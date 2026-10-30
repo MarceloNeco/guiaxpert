@@ -7,7 +7,8 @@
        carrega só quando o mapa abre). Conexões: só HTTPS (Supabase, Open-Meteo, MET Norway, wttr.in, OpenStreetMap). -->
   <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https:; font-src 'self' data:; connect-src 'self' https:; worker-src 'self' blob:; manifest-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'">
   <meta name="referrer" content="strict-origin-when-cross-origin">
-  <meta name="theme-color" content="#1e5b48">
+  <meta name="theme-color" content="#edf1ef" media="(prefers-color-scheme: light)">
+  <meta name="theme-color" content="#0f1517" media="(prefers-color-scheme: dark)">
   <meta name="description" content="GuiaXpert — roteiros sob medida para a sua família, que funcionam sem internet.">
   <title>GuiaXpert</title>
   <link rel="manifest" href="manifest.json">
@@ -20,7 +21,7 @@
   <div id="app">
     <header class="topo">
       <div class="topo-esq">
-        <button class="ic" id="bt-menu" type="button" aria-controls="gaveta" aria-expanded="false" data-ta="menu" aria-label="Menu">☰</button>
+        <button class="ic" id="bt-menu" type="button" aria-controls="gaveta" aria-expanded="false" data-ta="menu" aria-label="Menu"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h10"/></svg></button>
         <div class="marca" id="marca" role="button" tabindex="0" data-ta="irInicio" aria-label="Ir para o Início">
           <img src="icone-192.png" alt="" width="28" height="28">
           <strong>Guia<b>Xpert</b></strong>
@@ -28,10 +29,10 @@
       </div>
       <div class="topo-dir">
         <button class="ic" id="bt-idioma" type="button" data-ta="trocarIdioma" aria-label="Trocar idioma">EN</button>
-        <button class="ic" id="bt-busca" type="button" data-ta="buscar" aria-label="Buscar">🔍</button>
-        <button class="ic" id="bt-config" type="button" data-ta="configuracoes" aria-label="Configurações">⚙</button>
-        <button class="ic" id="bt-inicio" type="button" data-ta="inicio" aria-label="Início">🏠</button>
-        <button class="ic" id="bt-conta" type="button" data-ta="conta" aria-label="Conta">👤</button>
+        <button class="ic" id="bt-busca" type="button" data-ta="buscar" aria-label="Buscar"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="6.5"/><path d="m16 16 4.5 4.5"/></svg></button>
+        <button class="ic" id="bt-config" type="button" data-ta="configuracoes" aria-label="Configurações"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h9M17 7h3M4 17h3M11 17h9"/><circle cx="15" cy="7" r="2.2"/><circle cx="9" cy="17" r="2.2"/></svg></button>
+        <button class="ic" id="bt-inicio" type="button" data-ta="inicio" aria-label="Início"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 11.5 12 5l8 6.5"/><path d="M6.5 10v9h11v-9"/><path d="M10.5 19v-4.5h3V19"/></svg></button>
+        <button class="ic" id="bt-conta" type="button" data-ta="conta" aria-label="Conta"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8.5" r="3.6"/><path d="M5 20c.9-3.6 3.6-5.5 7-5.5s6.1 1.9 7 5.5"/></svg></button>
       </div>
     </header>
 
@@ -53,6 +54,7 @@
   <script src="js/clima.js"></script>
   <script src="js/descobrir.js"></script>
   <script src="js/conta.js"></script>
+  <script src="js/gostos.js"></script>
   <script src="js/app.js"></script>
   <!-- módulo comum SolverONE (igual em todos os apps) e o ajuste deste app -->
   <script src="diretrizes.js"></script>

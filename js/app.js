@@ -12,7 +12,7 @@
 (function () {
   'use strict';
   var d = document, $ = function (id) { return d.getElementById(id); };
-  var VERSAO_APP = '0.1.0';
+  var VERSAO_APP = '0.2.0';
 
   /* ------------------------------------------------------------------
      1. UTILIDADES
@@ -354,12 +354,21 @@
       return;
     }
     var dias = diasDaViagem(v), hj = hojeIso(), di = dias.indexOf(hj);
-    var cab = h('div', {}, [h('h1', { texto: v.nome }), h('p', { class: 'sub', texto: fData(v.inicio) + ' – ' + fData(v.fim) + (estado.pacote ? ' · ' + Pacotes.nome(estado.pacote, idioma()) : '') })]);
+    var cab = h('div', {}, [h('h1', { texto: v.nome }), h('p', { class: 'sub', texto: fData(v.inicio) + ' – ' + fData(v.fim) })]);
     tela.appendChild(cab);
     if (estado.pacote && estado.pacote.offline) tela.appendChild(h('p', { class: 'pequeno', texto: T('usandoCopia') }));
 
     var dias2 = Math.round((dataDe(v.inicio) - dataDe(hj)) / 86400000);
-    if (di < 0 && dias2 > 0) tela.appendChild(h('div', { class: 'cartao' }, [h('b', { texto: T('faltamDias', { n: dias2 }) }), h('p', { class: 'sub', texto: T('faltamDiasTexto') })]));
+    if (di < 0 && dias2 > 0) {
+      var destino = estado.pacote ? Pacotes.nome(estado.pacote, idioma()) : (v.destinoTexto || v.nome);
+      tela.appendChild(h('section', { class: 'sinal rodovia', 'aria-label': destino + ': ' + T(dias2 === 1 ? 'falta1' : 'faltamDias', { n: dias2 }) }, [
+        h('div', { class: 'destino' }, [
+          h('div', {}, [h('p', { class: 'rotulo', texto: T('ateAViagem') }), h('p', { class: 'grande', texto: destino })]),
+          h('p', { class: 'distancia', 'aria-hidden': 'true' }, [String(dias2), h('small', { texto: T(dias2 === 1 ? 'umDia' : 'variosDias') })])
+        ]),
+        h('p', { class: 'nota', texto: T('faltamDiasTexto') })
+      ]));
+    }
 
     /* agora / próximo item de hoje */
     if (di >= 0 && estado.opcao) {
@@ -386,12 +395,17 @@
   function minutos(hh) { var p = String(hh).split(':'); return (+p[0]) * 60 + (+p[1] || 0); }
   function cartaoAgora(it) {
     var l = it.lugarId ? lugarPorId(it.lugarId) : null;
-    var c = h('div', { class: 'cartao', style: 'border-color:var(--serra)' }, [
-      h('p', { class: 'pequeno', texto: T('aSeguir') }),
-      h('div', { class: 'linha' }, [h('b', { texto: it.hora, style: 'color:var(--serra);font-size:1.2rem' }), l ? placa(l.categoria) : null, h('b', { texto: it.titulo })])
+    var cat = l ? l.categoria : 'atracao';
+    var c = h('section', { class: 'sinal' + (cat === 'logistica' ? ' rodovia' : ''), 'aria-label': T('aSeguir') }, [
+      h('div', { class: 'topo-sinal' }, [h('span', { class: 'picto', 'aria-hidden': 'true', svg: PICTO[cat] || PICTO.atracao }), h('p', { class: 'rotulo', texto: T('aSeguir') })]),
+      h('p', { class: 'grande' }, [h('span', { class: 'hora', texto: it.hora }), ' ', it.titulo])
     ]);
-    if (it.nota) c.appendChild(h('p', { class: 'sub', texto: it.nota }));
-    if (l) c.appendChild(linksLugar(l));
+    if (it.nota) c.appendChild(h('p', { class: 'nota', texto: it.nota }));
+    if (l && l.lat != null) c.appendChild(h('div', { class: 'acoes-sinal' }, [
+      h('a', { href: Geo.linkRota(l, estado.pos), target: '_blank', rel: 'noopener', texto: T('rota') }),
+      h('a', { href: Geo.linkWaze(l), target: '_blank', rel: 'noopener', texto: 'Waze' }),
+      h('button', { type: 'button', texto: T('verNaLista'), onclick: function () { estado.abrirLugar = l.id; estado.filtro = 'todos'; Nav.ir('lugares'); } })
+    ]));
     return c;
   }
   function desenharClima(cx, p, dias) {
@@ -435,7 +449,7 @@
       return;
     }
     /* opções de roteiro (várias por viagem) */
-    var ops = h('div', { class: 'chips', role: 'tablist', 'aria-label': T('opcoesRoteiro') });
+    var ops = h('div', { class: 'chips rolar', role: 'tablist', 'aria-label': T('opcoesRoteiro') });
     estado.roteiros.forEach(function (o) {
       ops.appendChild(h('button', { class: 'chip', role: 'tab', type: 'button', 'aria-selected': estado.opcao && estado.opcao.id === o.id ? 'true' : 'false',
         onclick: function () { estado.opcao = o; v.opcao_ativa = o.id; Banco.gravar('viagens', v).then(function (nv) { estado.viagem = nv; }); mostrar('roteiro'); } },
@@ -587,14 +601,14 @@
   }
 
   /* ---------- Lugares ---------- */
-  var FILTROS = ['todos', 'favoritos', 'perto', 'comer', 'atracao', 'gratis', 'bebidas', 'doces', 'logistica'];
+  var FILTROS = ['todos', 'paraVoces', 'favoritos', 'perto', 'comer', 'atracao', 'gratis', 'bebidas', 'doces', 'logistica'];
   TELAS.lugares = function (tela) {
     tela.appendChild(h('div', { class: 'linha entre' }, [h('h1', { texto: T('listaLugares') }),
       h('button', { class: 'bt leve', type: 'button', onclick: janelaNovoLugar }, '＋ ' + T('novoLugar'))]));
     if (!todosLugares().length && !estado.descobertas.length) {
       tela.appendChild(h('p', { class: 'sub', texto: estado.viagem ? T('semLugares') : T('semViagemTexto') }));
     }
-    var chips = h('div', { class: 'chips', role: 'group', 'aria-label': T('filtrar') }, FILTROS.map(function (f) {
+    var chips = h('div', { class: 'chips rolar', role: 'group', 'aria-label': T('filtrar') }, FILTROS.map(function (f) {
       return h('button', { class: 'chip', type: 'button', 'aria-pressed': estado.filtro === f ? 'true' : 'false', onclick: function () {
         estado.filtro = f;
         if (f === 'perto' && !estado.pos) { pegarPosicao().then(function () { mostrar('lugares'); }); return; }
@@ -608,11 +622,13 @@
     var lista = h('div', { class: 'linha', style: 'flex-direction:column;align-items:stretch;gap:.5rem' }); tela.appendChild(lista);
 
     var restr = restricoesDoGrupo();
+    somaGostos = Gostos.doGrupo(pessoasDaViagem());
     function desenhar() {
       var q = normalizar(estado.busca).trim(), f = estado.filtro;
       var base = todosLugares().concat(estado.descobertas.filter(function (x) { return !lugarPorId(x.id); }));
       var itens = base.filter(function (l) {
         if (f === 'favoritos' && !estado.favoritos['lugar:' + l.id]) return false;
+        if (f === 'paraVoces' && Gostos.combina(l, somaGostos) <= 0) return false;
         if (f === 'gratis' && !l.gratis) return false;
         if (['comer', 'atracao', 'bebidas', 'doces', 'logistica'].indexOf(f) > -1 && l.categoria !== f) return false;
         if (f === 'perto' && l.lat == null) return false;
@@ -621,11 +637,12 @@
       });
       var pos = estado.pos;
       if (pos) itens.forEach(function (l) { l._km = Geo.distancia(pos, l); });
-      if (f === 'perto' || pos) itens.sort(function (a, b) { return (a._km == null ? 1e9 : a._km) - (b._km == null ? 1e9 : b._km); });
+      if (f === 'paraVoces') itens.sort(function (a, b) { return Gostos.combina(b, somaGostos) - Gostos.combina(a, somaGostos); });
+      else if (f === 'perto' || pos) itens.sort(function (a, b) { return (a._km == null ? 1e9 : a._km) - (b._km == null ? 1e9 : b._km); });
       lista.textContent = '';
       info.textContent = T('nLugares', { n: itens.length }) + (pos ? ' · ' + T('ordemDistancia') : '');
       itens.slice(0, 200).forEach(function (l) { lista.appendChild(cartaoLugar(l, restr)); });
-      if (!itens.length) lista.appendChild(h('p', { class: 'sub', texto: T('nadaAchado') }));
+      if (!itens.length) lista.appendChild(h('p', { class: 'sub', texto: f === 'paraVoces' && !Object.keys(somaGostos).length ? T('semGostosAinda') : T('nadaAchado') }));
       if (estado.abrirLugar) {
         var alvo = lista.querySelector('[data-id="' + CSS.escape(estado.abrirLugar) + '"]');
         if (alvo) { alvo.open = true; alvo.scrollIntoView({ block: 'center' }); }
@@ -646,11 +663,17 @@
       h('p', { class: 'pequeno', texto: '© OpenStreetMap contributors (ODbL)' })
     ]));
   };
+  var somaGostos = {};
+  function pessoasDaViagem() {
+    var ids = estado.viagem && estado.viagem.pessoas || [];
+    return estado.pessoas.filter(function (p) { return ids.indexOf(p.id) > -1; });
+  }
   function cartaoLugar(l, restr) {
     var fav = !!estado.favoritos['lugar:' + l.id];
     var det = h('details', { class: 'lugar', 'data-id': l.id });
     var meta = h('span', { class: 'meta' }, [placa(l.categoria), l.subcategoria ? T('sub_' + l.subcategoria) : null,
-      l._km != null ? '· ' + Geo.formatarKm(l._km) : null, l.gratis ? h('span', { class: 'etq gratis', texto: T('gratis') }) : null,
+      l._km != null ? Geo.formatarKm(l._km) : null, l.gratis ? h('span', { class: 'etq gratis', texto: T('gratis') }) : null,
+      Gostos.combina(l, somaGostos) > 0 ? h('span', { class: 'etq combina', texto: '♥ ' + T('combina') }) : null,
       l.confianca === 'baixa' ? h('span', { class: 'conferir', texto: T('conferir') }) : null,
       l.confianca === 'osm' ? h('span', { class: 'pequeno', texto: 'OSM' }) : null]);
     var bfav = h('button', { class: 'fav', type: 'button', 'aria-pressed': fav ? 'true' : 'false', 'aria-label': T('favoritar') + ': ' + l.nome, texto: fav ? '★' : '☆',
@@ -912,16 +935,113 @@
     tela.appendChild(h('button', { class: 'bt', type: 'button', onclick: function () { janelaPessoa(null); } }, '＋ ' + T('addPessoa')));
     if (!estado.pessoas.length) tela.appendChild(h('p', { class: 'sub', texto: T('semPessoas') }));
     estado.pessoas.forEach(function (p) {
-      tela.appendChild(h('div', { class: 'cartao' }, [
-        h('div', { class: 'linha entre' }, [h('b', { texto: p.apelido || T('par_' + p.parentesco) }), h('span', { class: 'pequeno', texto: T('par_' + p.parentesco) + (p.idade !== '' && p.idade != null ? ' · ' + T('anos', { n: p.idade }) : '') })]),
-        h('span', { class: 'pequeno', texto: [p.mobilidade && p.mobilidade !== 'normal' ? T('mob_' + p.mobilidade) : null, p.calor ? T('sensCalor') : null, p.frio ? T('sensFrio') : null, p.soneca ? T('soneca') : null, p.restricoes ? '🔒 ' + T('temRestricoes') : null].filter(Boolean).join(' · ') }),
-        h('div', { class: 'linha' }, [
+      var nome = p.apelido || T('par_' + p.parentesco), g = contarGostos(p.gostos);
+      var marc = [T('par_' + p.parentesco), p.idade !== '' && p.idade != null ? T('anos', { n: p.idade }) : null,
+        p.mobilidade && p.mobilidade !== 'normal' ? T('mob_' + p.mobilidade) : null, p.calor ? T('sensCalor') : null, p.frio ? T('sensFrio') : null,
+        p.soneca ? T('soneca') : null, p.restricoes ? '🔒 ' + T('temRestricoes') : null].filter(Boolean);
+      tela.appendChild(h('div', { class: 'cartao pessoa-cartao' }, [
+        h('span', { class: 'avatar', 'aria-hidden': 'true', texto: nome.trim().charAt(0).toUpperCase() }),
+        h('b', { class: 'nomeP', texto: nome }),
+        h('div', { class: 'marcadores' }, marc.map(function (m) { return h('span', { texto: m }); })),
+        g.total ? h('div', { class: 'resumo-gostos', style: 'grid-column:1/-1;margin-top:.35rem' }, topGostos(p.gostos, 6).map(function (id) {
+          return h('span', { class: 'gosto', 'data-v': String(p.gostos[id]), texto: Gostos.nome(id, idioma()) }); })) : null,
+        h('div', { class: 'botoes' }, [
+          h('button', { class: 'bt sec', type: 'button', onclick: function () { janelaGostos(p, function () { mostrar('familia'); }); } }, g.total ? T('gostosN', { n: g.total }) : T('marcarGostos')),
           h('button', { class: 'bt leve', type: 'button', onclick: function () { janelaPessoa(p); } }, T('editar')),
           p.restricoes ? h('button', { class: 'bt leve', type: 'button', onclick: function () { cartaoAlergia(p); } }, T('cartaoAlergia')) : null
         ])
       ]));
     });
   };
+  function contarGostos(g) {
+    var c = { ama: 0, curte: 0, evita: 0, total: 0 };
+    Object.keys(g || {}).forEach(function (id) { var v = g[id]; if (v === 2) c.ama++; else if (v === 1) c.curte++; else if (v === -1) c.evita++; else return; c.total++; });
+    return c;
+  }
+  /* os mais fortes primeiro: ama, curte, evita */
+  function topGostos(g, n) {
+    var peso = { 2: 0, 1: 1, '-1': 2 };
+    return Object.keys(g || {}).filter(function (id) { return g[id] && Gostos.item(id); })
+      .sort(function (a, b) { return peso[g[a]] - peso[g[b]]; }).slice(0, n);
+  }
+
+  /* Gostos: tocar muda o estado (curte → ama → evita → nada). Ao marcar,
+     os parecidos do mesmo grupinho aparecem logo ao lado. Salva a cada toque. */
+  function janelaGostos(p, depois) {
+    var g = Object.assign({}, p.gostos || {}), lg = idioma(), nome = p.apelido || T('par_' + p.parentesco);
+    var abertos = {}, novos = {};
+    var corpo = h('div', { style: 'display:flex;flex-direction:column;gap:.4rem;flex:1' });
+    var j = janela(T('gostosTitulo', { nome: nome }), corpo, function () { if (depois) depois(); });
+    j.caixa.classList.add('cheia');
+    var busca = h('input', { class: 'campo', type: 'search', id: 'gx-gosto-busca', placeholder: T('buscarGosto'), 'aria-label': T('buscarGosto'), autocomplete: 'off' });
+    var temas = h('div', { class: 'temas', role: 'group', 'aria-label': T('temas') });
+    corpo.appendChild(h('div', { class: 'gostos-cab' }, [
+      h('div', { class: 'legenda' }, [
+        h('span', {}, [h('i', { class: 'l1', 'aria-hidden': 'true', texto: '✓' }), T('toque1')]),
+        h('span', {}, [h('i', { class: 'l2', 'aria-hidden': 'true', texto: '♥' }), T('toque2')]),
+        h('span', {}, [h('i', { class: 'l3', 'aria-hidden': 'true', texto: '⊘' }), T('toque3')])
+      ]), busca, temas]));
+    var lista = h('div', {}); corpo.appendChild(lista);
+    var resumo = h('p', { class: 'pequeno', 'aria-live': 'polite' });
+    var pronto = h('button', { class: 'bt', type: 'button', texto: T('pronto'), onclick: function () { j.fechar(); } });
+    corpo.appendChild(h('div', { class: 'gostos-pe' }, [resumo, pronto]));
+
+    function salvar() {
+      Object.keys(g).forEach(function (k) { if (!g[k]) delete g[k]; });
+      p.gostos = Object.assign({}, g);
+      if (p.id) Banco.gravar('pessoas', p).then(function (nv) { p.versao = nv.versao; p.atualizado_em = nv.atualizado_em; });
+    }
+    function rotuloEstado(v) { return v === 1 ? T('toque1') : v === 2 ? T('toque2') : v === -1 ? T('toque3') : T('semMarca'); }
+    function botao(it) {
+      var b = h('button', { class: 'gosto' + (novos[it.id] ? ' novo' : ''), type: 'button', 'data-id': it.id, 'data-v': String(g[it.id] || 0), texto: it[lg] || it.pt,
+        'aria-label': (it[lg] || it.pt) + ': ' + rotuloEstado(g[it.id]) });
+      b.addEventListener('click', function () {
+        g[it.id] = Gostos.proximo(g[it.id]);
+        if (g[it.id] > 0) Gostos.parecidos(it.id, g).forEach(function (o) { if (!novos[o.id]) novos[o.id] = 1; });
+        salvar(); desenhar(it.id);
+      });
+      return b;
+    }
+    function desenharTemas() {
+      temas.textContent = '';
+      Gostos.temas.forEach(function (t) {
+        var n = 0; t.grupos.forEach(function (gr) { gr.forEach(function (it) { if (g[it.id]) n++; }); });
+        temas.appendChild(h('button', { class: 'chip', type: 'button', onclick: function () {
+          var alvo = lista.querySelector('[data-tema="' + t.id + '"]'); if (alvo) alvo.scrollIntoView({ block: 'start', behavior: 'smooth' }); } },
+          [h('span', { 'aria-hidden': 'true', texto: t.icone }), t[lg] || t.pt, n ? h('em', { texto: String(n), 'aria-label': T('nMarcados', { n: n }) }) : null]));
+      });
+    }
+    function desenhar(foco) {
+      var c = contarGostos(g);
+      resumo.textContent = c.total ? T('resumoGostos', { a: c.ama, c: c.curte, e: c.evita }) : T('nadaMarcado');
+      desenharTemas();
+      lista.textContent = '';
+      var q = busca.value.trim();
+      if (q) {
+        var achados = Gostos.buscar(q, lg);
+        lista.appendChild(h('div', { class: 'chips' }, achados.length ? achados.map(botao) : [h('p', { class: 'sub', texto: T('nadaAchado') })]));
+      } else {
+        Gostos.temas.forEach(function (t) {
+          var todos = [], vis = [];
+          t.grupos.forEach(function (gr) { gr.forEach(function (it, k) {
+            todos.push(it);
+            if (abertos[t.id] || k < 2 || g[it.id] || novos[it.id]) vis.push(it);
+          }); });
+          var resto = todos.length - vis.length;
+          var chips = h('div', { class: 'chips' }, vis.map(botao));
+          if (resto > 0) chips.appendChild(h('button', { class: 'mais', type: 'button', texto: T('verMais', { n: resto }), onclick: function () { abertos[t.id] = 1; desenhar(); } }));
+          lista.appendChild(h('section', { class: 'tema-bloco', 'data-tema': t.id, 'aria-label': t[lg] || t.pt }, [
+            h('h3', {}, [h('span', { 'aria-hidden': 'true', texto: t.icone }), t[lg] || t.pt]), chips]));
+        });
+      }
+      /* o foco fica no mesmo item depois de redesenhar (teclado e leitor de tela) */
+      if (foco) { var b = lista.querySelector('.gosto[data-id="' + foco + '"]'); if (b) b.focus(); }
+    }
+    busca.addEventListener('input', function () { desenhar(); });
+    desenhar();
+    /* não abrir o teclado do celular sozinho: o foco vai para o fechar */
+    setTimeout(function () { var x = j.caixa.querySelector('.ic'); if (x) x.focus(); }, 60);
+  }
   function janelaPessoa(p) {
     p = p || {};
     var apelido = h('input', { class: 'campo', id: 'gx-p-apelido', maxlength: '30', value: p.apelido || '', placeholder: T('exApelido') });
@@ -931,13 +1051,18 @@
     var chk = function (id, k, rot) { var c = h('input', { type: 'checkbox', id: id }); c.checked = !!p[k]; return [c, h('label', { for: id, texto: ' ' + rot })]; };
     var calor = chk('gx-p-calor', 'calor', T('sensCalor')), frio = chk('gx-p-frio', 'frio', T('sensFrio')), son = chk('gx-p-soneca', 'soneca', T('soneca'));
     var bRestr = h('button', { class: 'bt leve', type: 'button' }, '🔒 ' + T('comidaSaude'));
+    var bGostos = h('button', { class: 'bt sec', type: 'button' }, contarGostos(p.gostos).total ? T('gostosN', { n: contarGostos(p.gostos).total }) : T('marcarGostos'));
+    bGostos.addEventListener('click', function () {
+      if (!p.id) { avisar(T('salveAntes')); return; }
+      janelaGostos(p, function () { bGostos.textContent = contarGostos(p.gostos).total ? T('gostosN', { n: contarGostos(p.gostos).total }) : T('marcarGostos'); });
+    });
     var ok = h('button', { class: 'bt', type: 'button' }, T('salvar'));
     var apagar = p.id ? h('button', { class: 'bt perigo', type: 'button' }, T('apagar')) : null;
     var j = janela(p.id ? T('editar') : T('addPessoa'), h('div', { class: 'linha', style: 'flex-direction:column;align-items:stretch' }, [
       h('label', { class: 'rot', for: 'gx-p-apelido', texto: T('apelidoOpcional') }), apelido, h('p', { class: 'dica', texto: T('apelidoDica') }),
       h('div', { class: 'dois' }, [h('div', {}, [h('label', { class: 'rot', for: 'gx-p-par', texto: T('parentesco') }), par]), h('div', {}, [h('label', { class: 'rot', for: 'gx-p-idade', texto: T('idade') }), idade])]),
       h('label', { class: 'rot', for: 'gx-p-mob', texto: T('mobilidade') }), mob,
-      h('div', {}, calor), h('div', {}, frio), h('div', {}, son), bRestr, h('div', { class: 'acoes' }, [apagar, ok])]));
+      h('div', {}, calor), h('div', {}, frio), h('div', {}, son), bRestr, bGostos, h('div', { class: 'acoes' }, [apagar, ok])]));
     var novaRestr;
     bRestr.addEventListener('click', function () { janelaRestricoes(p, function (r) { novaRestr = r; bRestr.textContent = '🔒 ' + T('comidaSaude') + ' ✓'; }); });
     ok.addEventListener('click', function () {
@@ -1036,7 +1161,6 @@
      rascunho para continuar depois. Reaproveita a família já cadastrada.
      ------------------------------------------------------------------ */
   var PASSOS = ['destino', 'datas', 'quem', 'estilo', 'estadia', 'pronto'];
-  var INTERESSES = ['natureza', 'parquesInfantis', 'gastronomia', 'cervejaVinho', 'compras', 'cultura', 'eventos', 'fotos'];
   TELAS.nova = function (tela) {
     var r = estado.rascunho || (estado.rascunho = { passo: 0, destino: null, destinoTexto: '', inicio: '', fim: '', pessoas: [], preferencias: { ritmo: 'equilibrado', orcamento: 'medio', interesses: [], transporte: 'carro' }, estadias: [], usarPacote: true, ia: false });
     var i = r.passo, total = PASSOS.length;
@@ -1117,11 +1241,17 @@
     c.appendChild(escolha(T('ritmo'), 'ritmo', ['tranquilo', 'equilibrado', 'intenso']));
     c.appendChild(escolha(T('orcamento'), 'orcamento', ['economico', 'medio', 'alto', 'luxo']));
     c.appendChild(escolha(T('transporte'), 'transporte', ['carro', 'ape', 'transporte']));
-    c.appendChild(h('fieldset', {}, [h('legend', { texto: T('interesses') }), h('div', { class: 'chips' }, INTERESSES.map(function (o) {
-      var on = pr.interesses.indexOf(o) > -1;
-      return h('button', { class: 'chip', type: 'button', 'aria-pressed': on ? 'true' : 'false', onclick: function () {
-        pr.interesses = on ? pr.interesses.filter(function (x) { return x !== o; }) : pr.interesses.concat(o); mostrar('nova'); } }, T('in_' + o));
-    }))]));
+    var quem = estado.pessoas.filter(function (p) { return r.pessoas.indexOf(p.id) > -1; });
+    var soma = Gostos.doGrupo(quem), fortes = Object.keys(soma).filter(function (id) { return soma[id] > 0 && Gostos.item(id); })
+      .sort(function (a, b) { return soma[b] - soma[a]; });
+    c.appendChild(h('fieldset', {}, [h('legend', { texto: T('gostosGrupo') }),
+      fortes.length ? h('div', { class: 'resumo-gostos' }, fortes.slice(0, 12).map(function (id) {
+        return h('span', { class: 'gosto', 'data-v': soma[id] >= 2 ? '2' : '1', texto: Gostos.nome(id, idioma()) }); }))
+        : h('p', { class: 'sub', texto: T('gostosGrupoVazio') }),
+      h('div', { class: 'chips' }, quem.map(function (p) {
+        return h('button', { class: 'chip', type: 'button', onclick: function () { janelaGostos(p, function () { mostrar('nova'); }); } },
+          '♥ ' + (p.apelido || T('par_' + p.parentesco)));
+      }))]));
   };
   PASSO.estadia = function (c, r, val) {
     c.appendChild(h('h1', { texto: T('pEstadia') }));

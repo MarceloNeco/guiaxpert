@@ -19,7 +19,7 @@ HTML, CSS e JavaScript puros. Sem framework, sem passo de build. Abra e edite.
 | Arquivo | O que faz | Mexer? |
 |---|---|---|
 | `index.html` | casca: cabeçalho (☰ marca · PT/EN 🔍 ⚙ 🏠 👤), gaveta, `<main>`, barra de baixo e a ORDEM dos scripts | pouco |
-| `styles.css` | aparência; cores em variáveis (claro/escuro), placa turística marrom, linha do tempo | sim |
+| `styles.css` | aparência: linguagem das placas de estrada (marrom = passeio, verde = ação e contagem, amarelo = agora/ama), fonte Overpass em `vendor/fontes/`, cores em variáveis (claro/escuro) | sim |
 | `config.js` | URL e chave **pública** do Supabase, modo de acesso, endereço dos pacotes | só valores |
 | `js/textos.js` | todo texto da tela em PT e EN | a cada texto novo |
 | `js/banco.js` | `Banco`: lojas no IndexedDB no **formato das futuras tabelas** + fila para a nuvem | com cuidado |
@@ -27,6 +27,7 @@ HTML, CSS e JavaScript puros. Sem framework, sem passo de build. Abra e edite.
 | `js/pacotes.js` | `Pacotes`: lê o pacote de cidade (central → local → cópia no aparelho) | pouco |
 | `js/geo.js` | `Geo`: GPS (só com toque), distância, links de rota (Google Maps, Waze) | pouco |
 | `js/clima.js` | `Clima`: Open-Meteo, guarda 1 h, avisos práticos | pouco |
+| `js/gostos.js` | `Gostos`: catálogo de 249 gostos em 15 temas (PT/EN), ciclo curte → ama → evita, soma do grupo, "combina" com lugares e resumo para a IA | ao acrescentar gosto |
 | `js/descobrir.js` | `Descobrir`: OpenStreetMap (Overpass) e roteiro pela IA da pessoa (`DGO.ia`) | sim |
 | `js/conta.js` | `Conta`: login REST, sessão comum `solverone.sessao.v1`, `acesso_app`, códigos de degustação | com cuidado |
 | `js/app.js` | telas, navegação (`Nav`) e wizard "Nova viagem" | sim |

@@ -82,7 +82,8 @@
       var pr = viagem.preferencias || {};
       return 'Grupo:\n' + linhas.join('\n') +
         '\nRitmo: ' + (pr.ritmo || 'equilibrado') + '. Orçamento: ' + (pr.orcamento || 'médio') +
-        '. Interesses: ' + ((pr.interesses || []).join(', ') || 'variados') + '. Transporte: ' + (pr.transporte || 'carro') + '.';
+        '. Transporte: ' + (pr.transporte || 'carro') + '.' +
+        (window.Gostos ? ' ' + (Gostos.resumo(pessoas) || 'Gostos variados.') : '');
     },
 
     /* jeito 3: a IA da pessoa monta uma opção nova de roteiro */

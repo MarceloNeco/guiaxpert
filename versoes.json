@@ -2,6 +2,24 @@
   "app": "guiaxpert",
   "versoes": [
     {
+      "versao": "0.2.0",
+      "data": "2026-10-30",
+      "itens": {
+        "pt": [
+          "Visual novo, inspirado nas placas de estrada: placa marrom com o próximo passeio, placa verde com a contagem até a viagem, amarelo da faixa marcando o 'agora'. Letra Overpass, cantos arredondados, tema escuro revisado.",
+          "Gostos de cada pessoa: 249 opções em 15 temas (jeito de passear, natureza, aventura, cultura, comer, doces, bebidas, crianças, compras, descanso, noite, esportes, fotos, eventos, onde ficar). Toque uma vez para 'curte', duas para 'ama', três para 'prefere evitar'; o que combina aparece na hora.",
+          "Lugares: novo filtro 'Para vocês' e a etiqueta '♥ combina' a partir dos gostos do grupo. O roteiro com IA também usa os gostos (sem nomes).",
+          "Filtros e opções de roteiro numa fileira que rola para o lado; cabeçalho com ícones desenhados; 'Falta 1 dia' com o plural certo."
+        ],
+        "en": [
+          "New look inspired by road signs: a brown sign for what's next, a green sign counting down to the trip, lane-marking yellow for 'now'. Overpass typeface, rounded corners, refined dark theme.",
+          "What each person likes: 249 options in 15 themes (how you explore, nature, adventure, culture, food, sweets, drinks, kids, shopping, rest, night, sports, photos, events, where to stay). Tap once for 'likes', twice for 'loves', three times for 'rather avoid'; related options appear right away.",
+          "Places: new 'For you' filter and a '♥ a good fit' tag based on the group's likes. The AI itinerary also uses them (no names).",
+          "Filters and itinerary options in one scrolling row; drawn header icons; correct singular in '1 day to go'."
+        ]
+      }
+    },
+    {
       "versao": "0.1.0",
       "data": "2026-10-30",
       "hora": "13:38:20",

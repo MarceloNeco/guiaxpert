@@ -2,6 +2,7 @@
 
 | O quê | Origem | Licença | Como entra |
 |---|---|---|---|
+| Fonte Overpass (letra da tela) | https://github.com/RedHatOfficial/Overpass | SIL Open Font License 1.1 (`vendor/fontes/OFL.txt`) | arquivo no repositório (`vendor/fontes/`), sem Google Fonts |
 | Leaflet 1.9.4 (mapa) | https://leafletjs.com | BSD-2-Clause | arquivo no repositório (`vendor/leaflet/`), carregado só quando o mapa abre |
 | Dados de mapa, lugares e endereços (Descobrir, mapa, coordenadas do pacote) | OpenStreetMap | ODbL 1.0 — "© OpenStreetMap contributors" | consultados na hora (Overpass, Nominatim, tiles) e coordenadas guardadas no pacote |
 | Previsão do tempo (1ª opção) | Open-Meteo (https://open-meteo.com) | CC BY 4.0 (dados), uso não comercial grátis | consultada na hora; a tela cita a fonte |
