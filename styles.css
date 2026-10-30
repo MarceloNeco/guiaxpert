@@ -377,7 +377,9 @@ h2.secao-cab, .secao-cab h2 { font-size: 1.15rem; font-weight: 800; }
 .ajustado { grid-column: 1 / -1; font-size: .875rem; font-weight: 700; color: var(--faixa-tinta); background: var(--faixa-claro); border-radius: 10px; padding: .3rem .6rem .2rem; justify-self: start; }
 
 /* ---------- mapa ---------- */
-#mapa { height: calc(100vh - var(--topo) - var(--barra) - 7rem); min-height: 18rem; border-radius: var(--r-painel); overflow: hidden; }
+#mapa { height: calc(100vh - var(--topo) - var(--barra) - 8rem); min-height: 18rem; border-radius: var(--r-painel); overflow: hidden; }
+/* 100dvh = altura visível de verdade (no Android, 100vh conta a área atrás da barra do navegador) */
+@supports (height: 100dvh) { #mapa { height: calc(100dvh - var(--topo) - var(--barra) - env(safe-area-inset-bottom, 0px) - 8rem); } }
 
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation: none !important; transition: none !important; }

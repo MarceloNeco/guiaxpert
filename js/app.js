@@ -12,7 +12,7 @@
 (function () {
   'use strict';
   var d = document, $ = function (id) { return d.getElementById(id); };
-  var VERSAO_APP = '0.5.0';
+  var VERSAO_APP = '0.5.1';
 
   /* ------------------------------------------------------------------
      1. UTILIDADES
