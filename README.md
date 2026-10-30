@@ -14,6 +14,8 @@ Para testar sem login (só no seu computador): em `config.js` troque `ACESSO: 'o
 
 ## 2. Ligar o acesso por convite (uma vez)
 
+> **Já feito em 30/Out/2026** no projeto solverone-app. Os passos abaixo ficam para referência (rodar de novo não estraga nada).
+
 1. Entre no Supabase → projeto **solverone-app** → **SQL Editor** → **New query**.
 2. Abra `supabase/2026-10-30-acesso-por-app-e-codigos.sql`, copie tudo, cole e clique em **Run**.
 3. Deve aparecer "Success. No rows returned".
