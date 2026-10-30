@@ -1,0 +1,19 @@
+{
+  "name": "GuiaXpert",
+  "short_name": "GuiaXpert",
+  "description": "Roteiros sob medida para a sua família, que funcionam sem internet. Uma solução SolverONE.",
+  "lang": "pt-BR",
+  "id": "./",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#f3f5f4",
+  "theme_color": "#1e5b48",
+  "categories": ["travel", "navigation"],
+  "icons": [
+    { "src": "icone-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icone-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "icone-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}

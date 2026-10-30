@@ -1,0 +1,2658 @@
+{
+ "formato": 1,
+ "id": "gramado",
+ "nome": {
+  "pt": "Gramado e Canela",
+  "en": "Gramado and Canela"
+ },
+ "uf": "RS",
+ "pais": "BR",
+ "centro": {
+  "lat": -29.3789,
+  "lng": -50.8744
+ },
+ "atualizadoEm": "2026-10-30",
+ "fonte": "Pesquisa GuiaXpert (blogs, guias e sites oficiais, out/2026)",
+ "aviso": {
+  "pt": "Horários e preços podem ter mudado. Itens com confiança baixa: confirme antes de ir.",
+  "en": "Hours and prices may have changed. Low-confidence items: check before going."
+ },
+ "eventos": [
+  {
+   "id": "natal-luz",
+   "nome": "Natal Luz",
+   "inicio": "2026-10-22",
+   "fim": "2027-01-17"
+  }
+ ],
+ "lugares": [
+  {
+   "id": "belle-du-valais",
+   "nome": "Belle du Valais",
+   "categoria": "comer",
+   "subcategoria": "fondue",
+   "descricao": "Fondue suíço, ambiente romântico",
+   "endereco": "Av. das Hortênsias, 1432, Centro, Gramado",
+   "site": "https://www.belleduvalais.com.br",
+   "telefone": "(54) 3286-1744",
+   "horario": "Seg a sáb 19h–24h (site oficial)",
+   "reserva": "Recomendada, formulário no site",
+   "preco": "Cerca de R$ 150 por pessoa (2025)",
+   "criancas": "Sem informação; pouco indicado para crianças",
+   "confianca": "oficial",
+   "gratis": false,
+   "lat": -29.38159,
+   "lng": -50.87662,
+   "geoFonte": "endereco"
+  },
+  {
+   "id": "le-chalet-de-la-fondue",
+   "nome": "Le Chalet de la Fondue",
+   "categoria": "comer",
+   "subcategoria": "fondue",
+   "descricao": "Fondue em chalé, tem opção vegetariana",
+   "endereco": "Av. das Hortênsias, 1297, Centro, Gramado (um guia diz 3500)",
+   "site": null,
+   "telefone": null,
+   "horario": "Diário 16h–0h (guia 2025)",
+   "reserva": null,
+   "preco": "A partir de R$ 220 (2023)",
+   "criancas": "Sem informação",
+   "confianca": "baixa",
+   "gratis": false,
+   "lat": -29.38268,
+   "lng": -50.87839,
+   "geoFonte": "endereco"
+  },
+  {
+   "id": "gatzz-gramado-experience",
+   "nome": "Gatzz Gramado Experience",
+   "categoria": "comer",
+   "subcategoria": "fondue",
+   "descricao": "Jantar-show com fondue, longo (2h ou mais)",
+   "endereco": "Av. das Hortênsias, 3380, Gramado (não confirmado)",
+   "site": null,
+   "telefone": null,
+   "horario": "Diário 19h; fecha aos domingos (2025/26)",
+   "reserva": "Essencial, reservar online",
+   "preco": "A partir de R$ 398 (mar/2026)",
+   "criancas": "Política infantil não confirmada",
+   "confianca": "baixa",
+   "gratis": false,
+   "lat": -29.36861,
+   "lng": -50.8611,
+   "geoFonte": "endereco"
+  },
+  {
+   "id": "maximilia-fondue",
+   "nome": "Maximilia Fondue",
+   "categoria": "comer",
+   "subcategoria": "fondue",
+   "descricao": "Fondue na pedra, bom custo-benefício",
+   "endereco": "Av. das Hortênsias, 2174, Centro, Gramado (confirmar)",
+   "site": null,
+   "telefone": "(54) 3286-1711",
+   "horario": "Diário 18h–24h (2025)",
+   "reserva": "Recomendada, tem muita procura",
+   "preco": "Cerca de R$ 49–100 (2023/2025)",
+   "criancas": "Citada como boa opção para famílias",
+   "confianca": "guia",
+   "gratis": false,
+   "lat": -29.38268,
+   "lng": -50.87839,
+   "geoFonte": "endereco"
+  },
+  {
+   "id": "chateau-de-la-fondue",
+   "nome": "Chateau de la Fondue",
+   "categoria": "comer",
+   "subcategoria": "fondue",
+   "descricao": "Fondue descontraído",
+   "endereco": "R. Cel. João Corrêa, 101, Centro, Gramado",
+   "site": null,
+   "telefone": "(54) 3286-7561",
+   "horario": "Diário 11h30–24h (2025)",
+   "reserva": "Não especificada",
+   "preco": "A partir de R$ 79 (promoção 2025)",
+   "criancas": "Ambiente descontraído, família ok",
+   "confianca": "guia",
+   "gratis": false,
+   "lat": -29.38421,
+   "lng": -50.87186,
+   "geoFonte": "endereco"
+  },
+  {
+   "id": "chateau-dos-platanos",
+   "nome": "Chateau dos Plátanos",
+   "categoria": "comer",
+   "subcategoria": "fondue",
+   "descricao": "Fondue, indicado para jantar em família",
+   "endereco": "R. João Alfredo Schneider, 607, Planalto, Gramado",
+   "site": null,
+   "telefone": "(54) 3295-1220",
+   "horario": "Diário 17h–23h (2025)",
+   "reserva": "Não especificada",
+   "preco": "A partir de R$ 59,90 (2025)",
+   "criancas": "Indicado para família. Fora do centro",
+   "confianca": "guia",
+   "gratis": false,
+   "lat": -29.38922,
+   "lng": -50.87768,
+   "geoFonte": "endereco"
+  },
+  {
+   "id": "colosseo",
+   "nome": "Colosseo",
+   "categoria": "comer",
+   "subcategoria": "fondue",
+   "descricao": "Fondue com vinhos e música ao vivo",
+   "endereco": "Av. das Hortênsias, 1560, Centro, Gramado (endereço conflita entre fontes)",
+   "site": null,
+   "telefone": "(54) 3286-7259",
+   "horario": "Seg a qui 18h–24h; sex a dom 11h–15h e 18h–1h",
+   "reserva": "Não especificada",
+   "preco": "R$ 142 a R$ 175 (2025)",
+   "criancas": "Sem informação",
+   "confianca": "baixa",
+   "gratis": false,
+   "lat": -29.38118,
+   "lng": -50.8751,
+   "geoFonte": "endereco"
+  },
+  {
+   "id": "maison-de-la-fondue",
+   "nome": "Maison de la Fondue",
+   "categoria": "comer",
+   "subcategoria": "fondue",
+   "descricao": "Fondue",
+   "endereco": "Av. Borges de Medeiros, 2311, Centro, Gramado",
+   "site": null,
+   "telefone": "(54) 3286-5282",
+   "horario": "Seg a sex 18h–23h30; sáb e dom 11h30–23h30",
+   "reserva": "Não especificada",
+   "preco": "A partir de R$ 85 (2025)",
+   "criancas": "Sem informação",
+   "confianca": "guia",
+   "gratis": false,
+   "lat": -29.3818,
+   "lng": -50.87182,
+   "geoFonte": "endereco"
+  },
+  {
+   "id": "cantina-pastasciutta",
+   "nome": "Cantina Pastasciutta",
+   "categoria": "comer",
+   "subcategoria": "pizza-massas",
+   "descricao": "Italiano, massas, executivo no almoço",
+   "endereco": "Av. Borges de Medeiros, 2083, Centro (também entrada pela Rua Coberta)",
+   "site": null,
+   "telefone": "(54) 3286-2131",
+   "horario": "Diário 11h–23h30 (2025)",
+   "reserva": "Recomendada em feriados e fins de semana",
+   "preco": "Executivo de R$ 35 a R$ 55",
+   "criancas": "Opção barata no centro",
+   "confianca": "guia",
+   "gratis": false,
+   "lat": -29.38371,
+   "lng": -50.8726,
+   "geoFonte": "endereco"
+  },
+  {
+   "id": "nonno-mio",
+   "nome": "Nonno Mio",
+   "categoria": "comer",
+   "subcategoria": "pizza-massas",
+   "descricao": "Italiano, rodízio de galeto e massas",
+   "endereco": "Av. Borges de Medeiros, 2070, Centro (outro guia diz 2497)",
+   "site": null,
+   "telefone": null,
+   "horario": "Diário 11h30–23h",
+   "reserva": null,
+   "preco": "Pratos do dia de R$ 40 a R$ 70",
+   "criancas": "Sem informação",
+   "confianca": "baixa",
+   "gratis": false,
+   "lat": -29.37156,
+   "lng": -50.87704,
+   "geoFonte": "endereco"
+  },
+  {
+   "id": "famiglia-guimaraes",
+   "nome": "Famiglia Guimarães",
+   "categoria": "comer",
+   "subcategoria": "pizza-massas",
+   "descricao": "Cantina italiana tradicional",
+   "endereco": "Rua Wilma Dinebier, 91, Centro, Gramado",
+   "site": null,
+   "telefone": null,
+   "horario": "Qua a seg 11h30–15h30 e 19h–23h",
+   "reserva": null,
+   "preco": "Até R$ 224,90 (2026)",
+   "criancas": "Sem informação",
+   "confianca": "baixa",
+   "gratis": false,
+   "lat": null,
+   "lng": null
+  },
+  {
+   "id": "il-piacere",
+   "nome": "Il Piacere",
+   "categoria": "comer",
+   "subcategoria": "pizza-massas",
+   "descricao": "Pizza, risotos, massas e carnes",
+   "endereco": "Av. Borges de Medeiros, 1991, Centro, Gramado",
+   "site": null,
+   "telefone": null,
+   "horario": "Diário 11h30–23h",
+   "reserva": null,
+   "preco": null,
+   "criancas": "Sem informação",
+   "confianca": "baixa",
+   "gratis": false,
+   "lat": -29.37156,
+   "lng": -50.87704,
+   "geoFonte": "endereco"
+  },
+  {
+   "id": "cantina-28",
+   "nome": "Cantina 28",
+   "categoria": "comer",
+   "subcategoria": "pizza-massas",
+   "descricao": "Italiano casual, simples",
+   "endereco": "Av. 28 de Janeiro, 140, Centro, Gramado",
+   "site": null,
+   "telefone": null,
+   "horario": null,
+   "reserva": null,
+   "preco": "R$ 30 a R$ 60 (2025)",
+   "criancas": "Sem informação",
+   "confianca": "baixa",
+   "gratis": false,
+   "lat": null,
+   "lng": null
+  },
+  {
+   "id": "osteria-di-lucca",
+   "nome": "Osteria Di Lucca",
+   "categoria": "comer",
+   "subcategoria": "pizza-massas",
+   "descricao": "Italiano gourmet, dentro do Hotel Valle D'Incanto",
+   "endereco": "R. Júlio Hanke, 87, Dutra, Gramado",
+   "site": null,
+   "telefone": null,
+   "horario": "Diário 20h–23h",
+   "reserva": "Obrigatória",
+   "preco": null,
+   "criancas": "Jantar tardio, pouco indicado",
+   "confianca": "baixa",
+   "gratis": false,
+   "lat": null,
+   "lng": null
+  },
+  {
+   "id": "el-cordero",
+   "nome": "El Cordero",
+   "categoria": "comer",
+   "subcategoria": "restaurante",
+   "descricao": "Gaúcho, espeto corrido, cordeiro",
+   "endereco": "Av. Borges de Medeiros, 3411, Gramado",
+   "site": null,
+   "telefone": null,
+   "horario": "Diário 11h30–23h30",
+   "reserva": null,
+   "preco": null,
+   "criancas": "Sem informação",
+   "confianca": "baixa",
+   "gratis": false,
+   "lat": -29.37156,
+   "lng": -50.87704,
+   "geoFonte": "endereco"
+  },
+  {
+   "id": "galeto-italia",
+   "nome": "Galeto Itália",
+   "categoria": "comer",
+   "subcategoria": "restaurante",
+   "descricao": "Galeto e sopa de capeletti",
+   "endereco": "Av. das Hortênsias, 3871, Carniel, Gramado",
+   "site": null,
+   "telefone": null,
+   "horario": null,
+   "reserva": null,
+   "preco": "R$ 40 a R$ 70 por pessoa",
+   "criancas": "Sem informação",
+   "confianca": "baixa",
+   "gratis": false,
+   "lat": -29.36201,
+   "lng": -50.85714,
+   "geoFonte": "endereco"
+  },
+  {
+   "id": "kongo-pizzaria",
+   "nome": "Kongo Pizzaria",
+   "categoria": "comer",
+   "subcategoria": "pizza-massas",
+   "descricao": "Pizza temática, rodízio, playground com monitores",
+   "endereco": "Av. das Hortênsias, 5683, Carniel, Gramado (precisa de carro)",
+   "site": "https://kongogramado.com.br",
+   "telefone": "(54) 3286-7627",
+   "horario": "Cerca de 18h–23h30 (blog antigo)",
+   "reserva": "Recomendada, online",
+   "preco": "Adulto R$ 79,90; 5 a 9 anos R$ 39,90; até 4 grátis (blog antigo)",
+   "criancas": "Indicada para crianças",
+   "confianca": "baixa",
+   "gratis": false,
+   "lat": -29.36201,
+   "lng": -50.85714,
+   "geoFonte": "endereco"
+  },
+  {
+   "id": "cara-de-mau",
+   "nome": "Cara de Mau",
+   "categoria": "comer",
+   "subcategoria": "pizza-massas",
+   "descricao": "Pizza temática, rodízio pirata com show",
+   "endereco": "R. Cel. João Corrêa, 394, Centro, Gramado",
+   "site": "https://carademau.com",
+   "telefone": null,
+   "horario": "Sessões às 18h e 21h30; cerca de 1h30 a 2h",
+   "reserva": "Reservar online",
+   "preco": "Adulto a partir de R$ 239,90; criança R$ 99,90",
+   "criancas": "Tem preço infantil",
+   "confianca": "baixa",
+   "gratis": false,
+   "lat": -29.38492,
+   "lng": -50.87222,
+   "geoFonte": "endereco"
+  },
+  {
+   "id": "pizzaria-hector",
+   "nome": "Pizzaria Hector",
+   "categoria": "comer",
+   "subcategoria": "pizza-massas",
+   "descricao": "Pizza temática estilo Harry Potter",
+   "endereco": "Av. Borges de Medeiros, 1791, Centro (endereço conflita)",
+   "site": null,
+   "telefone": null,
+   "horario": "Diário 18h–23h",
+   "reserva": "Obrigatória para a opção com show",
+   "preco": "A partir de R$ 229,90",
+   "criancas": "não informado",
+   "confianca": "baixa",
+   "gratis": false,
+   "lat": -29.38608,
+   "lng": -50.87412,
+   "geoFonte": "endereco"
+  },
+  {
+   "id": "sopas-segredos-de-gramado",
+   "nome": "Sopas Segredos de Gramado",
+   "categoria": "comer",
+   "subcategoria": "restaurante",
+   "descricao": "Sopas no pão, inclui capeletti",
+   "endereco": "Rua São Pedro, 220, Centro (mesma rua do hotel)",
+   "site": null,
+   "telefone": null,
+   "horario": null,
+   "reserva": "Não confirmada",
+   "preco": "R$ 25 a R$ 40 por sopa",
+   "criancas": "Rápido e barato",
+   "confianca": "baixa",
+   "gratis": false,
+   "lat": -29.37618,
+   "lng": -50.877,
+   "geoFonte": "endereco"
+  },
+  {
+   "id": "torre-cafe-restaurante",
+   "nome": "Torre Café & Restaurante",
+   "categoria": "comer",
+   "subcategoria": "restaurante",
+   "descricao": "Casual, pratos individuais",
+   "endereco": "R. João Fisch Sobrinho, 135, Centro, Gramado",
+   "site": null,
+   "telefone": null,
+   "horario": null,
+   "reserva": "Não confirmada",
+   "preco": "R$ 28 a R$ 50 por prato",
+   "criancas": "Rápido e barato",
+   "confianca": "baixa",
+   "gratis": false,
+   "lat": -29.38105,
+   "lng": -50.86768,
+   "geoFonte": "endereco"
+  },
+  {
+   "id": "bella-gramado",
+   "nome": "Bella Gramado",
+   "categoria": "comer",
+   "subcategoria": "restaurante",
+   "descricao": "Buffet por quilo, self-service",
+   "endereco": "Av. Borges de Medeiros, 1320, Centro, Gramado",
+   "site": null,
+   "telefone": null,
+   "horario": null,
+   "reserva": "Não se aplica",
+   "preco": "R$ 55 a R$ 75 o kg",
+   "criancas": "Boa para crianças, rápido",
+   "confianca": "baixa",
+   "gratis": false,
+   "lat": -29.3797,
+   "lng": -50.87298,
+   "geoFonte": "endereco"
+  },
+  {
+   "id": "bela-vista-cafe-colonial",
+   "nome": "Bela Vista Café Colonial",
+   "categoria": "comer",
+   "subcategoria": "cafe-colonial",
+   "descricao": "Café colonial, rodízio de massas, chocolate quente",
+   "endereco": "Av. das Hortênsias, 3500, Vila Suíça, Gramado",
+   "site": "https://ingressos.belavista.tur.br",
+   "telefone": "(54) 3286-1608",
+   "horario": "Seg a sex 11h–23h; sáb e dom 10h–23h (2025)",
+   "reserva": "Compra antecipada no site",
+   "preco": "R$ 140 (jul/2025)",
+   "criancas": "Não mencionado",
+   "confianca": "guia",
+   "gratis": false,
+   "lat": -29.37843,
+   "lng": -50.86584,
+   "geoFonte": "endereco"
+  },
+  {
+   "id": "cafe-coelho-colonial",
+   "nome": "Café Coelho Colonial",
+   "categoria": "comer",
+   "subcategoria": "cafe-colonial",
+   "descricao": "Café colonial",
+   "endereco": "Av. das Hortênsias, 5433, Gramado",
+   "site": null,
+   "telefone": "(54) 3286-2538",
+   "horario": "Diário 11h–20h (2025)",
+   "reserva": null,
+   "preco": "R$ 126 por adulto (jul/2025)",
+   "criancas": "Não mencionado",
+   "confianca": "guia",
+   "gratis": false,
+   "lat": -29.36117,
+   "lng": -50.85038,
+   "geoFonte": "endereco"
+  },
+  {
+   "id": "torre-cafe-colonial",
+   "nome": "Torre Café Colonial",
+   "categoria": "comer",
+   "subcategoria": "cafe-colonial",
+   "descricao": "Café colonial",
+   "endereco": "Av. das Hortênsias, 2174, Vila Suíça, Gramado",
+   "site": null,
+   "telefone": "(54) 3286-1921",
+   "horario": "Ter a dom 10h–18h (2025)",
+   "reserva": null,
+   "preco": "R$ 54,90 em promoção (jul/2025)",
+   "criancas": "Não mencionado",
+   "confianca": "baixa",
+   "gratis": false,
+   "lat": -29.37843,
+   "lng": -50.86584,
+   "geoFonte": "endereco"
+  },
+  {
+   "id": "gramado-cafe-colonial",
+   "nome": "Gramado Café Colonial",
+   "categoria": "comer",
+   "subcategoria": "cafe-colonial",
+   "descricao": "Café colonial amplo (fica em Canela)",
+   "endereco": "Av. Dom Luiz Guanella, 1168, Vila Suíça, Canela",
+   "site": null,
+   "telefone": "(54) 3282-2317",
+   "horario": "Diário 11h30–20h (2025)",
+   "reserva": "Compra antecipada online recomendada",
+   "preco": "R$ 115 antecipado (jul/2025)",
+   "criancas": "Menores de 5 anos não pagam",
+   "confianca": "guia",
+   "gratis": false,
+   "lat": -29.35971,
+   "lng": -50.83788,
+   "geoFonte": "nome"
+  },
+  {
+   "id": "cervejaria-farol",
+   "nome": "Cervejaria Farol",
+   "categoria": "bebidas",
+   "subcategoria": "cerveja",
+   "descricao": "Pub em Canela, chope, pizza, hambúrguer; tour Farol Beer Experience de 45 min",
+   "endereco": "Rua Severino Inocente Zini, 150, Vila Mina, Canela",
+   "site": "http://www.cervejariafarol.com.br",
+   "telefone": "(54) 99205-2794",
+   "horario": "Ter a sáb 11h–23h30; dom 11h–17h (site oficial)",
+   "reserva": "O tour exige reserva (online ou WhatsApp)",
+   "preco": "Preço do tour não confirmado",
+   "criancas": "Crianças acompanham o tour; degustação só para maiores; área kids a confirmar",
+   "confianca": "oficial",
+   "gratis": false,
+   "lat": -29.34312,
+   "lng": -50.78909,
+   "geoFonte": "nome"
+  },
+  {
+   "id": "kraustin-bier-burguer",
+   "nome": "Kraustin Bier & Burguer",
+   "categoria": "bebidas",
+   "subcategoria": "cerveja",
+   "descricao": "Cerveja artesanal e hambúrguer em Canela",
+   "endereco": "Rua Dona Carlinda, 174, Centro, Canela",
+   "site": null,
+   "telefone": null,
+   "horario": null,
+   "reserva": null,
+   "preco": null,
+   "criancas": "Política não confirmada (a comida deve servir às crianças)",
+   "confianca": "baixa",
+   "gratis": false,
+   "lat": -29.36706,
+   "lng": -50.81149,
+   "geoFonte": "endereco"
+  },
+  {
+   "id": "rasen-bier-bier-park",
+   "nome": "Rasen Bier / Bier Park",
+   "categoria": "bebidas",
+   "subcategoria": "cerveja",
+   "descricao": "Cervejaria na Rua Coberta",
+   "endereco": "Rua Madre Verônica (Rua Coberta), 50, Centro, Gramado (dado antigo)",
+   "site": null,
+   "telefone": "(54) 3286-6886 (dado antigo)",
+   "horario": "Diário 10h–22h (dado antigo)",
+   "reserva": null,
+   "preco": "A partir de R$ 40 (dado antigo)",
+   "criancas": null,
+   "confianca": "baixa",
+   "gratis": false,
+   "lat": -29.37762,
+   "lng": -50.87144,
+   "geoFonte": "endereco"
+  },
+  {
+   "id": "gram-bier",
+   "nome": "Gram Bier",
+   "categoria": "bebidas",
+   "subcategoria": "cerveja",
+   "descricao": "Degustação de 4 estilos com espetáculo",
+   "endereco": "Av. das Hortênsias, 1122, Gramado (não confirmado)",
+   "site": null,
+   "telefone": null,
+   "horario": null,
+   "reserva": null,
+   "preco": null,
+   "criancas": null,
+   "confianca": "baixa",
+   "gratis": false,
+   "lat": -29.36861,
+   "lng": -50.8611,
+   "geoFonte": "endereco"
+  },
+  {
+   "id": "bus-bier-tour-brocker-turismo",
+   "nome": "Bus Bier Tour (Brocker Turismo)",
+   "categoria": "bebidas",
+   "subcategoria": "cerveja",
+   "descricao": "Ônibus por Rasen, Gram Bier e Farol, 5 cervejas por parada, 3h30",
+   "endereco": "Saída no centro de Gramado, em frente à agência Brocker",
+   "site": null,
+   "telefone": "reserva pela Bela Viagem",
+   "horario": "Ter, qui e sáb, à tarde (2024)",
+   "reserva": "Sim",
+   "preco": "não confirmado em R$",
+   "criancas": "Pouco atrativo para crianças de 4 e 7 anos",
+   "confianca": "baixa",
+   "gratis": false,
+   "lat": null,
+   "lng": null
+  },
+  {
+   "id": "prawer-chocolates",
+   "nome": "Prawer Chocolates",
+   "categoria": "doces",
+   "subcategoria": "chocolate",
+   "descricao": "Tour com degustação e chocolate quente na Casa da Velha Bruxa",
+   "endereco": "Av. das Hortênsias, 4120 ou 4100, Carniel, Gramado (endereço conflita)",
+   "site": "https://www.prawer.com.br",
+   "telefone": "WhatsApp +55 54 99919-8213",
+   "horario": "Tour pago: sáb, dom e feriados. Visita gratuita seg a sex 9h–11h e 14h–16h (blog, baixa confiança)",
+   "reserva": "Sim, pelo WhatsApp ou site",
+   "preco": "R$ 59 ou R$ 69; meia R$ 29,50 ou R$ 34,50",
+   "criancas": "Meia entrada; boa para crianças",
+   "confianca": "guia",
+   "gratis": false,
+   "lat": -29.36611,
+   "lng": -50.85925,
+   "geoFonte": "nome"
+  },
+  {
+   "id": "florybal-loja-conceito",
+   "nome": "Florybal Loja Conceito",
+   "categoria": "doces",
+   "subcategoria": "chocolate",
+   "descricao": "Chocolate caseiro, loja temática",
+   "endereco": "Av. Borges de Medeiros, 2771, Gramado",
+   "site": null,
+   "telefone": "(54) 3286-5833",
+   "horario": null,
+   "reserva": null,
+   "preco": null,
+   "criancas": "Loja lúdica",
+   "confianca": "baixa",
+   "gratis": false,
+   "lat": -29.36654,
+   "lng": -50.88031,
+   "geoFonte": "endereco"
+  },
+  {
+   "id": "florybal-casa-de-chocolate-canela",
+   "nome": "Florybal Casa de Chocolate (Canela)",
+   "categoria": "doces",
+   "subcategoria": "chocolate",
+   "descricao": "Chocolates e pista de patinação",
+   "endereco": "Av. Ernani Kroeff Fleck, 264, Remanso, Canela",
+   "site": null,
+   "telefone": "(54) 3282-9239",
+   "horario": null,
+   "reserva": null,
+   "preco": null,
+   "criancas": "Tem atrações para crianças",
+   "confianca": "baixa",
+   "gratis": false,
+   "lat": null,
+   "lng": null
+  },
+  {
+   "id": "lugano-loja",
+   "nome": "Lugano (loja)",
+   "categoria": "doces",
+   "subcategoria": "chocolate",
+   "descricao": "Chocolate quente, esculturas, degustação",
+   "endereco": "Av. Borges de Medeiros, 2784, Gramado",
+   "site": null,
+   "telefone": null,
+   "horario": null,
+   "reserva": null,
+   "preco": null,
+   "criancas": "Atração com esculturas",
+   "confianca": "baixa",
+   "gratis": false,
+   "lat": -29.37798,
+   "lng": -50.87399,
+   "geoFonte": "endereco"
+  },
+  {
+   "id": "chocolate-planalto",
+   "nome": "Chocolate Planalto",
+   "categoria": "doces",
+   "subcategoria": "chocolate",
+   "descricao": "Barras e visita guiada",
+   "endereco": "Av. Borges de Medeiros, 2918, Gramado",
+   "site": null,
+   "telefone": "(54) 3286-2268",
+   "horario": null,
+   "reserva": null,
+   "preco": null,
+   "criancas": null,
+   "confianca": "baixa",
+   "gratis": false,
+   "lat": -29.37156,
+   "lng": -50.87704,
+   "geoFonte": "endereco"
+  },
+  {
+   "id": "caracol-chocolates-reino-do-chocolate",
+   "nome": "Caracol Chocolates (Reino do Chocolate)",
+   "categoria": "doces",
+   "subcategoria": "chocolate",
+   "descricao": "Oficina para fazer o próprio chocolate",
+   "endereco": "Av. Borges de Medeiros, 2935, Gramado",
+   "site": null,
+   "telefone": "(54) 3295-5680",
+   "horario": null,
+   "reserva": null,
+   "preco": null,
+   "criancas": "Atração temática",
+   "confianca": "baixa",
+   "gratis": false,
+   "lat": -29.37156,
+   "lng": -50.87704,
+   "geoFonte": "endereco"
+  },
+  {
+   "id": "mini-mundo",
+   "nome": "Mini Mundo",
+   "categoria": "atracao",
+   "subcategoria": null,
+   "descricao": "Parque de miniaturas, plano, com área infantil",
+   "endereco": "Rua Horácio Cardoso, 291, Planalto, Gramado",
+   "site": "https://www.minimundo.com.br",
+   "telefone": "(54) 3286-4055",
+   "horario": "Cerca de 9h–17h (blogs)",
+   "reserva": "Online opcional",
+   "preco": "A partir de R$ 58 (guia antigo)",
+   "criancas": "Ótimo para crianças; fácil para a avó; 1h30 a 2h",
+   "confianca": "guia",
+   "gratis": false,
+   "lat": -29.38452,
+   "lng": -50.87537,
+   "geoFonte": "endereco"
+  },
+  {
+   "id": "snowland",
+   "nome": "Snowland",
+   "categoria": "atracao",
+   "subcategoria": null,
+   "descricao": "Parque de neve coberto; Kids Area de 0 a 7 anos",
+   "endereco": "RS-235, 9009, Carazal, Gramado",
+   "site": "https://www.snowland.com.br",
+   "telefone": null,
+   "horario": "10h–17h; fecha às quartas em baixa temporada (não confirmado)",
+   "reserva": "Online antecipado",
+   "preco": "Adulto a partir de R$ 199; criança R$ 79 (2023). Fontes divergem",
+   "criancas": "Ótimo; avó: frio e piso gelado; 3 a 4h; várias atrações exigem 1,15 m ou mais",
+   "confianca": "baixa",
+   "gratis": false,
+   "lat": -29.39385,
+   "lng": -50.92148,
+   "geoFonte": "endereco"
+  },
+  {
+   "id": "gramado-zoo",
+   "nome": "Gramado Zoo",
+   "categoria": "atracao",
+   "subcategoria": null,
+   "descricao": "Zoológico com animais nativos e exóticos",
+   "endereco": "ERS-115, km 35, Várzea Grande, Gramado",
+   "site": "https://www.gramadozoo.com.br",
+   "telefone": "(54) 3421-0800",
+   "horario": null,
+   "reserva": "Provável online",
+   "preco": null,
+   "criancas": "Ótimo; cerca de 3h",
+   "confianca": "guia",
+   "gratis": false,
+   "lat": -29.4165,
+   "lng": -50.87132,
+   "geoFonte": "endereco"
+  },
+  {
+   "id": "mundo-criamigos",
+   "nome": "Mundo Criamigos",
+   "categoria": "atracao",
+   "subcategoria": null,
+   "descricao": "Parque infantil com cerca de 50 atrações",
+   "endereco": "Endereço de visitação não confirmado (sede na Rua São Pedro, 663)",
+   "site": null,
+   "telefone": null,
+   "horario": "Cerca de 10h–17h; dias divergem entre fontes",
+   "reserva": "Online",
+   "preco": "Adulto R$ 120 em promoção (2024)",
+   "criancas": "Ótimo; cerca de 3h",
+   "confianca": "baixa",
+   "gratis": false,
+   "lat": null,
+   "lng": null
+  },
+  {
+   "id": "dreamland-museu-de-cera",
+   "nome": "Dreamland Museu de Cera",
+   "categoria": "atracao",
+   "subcategoria": null,
+   "descricao": "Figuras de cera e cenários de cinema",
+   "endereco": "Av. das Hortênsias, 5507, Gramado",
+   "site": null,
+   "telefone": null,
+   "horario": "8h–18h30 (guia)",
+   "reserva": "Online",
+   "preco": "Passaporte R$ 240 cheio (2026)",
+   "criancas": "Regular; pode assustar",
+   "confianca": "baixa",
+   "gratis": false,
+   "lat": -29.36097,
+   "lng": -50.8486,
+   "geoFonte": "endereco"
+  },
+  {
+   "id": "parque-olivas-de-gramado",
+   "nome": "Parque Olivas de Gramado",
+   "categoria": "atracao",
+   "subcategoria": null,
+   "descricao": "Parque contemplativo com museu de motos",
+   "endereco": "R. Vereador José Alexandre Benetti, 1808, Linha Nova, Gramado",
+   "site": null,
+   "telefone": null,
+   "horario": null,
+   "reserva": null,
+   "preco": "R$ 99 (2022)",
+   "criancas": "Fraco para crianças",
+   "confianca": "baixa",
+   "gratis": false,
+   "lat": -29.30385,
+   "lng": -50.93503,
+   "geoFonte": "nome"
+  },
+  {
+   "id": "alpen-park-canela",
+   "nome": "Alpen Park (Canela)",
+   "categoria": "atracao",
+   "subcategoria": null,
+   "descricao": "Parque de aventura; trenó; Alpen Kids de 0,80 a 1,29 m",
+   "endereco": "Rodovia Arnaldo Oppitz, 901, Canela",
+   "site": "https://www.alpenpark.com.br",
+   "telefone": "(54) 3282-9752",
+   "horario": "9h–17h (site oficial); novo trenó em obras em 2026, confira fechamento",
+   "reserva": "Online com desconto",
+   "preco": "Passaporte R$ 168; Kids R$ 75 (set/2026). Estacionamento R$ 30",
+   "criancas": "Ótimo com Kids; 3 a 4h",
+   "confianca": "guia",
+   "gratis": false,
+   "lat": -29.36155,
+   "lng": -50.78546,
+   "geoFonte": "nome"
+  },
+  {
+   "id": "parque-do-caracol-cascata-canela",
+   "nome": "Parque do Caracol, cascata (Canela)",
+   "categoria": "atracao",
+   "subcategoria": null,
+   "descricao": "Cascata de 131 m, mirante e trilha",
+   "endereco": "Rodovia RS-466, km 0, Caracol, Canela",
+   "site": "https://parquecaracol.com.br",
+   "telefone": "(54) 3699-9695",
+   "horario": "Seg a sex 9h–17h (última entrada 16h30); fim de semana e feriado 9h–18h (última 17h30)",
+   "reserva": "Online",
+   "preco": "R$ 75 a R$ 114 (fontes divergem)",
+   "criancas": "Mirante fácil; a descida cansa; 2 a 3h",
+   "confianca": "oficial",
+   "gratis": false,
+   "lat": null,
+   "lng": null
+  },
+  {
+   "id": "catedral-de-pedra-canela",
+   "nome": "Catedral de Pedra (Canela)",
+   "categoria": "atracao",
+   "subcategoria": "gratis",
+   "descricao": "Catedral gótica com show de luzes à noite",
+   "endereco": "Praça João Pessoa, centro de Canela (não confirmado)",
+   "site": null,
+   "telefone": null,
+   "horario": "8h–18h; luzes às 20h30 e 21h30 (varia)",
+   "reserva": "Não se aplica",
+   "preco": "Entrada grátis; torre cerca de R$ 20",
+   "criancas": "Visita curta, 30 a 45 min",
+   "confianca": "baixa",
+   "gratis": true,
+   "lat": -29.36375,
+   "lng": -50.8092,
+   "geoFonte": "nome"
+  },
+  {
+   "id": "skyglass-canela",
+   "nome": "Skyglass Canela",
+   "categoria": "atracao",
+   "subcategoria": null,
+   "descricao": "Mirante com plataforma de vidro",
+   "endereco": null,
+   "site": null,
+   "telefone": null,
+   "horario": null,
+   "reserva": null,
+   "preco": "R$ 100 (2022)",
+   "criancas": "Regular (altura)",
+   "confianca": "baixa",
+   "gratis": false,
+   "lat": -29.27019,
+   "lng": -50.84418,
+   "geoFonte": "endereco"
+  },
+  {
+   "id": "bondinhos-aereos-canela",
+   "nome": "Bondinhos Aéreos (Canela)",
+   "categoria": "atracao",
+   "subcategoria": null,
+   "descricao": "12 bondinhos sobre a cascata, 840 m (Parque da Serra)",
+   "endereco": "Estrada da Ferradura, 699, Canela (500 m depois do Parque do Caracol)",
+   "site": null,
+   "telefone": null,
+   "horario": "9h–17h ou 17h30 (fontes divergem)",
+   "reserva": "Online evita fila",
+   "preco": "R$ 70 (valor antigo)",
+   "criancas": null,
+   "confianca": "baixa",
+   "gratis": false,
+   "lat": -29.30797,
+   "lng": -50.84898,
+   "geoFonte": "endereco"
+  },
+  {
+   "id": "parque-knorr-aldeia-do-papai-noel",
+   "nome": "Parque Knorr / Aldeia do Papai Noel",
+   "categoria": "atracao",
+   "subcategoria": null,
+   "descricao": "Parque temático natalino",
+   "endereco": null,
+   "site": null,
+   "telefone": null,
+   "horario": null,
+   "reserva": null,
+   "preco": "Valores antigos",
+   "criancas": "Ótimo no Natal; operação em 2026 a confirmar",
+   "confianca": "baixa",
+   "gratis": false,
+   "lat": null,
+   "lng": null
+  },
+  {
+   "id": "lago-negro",
+   "nome": "Lago Negro",
+   "categoria": "atracao",
+   "subcategoria": "gratis",
+   "descricao": "Lago com pedalinhos e caminhada plana",
+   "endereco": "R. A. J. Renner, Gramado",
+   "site": null,
+   "telefone": null,
+   "horario": "Livre; pedalinho não confirmado",
+   "reserva": "Não se aplica",
+   "preco": "Entrada grátis; pedalinho pago",
+   "criancas": "Bom; avó fácil; 1 a 1h30",
+   "confianca": "guia",
+   "gratis": true,
+   "lat": null,
+   "lng": null
+  },
+  {
+   "id": "rua-coberta",
+   "nome": "Rua Coberta",
+   "categoria": "atracao",
+   "subcategoria": "gratis",
+   "descricao": "Galeria com lojas e cafés; Palco Rua Coberta do Natal Luz",
+   "endereco": "R. Madre Verônica, Centro, Gramado",
+   "site": null,
+   "telefone": null,
+   "horario": "Palco: ter a dom 18h30; sáb e dom também 11h30",
+   "reserva": "Não se aplica",
+   "preco": "Grátis",
+   "criancas": "Bom; avó fácil; 1h",
+   "confianca": "guia",
+   "gratis": true,
+   "lat": null,
+   "lng": null
+  },
+  {
+   "id": "praca-das-etnias-vila-de-natal",
+   "nome": "Praça das Etnias / Vila de Natal",
+   "categoria": "atracao",
+   "subcategoria": "gratis",
+   "descricao": "Mercado de Natal, comidas e Casa do Papai Noel",
+   "endereco": "Praça das Etnias, Centro, Gramado",
+   "site": "https://www.natalluzdegramado.com.br",
+   "telefone": null,
+   "horario": "9h–21h todos os dias; Papai Noel costuma atender das 14h às 18h",
+   "reserva": "Não se aplica",
+   "preco": "Entrada grátis",
+   "criancas": "Ótimo; avó fácil; 1h30 a 2h",
+   "confianca": "guia",
+   "gratis": true,
+   "lat": null,
+   "lng": null
+  },
+  {
+   "id": "igreja-sao-pedro",
+   "nome": "Igreja São Pedro",
+   "categoria": "atracao",
+   "subcategoria": "gratis",
+   "descricao": "Igreja matriz",
+   "endereco": "Av. Borges de Medeiros, Centro, Gramado",
+   "site": null,
+   "telefone": null,
+   "horario": "Acesso livre segundo um guia",
+   "reserva": "Não se aplica",
+   "preco": "Grátis",
+   "criancas": "Visita curta",
+   "confianca": "baixa",
+   "gratis": true,
+   "lat": null,
+   "lng": null
+  },
+  {
+   "id": "parada-de-natal",
+   "nome": "Parada de Natal",
+   "categoria": "atracao",
+   "subcategoria": "gratis",
+   "descricao": "Desfile de personagens natalinos pela avenida",
+   "endereco": "Av. Borges de Medeiros, Centro, Gramado",
+   "site": "https://www.natalluzdegramado.com.br",
+   "telefone": null,
+   "horario": "Sex, sáb e dom às 15h",
+   "reserva": "Não se aplica",
+   "preco": "Grátis",
+   "criancas": "Ótimo para crianças",
+   "confianca": "guia",
+   "gratis": true,
+   "lat": null,
+   "lng": null
+  },
+  {
+   "id": "acendimento-das-luzes",
+   "nome": "Acendimento das Luzes",
+   "categoria": "atracao",
+   "subcategoria": "gratis",
+   "descricao": "Show de acendimento do Natal Luz",
+   "endereco": "Palácio dos Festivais, Av. Borges de Medeiros, em frente à Rua Coberta, Gramado",
+   "site": "https://www.natalluzdegramado.com.br",
+   "telefone": null,
+   "horario": "Todo dia às 20h",
+   "reserva": "Não se aplica",
+   "preco": "Grátis",
+   "criancas": "Livre",
+   "confianca": "guia",
+   "gratis": true,
+   "lat": null,
+   "lng": null
+  },
+  {
+   "id": "grande-desfile-de-natal",
+   "nome": "Grande Desfile de Natal",
+   "categoria": "atracao",
+   "subcategoria": null,
+   "descricao": "Espetáculo coberto no Expogramado, cerca de 60 min",
+   "endereco": "Expogramado, ginásio coberto, Gramado",
+   "site": "https://www.natalluzdegramado.com.br",
+   "telefone": null,
+   "horario": "Sex 20/11 às 20h (família só vai nesse dia)",
+   "reserva": "Ingresso online",
+   "preco": "Inteira R$ 420 (outro site R$ 462)",
+   "criancas": "Até 4 anos grátis no colo (regra mais citada)",
+   "confianca": "guia",
+   "gratis": false,
+   "lat": null,
+   "lng": null
+  },
+  {
+   "id": "nativitaten-show-do-lago",
+   "nome": "Nativitaten, Show do Lago",
+   "categoria": "atracao",
+   "subcategoria": null,
+   "descricao": "Espetáculo no lago do Serra Park, boa parte ao ar livre",
+   "endereco": "Serra Park, Três Pinheiros, Gramado (endereço conflita)",
+   "site": "https://www.natalluzdegramado.com.br",
+   "telefone": null,
+   "horario": "Qui e dom às 20h (padrão semanal)",
+   "reserva": "Ingresso online",
+   "preco": "Inteira R$ 360 (outro site R$ 396)",
+   "criancas": "Até 4 anos grátis no colo; noite fria",
+   "confianca": "guia",
+   "gratis": false,
+   "lat": null,
+   "lng": null
+  },
+  {
+   "id": "o-brilho-do-natal",
+   "nome": "O Brilho do Natal",
+   "categoria": "atracao",
+   "subcategoria": null,
+   "descricao": "Espetáculo de luzes no Palácio dos Festivais",
+   "endereco": "Palácio dos Festivais, Av. Borges de Medeiros, em frente à Rua Coberta, Gramado",
+   "site": "https://www.natalluzdegramado.com.br",
+   "telefone": null,
+   "horario": "Qui a dom às 15h e 18h",
+   "reserva": "Ingresso online",
+   "preco": "R$ 120",
+   "criancas": "Duração e idade não confirmadas",
+   "confianca": "guia",
+   "gratis": false,
+   "lat": null,
+   "lng": null
+  },
+  {
+   "id": "terra-magica-florybal-canela",
+   "nome": "Terra Mágica Florybal (Canela)",
+   "categoria": "atracao",
+   "subcategoria": null,
+   "descricao": "Parque temático infantil",
+   "endereco": "RS-466, km 5, Canela",
+   "site": null,
+   "telefone": null,
+   "horario": "9h–16h30 (guia)",
+   "reserva": "Online evita fila",
+   "preco": "Adulto cerca de R$ 160; 4 a 15 anos cerca de R$ 80 (sem data)",
+   "criancas": null,
+   "confianca": "baixa",
+   "gratis": false,
+   "lat": null,
+   "lng": null
+  },
+  {
+   "id": "fonte-do-amor-eterno",
+   "nome": "Fonte do Amor Eterno",
+   "categoria": "atracao",
+   "subcategoria": "gratis",
+   "descricao": "Fonte ao lado da Igreja São Pedro",
+   "endereco": "Av. Borges de Medeiros, 2659, Centro, Gramado",
+   "site": null,
+   "telefone": null,
+   "horario": "Livre, 24h",
+   "reserva": "Não se aplica",
+   "preco": "Grátis",
+   "criancas": null,
+   "confianca": "guia",
+   "gratis": true,
+   "lat": null,
+   "lng": null
+  },
+  {
+   "id": "rua-torta",
+   "nome": "Rua Torta",
+   "categoria": "atracao",
+   "subcategoria": "gratis",
+   "descricao": "Rua curva com casas e flores",
+   "endereco": "Rua Emílio Sorgetz, Gramado (fonte única)",
+   "site": null,
+   "telefone": null,
+   "horario": "Livre",
+   "reserva": "Não se aplica",
+   "preco": "Grátis",
+   "criancas": null,
+   "confianca": "baixa",
+   "gratis": true,
+   "lat": null,
+   "lng": null
+  },
+  {
+   "id": "avenida-borges-de-medeiros",
+   "nome": "Avenida Borges de Medeiros",
+   "categoria": "atracao",
+   "subcategoria": "gratis",
+   "descricao": "Avenida principal do centro, lojas e restaurantes",
+   "endereco": "Av. Borges de Medeiros, Centro, Gramado",
+   "site": null,
+   "telefone": null,
+   "horario": "Livre",
+   "reserva": "Não se aplica",
+   "preco": "Grátis",
+   "criancas": null,
+   "confianca": "guia",
+   "gratis": true,
+   "lat": null,
+   "lng": null
+  },
+  {
+   "id": "pao-com-linguica",
+   "nome": "Pão com linguiça",
+   "categoria": "comer",
+   "subcategoria": "restaurante",
+   "descricao": "Pão artesanal com linguiça e queijo, forno à lenha",
+   "endereco": "Praça das Etnias, Centro, Gramado (relato de visitante)",
+   "site": null,
+   "telefone": null,
+   "horario": null,
+   "reserva": "Não se aplica",
+   "preco": "Cerca de R$ 8 (relato antigo)",
+   "criancas": null,
+   "confianca": "baixa",
+   "gratis": false,
+   "lat": null,
+   "lng": null
+  },
+  {
+   "id": "garden-park",
+   "nome": "Garden Park",
+   "categoria": "atracao",
+   "subcategoria": null,
+   "descricao": "Parque de flores e jardins",
+   "endereco": "Estrada Profa. Elvira Apolo Benetti, 1699, Gramado",
+   "site": null,
+   "telefone": null,
+   "horario": "10h–18h ou 9h–17h (fontes divergem)",
+   "reserva": null,
+   "preco": "Adulto R$ 130; criança e idoso R$ 80 (pode estar antigo)",
+   "criancas": null,
+   "confianca": "baixa",
+   "gratis": false,
+   "lat": null,
+   "lng": null
+  },
+  {
+   "id": "vinicola-jolimont",
+   "nome": "Vinícola Jolimont",
+   "categoria": "atracao",
+   "subcategoria": null,
+   "descricao": "Visita e degustação de 7 vinhos, cerca de 1h",
+   "endereco": "Estrada Morro Calçado, 1420, Canela",
+   "site": null,
+   "telefone": null,
+   "horario": "Diário 9h–16h (guia)",
+   "reserva": null,
+   "preco": "Tour a partir de R$ 138 por adulto",
+   "criancas": null,
+   "confianca": "baixa",
+   "gratis": false,
+   "lat": null,
+   "lng": null
+  },
+  {
+   "id": "mundo-a-vapor-canela",
+   "nome": "Mundo a Vapor (Canela)",
+   "categoria": "atracao",
+   "subcategoria": null,
+   "descricao": "Museu de miniaturas a vapor, com volta de trem e roda-gigante",
+   "endereco": "Av. Dom Luiz Guanella, 1247, Carniel, Canela",
+   "site": "https://www.mundoavapor.com.br",
+   "telefone": "(54) 3699-8979",
+   "horario": "Qui a ter 9h–17h (outra fonte até 20h); fecha às quartas",
+   "reserva": null,
+   "preco": "Passaporte R$ 129 (site oficial segundo um artigo); promoção R$ 99,90",
+   "criancas": null,
+   "confianca": "baixa",
+   "gratis": false,
+   "lat": null,
+   "lng": null
+  },
+  {
+   "id": "roda-gigante-roda-canela",
+   "nome": "Roda Gigante (Roda Canela)",
+   "categoria": "atracao",
+   "subcategoria": null,
+   "descricao": "Roda-gigante de 52 m com 30 cabines, entre Gramado e Canela",
+   "endereco": "Av. das Hortênsias, RS-235, km 13,5",
+   "site": null,
+   "telefone": null,
+   "horario": null,
+   "reserva": null,
+   "preco": "Ingresso adulto R$ 65 com uma volta (valor antigo)",
+   "criancas": null,
+   "confianca": "baixa",
+   "gratis": false,
+   "lat": null,
+   "lng": null
+  },
+  {
+   "id": "sabor-da-nonna",
+   "nome": "Sabor da Nonna",
+   "categoria": "comer",
+   "subcategoria": "restaurante",
+   "descricao": "Buffet com comida caseira e italiana, barato",
+   "endereco": "Gramado (endereço não encontrado)",
+   "site": null,
+   "telefone": null,
+   "horario": null,
+   "reserva": null,
+   "preco": "Barato (sem valor)",
+   "criancas": null,
+   "confianca": "baixa",
+   "gratis": false,
+   "lat": null,
+   "lng": null
+  },
+  {
+   "id": "sabor-de-casa",
+   "nome": "Sabor de Casa",
+   "categoria": "comer",
+   "subcategoria": "restaurante",
+   "descricao": "Self-service",
+   "endereco": null,
+   "site": null,
+   "telefone": null,
+   "horario": null,
+   "reserva": null,
+   "preco": null,
+   "criancas": null,
+   "confianca": "baixa",
+   "gratis": false,
+   "lat": null,
+   "lng": null
+  },
+  {
+   "id": "campo-e-vinho",
+   "nome": "Campo e Vinho",
+   "categoria": "comer",
+   "subcategoria": "restaurante",
+   "descricao": "Self-service",
+   "endereco": null,
+   "site": null,
+   "telefone": null,
+   "horario": null,
+   "reserva": null,
+   "preco": null,
+   "criancas": null,
+   "confianca": "baixa",
+   "gratis": false,
+   "lat": null,
+   "lng": null
+  },
+  {
+   "id": "serra-grill",
+   "nome": "Serra Grill",
+   "categoria": "comer",
+   "subcategoria": "restaurante",
+   "descricao": "Self-service",
+   "endereco": "Gramado (endereço não confirmado)",
+   "site": null,
+   "telefone": null,
+   "horario": null,
+   "reserva": "Não se aplica",
+   "preco": "Self-service (valor não confirmado)",
+   "criancas": null,
+   "confianca": "baixa",
+   "gratis": false,
+   "lat": null,
+   "lng": null
+  },
+  {
+   "id": "hotel-fioreze-centro",
+   "nome": "Hotel Fioreze Centro",
+   "categoria": "logistica",
+   "subcategoria": null,
+   "descricao": "Hotel no centro, perto da Rua Coberta",
+   "endereco": "Rua São Pedro, 438, Centro, Gramado",
+   "site": null,
+   "telefone": "+55 54 3286-5517",
+   "horario": "Check-in a partir das 14h; check-out até 12h",
+   "reserva": null,
+   "preco": "Estacionamento R$ 34 por dia",
+   "criancas": null,
+   "confianca": "oficial",
+   "gratis": false,
+   "lat": null,
+   "lng": null
+  },
+  {
+   "id": "aeroporto-salgado-filho-poa",
+   "nome": "Aeroporto Salgado Filho (POA)",
+   "categoria": "logistica",
+   "subcategoria": null,
+   "descricao": "Aeroporto de Porto Alegre, a ~124 km de Gramado",
+   "endereco": "Av. Severo Dullius, 90010, São João, Porto Alegre",
+   "site": null,
+   "telefone": null,
+   "horario": null,
+   "reserva": "Não se aplica",
+   "preco": null,
+   "criancas": null,
+   "confianca": "guia",
+   "gratis": false,
+   "lat": null,
+   "lng": null
+  },
+  {
+   "id": "localiza-retirada-e-devolucao",
+   "nome": "Localiza (retirada e devolução)",
+   "categoria": "logistica",
+   "subcategoria": null,
+   "descricao": "Locadora do carro, Porto Alegre",
+   "endereco": "Av. dos Estados, 3852, Anchieta, Porto Alegre",
+   "site": null,
+   "telefone": "0800 979 2020",
+   "horario": "Aberta 24h; retirada vale até 1h após 18:00",
+   "reserva": null,
+   "preco": null,
+   "criancas": null,
+   "confianca": "guia",
+   "gratis": false,
+   "lat": null,
+   "lng": null
+  },
+  {
+   "id": "bustour-onibus-turistico-alternativa-ao-carro",
+   "nome": "BusTour (ônibus turístico), alternativa ao carro",
+   "categoria": "logistica",
+   "subcategoria": null,
+   "descricao": "Hop on hop off entre Gramado e Canela. Não para em todo lugar e tem horário restrito",
+   "endereco": "Pontos de parada em Gramado e Canela (confirmar no site)",
+   "site": "https://www.bustour.com.br",
+   "telefone": null,
+   "horario": "Cerca de 9h–18h na alta temporada; percurso completo cerca de 3h",
+   "reserva": "Bilhete de 1, 2 ou 3 dias",
+   "preco": "R$ 69 a R$ 88 por dia (fontes divergem)",
+   "criancas": null,
+   "confianca": "baixa",
+   "gratis": false,
+   "lat": null,
+   "lng": null
+  },
+  {
+   "id": "casa-figueira",
+   "nome": "Casa Figueira",
+   "categoria": "comer",
+   "subcategoria": "restaurante",
+   "descricao": "Buffet livre com vista panorâmica",
+   "endereco": "Gramado (endereço não encontrado)",
+   "site": null,
+   "telefone": null,
+   "horario": "Seg a sáb 11h–13h30",
+   "reserva": null,
+   "preco": "R$ 57 no buffet livre; desconto para crianças",
+   "criancas": null,
+   "confianca": "baixa",
+   "gratis": false,
+   "lat": null,
+   "lng": null
+  }
+ ],
+ "roteiros": [
+  {
+   "id": "natal-luz-classico",
+   "nome": "Natal Luz clássico",
+   "dias": [
+    {
+     "ordem": 1,
+     "titulo": "Chegada",
+     "itens": [
+      {
+       "hora": "15:55",
+       "titulo": "Chegada no aeroporto de Porto Alegre",
+       "nota": null,
+       "tipo": null,
+       "lugarId": null
+      },
+      {
+       "hora": "18:15",
+       "titulo": "Pegar o carro",
+       "nota": "Locadora no aeroporto. Confira o horário limite.",
+       "tipo": null,
+       "lugarId": null
+      },
+      {
+       "hora": "19:00",
+       "titulo": "Estrada para Gramado",
+       "nota": "2h a 2h30. Levar lanche.",
+       "tipo": null,
+       "lugarId": null
+      },
+      {
+       "hora": "21:30",
+       "titulo": "Check-in no hotel",
+       "nota": "Rua São Pedro, 438",
+       "tipo": null,
+       "lugarId": "hotel-fioreze-centro"
+      }
+     ]
+    },
+    {
+     "ordem": 2,
+     "titulo": "Mini Mundo e Papai Noel",
+     "itens": [
+      {
+       "hora": "10:00",
+       "titulo": "Mini Mundo",
+       "nota": "Planalto. 1h30.",
+       "tipo": null,
+       "lugarId": "mini-mundo"
+      },
+      {
+       "hora": "12:30",
+       "titulo": "Almoço na Cantina Pastasciutta",
+       "nota": "Reservar.",
+       "tipo": null,
+       "lugarId": "cantina-pastasciutta"
+      },
+      {
+       "hora": "14:30",
+       "titulo": "Vila de Natal e Papai Noel",
+       "nota": "Praça das Etnias",
+       "tipo": "gratis",
+       "lugarId": "praca-das-etnias-vila-de-natal"
+      },
+      {
+       "hora": "16:00",
+       "titulo": "Descanso",
+       "nota": null,
+       "tipo": null,
+       "lugarId": null
+      },
+      {
+       "hora": "18:00",
+       "titulo": "Jantar no Cara de Mau",
+       "nota": "Rua Cel. João Corrêa, 394. Reservar online.",
+       "tipo": "ingresso",
+       "lugarId": "cara-de-mau"
+      }
+     ]
+    },
+    {
+     "ordem": 3,
+     "titulo": "Feriado e Desfile",
+     "itens": [
+      {
+       "hora": "10:30",
+       "titulo": "Lago Negro e Rua Coberta",
+       "nota": null,
+       "tipo": "gratis",
+       "lugarId": "lago-negro"
+      },
+      {
+       "hora": "12:30",
+       "titulo": "Almoço de fondue",
+       "nota": "Maximilia. Reservar.",
+       "tipo": null,
+       "lugarId": null
+      },
+      {
+       "hora": "15:00",
+       "titulo": "Parada de Natal",
+       "nota": "Av. Borges de Medeiros",
+       "tipo": "gratis",
+       "lugarId": "parada-de-natal"
+      },
+      {
+       "hora": "16:30",
+       "titulo": "Descanso",
+       "nota": null,
+       "tipo": null,
+       "lugarId": null
+      },
+      {
+       "hora": "20:00",
+       "titulo": "Grande Desfile de Natal",
+       "nota": "Expogramado, Av. Borges de Medeiros, 4111. Ginásio coberto. R$ 420.",
+       "tipo": "ingresso",
+       "lugarId": "grande-desfile-de-natal"
+      }
+     ]
+    },
+    {
+     "ordem": 4,
+     "titulo": "Terra Mágica e luzes",
+     "itens": [
+      {
+       "hora": "10:00",
+       "titulo": "Terra Mágica Florybal",
+       "nota": "Canela, RS-466 km 5. Até ~14:30, almoço lá.",
+       "tipo": "ingresso",
+       "lugarId": "terra-magica-florybal-canela"
+      },
+      {
+       "hora": "15:00",
+       "titulo": "Catedral de Pedra",
+       "nota": "Canela",
+       "tipo": "gratis",
+       "lugarId": "catedral-de-pedra-canela"
+      },
+      {
+       "hora": "17:00",
+       "titulo": "Descanso",
+       "nota": null,
+       "tipo": null,
+       "lugarId": null
+      },
+      {
+       "hora": "20:00",
+       "titulo": "Acendimento das Luzes",
+       "nota": "Palácio dos Festivais, no centrinho",
+       "tipo": "gratis",
+       "lugarId": "acendimento-das-luzes"
+      }
+     ]
+    },
+    {
+     "ordem": 5,
+     "titulo": "Volta",
+     "itens": [
+      {
+       "hora": "09:30",
+       "titulo": "Lago Negro",
+       "nota": "Última foto",
+       "tipo": "gratis",
+       "lugarId": "lago-negro"
+      },
+      {
+       "hora": "11:00",
+       "titulo": "Check-out",
+       "nota": null,
+       "tipo": null,
+       "lugarId": null
+      },
+      {
+       "hora": "12:00",
+       "titulo": "Almoço",
+       "nota": null,
+       "tipo": null,
+       "lugarId": null
+      },
+      {
+       "hora": "13:30",
+       "titulo": "Sair de Gramado",
+       "nota": "2h a 3h, feriadão",
+       "tipo": null,
+       "lugarId": null
+      },
+      {
+       "hora": "17:00",
+       "titulo": "Devolver o carro",
+       "nota": "Abastecer antes. Limite 18:00.",
+       "tipo": null,
+       "lugarId": null
+      },
+      {
+       "hora": "18:00",
+       "titulo": "Aeroporto",
+       "nota": "Só bagagem de mão",
+       "tipo": null,
+       "lugarId": "aeroporto-salgado-filho-poa"
+      },
+      {
+       "hora": "20:15",
+       "titulo": "Voo de volta",
+       "nota": null,
+       "tipo": null,
+       "lugarId": null
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "ritmo-leve",
+   "nome": "Ritmo leve",
+   "dias": [
+    {
+     "ordem": 1,
+     "titulo": "Chegada",
+     "itens": [
+      {
+       "hora": "15:55",
+       "titulo": "Chegada no aeroporto de Porto Alegre",
+       "nota": null,
+       "tipo": null,
+       "lugarId": null
+      },
+      {
+       "hora": "18:15",
+       "titulo": "Pegar o carro",
+       "nota": "Locadora no aeroporto. Confira o horário limite.",
+       "tipo": null,
+       "lugarId": null
+      },
+      {
+       "hora": "19:00",
+       "titulo": "Estrada para Gramado",
+       "nota": "2h a 2h30. Levar lanche.",
+       "tipo": null,
+       "lugarId": null
+      },
+      {
+       "hora": "21:30",
+       "titulo": "Check-in no hotel",
+       "nota": "Rua São Pedro, 438",
+       "tipo": null,
+       "lugarId": "hotel-fioreze-centro"
+      }
+     ]
+    },
+    {
+     "ordem": 2,
+     "titulo": "Calmo",
+     "itens": [
+      {
+       "hora": "10:30",
+       "titulo": "Mini Mundo",
+       "nota": "Planalto. 1h30.",
+       "tipo": null,
+       "lugarId": "mini-mundo"
+      },
+      {
+       "hora": "12:30",
+       "titulo": "Almoço no Sopas Segredos",
+       "nota": "Rua São Pedro, 220",
+       "tipo": null,
+       "lugarId": "sopas-segredos-de-gramado"
+      },
+      {
+       "hora": "14:30",
+       "titulo": "Vila de Natal e Papai Noel",
+       "nota": "Praça das Etnias",
+       "tipo": "gratis",
+       "lugarId": "praca-das-etnias-vila-de-natal"
+      },
+      {
+       "hora": "16:00",
+       "titulo": "Descanso",
+       "nota": null,
+       "tipo": null,
+       "lugarId": null
+      },
+      {
+       "hora": "18:00",
+       "titulo": "Jantar no Cara de Mau",
+       "nota": "Rua Cel. João Corrêa, 394. Reservar online.",
+       "tipo": "ingresso",
+       "lugarId": "cara-de-mau"
+      }
+     ]
+    },
+    {
+     "ordem": 3,
+     "titulo": "Feriado e Desfile",
+     "itens": [
+      {
+       "hora": "10:00",
+       "titulo": "Lago Negro",
+       "nota": "Pedalinho pago",
+       "tipo": "gratis",
+       "lugarId": "lago-negro"
+      },
+      {
+       "hora": "12:30",
+       "titulo": "Almoço no Bella Gramado",
+       "nota": "Buffet por quilo",
+       "tipo": null,
+       "lugarId": "bella-gramado"
+      },
+      {
+       "hora": "15:00",
+       "titulo": "Parada de Natal",
+       "nota": "Av. Borges de Medeiros",
+       "tipo": "gratis",
+       "lugarId": "parada-de-natal"
+      },
+      {
+       "hora": "16:00",
+       "titulo": "Descanso",
+       "nota": null,
+       "tipo": null,
+       "lugarId": null
+      },
+      {
+       "hora": "20:00",
+       "titulo": "Grande Desfile de Natal",
+       "nota": "Expogramado, Av. Borges de Medeiros, 4111. Ginásio coberto. R$ 420.",
+       "tipo": "ingresso",
+       "lugarId": "grande-desfile-de-natal"
+      }
+     ]
+    },
+    {
+     "ordem": 4,
+     "titulo": "Terra Mágica e luzes",
+     "itens": [
+      {
+       "hora": "10:00",
+       "titulo": "Terra Mágica Florybal",
+       "nota": "Canela, RS-466 km 5. Até ~14:30, almoço lá.",
+       "tipo": "ingresso",
+       "lugarId": "terra-magica-florybal-canela"
+      },
+      {
+       "hora": "15:30",
+       "titulo": "Descanso",
+       "nota": null,
+       "tipo": null,
+       "lugarId": null
+      },
+      {
+       "hora": "18:30",
+       "titulo": "Jantar leve",
+       "nota": null,
+       "tipo": null,
+       "lugarId": null
+      },
+      {
+       "hora": "20:00",
+       "titulo": "Acendimento das Luzes",
+       "nota": "Palácio dos Festivais, no centrinho",
+       "tipo": "gratis",
+       "lugarId": "acendimento-das-luzes"
+      }
+     ]
+    },
+    {
+     "ordem": 5,
+     "titulo": "Volta",
+     "itens": [
+      {
+       "hora": "09:30",
+       "titulo": "Vila de Natal",
+       "nota": "Praça das Etnias, abre 9h",
+       "tipo": "gratis",
+       "lugarId": "praca-das-etnias-vila-de-natal"
+      },
+      {
+       "hora": "11:00",
+       "titulo": "Check-out",
+       "nota": null,
+       "tipo": null,
+       "lugarId": null
+      },
+      {
+       "hora": "12:00",
+       "titulo": "Almoço",
+       "nota": null,
+       "tipo": null,
+       "lugarId": null
+      },
+      {
+       "hora": "13:30",
+       "titulo": "Sair de Gramado",
+       "nota": "2h a 3h, feriadão",
+       "tipo": null,
+       "lugarId": null
+      },
+      {
+       "hora": "17:00",
+       "titulo": "Devolver o carro",
+       "nota": "Abastecer antes. Limite 18:00.",
+       "tipo": null,
+       "lugarId": null
+      },
+      {
+       "hora": "18:00",
+       "titulo": "Aeroporto",
+       "nota": "Só bagagem de mão",
+       "tipo": null,
+       "lugarId": "aeroporto-salgado-filho-poa"
+      },
+      {
+       "hora": "20:15",
+       "titulo": "Voo de volta",
+       "nota": null,
+       "tipo": null,
+       "lugarId": null
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "sabores-e-cervejas",
+   "nome": "Sabores e cervejas",
+   "dias": [
+    {
+     "ordem": 1,
+     "titulo": "Chegada",
+     "itens": [
+      {
+       "hora": "15:55",
+       "titulo": "Chegada no aeroporto de Porto Alegre",
+       "nota": null,
+       "tipo": null,
+       "lugarId": null
+      },
+      {
+       "hora": "18:15",
+       "titulo": "Pegar o carro",
+       "nota": "Locadora no aeroporto. Confira o horário limite.",
+       "tipo": null,
+       "lugarId": null
+      },
+      {
+       "hora": "19:00",
+       "titulo": "Estrada para Gramado",
+       "nota": "2h a 2h30. Levar lanche.",
+       "tipo": null,
+       "lugarId": null
+      },
+      {
+       "hora": "21:30",
+       "titulo": "Check-in no hotel",
+       "nota": "Rua São Pedro, 438",
+       "tipo": null,
+       "lugarId": "hotel-fioreze-centro"
+      }
+     ]
+    },
+    {
+     "ordem": 2,
+     "titulo": "Fondue e cerveja",
+     "itens": [
+      {
+       "hora": "12:30",
+       "titulo": "Almoço de fondue",
+       "nota": "Chateau de la Fondue. Reservar.",
+       "tipo": null,
+       "lugarId": null
+      },
+      {
+       "hora": "15:00",
+       "titulo": "Bus Bier Tour (adultos)",
+       "nota": "3h30. Preço não confirmado.",
+       "tipo": "ingresso",
+       "lugarId": "bus-bier-tour-brocker-turismo"
+      },
+      {
+       "hora": "18:00",
+       "titulo": "Jantar no Cara de Mau",
+       "nota": "Rua Cel. João Corrêa, 394. Reservar online.",
+       "tipo": "ingresso",
+       "lugarId": "cara-de-mau"
+      }
+     ]
+    },
+    {
+     "ordem": 3,
+     "titulo": "Feriado e Desfile",
+     "itens": [
+      {
+       "hora": "12:00",
+       "titulo": "Almoço na Cervejaria Farol",
+       "nota": "Canela. Tour 45 min, reservar.",
+       "tipo": null,
+       "lugarId": "cervejaria-farol"
+      },
+      {
+       "hora": "15:00",
+       "titulo": "Parada de Natal",
+       "nota": "Av. Borges de Medeiros",
+       "tipo": "gratis",
+       "lugarId": "parada-de-natal"
+      },
+      {
+       "hora": "16:30",
+       "titulo": "Descanso",
+       "nota": null,
+       "tipo": null,
+       "lugarId": null
+      },
+      {
+       "hora": "20:00",
+       "titulo": "Grande Desfile de Natal",
+       "nota": "Expogramado, Av. Borges de Medeiros, 4111. Ginásio coberto. R$ 420.",
+       "tipo": "ingresso",
+       "lugarId": "grande-desfile-de-natal"
+      }
+     ]
+    },
+    {
+     "ordem": 4,
+     "titulo": "Terra Mágica e luzes",
+     "itens": [
+      {
+       "hora": "10:00",
+       "titulo": "Terra Mágica Florybal",
+       "nota": "Canela, RS-466 km 5. Até ~14:30, almoço lá.",
+       "tipo": "ingresso",
+       "lugarId": "terra-magica-florybal-canela"
+      },
+      {
+       "hora": "15:30",
+       "titulo": "Café colonial no Bela Vista",
+       "nota": "R$ 140. Compra antecipada. Vira o jantar.",
+       "tipo": "ingresso",
+       "lugarId": "bela-vista-cafe-colonial"
+      },
+      {
+       "hora": "20:00",
+       "titulo": "Acendimento das Luzes",
+       "nota": "Palácio dos Festivais, no centrinho",
+       "tipo": "gratis",
+       "lugarId": "acendimento-das-luzes"
+      }
+     ]
+    },
+    {
+     "ordem": 5,
+     "titulo": "Volta",
+     "itens": [
+      {
+       "hora": "09:30",
+       "titulo": "Rua Coberta",
+       "nota": "Lembrancinhas",
+       "tipo": "gratis",
+       "lugarId": "rua-coberta"
+      },
+      {
+       "hora": "11:00",
+       "titulo": "Check-out",
+       "nota": null,
+       "tipo": null,
+       "lugarId": null
+      },
+      {
+       "hora": "12:00",
+       "titulo": "Almoço",
+       "nota": null,
+       "tipo": null,
+       "lugarId": null
+      },
+      {
+       "hora": "13:30",
+       "titulo": "Sair de Gramado",
+       "nota": "2h a 3h, feriadão",
+       "tipo": null,
+       "lugarId": null
+      },
+      {
+       "hora": "17:00",
+       "titulo": "Devolver o carro",
+       "nota": "Abastecer antes. Limite 18:00.",
+       "tipo": null,
+       "lugarId": null
+      },
+      {
+       "hora": "18:00",
+       "titulo": "Aeroporto",
+       "nota": "Só bagagem de mão",
+       "tipo": null,
+       "lugarId": "aeroporto-salgado-filho-poa"
+      },
+      {
+       "hora": "20:15",
+       "titulo": "Voo de volta",
+       "nota": null,
+       "tipo": null,
+       "lugarId": null
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "parques-e-natureza",
+   "nome": "Parques e natureza",
+   "dias": [
+    {
+     "ordem": 1,
+     "titulo": "Chegada",
+     "itens": [
+      {
+       "hora": "15:55",
+       "titulo": "Chegada no aeroporto de Porto Alegre",
+       "nota": null,
+       "tipo": null,
+       "lugarId": null
+      },
+      {
+       "hora": "18:15",
+       "titulo": "Pegar o carro",
+       "nota": "Locadora no aeroporto. Confira o horário limite.",
+       "tipo": null,
+       "lugarId": null
+      },
+      {
+       "hora": "19:00",
+       "titulo": "Estrada para Gramado",
+       "nota": "2h a 2h30. Levar lanche.",
+       "tipo": null,
+       "lugarId": null
+      },
+      {
+       "hora": "21:30",
+       "titulo": "Check-in no hotel",
+       "nota": "Rua São Pedro, 438",
+       "tipo": null,
+       "lugarId": "hotel-fioreze-centro"
+      }
+     ]
+    },
+    {
+     "ordem": 2,
+     "titulo": "Caracol",
+     "itens": [
+      {
+       "hora": "09:30",
+       "titulo": "Parque do Caracol",
+       "nota": "Canela. 9h–17h.",
+       "tipo": "ingresso",
+       "lugarId": "parque-do-caracol-cascata-canela"
+      },
+      {
+       "hora": "12:30",
+       "titulo": "Almoço no Gramado Café Colonial",
+       "nota": "Canela. Menores de 5 não pagam.",
+       "tipo": null,
+       "lugarId": "gramado-cafe-colonial"
+      },
+      {
+       "hora": "15:00",
+       "titulo": "Catedral de Pedra",
+       "nota": "Canela",
+       "tipo": "gratis",
+       "lugarId": "catedral-de-pedra-canela"
+      },
+      {
+       "hora": "16:30",
+       "titulo": "Descanso",
+       "nota": null,
+       "tipo": null,
+       "lugarId": null
+      },
+      {
+       "hora": "18:00",
+       "titulo": "Jantar no Cara de Mau",
+       "nota": "Rua Cel. João Corrêa, 394. Reservar online.",
+       "tipo": "ingresso",
+       "lugarId": "cara-de-mau"
+      }
+     ]
+    },
+    {
+     "ordem": 3,
+     "titulo": "Alpen Park e Desfile",
+     "itens": [
+      {
+       "hora": "10:00",
+       "titulo": "Alpen Park, área Kids",
+       "nota": "Canela. 9h–17h. Ver obras.",
+       "tipo": "ingresso",
+       "lugarId": "alpen-park-canela"
+      },
+      {
+       "hora": "13:00",
+       "titulo": "Almoço na Cervejaria Farol",
+       "nota": "Canela",
+       "tipo": null,
+       "lugarId": "cervejaria-farol"
+      },
+      {
+       "hora": "16:30",
+       "titulo": "Descanso",
+       "nota": null,
+       "tipo": null,
+       "lugarId": null
+      },
+      {
+       "hora": "20:00",
+       "titulo": "Grande Desfile de Natal",
+       "nota": "Expogramado, Av. Borges de Medeiros, 4111. Ginásio coberto. R$ 420.",
+       "tipo": "ingresso",
+       "lugarId": "grande-desfile-de-natal"
+      }
+     ]
+    },
+    {
+     "ordem": 4,
+     "titulo": "Terra Mágica e luzes",
+     "itens": [
+      {
+       "hora": "10:00",
+       "titulo": "Terra Mágica Florybal",
+       "nota": "Canela, RS-466 km 5. Até ~14:30, almoço lá.",
+       "tipo": "ingresso",
+       "lugarId": "terra-magica-florybal-canela"
+      },
+      {
+       "hora": "16:00",
+       "titulo": "Lago Negro",
+       "nota": null,
+       "tipo": "gratis",
+       "lugarId": "lago-negro"
+      },
+      {
+       "hora": "20:00",
+       "titulo": "Acendimento das Luzes",
+       "nota": "Palácio dos Festivais, no centrinho",
+       "tipo": "gratis",
+       "lugarId": "acendimento-das-luzes"
+      }
+     ]
+    },
+    {
+     "ordem": 5,
+     "titulo": "Volta",
+     "itens": [
+      {
+       "hora": "09:30",
+       "titulo": "Lago Negro",
+       "nota": "Última foto",
+       "tipo": "gratis",
+       "lugarId": "lago-negro"
+      },
+      {
+       "hora": "11:00",
+       "titulo": "Check-out",
+       "nota": null,
+       "tipo": null,
+       "lugarId": null
+      },
+      {
+       "hora": "12:00",
+       "titulo": "Almoço",
+       "nota": null,
+       "tipo": null,
+       "lugarId": null
+      },
+      {
+       "hora": "13:30",
+       "titulo": "Sair de Gramado",
+       "nota": "2h a 3h, feriadão",
+       "tipo": null,
+       "lugarId": null
+      },
+      {
+       "hora": "17:00",
+       "titulo": "Devolver o carro",
+       "nota": "Abastecer antes. Limite 18:00.",
+       "tipo": null,
+       "lugarId": null
+      },
+      {
+       "hora": "18:00",
+       "titulo": "Aeroporto",
+       "nota": "Só bagagem de mão",
+       "tipo": null,
+       "lugarId": "aeroporto-salgado-filho-poa"
+      },
+      {
+       "hora": "20:15",
+       "titulo": "Voo de volta",
+       "nota": null,
+       "tipo": null,
+       "lugarId": null
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "chocolate-e-cafes",
+   "nome": "Chocolate e cafés",
+   "dias": [
+    {
+     "ordem": 1,
+     "titulo": "Chegada",
+     "itens": [
+      {
+       "hora": "15:55",
+       "titulo": "Chegada no aeroporto de Porto Alegre",
+       "nota": null,
+       "tipo": null,
+       "lugarId": null
+      },
+      {
+       "hora": "18:15",
+       "titulo": "Pegar o carro",
+       "nota": "Locadora no aeroporto. Confira o horário limite.",
+       "tipo": null,
+       "lugarId": null
+      },
+      {
+       "hora": "19:00",
+       "titulo": "Estrada para Gramado",
+       "nota": "2h a 2h30. Levar lanche.",
+       "tipo": null,
+       "lugarId": null
+      },
+      {
+       "hora": "21:30",
+       "titulo": "Check-in no hotel",
+       "nota": "Rua São Pedro, 438",
+       "tipo": null,
+       "lugarId": "hotel-fioreze-centro"
+      }
+     ]
+    },
+    {
+     "ordem": 2,
+     "titulo": "Chocolate e Papai Noel",
+     "itens": [
+      {
+       "hora": "09:30",
+       "titulo": "Prawer, visita grátis",
+       "nota": "Seg–sex 9h–11h. Ligar antes.",
+       "tipo": "gratis",
+       "lugarId": "prawer-chocolates"
+      },
+      {
+       "hora": "11:30",
+       "titulo": "Lojas na Av. Borges de Medeiros",
+       "nota": "Florybal, Lugano, Planalto, Caracol",
+       "tipo": "gratis",
+       "lugarId": "avenida-borges-de-medeiros"
+      },
+      {
+       "hora": "13:00",
+       "titulo": "Almoço no Torre Café",
+       "nota": null,
+       "tipo": null,
+       "lugarId": "torre-cafe-restaurante"
+      },
+      {
+       "hora": "15:00",
+       "titulo": "Vila de Natal e Papai Noel",
+       "nota": "Praça das Etnias",
+       "tipo": "gratis",
+       "lugarId": "praca-das-etnias-vila-de-natal"
+      },
+      {
+       "hora": "18:00",
+       "titulo": "Jantar no Cara de Mau",
+       "nota": "Rua Cel. João Corrêa, 394. Reservar online.",
+       "tipo": "ingresso",
+       "lugarId": "cara-de-mau"
+      }
+     ]
+    },
+    {
+     "ordem": 3,
+     "titulo": "Feriado e Desfile",
+     "itens": [
+      {
+       "hora": "10:00",
+       "titulo": "Prawer, tour com degustação",
+       "nota": "R$ 59 ou R$ 69. WhatsApp +55 54 99919-8213.",
+       "tipo": "ingresso",
+       "lugarId": "prawer-chocolates"
+      },
+      {
+       "hora": "13:00",
+       "titulo": "Almoço no Bella Gramado",
+       "nota": null,
+       "tipo": null,
+       "lugarId": "bella-gramado"
+      },
+      {
+       "hora": "15:00",
+       "titulo": "Parada de Natal",
+       "nota": "Av. Borges de Medeiros",
+       "tipo": "gratis",
+       "lugarId": "parada-de-natal"
+      },
+      {
+       "hora": "16:30",
+       "titulo": "Descanso",
+       "nota": null,
+       "tipo": null,
+       "lugarId": null
+      },
+      {
+       "hora": "20:00",
+       "titulo": "Grande Desfile de Natal",
+       "nota": "Expogramado, Av. Borges de Medeiros, 4111. Ginásio coberto. R$ 420.",
+       "tipo": "ingresso",
+       "lugarId": "grande-desfile-de-natal"
+      }
+     ]
+    },
+    {
+     "ordem": 4,
+     "titulo": "Terra Mágica e luzes",
+     "itens": [
+      {
+       "hora": "10:00",
+       "titulo": "Terra Mágica Florybal",
+       "nota": "Canela, RS-466 km 5. Até ~14:30, almoço lá.",
+       "tipo": "ingresso",
+       "lugarId": "terra-magica-florybal-canela"
+      },
+      {
+       "hora": "15:30",
+       "titulo": "Café colonial no Bela Vista",
+       "nota": "R$ 140. Compra antecipada.",
+       "tipo": "ingresso",
+       "lugarId": "bela-vista-cafe-colonial"
+      },
+      {
+       "hora": "20:00",
+       "titulo": "Acendimento das Luzes",
+       "nota": "Palácio dos Festivais, no centrinho",
+       "tipo": "gratis",
+       "lugarId": "acendimento-das-luzes"
+      }
+     ]
+    },
+    {
+     "ordem": 5,
+     "titulo": "Volta",
+     "itens": [
+      {
+       "hora": "09:30",
+       "titulo": "Rua Coberta",
+       "nota": "Lembrancinhas",
+       "tipo": "gratis",
+       "lugarId": "rua-coberta"
+      },
+      {
+       "hora": "11:00",
+       "titulo": "Check-out",
+       "nota": null,
+       "tipo": null,
+       "lugarId": null
+      },
+      {
+       "hora": "12:00",
+       "titulo": "Almoço",
+       "nota": null,
+       "tipo": null,
+       "lugarId": null
+      },
+      {
+       "hora": "13:30",
+       "titulo": "Sair de Gramado",
+       "nota": "2h a 3h, feriadão",
+       "tipo": null,
+       "lugarId": null
+      },
+      {
+       "hora": "17:00",
+       "titulo": "Devolver o carro",
+       "nota": "Abastecer antes. Limite 18:00.",
+       "tipo": null,
+       "lugarId": null
+      },
+      {
+       "hora": "18:00",
+       "titulo": "Aeroporto",
+       "nota": "Só bagagem de mão",
+       "tipo": null,
+       "lugarId": "aeroporto-salgado-filho-poa"
+      },
+      {
+       "hora": "20:15",
+       "titulo": "Voo de volta",
+       "nota": null,
+       "tipo": null,
+       "lugarId": null
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "canela-e-cascata",
+   "nome": "Canela e cascata",
+   "dias": [
+    {
+     "ordem": 1,
+     "titulo": "Chegada",
+     "itens": [
+      {
+       "hora": "15:55",
+       "titulo": "Chegada no aeroporto de Porto Alegre",
+       "nota": null,
+       "tipo": null,
+       "lugarId": null
+      },
+      {
+       "hora": "18:15",
+       "titulo": "Pegar o carro",
+       "nota": "Locadora no aeroporto. Confira o horário limite.",
+       "tipo": null,
+       "lugarId": null
+      },
+      {
+       "hora": "19:00",
+       "titulo": "Estrada para Gramado",
+       "nota": "2h a 2h30. Levar lanche.",
+       "tipo": null,
+       "lugarId": null
+      },
+      {
+       "hora": "21:30",
+       "titulo": "Check-in no hotel",
+       "nota": "Rua São Pedro, 438",
+       "tipo": null,
+       "lugarId": "hotel-fioreze-centro"
+      }
+     ]
+    },
+    {
+     "ordem": 2,
+     "titulo": "Cascata e Canela",
+     "itens": [
+      {
+       "hora": "09:30",
+       "titulo": "Cascata do Caracol",
+       "nota": "Só uma olhadinha. Canela, RS-466 km 0. Abre 9h.",
+       "tipo": "ingresso",
+       "lugarId": "parque-do-caracol-cascata-canela"
+      },
+      {
+       "hora": "11:00",
+       "titulo": "Passear no centro de Canela",
+       "nota": "Catedral de Pedra",
+       "tipo": "gratis",
+       "lugarId": null
+      },
+      {
+       "hora": "12:30",
+       "titulo": "Almoço no Gramado Café Colonial",
+       "nota": "Canela. Menores de 5 não pagam.",
+       "tipo": null,
+       "lugarId": "gramado-cafe-colonial"
+      },
+      {
+       "hora": "15:00",
+       "titulo": "Voltar a Gramado e descansar",
+       "nota": null,
+       "tipo": null,
+       "lugarId": null
+      },
+      {
+       "hora": "18:00",
+       "titulo": "Jantar no Cara de Mau",
+       "nota": "Rua Cel. João Corrêa, 394. Reservar online.",
+       "tipo": "ingresso",
+       "lugarId": "cara-de-mau"
+      }
+     ]
+    },
+    {
+     "ordem": 3,
+     "titulo": "Feriado e Desfile",
+     "itens": [
+      {
+       "hora": "10:30",
+       "titulo": "Lago Negro e Rua Coberta",
+       "nota": null,
+       "tipo": "gratis",
+       "lugarId": "lago-negro"
+      },
+      {
+       "hora": "12:30",
+       "titulo": "Almoço no centro",
+       "nota": null,
+       "tipo": null,
+       "lugarId": null
+      },
+      {
+       "hora": "15:00",
+       "titulo": "Parada de Natal",
+       "nota": "Av. Borges de Medeiros",
+       "tipo": "gratis",
+       "lugarId": "parada-de-natal"
+      },
+      {
+       "hora": "16:30",
+       "titulo": "Descanso",
+       "nota": null,
+       "tipo": null,
+       "lugarId": null
+      },
+      {
+       "hora": "20:00",
+       "titulo": "Grande Desfile de Natal",
+       "nota": "Expogramado, Av. Borges de Medeiros, 4111. Ginásio coberto. R$ 420.",
+       "tipo": "ingresso",
+       "lugarId": "grande-desfile-de-natal"
+      }
+     ]
+    },
+    {
+     "ordem": 4,
+     "titulo": "Terra Mágica e luzes",
+     "itens": [
+      {
+       "hora": "10:00",
+       "titulo": "Terra Mágica Florybal",
+       "nota": "Canela, RS-466 km 5. Até ~14:30, almoço lá.",
+       "tipo": "ingresso",
+       "lugarId": "terra-magica-florybal-canela"
+      },
+      {
+       "hora": "15:00",
+       "titulo": "Vila de Natal e Papai Noel",
+       "nota": "Praça das Etnias",
+       "tipo": "gratis",
+       "lugarId": "praca-das-etnias-vila-de-natal"
+      },
+      {
+       "hora": "17:00",
+       "titulo": "Descanso",
+       "nota": null,
+       "tipo": null,
+       "lugarId": null
+      },
+      {
+       "hora": "20:00",
+       "titulo": "Acendimento das Luzes",
+       "nota": "Palácio dos Festivais, no centrinho",
+       "tipo": "gratis",
+       "lugarId": "acendimento-das-luzes"
+      }
+     ]
+    },
+    {
+     "ordem": 5,
+     "titulo": "Volta",
+     "itens": [
+      {
+       "hora": "09:30",
+       "titulo": "Lago Negro",
+       "nota": "Última foto",
+       "tipo": "gratis",
+       "lugarId": "lago-negro"
+      },
+      {
+       "hora": "11:00",
+       "titulo": "Check-out",
+       "nota": null,
+       "tipo": null,
+       "lugarId": null
+      },
+      {
+       "hora": "12:00",
+       "titulo": "Almoço",
+       "nota": null,
+       "tipo": null,
+       "lugarId": null
+      },
+      {
+       "hora": "13:30",
+       "titulo": "Sair de Gramado",
+       "nota": "2h a 3h, feriadão",
+       "tipo": null,
+       "lugarId": null
+      },
+      {
+       "hora": "17:00",
+       "titulo": "Devolver o carro",
+       "nota": "Abastecer antes. Limite 18:00.",
+       "tipo": null,
+       "lugarId": null
+      },
+      {
+       "hora": "18:00",
+       "titulo": "Aeroporto",
+       "nota": "Só bagagem de mão",
+       "tipo": null,
+       "lugarId": "aeroporto-salgado-filho-poa"
+      },
+      {
+       "hora": "20:15",
+       "titulo": "Voo de volta",
+       "nota": null,
+       "tipo": null,
+       "lugarId": null
+      }
+     ]
+    }
+   ]
+  }
+ ]
+}

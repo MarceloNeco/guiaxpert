@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <!-- Segurança: só roda script deste site (a biblioteca do mapa fica em vendor/ e
+       carrega só quando o mapa abre). Conexões: só HTTPS (Supabase, Open-Meteo, OpenStreetMap). -->
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https:; font-src 'self' data:; connect-src 'self' https:; worker-src 'self' blob:; manifest-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'">
+  <meta name="referrer" content="strict-origin-when-cross-origin">
+  <meta name="theme-color" content="#1e5b48">
+  <meta name="description" content="GuiaXpert — roteiros sob medida para a sua família, que funcionam sem internet.">
+  <title>GuiaXpert</title>
+  <link rel="manifest" href="manifest.json">
+  <link rel="icon" href="icone-192.png">
+  <link rel="apple-touch-icon" href="apple-touch-icon.png">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <a class="pular" href="#conteudo" data-t="pular">Pular para o conteúdo</a>
+  <div id="app">
+    <header class="topo">
+      <div class="topo-esq">
+        <button class="ic" id="bt-menu" type="button" aria-controls="gaveta" aria-expanded="false" data-ta="menu" aria-label="Menu">☰</button>
+        <div class="marca" id="marca" role="button" tabindex="0" data-ta="irInicio" aria-label="Ir para o Início">
+          <img src="icone-192.png" alt="" width="28" height="28">
+          <strong>Guia<b>Xpert</b></strong>
+        </div>
+      </div>
+      <div class="topo-dir">
+        <button class="ic" id="bt-idioma" type="button" data-ta="trocarIdioma" aria-label="Trocar idioma">EN</button>
+        <button class="ic" id="bt-busca" type="button" data-ta="buscar" aria-label="Buscar">🔍</button>
+        <button class="ic" id="bt-config" type="button" data-ta="configuracoes" aria-label="Configurações">⚙</button>
+        <button class="ic" id="bt-inicio" type="button" data-ta="inicio" aria-label="Início">🏠</button>
+        <button class="ic" id="bt-conta" type="button" data-ta="conta" aria-label="Conta">👤</button>
+      </div>
+    </header>
+
+    <div class="fundo-gaveta" id="fundo-gaveta" hidden></div>
+    <nav class="gaveta" id="gaveta" aria-labelledby="gaveta-titulo" hidden></nav>
+
+    <main id="conteudo" tabindex="-1"></main>
+
+    <nav class="barra" id="barra" aria-label="Atalhos"></nav>
+  </div>
+
+  <!-- ordem importa: dados e serviços antes da tela -->
+  <script src="config.js"></script>
+  <script src="js/textos.js"></script>
+  <script src="js/banco.js"></script>
+  <script src="js/cofre.js"></script>
+  <script src="js/pacotes.js"></script>
+  <script src="js/geo.js"></script>
+  <script src="js/clima.js"></script>
+  <script src="js/descobrir.js"></script>
+  <script src="js/conta.js"></script>
+  <script src="js/app.js"></script>
+  <!-- módulo comum SolverONE (igual em todos os apps) e o ajuste deste app -->
+  <script src="diretrizes.js"></script>
+  <script src="diretrizes-config.js"></script>
+</body>
+</html>

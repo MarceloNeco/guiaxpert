@@ -1,0 +1,79 @@
+# GuiaXpert — arquitetura
+
+Leia antes de mexer. Serve para qualquer pessoa ou IA que for alterar este repositório.
+
+## O que é
+
+Guia de viagem e de cidade para famílias: perfil de quem viaja, várias viagens, várias opções de roteiro por
+viagem, favoritos, lista de lugares, mapa, previsão do tempo e reservas guardadas com segurança. Funciona sem
+internet depois da primeira abertura. É um app da plataforma **SolverONE**, controlado pelo **RootifyONE**.
+
+HTML, CSS e JavaScript puros. Sem framework, sem passo de build. Abra e edite.
+
+- Endereço: `solverone.com.br/guiaxpert/` (repositório `guiaxpert`, GitHub Pages)
+- Conta e acesso: Supabase `solverone-app` (a mesma conta de todos os apps)
+- Gaveta de dados no navegador: `guiaxpert` (IndexedDB `guiaxpert`, `localStorage` com prefixo `dgo:guiaxpert:`)
+
+## Arquivos
+
+| Arquivo | O que faz | Mexer? |
+|---|---|---|
+| `index.html` | casca: cabeçalho (☰ marca · PT/EN 🔍 ⚙ 🏠 👤), gaveta, `<main>`, barra de baixo e a ORDEM dos scripts | pouco |
+| `styles.css` | aparência; cores em variáveis (claro/escuro), placa turística marrom, linha do tempo | sim |
+| `config.js` | URL e chave **pública** do Supabase, modo de acesso, endereço dos pacotes | só valores |
+| `js/textos.js` | todo texto da tela em PT e EN | a cada texto novo |
+| `js/banco.js` | `Banco`: lojas no IndexedDB no **formato das futuras tabelas** + fila para a nuvem | com cuidado |
+| `js/cofre.js` | `Cofre`: PIN (PBKDF2 600 mil) + código de recuperação embrulham a chave AES-GCM que embaralha reservas e comida/alergias | **não**, sem revisão |
+| `js/pacotes.js` | `Pacotes`: lê o pacote de cidade (central → local → cópia no aparelho) | pouco |
+| `js/geo.js` | `Geo`: GPS (só com toque), distância, links de rota (Google Maps, Waze) | pouco |
+| `js/clima.js` | `Clima`: Open-Meteo, guarda 1 h, avisos práticos | pouco |
+| `js/descobrir.js` | `Descobrir`: OpenStreetMap (Overpass) e roteiro pela IA da pessoa (`DGO.ia`) | sim |
+| `js/conta.js` | `Conta`: login REST, sessão comum `solverone.sessao.v1`, `acesso_app`, códigos de degustação | com cuidado |
+| `js/app.js` | telas, navegação (`Nav`) e wizard "Nova viagem" | sim |
+| `pacotes/indice.json`, `pacotes/<id>.json` | pacotes de cidade (formato em `docs/FORMATO-PACOTE.md`) | ao publicar cidade |
+| `vendor/leaflet/` | biblioteca do mapa (hospedada, sem CDN) | não |
+| `diretrizes.js` | módulo comum SolverONE (igual em todos os apps) | **não** — troque pela versão nova |
+| `diretrizes-config.js` | ajustes do módulo para o GuiaXpert | pouco |
+| `sw.js`, `manifest.json`, `icone-*.png` | instalar e abrir sem internet | só subir a `VERSAO` do `sw.js` a cada release |
+| `versoes.json` | o que cada versão trouxe | a cada versão |
+| `supabase/*.sql` | SQL para rodar **uma vez** (data no nome) | só acrescentar arquivo novo |
+| `teste/sql-grants.js` | verificador: todo CREATE no SQL tem GRANT (`node teste/sql-grants.js supabase`) | não (vem do rootify-one) |
+
+## Regras que não se quebram
+
+1. **Nenhum segredo no código.** Só URL e publishable key do Supabase (públicas). Chave de IA é da pessoa e fica no cofre do módulo.
+2. **Quem libera é o banco.** O app só pergunta `acesso_app('guiaxpert')`. Esconder tela no JavaScript não protege nada.
+3. **Texto da pessoa nunca vai por `innerHTML`.** Use `h()` (vira `textContent`). `svg` em `h()` só com ícone fixo do código.
+4. **Dado sensível só embaralhado:** reservas e comida/alergias/dieta (saúde e religião, LGPD art. 11) passam pelo `Cofre`.
+5. **Nome de pessoa nunca vai para a IA** (LGPD art. 14 para crianças): `Descobrir.resumoGrupo` manda só faixa, idade e cuidados.
+6. **Histórico do navegador só pelo `Nav`** (o Voltar do celular navega dentro do app; camada = gaveta, busca, janela).
+7. **Todo texto nasce em PT e EN** em `js/textos.js`.
+8. **Formato das lojas = formato das tabelas.** Campo novo entra nos dois (ver "Nuvem").
+9. **Localização só com toque**, aproximada no aparelho, nunca para a nuvem.
+
+## Como as peças conversam
+
+```
+abrir → Conta.lerVolta (#access_token só se este aparelho pediu)
+      → Conta.acesso()  ── não liberado → tela Entrar (login / código de degustação)
+                        └─ liberado → Banco (viagem atual) → Pacotes.carregar → telas
+roteiro: viagem.opcao_ativa → loja roteiros (várias opções; pacote | manual | ia)
+         editar opção do pacote = cria cópia "minha versão" (o pacote nunca muda)
+dia da viagem → dia do modelo: 1º = chegada, último = volta, meio = repete os do meio
+```
+
+## Nuvem (próximo passo)
+
+Cada loja vira uma tabela `guiaxpert_<loja>` com `user_id`, RLS "own" e GRANT só para `authenticated`. A fila
+(`Banco.pendentes()`) sobe o que mudou; conflito junta campo a campo (diretriz). Reservas e restrições sobem
+**ainda embaralhadas** (o servidor não lê). Nada disso está ligado na 0.1.0.
+
+## Acesso e RootifyONE
+
+- SQL: `supabase/2026-10-30-acesso-por-app-e-codigos.sql` (genérico: serve para qualquer app).
+- Liberado = plano ativo em `assinaturas` (lista de liberados e pré-liberação por e-mail que o RootifyONE já usa)
+  **ou** código de degustação válido em `acessos_app`.
+- Códigos: `admin_criar_codigo('guiaxpert', dias, valido_ate, usos_max, nota)` devolve o texto UMA vez; o banco
+  guarda só o SHA-256. Listar e desativar: `admin_listar_codigos`, `admin_desativar_codigo`. Tudo vai para `acesso_log`.
+- Sem internet: vale a última conferência por `DIAS_SEM_INTERNET` dias (config), nunca depois da validade.
+- Catálogo: `solverone-dados/apps.json` e `servicos/guiaxpert.json`.

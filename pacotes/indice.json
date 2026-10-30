@@ -1,0 +1,8 @@
+{
+ "formato": 1,
+ "pacotes": [
+  { "id": "gramado", "nome": { "pt": "Gramado e Canela", "en": "Gramado and Canela" }, "uf": "RS", "pais": "BR",
+    "centro": { "lat": -29.3789, "lng": -50.8744 }, "atualizadoEm": "2026-10-30",
+    "resumo": { "pt": "Natal Luz, parques, fondue, chocolate e cerveja artesanal na Serra Gaúcha.", "en": "Christmas lights, parks, fondue, chocolate and craft beer in the Serra Gaúcha." } }
+ ]
+}
