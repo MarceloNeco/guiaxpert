@@ -398,7 +398,7 @@
     cx.textContent = '';
     cx.appendChild(h('h3', { texto: T('climaTitulo') }));
     var ds = p.dias.filter(function (x) { return dias.indexOf(x.data) > -1; });
-    if (!ds.length) { cx.appendChild(h('p', { class: 'sub', texto: T('climaLonge') })); return; }
+    if (!ds.length) { cx.appendChild(h('p', { class: 'sub', texto: T('climaLonge', { n: p.dias.length }) })); return; }
     cx.appendChild(h('div', { class: 'clima' }, ds.map(function (x) {
       return h('div', { class: 'd', 'aria-label': fData(x.data) + ': ' + x.min + '° a ' + x.max + '°' }, [
         h('span', { texto: semana(x.data) + ' ' + fData(x.data, true) }), h('b', { texto: Clima.icone(x.codigo) }),
@@ -408,7 +408,11 @@
     var avisos = {};
     ds.forEach(function (x) { Clima.avisos(x).forEach(function (a) { avisos[a] = (avisos[a] || []).concat(fData(x.data, true)); }); });
     Object.keys(avisos).forEach(function (a) { cx.appendChild(h('div', { class: 'alerta' }, [h('b', { texto: T(a) }), avisos[a].join(', ')])); });
-    cx.appendChild(h('p', { class: 'pequeno', texto: (p.antiga ? T('climaAntigo') + ' ' : '') + T('climaFonte') }));
+    var v = estado.viagem, onde = (v && v.destinoTexto) || (estado.pacote && Pacotes.nome(estado.pacote, idioma())) || '';
+    cx.appendChild(h('p', { class: 'pequeno' }, [
+      (p.antiga ? T('climaAntigo') + ' ' : '') + T('climaFonte', { fonte: p.fonte || 'Open-Meteo' }) + ' ',
+      h('a', { href: Clima.linkCompleto(onde), target: '_blank', rel: 'noopener', texto: T('climaCompleto') })
+    ]));
   }
 
   /* dia da viagem → dia do modelo de roteiro: 1º = chegada, último = volta, meio = repete os dias do meio */

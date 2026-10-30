@@ -11,7 +11,7 @@
           "Guia de Gramado e Canela pronto: 76 lugares e 6 opções de roteiro, com filtros, busca, 'perto de mim' (GPS) e rota pelo Google Maps ou Waze.",
           "Descobrir na região: busca restaurantes, cafés e atrações no OpenStreetMap, para qualquer cidade, sem IA.",
           "Montar com a minha IA: usa a chave de IA da pessoa (o mesmo cofre de todos os apps SolverONE). Nomes nunca vão para a IA.",
-          "Previsão do tempo por dia da viagem, com avisos de chuva, frio, calor e vento.",
+          "Previsão do tempo por dia da viagem, com avisos de chuva, frio, calor e vento; se um serviço falhar, usa outro (Open-Meteo, MET Norway, wttr.in) e há link para a previsão completa.",
           "Reservas, comida e alergias guardadas embaralhadas no aparelho, com PIN de 6 números e código de recuperação. Cartão de alergia em PT e EN.",
           "Entrada só para convidados: conta SolverONE liberada ou código de degustação com validade, controlados pelo RootifyONE.",
           "Funciona sem internet depois da primeira abertura; mapa com os lugares e o GPS (o fundo do mapa precisa de internet nesta versão)."
@@ -21,7 +21,7 @@
           "Ready-made Gramado and Canela guide: 76 places and 6 itinerary options, with filters, search, 'near me' (GPS) and directions via Google Maps or Waze.",
           "Discover nearby: finds restaurants, cafés and sights on OpenStreetMap, for any city, without AI.",
           "Build with my AI: uses the person's own AI key (the same vault as every SolverONE app). Names never go to the AI.",
-          "Weather forecast per trip day, with rain, cold, heat and wind alerts.",
+          "Weather forecast per trip day, with rain, cold, heat and wind alerts; if one service fails it uses another (Open-Meteo, MET Norway, wttr.in), plus a link to the full forecast.",
           "Bookings, food and allergies stored scrambled on the device, with a 6-digit PIN and a recovery code. Allergy card in PT and EN.",
           "Invite-only access: unlocked SolverONE account or a trial code with an expiry, controlled by RootifyONE.",
           "Works offline after the first visit; map with places and GPS (the map background needs internet in this version)."

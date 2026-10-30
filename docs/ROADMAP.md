@@ -39,5 +39,5 @@ Os quatro jeitos de montar o guia, combinados com o dono em 30/Out/2026:
 
 - Anúncios no GuiaXpert (público premium): hoje desligados.
 - Planos: o que o visitante, o degustação e o premium podem usar (`servicos/guiaxpert.json` está com tudo liberado e `aConfirmar`).
-- Open-Meteo e tiles do OSM são grátis para uso leve/não comercial; com assinatura paga, contratar plano comercial ou servidor.
+- Hoje o uso é pessoal. Clima: Open-Meteo com reserva automática em MET Norway e wttr.in. Se um dia vender assinatura: MET Norway como 1ª opção (permite uso comercial) ou plano comercial da Open-Meteo; tiles do OSM por provedor próprio.
 - Registrar a marca GuiaXpert no INPI (classes 9, 35, 39, 41, 42) e o domínio `guiaxpert.com.br`.
