@@ -2,6 +2,18 @@
   "app": "guiaxpert",
   "versoes": [
     {
+      "versao": "0.3.1",
+      "data": "2026-10-30",
+      "itens": {
+        "pt": [
+          "Textos mais curtos e diretos nas telas de boas-vindas, Quem viaja, gostos e ajuste da viagem."
+        ],
+        "en": [
+          "Shorter, plainer text on the welcome, Travelers, likes and trip-adjustment screens."
+        ]
+      }
+    },
+    {
       "versao": "0.3.0",
       "data": "2026-10-30",
       "itens": {
