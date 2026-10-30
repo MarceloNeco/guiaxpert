@@ -12,7 +12,7 @@
 (function () {
   'use strict';
   var d = document, $ = function (id) { return d.getElementById(id); };
-  var VERSAO_APP = '0.4.0';
+  var VERSAO_APP = '0.5.0';
 
   /* ------------------------------------------------------------------
      1. UTILIDADES
@@ -369,6 +369,8 @@
         h('p', { class: 'nota', texto: T('faltamDiasTexto') })
       ]));
     }
+    /* avisos que a própria pessoa guardou na viagem (texto, nunca HTML) */
+    (v.avisos || []).forEach(function (a) { tela.appendChild(h('div', { class: 'alerta' }, [h('b', { texto: a.titulo }), a.texto || ''])); });
 
     /* agora / próximo item de hoje */
     if (di >= 0 && estado.opcao) {
@@ -1537,7 +1539,9 @@
       } }, T('sairBio')) : null,
       s && Bio.ligada() ? h('button', { class: 'bt perigo', type: 'button', onclick: function () { desligarBio().then(function () { Conta.sair(); Cofre.fechar(); iniciarAcesso(); }); } }, T('sairDeVez')) : null
     ]));
-    tela.appendChild(h('div', { class: 'cartao' }, [h('h3', { texto: T('meusDados') }), h('p', { class: 'sub', texto: T('meusDadosTexto') }),
+    var sinc = h('p', { class: 'pequeno' });
+    if (window.Nuvem && s) Nuvem.ultima().then(function (u) { sinc.textContent = u ? T('nuvemUltima', { d: fData(u.slice(0, 10)), h: new Date(u).toTimeString().slice(0, 5) }) : T('nuvemNunca'); });
+    tela.appendChild(h('div', { class: 'cartao' }, [h('h3', { texto: T('meusDados') }), h('p', { class: 'sub', texto: T('meusDadosTexto') }), sinc,
       h('button', { class: 'bt leve', type: 'button', onclick: exportar }, T('exportar')),
       h('button', { class: 'bt perigo', type: 'button', onclick: apagarTudo }, T('apagarTudo'))]));
   };
@@ -1558,7 +1562,7 @@
     bt.addEventListener('click', function () {
       if (normalizar(campo.value).trim() !== normalizar(T('palavraApagar'))) { campo.focus(); return; }
       Cofre.fechar();
-      Banco.apagarTudo().then(function () { j.fechar(); location.reload(); });
+      (window.Nuvem ? Nuvem.apagarTudo().catch(function () {}) : Promise.resolve()).then(function () { return Banco.apagarTudo(); }).then(function () { j.fechar(); location.reload(); });
     });
   }
 
@@ -1616,10 +1620,18 @@
       return Banco.meta('viagem-atual', null).then(carregarViagem).then(atualizarRestricoesGrupo).then(function () {
         mostrar(estado.rota === 'entrar' ? 'inicio' : estado.rota);
         oferecerBio();
+        sincronizarNuvem();
       });
     });
   }
 
+  /* nuvem: se chegou algo novo da conta, recarrega a viagem e a tela */
+  function sincronizarNuvem() {
+    if (!window.Nuvem) return Promise.resolve();
+    return Nuvem.sincronizar().then(function (r) {
+      if (r && r.baixados) return Banco.meta('viagem-atual', null).then(carregarViagem).then(function () { mostrar(estado.rota); });
+    });
+  }
   /* convite único depois do login: "da próxima vez, entre com digital ou rosto" */
   function oferecerBio() {
     var s = Conta.sessao();

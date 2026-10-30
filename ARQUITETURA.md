@@ -30,6 +30,7 @@ HTML, CSS e JavaScript puros. Sem framework, sem passo de build. Abra e edite.
 | `js/clima.js` | `Clima`: Open-Meteo, guarda 1 h, avisos práticos | pouco |
 | `js/gostos.js` | `Gostos`: catálogo de 249 gostos em 15 temas (PT/EN), ciclo curte → ama → evita, soma do grupo, "combina" com lugares e resumo para a IA | ao acrescentar gosto |
 | `js/descobrir.js` | `Descobrir`: OpenStreetMap (Overpass) e roteiro pela IA da pessoa (`DGO.ia`) | sim |
+| `js/nuvem.js` | `Nuvem`: sincroniza pessoas, viagens, roteiros, favoritos e lugares com `guiaxpert_dados` (baixa o que mudou, sobe a fila; vence o mais novo). Nunca sobe reservas nem `restricoes` | com cuidado |
 | `js/conta.js` | `Conta`: login REST, sessão comum `solverone.sessao.v1`, `acesso_app`, códigos de degustação | com cuidado |
 | `js/app.js` | telas, navegação (`Nav`) e wizard "Nova viagem" | sim |
 | `pacotes/indice.json`, `pacotes/<id>.json` | pacotes de cidade (formato em `docs/FORMATO-PACOTE.md`) | ao publicar cidade |
@@ -83,11 +84,13 @@ dia da viagem → dia do modelo: 1º = chegada, último = volta, meio = repete o
   em `gostos`, 0 = "não nesta viagem"). `perfilNaViagem(p, v)` junta perfil fixo + ajustes; `pessoasDaViagem()` já
   devolve juntado e é o que lugares, IA e clima usam. Comida/alergias não têm ajuste (ficam só no cofre do perfil fixo).
 
-## Nuvem (próximo passo)
+## Nuvem (ligada na 0.5.0)
 
-Cada loja vira uma tabela `guiaxpert_<loja>` com `user_id`, RLS "own" e GRANT só para `authenticated`. A fila
-(`Banco.pendentes()`) sobe o que mudou; conflito junta campo a campo (diretriz). Reservas e restrições sobem
-**ainda embaralhadas** (o servidor não lê). Nada disso está ligado na 0.1.0.
+Tabela única `guiaxpert_dados` (`supabase/2026-10-30-nuvem-guiaxpert.sql`): `user_id`, `loja`, `id`, `dados` jsonb,
+`atualizado_em` (aparelho), `recebido_em` (servidor). RLS: cada um só o seu; GRANT só para `authenticated`.
+Sincronia: baixa por `recebido_em`, sobe a fila; vence o `atualizado_em` mais novo, registro a registro.
+Reservas e `restricoes` NÃO sobem (a chave do cofre é do aparelho; mandar o PIN embrulhado permitiria força bruta).
+Aparelho usado por outra conta não mistura (`meta nuvem-dono`).
 
 ## Acesso e RootifyONE
 

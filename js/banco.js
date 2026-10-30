@@ -5,8 +5,8 @@
    - Cada "loja" tem o mesmo formato da tabela que vai existir no Supabase
      (id uuid, criado_em, atualizado_em, versao, apagado). Ir para a nuvem
      depois = mandar estes registros, sem converter nada.
-   - Toda mudança entra na "fila" (outbox). Hoje a fila só cresce; quando a
-     conta na nuvem for ligada, ela sobe o que estiver pendente.
+   - Toda mudança entra na "fila" (outbox); nuvem.js sobe o que estiver
+     pendente para a conta (tabela guiaxpert_dados) e baixa o que mudou.
    - Apagar é "apagado: true" (soft delete), para a sincronia saber o que sumiu.
 
    LOJAS (= futuras tabelas guiaxpert_*)
@@ -51,7 +51,7 @@
       return new Promise(function (ok, erro) {
         var t = db.transaction(loja, modo), s = t.objectStore(loja), res;
         res = fazer(s);
-        t.oncomplete = function () { ok(res && res.result !== undefined ? res.result : res); };
+        t.oncomplete = function () { ok(res instanceof IDBRequest ? res.result : res); }; /* registro que não existe → undefined (antes vinha o pedido) */
         t.onerror = function () { erro(t.error); };
         t.onabort = function () { erro(t.error); };
       });
@@ -116,6 +116,18 @@
       return tx('fila', 'readwrite', function (s) { s.add({ loja: loja, id: id, acao: acao, quando: new Date().toISOString() }); });
     },
     pendentes: function () { return tx('fila', 'readonly', function (s) { return s.count(); }); },
+
+    /* para a nuvem (nuvem.js) */
+    lerBruto: function (loja, id) { return tx(loja, 'readonly', function (s) { return s.get(id); }).then(function (r) { return r || null; }); },
+    filaToda: function () { return tx('fila', 'readonly', function (s) { return s.getAll(); }); },
+    limparFila: function (seqs) { return tx('fila', 'readwrite', function (s) { seqs.forEach(function (q) { s.delete(q); }); }); },
+    /* grava o que veio da nuvem: sem voltar para a fila e sem mexer na versão */
+    gravarDeFora: function (loja, obj) {
+      return tx(loja, 'readwrite', function (s) { s.put(obj); }).then(function () {
+        document.dispatchEvent(new CustomEvent('gx:dados', { detail: { loja: loja, id: obj.id, fora: true } }));
+        return obj;
+      });
+    },
 
     /* ajustes soltos */
     meta: function (chave, padrao) {

@@ -2,6 +2,24 @@
   "app": "guiaxpert",
   "versoes": [
     {
+      "versao": "0.5.0",
+      "data": "2026-10-30",
+      "itens": {
+        "pt": [
+          "Sua conta guarda viagens, roteiros, pessoas, favoritos e lugares: entrou em outro celular, está tudo lá. Só você vê.",
+          "Reservas e comida/alergias continuam só no celular, embaralhadas (não vão para a conta).",
+          "Avisos da viagem (ex.: estacionamento pago, feriadão) aparecem na tela Hoje.",
+          "'Apagar tudo' apaga também o que está na conta. Correção: leitura de registro inexistente no banco do aparelho."
+        ],
+        "en": [
+          "Your account keeps trips, itineraries, people, favorites and places: sign in on another phone and it's all there. Only you can see it.",
+          "Bookings and food/allergies stay on the phone, scrambled (they never go to the account).",
+          "Trip notices (e.g. paid parking, long weekend) show on Today.",
+          "'Delete everything' also deletes what's in your account. Fix: reading a missing record on the device database."
+        ]
+      }
+    },
+    {
       "versao": "0.4.0",
       "data": "2026-10-30",
       "itens": {
