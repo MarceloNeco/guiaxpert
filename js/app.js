@@ -12,7 +12,7 @@
 (function () {
   'use strict';
   var d = document, $ = function (id) { return d.getElementById(id); };
-  var VERSAO_APP = '1.0.0';
+  var VERSAO_APP = '1.0.1';
 
   /* ------------------------------------------------------------------
      1. UTILIDADES
@@ -365,6 +365,8 @@
     if (lib && !emViagem() && (rota === 'inicio' || rota === 'roteiro' || rota === 'mapa' || rota === 'reservas')) rota = 'explorar';
     if (lib && emViagem() && (rota === 'explorar' || rota === 'salvos')) { /* permitido: explorar de dentro da viagem */ }
     estado.rota = rota;
+    /* telas de mapa: a página não rola; só o mapa e a lista */
+    d.body.classList.toggle('sem-rolagem', rota === 'mapa' || rota === 'explorar');
     if (window.Mapa) Mapa.destruir();
     var m = $('conteudo'); m.textContent = '';
     var tela = h('section', { class: 'tela' + (rota === 'mapa' || rota === 'explorar' ? ' larga' : '') });

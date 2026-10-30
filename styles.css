@@ -80,9 +80,9 @@ button, input, select, textarea { font: inherit; color: inherit; }
   position: sticky; top: 0; z-index: 20; height: var(--topo);
   display: flex; align-items: center; justify-content: space-between; gap: .25rem;
   padding: 0 max(.5rem, env(safe-area-inset-right, 0px)) 0 max(.5rem, env(safe-area-inset-left, 0px));
-  background: color-mix(in srgb, var(--fundo) 86%, transparent);
-  -webkit-backdrop-filter: saturate(1.4) blur(14px); backdrop-filter: saturate(1.4) blur(14px);
+  background: var(--fundo);
 }
+@media (min-width: 700px) { .topo { background: color-mix(in srgb, var(--fundo) 86%, transparent); -webkit-backdrop-filter: saturate(1.4) blur(14px); backdrop-filter: saturate(1.4) blur(14px); } }
 .topo-esq, .topo-dir { display: flex; align-items: center; gap: .1rem; min-width: 0; }
 .ic {
   min-width: 2.75rem; height: 2.75rem; border: 0; background: none; border-radius: 50%;
@@ -390,8 +390,15 @@ h2.secao-cab, .secao-cab h2 { font-size: 1.15rem; font-weight: 800; }
 
 
 /* ---------- tela do mapa: mapa + lista + cartão ---------- */
-.tela.mapa-tela { max-width: none; padding: 0; gap: 0; position: relative; isolation: isolate; z-index: 0; height: calc(100vh - var(--topo) - var(--barra)); overflow: hidden; }
+.tela.mapa-tela { max-width: none; padding: 0; gap: 0; position: relative; isolation: isolate; z-index: 0; height: calc(100vh - var(--topo) - var(--barra)); overflow: hidden; overscroll-behavior: none; touch-action: none; }
 @supports (height: 100dvh) { .tela.mapa-tela { height: calc(100dvh - var(--topo) - var(--barra) - env(safe-area-inset-bottom, 0px)); } }
+/* com o mapa aberto, a página não rola (o Chrome do Android não recolhe a barra nem puxa para atualizar) */
+body.sem-rolagem { height: 100vh; overflow: hidden; padding-bottom: 0; overscroll-behavior: none; }
+@supports (height: 100dvh) { body.sem-rolagem { height: 100dvh; } }
+body.sem-rolagem main { height: calc(100% - var(--topo)); overflow: hidden; }
+.mapa-topo, .painel, .bt-mapa { touch-action: auto; }
+.mapa-topo .chips.rolar, .mapa-topo .dias { touch-action: pan-x; }
+.painel-corpo { touch-action: pan-y; }
 .mapa-topo { position: absolute; z-index: 410; top: .5rem; left: .5rem; right: .5rem; display: flex; flex-direction: column; gap: .4rem; pointer-events: none; }
 .mapa-topo > * { pointer-events: auto; }
 .mapa-topo .busca-caixa input, .mapa-topo .campo { box-shadow: var(--sombra-flutua); background: var(--sup); }

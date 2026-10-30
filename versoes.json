@@ -2,6 +2,18 @@
   "app": "guiaxpert",
   "versoes": [
     {
+      "versao": "1.0.1",
+      "data": "2026-10-31",
+      "itens": {
+        "pt": [
+          "Mapa: a página não rola mais junto com o mapa no celular; cabeçalho sem desfoque no celular (mais leve)."
+        ],
+        "en": [
+          "Map: the page no longer scrolls along with the map on phones; header without blur on phones (lighter)."
+        ]
+      }
+    },
+    {
       "versao": "1.0.0",
       "data": "2026-10-31",
       "itens": {
