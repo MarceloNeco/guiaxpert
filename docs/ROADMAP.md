@@ -7,20 +7,21 @@ Os quatro jeitos de montar o guia, combinados com o dono em 30/Out/2026:
 | 1. Pacote pronto | SolverONE monta a cidade; RootifyONE publica; família baixa e usa offline | ✅ 0.1.0 (Gramado e Canela) |
 | 2. Busca aberta, sem IA | OpenStreetMap (Overpass) perto do destino | ✅ 0.1.0 · Wikivoyage: v0.2 · blogs: só com servidor |
 | 3. Com a IA da pessoa | chave no cofre comum (`DGO.ia`), roteiro sob medida | ✅ 0.1.0 (gera opção nova; conferir) |
-| 4. Agente de IA completo | reorganiza o dia se chover, lê reservas, avisa lotação | 🔜 exige servidor (Edge Function) |
+| 4. Agente de IA | replaneja o dia se chover, responde sobre a viagem, lê e-mail de reserva | ✅ 1.0.0 (com a chave da pessoa) · avisos de lotação/push: exigem servidor |
 
-## v0.2 (próxima)
+## Feito até a 1.0.0 (31/Out/2026)
 
-1. **Mapa sem internet de verdade.** Hoje os pontos e o GPS funcionam offline, mas o fundo do mapa não. Plano:
-   arquivo de mapa por cidade em **PMTiles** (recorte do OpenStreetMap, 10–30 MB, licença ODbL), hospedado junto
-   do pacote e guardado no aparelho só no Wi-Fi (`DGO.rede.pedirPesado`), desenhado com protomaps-leaflet.
-   Baixar tiles do OSM em massa é proibido pela política deles: por isso arquivo próprio.
+Explorar vs. Viagem, mapa com lista e pontos do dia, mapa offline (PMTiles) de Gramado, reservas na conta (cifradas) com
+QR/código para outro celular, e-mail → reserva, família (membros, convites, cartão para quem fica em casa), IA (tela, replanejar, guia).
+
+## Próximos
+
+1. **Mapa offline para cidades sem pacote**: Edge Function que recorta o PMTiles sob demanda (`pmtiles extract`). Hoje só cidades com pacote.
 2. **Tela de códigos no RootifyONE** (criar, listar com uso, desativar) usando `admin_criar_codigo`,
    `admin_listar_codigos`, `admin_desativar_codigo`.
-3. **Nuvem**: tabelas `guiaxpert_*` com RLS, fila subindo, mesma viagem no celular da esposa e da sogra.
-4. **Compartilhar viagem** com a família (convite), cada um vê o roteiro e marca favoritos.
-5. **Importar reserva** de PDF/print/e-mail lido no aparelho (OCR do módulo comum), sem mandar para servidor.
-6. **Notificação** do próximo item e do clima da véspera (`DGO.notificacoes`).
+3. **Push** (próximo item, clima da véspera, 'a família mudou o roteiro'): exige Edge Function + VAPID.
+4. **Encaminhar e-mail** para `reservas@` (Edge Function de entrada) e OCR de print/PDF de reserva.
+5. **Localização da família ao vivo** (só no app nativo).
 7. Barra de baixo configurável (favoritos, diretriz) e AssistONE com ajuda por tela.
 8. Mais pacotes (Bonito, Foz, Serra Gaúcha vinícolas…), cada um com data de verificação.
 

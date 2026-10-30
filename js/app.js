@@ -12,7 +12,7 @@
 (function () {
   'use strict';
   var d = document, $ = function (id) { return d.getElementById(id); };
-  var VERSAO_APP = '0.9.0';
+  var VERSAO_APP = '1.0.0';
 
   /* ------------------------------------------------------------------
      1. UTILIDADES
@@ -157,7 +157,7 @@
      busca e janelas são camadas: o Voltar fecha só a de cima. Na base,
      o primeiro Voltar avisa; o segundo sai do app.
      ------------------------------------------------------------------ */
-  var ROTAS = { inicio: 1, roteiro: 1, lugares: 1, mapa: 1, reservas: 1, viagens: 1, nova: 1, familia: 1, conta: 1, config: 1, entrar: 1, explorar: 1, salvos: 1 };
+  var ROTAS = { inicio: 1, roteiro: 1, lugares: 1, mapa: 1, reservas: 1, viagens: 1, nova: 1, familia: 1, conta: 1, config: 1, entrar: 1, explorar: 1, salvos: 1, ia: 1 };
   var Nav = {
     camadas: [], depois: [], guarda: false,
     base: function (r) { return r === 'inicio' || r === 'entrar' || r === 'explorar'; },
@@ -266,7 +266,7 @@
     var grupos = lib ? [
       ['grupoViagem', [['inicio', '☀️'], ['roteiro', '🗓'], ['mapa', '🗺'], ['reservas', '🎫']]],
       ['grupoExplorar', [['explorar', '🌍'], ['salvos', '🔖']]],
-      ['grupoPlanejar', [['viagens', '🧳'], ['nova', '➕'], ['familia', '👨‍👩‍👧']]],
+      ['grupoPlanejar', [['viagens', '🧳'], ['nova', '➕'], ['familia', '👨‍👩‍👧'], ['ia', '✨']]],
       ['grupoAjustes', [['config', '⚙'], ['conta', '👤']]]
     ] : [['grupoAjustes', [['entrar', '🔑'], ['config', '⚙']]]];
     var lang = h('div', { class: 'chips', role: 'group', 'aria-label': T('trocarIdioma') }, ['pt', 'en'].map(function (l) {
@@ -433,7 +433,8 @@
     var ac = h('div', { class: 'grade' }, [
       h('button', { class: 'bt', type: 'button', onclick: function () { Nav.ir('roteiro'); } }, T('verRoteiro')),
       h('button', { class: 'bt sec', type: 'button', onclick: function () { estado.filtro = 'perto'; Nav.ir('mapa'); } }, '📍 ' + T('pertoDeMim')),
-      h('button', { class: 'bt leve', type: 'button', onclick: function () { Nav.ir('reservas'); } }, '🎫 ' + T('rota_reservas'))
+      h('button', { class: 'bt leve', type: 'button', onclick: function () { Nav.ir('reservas'); } }, '🎫 ' + T('rota_reservas')),
+      h('button', { class: 'bt leve', type: 'button', onclick: function () { janelaGuia(); } }, '✨ ' + T('perguntarGuia'))
     ]);
     tela.appendChild(ac);
     if (estado.pacote && estado.pacote.aviso) tela.appendChild(h('p', { class: 'pequeno', texto: estado.pacote.aviso[idioma()] || estado.pacote.aviso.pt }));
@@ -682,6 +683,112 @@
     }).catch(function (e) {
       avisar(e.message === 'sem-internet' ? T('semInternet') : e.message === 'ia-formato' ? T('iaFormato') : T('iaErro'));
     });
+  }
+
+  /* ---------- IA: o que a chave dá, com exemplos da viagem ---------- */
+  function contextoGuia() {
+    var v = estado.viagem, dias = diasDaViagem(v), hj = hojeIso(), di = dias.indexOf(hj);
+    if (di < 0) di = Math.max(0, Math.min(estado.dia, dias.length - 1));
+    var o = estado.opcao, dia = o ? o.dias[mapearDia(di, dias.length, o.dias.length)] : null;
+    var c = centroViagem();
+    return (c ? Clima.previsao(c.lat, c.lng).catch(function () { return null; }) : Promise.resolve(null)).then(function (p) {
+      var clima = p && p.dias.filter(function (x) { return x.data === dias[di]; })[0] || null;
+      return { viagem: v, pessoas: pessoasDaViagem(v), pacote: estado.pacote, lugares: todosLugares(), dia: dia, di: di, data: dias[di], clima: clima, idioma: idioma(), opcao: o };
+    });
+  }
+  TELAS.ia = function (tela) {
+    tela.appendChild(h('h1', { texto: T('iaTela') }));
+    var ok = window.Guia && Guia.pronta();
+    tela.appendChild(h('p', { class: 'sub', texto: T(ok ? 'iaTelaOk' : 'iaTelaSem') }));
+    if (!ok) tela.appendChild(h('div', { class: 'cartao' }, [h('p', { texto: T('iaSemChave') }),
+      h('button', { class: 'bt', type: 'button', onclick: function () { DGO.ia.guia(null, 'texto'); } }, T('iaConfigurar')),
+      h('p', { class: 'pequeno', texto: T('iaChaveOnde') })]));
+    var v = estado.viagem, ex = v ? (estado.pacote ? Pacotes.nome(estado.pacote, idioma()) : v.destinoTexto) : T('suaViagem');
+    var cartao = function (icone, titulo, texto, exemplo, botao, fn) {
+      return h('div', { class: 'cartao' }, [h('h3', { texto: icone + ' ' + titulo }), h('p', { class: 'sub', texto: texto }),
+        h('p', { class: 'exemplo', texto: '“' + exemplo + '”' }),
+        h('button', { class: 'bt ' + (ok && v ? 'sec' : 'leve'), type: 'button', disabled: !ok || !v, onclick: fn }, botao)]);
+    };
+    tela.appendChild(cartao('🗓', T('iaMontar'), T('iaMontarTexto'), T('iaMontarEx', { cidade: ex }), T('gerarIA'), gerarComIA));
+    tela.appendChild(cartao('🌦', T('iaReplanejar'), T('iaReplanejarTexto'), T('iaReplanejarEx'), T('replanejarHoje'), replanejarHoje));
+    tela.appendChild(cartao('💬', T('perguntarGuia'), T('iaPerguntarTexto'), T('iaPerguntarEx'), T('perguntarGuia'), janelaGuia));
+    tela.appendChild(cartao('✉', T('iaLerReserva'), T('iaLerReservaTexto'), T('iaLerReservaEx'), T('colarEmail'), function () { Nav.ir('reservas'); setTimeout(function () { janelaImportar(''); }, 200); }));
+    tela.appendChild(h('p', { class: 'pequeno', texto: T('iaRegras') }));
+  };
+  /* replanejar hoje: a IA propõe; a pessoa vê o que mudou e aplica numa cópia (o original não some) */
+  function replanejarHoje() {
+    if (!estado.viagem || !estado.opcao) { avisar(T('semOpcoes')); return; }
+    if (!Guia.pronta()) { Nav.ir('ia'); return; }
+    var corpo = h('div', { class: 'linha', style: 'flex-direction:column;align-items:stretch' }, [h('p', { class: 'sub', texto: T('iaMontando') })]);
+    var j = janela(T('replanejarHoje'), corpo);
+    contextoGuia().then(function (ctx) {
+      return Guia.replanejar(ctx).then(function (r) {
+        corpo.textContent = '';
+        corpo.appendChild(h('p', { class: 'sub', texto: semana(ctx.data) + ', ' + fData(ctx.data) + (ctx.clima ? ' · ' + Clima.icone(ctx.clima.codigo) + ' ' + ctx.clima.min + '°/' + ctx.clima.max + '°' + (ctx.clima.chuva != null ? ' ☔' + ctx.clima.chuva + '%' : '') : '') }));
+        if (r.motivo) corpo.appendChild(h('div', { class: 'alerta' }, [h('b', { texto: T('iaMudou') }), r.motivo]));
+        var bloco = h('div', { class: 'tempo' });
+        r.itens.forEach(function (it) {
+          bloco.appendChild(h('div', { class: 'item' + (it.mudou ? ' agora' : '') }, [h('span', { class: 'h', texto: it.hora || '—' }),
+            h('div', { class: 'x' }, [h('b', { texto: it.titulo }), it.nota ? h('span', { class: 'nota', texto: it.nota }) : null]), h('span', { texto: it.mudou ? '✨' : '' })]));
+        });
+        corpo.appendChild(bloco);
+        corpo.appendChild(h('p', { class: 'pequeno', texto: T('iaConfiraTexto') }));
+        corpo.appendChild(h('div', { class: 'acoes' }, [
+          h('button', { class: 'bt leve', type: 'button', texto: T('agoraNao'), onclick: function () { j.fechar(); } }),
+          h('button', { class: 'bt', type: 'button', texto: T('aplicarPlano'), onclick: function () {
+            var o = ctx.opcao, nova = { viagem_id: estado.viagem.id, nome: o.nome + ' · ' + T('replanejado', { d: fData(ctx.data, true) }), origem: 'ia', favorito: false, ordem: (o.ordem || 0) + 0.25, dias: JSON.parse(JSON.stringify(o.dias)) };
+            var idx = mapearDia(ctx.di, diasDaViagem(estado.viagem).length, o.dias.length);
+            nova.dias[idx].itens = r.itens.map(function (it) { return { hora: it.hora, titulo: it.titulo, nota: it.nota || null, tipo: null, lugarId: it.lugarId, estado: null }; });
+            Banco.gravar('roteiros', nova).then(function (n) { estado.viagem.opcao_ativa = n.id; return Banco.gravar('viagens', estado.viagem); })
+              .then(function () { j.fechar(); avisar(T('planoAplicado')); estado.dia = ctx.di; recarregar().then(function () { Nav.ir('roteiro'); }); });
+          } })]));
+      });
+    }).catch(function (e) { corpo.textContent = ''; corpo.appendChild(h('p', { class: 'conferir', texto: e.message === 'sem-internet' ? T('semInternet') : e.message === 'ia-formato' ? T('iaFormato') : T('iaErro') })); });
+  }
+  /* perguntar ao guia: conversa presa aos lugares; nomes de lugares viram links para o mapa */
+  var conversaGuia = [];
+  function janelaGuia() {
+    if (!estado.viagem) { avisar(T('semViagemTexto')); return; }
+    if (!window.Guia || !Guia.pronta()) { Nav.ir('ia'); return; }
+    var lista = h('div', { class: 'conversa' });
+    var campo = h('input', { class: 'campo', id: 'gx-guia', placeholder: T('guiaPlaceholder'), autocomplete: 'off', maxlength: '300' });
+    var enviar = h('button', { class: 'bt', type: 'button', texto: '➤', 'aria-label': T('enviar') });
+    var corpo = h('div', { class: 'linha', style: 'flex-direction:column;align-items:stretch;flex:1;min-height:0' }, [lista, h('div', { class: 'linha', style: 'flex-wrap:nowrap' }, [campo, enviar])]);
+    var j = janela(T('perguntarGuia'), corpo);
+    j.caixa.classList.add('cheia');
+    var nomes = todosLugares().filter(function (l) { return l.nome.length > 3; }).sort(function (a, b) { return b.nome.length - a.nome.length; });
+    function balao(papel, texto) {
+      var el = h('div', { class: 'balao ' + papel });
+      if (papel === 'ia') {
+        /* nome de lugar do pacote vira link que abre no mapa */
+        var resto = texto, achou;
+        while (resto.length) {
+          achou = null;
+          nomes.forEach(function (l) { var i = resto.indexOf(l.nome); if (i > -1 && (!achou || i < achou.i)) achou = { i: i, l: l }; });
+          if (!achou) { el.appendChild(d.createTextNode(resto)); break; }
+          el.appendChild(d.createTextNode(resto.slice(0, achou.i)));
+          el.appendChild((function (lug) { return h('button', { class: 'lk', type: 'button', texto: lug.nome, onclick: function () { estado.abrirLugar = lug.id; estado.filtro = 'todos'; j.fechar(function () { Nav.ir('mapa'); }); } }); })(achou.l));
+          resto = resto.slice(achou.i + achou.l.nome.length);
+        }
+      } else el.textContent = texto;
+      lista.appendChild(el); lista.scrollTop = lista.scrollHeight;
+    }
+    if (!conversaGuia.length) balao('ia', T('guiaOla'));
+    conversaGuia.forEach(function (m) { balao(m.papel, m.texto); });
+    [T('guiaSug1'), T('guiaSug2'), T('guiaSug3')].forEach(function (s) {
+      lista.appendChild(h('button', { class: 'chip', type: 'button', texto: s, style: 'align-self:flex-start', onclick: function () { campo.value = s; mandar(); } }));
+    });
+    function mandar() {
+      var t = campo.value.trim(); if (!t) return;
+      campo.value = ''; enviar.disabled = true;
+      balao('pessoa', t); var pensando = h('div', { class: 'balao ia', texto: '…' }); lista.appendChild(pensando);
+      contextoGuia().then(function (ctx) { return Guia.perguntar(ctx, t, conversaGuia); }).then(function (r) {
+        pensando.remove(); conversaGuia.push({ papel: 'pessoa', texto: t }, { papel: 'ia', texto: r }); conversaGuia = conversaGuia.slice(-12); balao('ia', r);
+      }).catch(function (e) { pensando.remove(); balao('ia', e.message === 'sem-internet' ? T('semInternet') : T('iaErro')); }).then(function () { enviar.disabled = false; campo.focus(); });
+    }
+    enviar.addEventListener('click', mandar);
+    campo.addEventListener('keydown', function (e) { if (e.key === 'Enter') mandar(); });
+    setTimeout(function () { campo.focus(); }, 80);
   }
 
   /* ---------- Mapa da viagem (mapa + lista + cartão: mapa.js) ---------- */
@@ -1831,6 +1938,7 @@
       return h('button', { class: 'chip', type: 'button', 'aria-pressed': idioma() === l ? 'true' : 'false', onclick: function () { trocarIdioma(l); } }, l === 'pt' ? 'Português' : 'English');
     }))]));
     if (window.DGO) tela.appendChild(h('div', { class: 'cartao' }, [h('h3', { texto: T('iaTitulo') }), h('p', { class: 'sub', texto: T('iaTexto') }),
+      h('button', { class: 'bt sec', type: 'button', onclick: function () { Nav.ir('ia'); } }, '✨ ' + T('oQueAIAFaz')),
       h('button', { class: 'bt leve', type: 'button', onclick: function () { DGO.ia.guia(null, 'texto'); } }, T('iaConfigurar')),
       h('button', { class: 'bt leve', type: 'button', onclick: function () { DGO.abrirConfiguracoes && DGO.abrirConfiguracoes(); } }, T('maisAjustes'))]));
     if (estado.viagem) tela.appendChild(cartaoOffline(estado.viagem));

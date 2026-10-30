@@ -2,6 +2,24 @@
   "app": "guiaxpert",
   "versoes": [
     {
+      "versao": "1.0.0",
+      "data": "2026-10-31",
+      "itens": {
+        "pt": [
+          "Tela 'IA: seu guia' (menu ☰ e Configurações): explica, com exemplos da sua viagem, o que a chave de IA faz: montar opção de roteiro, replanejar hoje, perguntar ao guia e ler e-mail de reserva.",
+          "Replanejar hoje: a IA olha a previsão e o grupo e propõe trocas só no dia; voos, carro e itens confirmados não mudam. Você vê o que mudou e aplica numa opção nova, o original continua.",
+          "Perguntar ao guia (botão na tela Hoje): conversa presa aos lugares do guia; o nome do lugar vira link para o mapa.",
+          "Para a IA vão idades, cuidados, gostos, plano do dia, previsão e lista de lugares. Nunca nomes, reservas nem alergias."
+        ],
+        "en": [
+          "'AI: your guide' screen (☰ menu and Settings): explains, with examples from your trip, what the AI key does: build an itinerary option, replan today, ask the guide and read a booking email.",
+          "Replan today: the AI looks at the forecast and the group and proposes changes for today only; flights, car and confirmed items don’t change. You see what changed and apply it as a new option, the original stays.",
+          "Ask the guide (button on Today): a chat tied to the guide’s places; place names become links to the map.",
+          "The AI receives ages, care needs, likes, today’s plan, the forecast and the list of places. Never names, bookings or allergies."
+        ]
+      }
+    },
+    {
       "versao": "0.9.0",
       "data": "2026-10-31",
       "itens": {
