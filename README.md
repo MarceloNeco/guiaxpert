@@ -37,6 +37,11 @@ Até a tela do RootifyONE ficar pronta (ver `docs/ROADMAP.md`). O SQL Editor nã
 
 A pessoa abre o GuiaXpert, cria a conta (ou entra), digita o código e fica liberada pelos dias do código.
 
+### Código de 6 números no e-mail (opcional)
+
+O "Receber código por e-mail" já funciona com o link do e-mail. Para o e-mail trazer também o código de 6 números:
+Supabase → Authentication → Emails → **Magic link** → acrescente no texto: `Seu código: {{ .Token }}`. Vale para todos os apps.
+
 ## 3. Publicar
 
 1. Crie o repositório **guiaxpert** (público, como os outros apps) e suba estes arquivos.

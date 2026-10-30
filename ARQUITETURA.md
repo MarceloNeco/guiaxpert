@@ -23,6 +23,7 @@ HTML, CSS e JavaScript puros. Sem framework, sem passo de build. Abra e edite.
 | `config.js` | URL e chave **pública** do Supabase, modo de acesso, endereço dos pacotes | só valores |
 | `js/textos.js` | todo texto da tela em PT e EN | a cada texto novo |
 | `js/banco.js` | `Banco`: lojas no IndexedDB no **formato das futuras tabelas** + fila para a nuvem | com cuidado |
+| `js/biometria.js` | `Bio`: digital ou rosto deste aparelho (WebAuthn + PRF). Uma leitura gera duas chaves: `sessao` (tranca a sessão ao sair, para voltar sem senha) e `cofre` (abre as reservas). Sem PRF, não liga | **não**, sem revisão |
 | `js/cofre.js` | `Cofre`: PIN (PBKDF2 600 mil) + código de recuperação embrulham a chave AES-GCM que embaralha reservas e comida/alergias | **não**, sem revisão |
 | `js/pacotes.js` | `Pacotes`: lê o pacote de cidade (central → local → cópia no aparelho) | pouco |
 | `js/geo.js` | `Geo`: GPS (só com toque), distância, links de rota (Google Maps, Waze) | pouco |
@@ -62,6 +63,17 @@ roteiro: viagem.opcao_ativa → loja roteiros (várias opções; pacote | manual
          editar opção do pacote = cria cópia "minha versão" (o pacote nunca muda)
 dia da viagem → dia do modelo: 1º = chegada, último = volta, meio = repete os do meio
 ```
+
+## Entrar e digital/rosto
+
+- Primeiro login: senha, Google ou código de 6 números por e-mail (`Conta.enviarCodigo` / `confirmarCodigo`, só conta existente).
+- Depois, convite único para ligar digital/rosto (`oferecerBio`). A passkey é só deste aparelho (rp = domínio do site);
+  o segredo PRF nunca sai do celular.
+- "Sair (volto com digital)": a sessão é embaralhada com a chave `sessao` e guardada em `guiaxpert.volta`; o servidor NÃO
+  encerra. Ao voltar, a digital desembaralha e o app renova o token no servidor (se a sessão morreu, pede e-mail).
+- "Sair e desligar digital": encerra no servidor e apaga `guiaxpert.volta` e o embrulho do cofre.
+- Login por passkey no servidor (qualquer aparelho, sem 1º login) existe no Supabase como experimental e está desligado
+  (Authentication → Passkeys). Não usado.
 
 ## Perfil fixo e perfil da viagem
 

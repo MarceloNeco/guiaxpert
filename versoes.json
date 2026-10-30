@@ -2,6 +2,22 @@
   "app": "guiaxpert",
   "versoes": [
     {
+      "versao": "0.4.0",
+      "data": "2026-10-30",
+      "itens": {
+        "pt": [
+          "Digital ou rosto: depois do primeiro login, o celular passa a reconhecer você. Entrar e abrir as reservas sem senha nem PIN.",
+          "Sair agora tem duas opções: 'Sair (volto com digital ou rosto)' ou 'Sair e desligar digital neste celular'.",
+          "Entrar sem senha: código de 6 números (ou link) por e-mail, para quem já tem conta."
+        ],
+        "en": [
+          "Fingerprint or face: after the first sign-in, your phone recognizes you. Sign in and open bookings with no password or PIN.",
+          "Signing out now has two options: 'Sign out (back with fingerprint or face)' or 'Sign out and turn off fingerprint here'.",
+          "Passwordless sign-in: a 6-digit code (or link) by email, for existing accounts."
+        ]
+      }
+    },
+    {
       "versao": "0.3.1",
       "data": "2026-10-30",
       "itens": {

@@ -17,6 +17,7 @@
   'use strict';
   var cfg = window.GUIAXPERT_CONFIG || {};
   var CHAVE = 'solverone.sessao.v1', ACESSO = 'dgo:guiaxpert:acesso', PEDIDO = 'guiaxpert.contaPedido';
+  var VOLTA = 'guiaxpert.volta'; /* sessão trancada pela digital/rosto (só existe com biometria ligada) */
   var APP = 'guiaxpert';
   var renovando = null;
 
@@ -104,9 +105,47 @@
       return renovando;
     },
 
+    /* código de 6 números por e-mail (sem senha). Só para quem já tem conta. */
+    enviarCodigo: function (email) {
+      gravar(PEDIDO, { em: Date.now() });
+      return fetch(base() + '/auth/v1/otp?redirect_to=' + encodeURIComponent(voltaPara()), { method: 'POST', headers: cab(),
+        body: JSON.stringify({ email: email, create_user: false }) }).then(json);
+    },
+    confirmarCodigo: function (email, codigo) {
+      return fetch(base() + '/auth/v1/verify', { method: 'POST', headers: cab(),
+        body: JSON.stringify({ type: 'email', email: email, token: String(codigo || '').replace(/\D/g, '') }) })
+        .then(json).then(function (j) { gravar(PEDIDO, null); return guardarSessao(j, email); });
+    },
+
+    /* digital/rosto: ao sair, a sessão fica trancada neste aparelho em vez de encerrada */
+    esquecerVolta: function () { gravar(VOLTA, null); },
+    temVolta: function () { var v = ler(VOLTA); return v ? { email: v.email } : null; },
+    sairTrancando: function (chaveSessao) {
+      var s = ler(CHAVE);
+      if (!s) return Promise.resolve();
+      return Bio.cifrar(chaveSessao, s).then(function (blob) {
+        gravar(VOLTA, { email: s.email, blob: blob, em: Date.now() });
+        gravar(CHAVE, null); gravar(ACESSO, null);
+      });
+    },
+    voltar: function (chaveSessao) {
+      var v = ler(VOLTA);
+      if (!v) return Promise.reject(new Error('sem-volta'));
+      return Bio.decifrar(chaveSessao, v.blob).then(function (s) {
+        s.expira = 0; gravar(CHAVE, s);             /* força renovar: confere no servidor */
+        return Conta.token();
+      }).then(function (t) {
+        if (!t) throw new Error('volta-expirou');
+        gravar(VOLTA, null); return ler(CHAVE);
+      }).catch(function (e) {
+        if (e && (e.status === 400 || e.status === 401 || e.message === 'volta-expirou')) { gravar(VOLTA, null); gravar(CHAVE, null); throw new Error('volta-expirou'); }
+        throw e;
+      });
+    },
+
     sair: function () {
       var s = ler(CHAVE);
-      gravar(CHAVE, null); gravar(ACESSO, null);
+      gravar(CHAVE, null); gravar(ACESSO, null); gravar(VOLTA, null);
       if (s && navigator.onLine) fetch(base() + '/auth/v1/logout?scope=local', { method: 'POST', headers: cab(s.access_token) }).catch(function () {});
     },
 

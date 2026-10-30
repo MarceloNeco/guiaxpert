@@ -12,7 +12,7 @@
 (function () {
   'use strict';
   var d = document, $ = function (id) { return d.getElementById(id); };
-  var VERSAO_APP = '0.3.1';
+  var VERSAO_APP = '0.4.0';
 
   /* ------------------------------------------------------------------
      1. UTILIDADES
@@ -885,10 +885,23 @@
         h('label', { class: 'rot', for: 'gx-pin', texto: T('pin6') }), pin, bt, msg]);
       if (existe) caixa.appendChild(h('button', { class: 'lk', type: 'button', onclick: function () { recuperarCofre(tela, pronto); } }, T('esqueciPin')));
       tela.appendChild(caixa);
+      if (existe && Bio.ligada()) Cofre.temBio().then(function (t) {
+        if (!t) return;
+        var bb = h('button', { class: 'bt', type: 'button', texto: T('abrirBio') });
+        bb.addEventListener('click', function () {
+          bb.disabled = true;
+          Bio.chaves().then(function (k) { return Cofre.abrirComBio(k.cofre); }).then(function () { caixa.remove(); pronto(); })
+            .catch(function (e) { bb.disabled = false; msg.textContent = e.message === 'cancelado' ? '' : T('bioErroUsePin'); });
+        });
+        caixa.insertBefore(bb, caixa.children[2]);
+        bt.className = 'bt leve';
+      });
       function ir() {
         if (!/^\d{6}$/.test(pin.value)) { msg.textContent = T('pinFormato'); pin.focus(); return; }
         bt.disabled = true; msg.textContent = T('abrindo');
-        (existe ? Cofre.abrir(pin.value) : Cofre.criar(pin.value).then(mostrarCodigo)).then(function () { caixa.remove(); pronto(); }).catch(function (e) {
+        (existe ? Cofre.abrir(pin.value) : Cofre.criar(pin.value).then(mostrarCodigo).then(function () {
+          if (Bio.ligada()) return Bio.chaves().then(function (k) { return Cofre.ligarBio(k.cofre); }).catch(function () {});
+        })).then(function () { caixa.remove(); pronto(); }).catch(function (e) {
           bt.disabled = false;
           msg.textContent = e.message === 'espera' ? T('pinEspera', { s: e.segundos }) : e.message === 'pin-errado' ? T('pinErrado', { n: e.tentativas }) : T('cofreErro');
         });
@@ -1423,7 +1436,27 @@
     if (a.motivo === 'sql-faltando') tela.appendChild(h('div', { class: 'alerta' }, [h('b', { texto: T('sqlFaltando') }), T('sqlFaltandoTexto')]));
     if (a.motivo === 'conferir' || a.motivo === 'sem-internet') tela.appendChild(h('div', { class: 'alerta' }, [h('b', { texto: T('conferirAcesso') }), T('conferirAcessoTexto')]));
     if (!s) {
-      var email = h('input', { class: 'campo', type: 'email', id: 'gx-email', autocomplete: 'email', placeholder: 'voce@email.com' });
+      var volta = Conta.temVolta();
+      if (volta && Bio.ligada()) {
+        var mv = h('p', { class: 'pequeno', role: 'status', 'aria-live': 'polite' });
+        var bv = h('button', { class: 'bt cheio', type: 'button', texto: T('entrarBio') });
+        bv.addEventListener('click', function () {
+          bv.disabled = true; mv.textContent = '';
+          Bio.chaves().then(function (k) { return Conta.voltar(k.sessao).then(function () { if (Cofre.aberto()) return; return Cofre.temBio().then(function (t) { if (t) return Cofre.abrirComBio(k.cofre); }); }); })
+            .then(iniciarAcesso).catch(function (e) {
+              bv.disabled = false;
+              mv.textContent = e.message === 'cancelado' ? '' : e.message === 'volta-expirou' ? T('bioExpirou') : navigator.onLine ? T('bioErro') : T('semInternet');
+              if (e.message === 'volta-expirou') mostrar('entrar');
+            });
+        });
+        tela.appendChild(h('div', { class: 'cartao' }, [h('p', { texto: T('bemVindoDeVolta', { email: volta.email }) }), bv, mv]));
+        /* as outras formas ficam recolhidas: a digital é o caminho principal */
+        var resto = h('div', { hidden: true, style: 'display:flex;flex-direction:column;gap:1.1rem' });
+        tela.appendChild(h('button', { class: 'lk', type: 'button', texto: T('outroJeito'), onclick: function (e) { e.target.remove(); resto.hidden = false; } }));
+        tela.appendChild(resto);
+        tela = resto;
+      }
+      var email = h('input', { class: 'campo', type: 'email', id: 'gx-email', autocomplete: 'email', placeholder: 'voce@email.com', value: volta ? volta.email : '' });
       var senha = h('input', { class: 'campo', type: 'password', id: 'gx-senha', autocomplete: 'current-password' });
       var ver = h('button', { class: 'bt leve', type: 'button', 'aria-label': T('mostrarSenha'), texto: '👁', onclick: function () { senha.type = senha.type === 'password' ? 'text' : 'password'; } });
       var msg = h('p', { class: 'pequeno', role: 'status', 'aria-live': 'polite' });
@@ -1437,6 +1470,29 @@
         ]),
         h('button', { class: 'bt leve cheio', type: 'button', onclick: function () { Conta.google(); } }, 'Google')
       ]));
+      /* sem senha: código de 6 números (ou link) por e-mail */
+      var codBox = h('div', { hidden: true, style: 'display:flex;flex-direction:column;gap:.6rem' });
+      var otp = h('input', { class: 'campo', id: 'gx-otp', inputmode: 'numeric', autocomplete: 'one-time-code', maxlength: '6', placeholder: '000000' });
+      var bOtp = h('button', { class: 'bt cheio', type: 'button', texto: T('confirmarCodigo') });
+      codBox.appendChild(h('label', { class: 'rot', for: 'gx-otp', texto: T('codigoEmail') })); codBox.appendChild(otp); codBox.appendChild(bOtp);
+      var mOtp = h('p', { class: 'pequeno', role: 'status', 'aria-live': 'polite' });
+      var bEnviar = h('button', { class: 'bt sec cheio', type: 'button', texto: T('entrarSemSenha') });
+      bEnviar.addEventListener('click', function () {
+        if (!email.value) { mOtp.textContent = T('digiteEmail'); email.focus(); return; }
+        bEnviar.disabled = true;
+        Conta.enviarCodigo(email.value.trim()).then(function () {
+          mOtp.textContent = T('codigoEnviado'); codBox.hidden = false; otp.focus();
+          setTimeout(function () { bEnviar.disabled = false; bEnviar.textContent = T('reenviarCodigo'); }, 60000);
+        }).catch(function (e) { bEnviar.disabled = false; mOtp.textContent = e.status === 429 ? T('esperaUmMinuto') : navigator.onLine ? T('codigoNaoEnviado') : T('semInternet'); });
+      });
+      var confirmar = function () {
+        if (!/^\d{6}$/.test(otp.value.replace(/\D/g, ''))) { mOtp.textContent = T('codigo6'); otp.focus(); return; }
+        bOtp.disabled = true;
+        Conta.confirmarCodigo(email.value.trim(), otp.value).then(iniciarAcesso).catch(function () { bOtp.disabled = false; mOtp.textContent = T('codigoEmailErrado'); });
+      };
+      bOtp.addEventListener('click', confirmar);
+      otp.addEventListener('keydown', function (e) { if (e.key === 'Enter') confirmar(); });
+      tela.appendChild(h('div', { class: 'cartao' }, [h('h3', { texto: T('semSenhaTitulo') }), bEnviar, mOtp, codBox]));
       var entrar = function () {
         if (!email.value || !senha.value) { msg.textContent = T('faltaLogin'); return; }
         bt.disabled = true; msg.textContent = T('entrando');
@@ -1474,7 +1530,12 @@
     tela.appendChild(h('div', { class: 'cartao' }, [
       h('span', { texto: s ? T('contaConectada', { email: s.email }) : T('semContaAberto') }),
       h('span', { class: 'sub', texto: T('acesso_' + (a.origem || 'aberto')) + (a.ate ? ' · ' + T('ate', { d: fData(String(a.ate).slice(0, 10)) }) : '') + (a.offline ? ' · ' + T('semInternetUsando') : '') }),
-      s ? h('button', { class: 'bt perigo', type: 'button', onclick: function () { Conta.sair(); iniciarAcesso(); } }, T('sair')) : null
+      s && !Bio.ligada() ? h('button', { class: 'bt perigo', type: 'button', onclick: function () { Conta.sair(); iniciarAcesso(); } }, T('sair')) : null,
+      s && Bio.ligada() ? h('button', { class: 'bt leve', type: 'button', onclick: function () {
+        Bio.chaves().then(function (k) { return Conta.sairTrancando(k.sessao); }).then(function () { Cofre.fechar(); avisar(T('saiuVoltaBio')); iniciarAcesso(); })
+          .catch(function (e) { if (e.message !== 'cancelado') avisar(T('bioErro')); });
+      } }, T('sairBio')) : null,
+      s && Bio.ligada() ? h('button', { class: 'bt perigo', type: 'button', onclick: function () { desligarBio().then(function () { Conta.sair(); Cofre.fechar(); iniciarAcesso(); }); } }, T('sairDeVez')) : null
     ]));
     tela.appendChild(h('div', { class: 'cartao' }, [h('h3', { texto: T('meusDados') }), h('p', { class: 'sub', texto: T('meusDadosTexto') }),
       h('button', { class: 'bt leve', type: 'button', onclick: exportar }, T('exportar')),
@@ -1513,6 +1574,25 @@
     if (window.DGO) tela.appendChild(h('div', { class: 'cartao' }, [h('h3', { texto: T('iaTitulo') }), h('p', { class: 'sub', texto: T('iaTexto') }),
       h('button', { class: 'bt leve', type: 'button', onclick: function () { DGO.ia.guia(null, 'texto'); } }, T('iaConfigurar')),
       h('button', { class: 'bt leve', type: 'button', onclick: function () { DGO.abrirConfiguracoes && DGO.abrirConfiguracoes(); } }, T('maisAjustes'))]));
+    var cBio = h('div', { class: 'cartao' }, [h('h3', { texto: T('bioCartao') })]);
+    tela.appendChild(cBio);
+    Bio.suportada().then(function (ok) {
+      if (!ok) { cBio.appendChild(h('p', { class: 'sub', texto: T('bioNaoSuportada') })); return; }
+      if (!Bio.ligada()) {
+        cBio.appendChild(h('p', { class: 'sub', texto: T('bioTexto') }));
+        cBio.appendChild(Conta.sessao() ? h('button', { class: 'bt sec', type: 'button', texto: T('ligarBio'), onclick: function () { ligarBio().then(function () { mostrar('config'); }); } })
+          : h('p', { class: 'pequeno', texto: T('bioPrecisaLogin') }));
+        return;
+      }
+      cBio.appendChild(h('p', { class: 'sub', texto: T('bioLigadaTexto') }));
+      Promise.all([Cofre.existe(), Cofre.temBio()]).then(function (r) {
+        if (r[0] && !r[1]) cBio.appendChild(h('button', { class: 'bt sec', type: 'button', texto: T('bioNasReservas'), onclick: function () {
+          var corpo = h('div', {}), j = janela(T('bioNasReservas'), corpo);
+          pedirCofre(corpo, function () { Bio.chaves().then(function (k) { return Cofre.ligarBio(k.cofre); }).then(function () { avisar(T('bioLigada')); j.fechar(); mostrar('config'); }).catch(function () { avisar(T('bioErro')); }); });
+        } }));
+        cBio.appendChild(h('button', { class: 'bt perigo', type: 'button', texto: T('desligarBio'), onclick: function () { desligarBio().then(function () { mostrar('config'); }); } }));
+      });
+    });
     var esp = h('p', { class: 'sub', texto: T('carregando') });
     tela.appendChild(h('div', { class: 'cartao' }, [h('h3', { texto: T('espaco') }), esp,
       h('p', { class: 'pequeno', texto: T('semInternetComo') })]));
@@ -1535,8 +1615,39 @@
       if (!a.liberado) { mostrar('entrar'); return; }
       return Banco.meta('viagem-atual', null).then(carregarViagem).then(atualizarRestricoesGrupo).then(function () {
         mostrar(estado.rota === 'entrar' ? 'inicio' : estado.rota);
+        oferecerBio();
       });
     });
+  }
+
+  /* convite único depois do login: "da próxima vez, entre com digital ou rosto" */
+  function oferecerBio() {
+    var s = Conta.sessao();
+    if (!s || Bio.ligada()) return;
+    try { if (localStorage.getItem('guiaxpert.bio-oferta')) return; } catch (e) { return; }
+    Bio.suportada().then(function (ok) {
+      if (!ok) return;
+      try { localStorage.setItem('guiaxpert.bio-oferta', '1'); } catch (e) {}
+      var sim = h('button', { class: 'bt', type: 'button', texto: T('ligarBio') });
+      var nao = h('button', { class: 'bt leve', type: 'button', texto: T('agoraNao') });
+      var j = janela(T('bioTitulo'), h('div', { class: 'linha', style: 'flex-direction:column;align-items:stretch' }, [
+        h('p', { class: 'sub', texto: T('bioTexto') }), h('div', { class: 'acoes' }, [nao, sim])]));
+      nao.addEventListener('click', function () { j.fechar(); });
+      sim.addEventListener('click', function () { ligarBio().then(function (ok2) { if (ok2) j.fechar(); }); });
+    });
+  }
+  function ligarBio() {
+    var s = Conta.sessao();
+    return Bio.ligar(s && s.email).then(function (k) {
+      return (Cofre.aberto() ? Cofre.ligarBio(k.cofre) : Promise.resolve()).then(function () { avisar(T('bioLigada')); return true; });
+    }).catch(function (e) {
+      if (e.message !== 'cancelado') avisar(e.message === 'sem-prf' ? T('bioSemPrf') : T('bioErro'));
+      return false;
+    });
+  }
+  function desligarBio() {
+    Bio.desligar(); Conta.esquecerVolta();
+    return Cofre.desligarBio().then(function () { avisar(T('bioDesligada')); });
   }
 
   function iniciar() {

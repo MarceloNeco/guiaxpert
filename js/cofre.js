@@ -6,7 +6,8 @@
    - Uma chave de dados aleatória (AES-GCM 256) embaralha o conteúdo.
    - Essa chave fica guardada "embrulhada" duas vezes:
        1) pelo PIN (PBKDF2-SHA256, 600.000 rodadas, sal aleatório);
-       2) pelo código de recuperação, mostrado UMA vez ao criar.
+       2) pelo código de recuperação, mostrado UMA vez ao criar;
+       3) se a pessoa ligar, pela digital ou rosto (biometria.js).
    - A chave aberta só existe na memória enquanto o cofre está aberto.
      Fecha sozinho depois de 5 minutos sem uso e ao sair do app.
    - Perder PIN e código = perder o que está no cofre. A tela diz isso.
@@ -102,6 +103,26 @@
         r[1].pin = r[0];
         return Banco.definirMeta('cofre', r[1]);
       });
+    },
+
+    /* digital ou rosto (biometria.js): mais um embrulho da mesma chave de dados */
+    temBio: function () { return Banco.meta('cofre', null).then(function (c) { return !!(c && c.bio); }); },
+    ligarBio: function (chaveBio) {
+      if (!chave) return Promise.reject(new Error('fechado'));
+      var iv = aleatorio(12);
+      return crypto.subtle.wrapKey('raw', chave, chaveBio, { name: 'AES-GCM', iv: iv }).then(function (w) {
+        return Banco.meta('cofre', null).then(function (c) { c.bio = { iv: b64(iv), chave: b64(w) }; return Banco.definirMeta('cofre', c); });
+      });
+    },
+    abrirComBio: function (chaveBio) {
+      return Banco.meta('cofre', null).then(function (c) {
+        if (!c || !c.bio) throw new Error('sem-bio');
+        return crypto.subtle.unwrapKey('raw', deB64(c.bio.chave), chaveBio, { name: 'AES-GCM', iv: deB64(c.bio.iv) },
+          { name: 'AES-GCM', length: 256 }, true, ['encrypt', 'decrypt']);
+      }).then(function (k) { chave = k; armar(); return true; });
+    },
+    desligarBio: function () {
+      return Banco.meta('cofre', null).then(function (c) { if (c && c.bio) { delete c.bio; return Banco.definirMeta('cofre', c); } });
     },
 
     fechar: function () { chave = null; clearTimeout(relogio); document.dispatchEvent(new CustomEvent('gx:cofre', { detail: { aberto: false } })); },
