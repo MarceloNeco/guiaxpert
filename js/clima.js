@@ -142,12 +142,14 @@
     },
 
     /* avisos práticos de um dia (textos em textos.js) */
-    avisos: function (dia) {
+    /* sens = { calor, frio }: alguém do grupo sente mais → avisa antes */
+    avisos: function (dia, sens) {
       var a = [];
       if (!dia) return a;
+      sens = sens || {};
       if (dia.chuva != null && dia.chuva >= 50) a.push('climaChuva');
-      if (dia.min != null && dia.min <= 10) a.push('climaFrio');
-      if (dia.max != null && dia.max >= 30) a.push('climaCalor');
+      if (dia.min != null && dia.min <= (sens.frio ? 14 : 10)) a.push('climaFrio');
+      if (dia.max != null && dia.max >= (sens.calor ? 27 : 30)) a.push('climaCalor');
       if (dia.vento != null && dia.vento >= 45) a.push('climaVento');
       return a;
     },

@@ -63,6 +63,14 @@ roteiro: viagem.opcao_ativa → loja roteiros (várias opções; pacote | manual
 dia da viagem → dia do modelo: 1º = chegada, último = volta, meio = repete os do meio
 ```
 
+## Perfil fixo e perfil da viagem
+
+- `pessoa.grupo`: `familia` (vem marcada em toda viagem nova), `convidado` (fica guardado) ou `viagem` (só de uma viagem;
+  apagada junto com a última viagem em que estava).
+- `viagem.ajustes[pessoaId]`: só as DIFERENÇAS para aquela viagem (`mobilidade`, `calor`, `frio`, `soneca`, `gostos`;
+  em `gostos`, 0 = "não nesta viagem"). `perfilNaViagem(p, v)` junta perfil fixo + ajustes; `pessoasDaViagem()` já
+  devolve juntado e é o que lugares, IA e clima usam. Comida/alergias não têm ajuste (ficam só no cofre do perfil fixo).
+
 ## Nuvem (próximo passo)
 
 Cada loja vira uma tabela `guiaxpert_<loja>` com `user_id`, RLS "own" e GRANT só para `authenticated`. A fila

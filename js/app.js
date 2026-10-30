@@ -12,7 +12,7 @@
 (function () {
   'use strict';
   var d = document, $ = function (id) { return d.getElementById(id); };
-  var VERSAO_APP = '0.2.0';
+  var VERSAO_APP = '0.3.0';
 
   /* ------------------------------------------------------------------
      1. UTILIDADES
@@ -376,6 +376,7 @@
       var agoraMin = new Date().getHours() * 60 + new Date().getMinutes();
       var prox = (dia && dia.itens || []).filter(function (it) { return it.hora && minutos(it.hora) >= agoraMin - 30; })[0];
       if (prox) tela.appendChild(cartaoAgora(prox));
+      if (pessoasDaViagem().some(function (p) { return p.soneca; }) && agoraMin < 15 * 60) tela.appendChild(h('div', { class: 'alerta' }, [h('b', { texto: T('avisoSoneca') })]));
     }
 
     /* clima */
@@ -420,7 +421,8 @@
       ]);
     })));
     var avisos = {};
-    ds.forEach(function (x) { Clima.avisos(x).forEach(function (a) { avisos[a] = (avisos[a] || []).concat(fData(x.data, true)); }); });
+    var grupo = pessoasDaViagem(), sens = { calor: grupo.some(function (p) { return p.calor; }), frio: grupo.some(function (p) { return p.frio; }) };
+    ds.forEach(function (x) { Clima.avisos(x, sens).forEach(function (a) { avisos[a] = (avisos[a] || []).concat(fData(x.data, true)); }); });
     Object.keys(avisos).forEach(function (a) { cx.appendChild(h('div', { class: 'alerta' }, [h('b', { texto: T(a) }), avisos[a].join(', ')])); });
     var v = estado.viagem, onde = (v && v.destinoTexto) || (estado.pacote && Pacotes.nome(estado.pacote, idioma())) || '';
     cx.appendChild(h('p', { class: 'pequeno' }, [
@@ -584,7 +586,7 @@
       return;
     }
     avisar(T('iaMontando'));
-    var pessoas = estado.pessoas.filter(function (p) { return (v.pessoas || []).indexOf(p.id) > -1; });
+    var pessoas = pessoasDaViagem(v);
     var pr = Cofre.aberto() ? Promise.all(pessoas.map(function (p) {
       return Cofre.decifrar(p.restricoes).then(function (r) { var c = Object.assign({}, p); c._restricoes = r ? listaRestricoes(r) : []; return c; }).catch(function () { return p; });
     })) : Promise.resolve(pessoas);
@@ -664,10 +666,26 @@
     ]));
   };
   var somaGostos = {};
-  function pessoasDaViagem() {
-    var ids = estado.viagem && estado.viagem.pessoas || [];
-    return estado.pessoas.filter(function (p) { return ids.indexOf(p.id) > -1; });
+  /* quem vai nesta viagem, já com os ajustes "só nesta viagem" por cima do perfil fixo */
+  function pessoasDaViagem(v) {
+    v = v || estado.viagem;
+    var ids = v && v.pessoas || [];
+    return estado.pessoas.filter(function (p) { return ids.indexOf(p.id) > -1; }).map(function (p) { return perfilNaViagem(p, v); });
   }
+  var CAMPOS_AJUSTE = ['mobilidade', 'calor', 'frio', 'soneca'];
+  function perfilNaViagem(p, v) {
+    var a = v && v.ajustes && v.ajustes[p.id];
+    if (!a) return p;
+    var c = Object.assign({}, p);
+    CAMPOS_AJUSTE.forEach(function (k) { if (a[k] !== undefined) c[k] = a[k]; });
+    if (a.gostos) {
+      c.gostos = Object.assign({}, p.gostos || {});
+      Object.keys(a.gostos).forEach(function (id) { if (a.gostos[id]) c.gostos[id] = a.gostos[id]; else delete c.gostos[id]; });
+    }
+    c._ajustado = true;
+    return c;
+  }
+  function grupoDe(p) { return p.grupo || 'familia'; }
   function cartaoLugar(l, restr) {
     var fav = !!estado.favoritos['lugar:' + l.id];
     var det = h('details', { class: 'lugar', 'data-id': l.id });
@@ -934,25 +952,82 @@
     tela.appendChild(h('p', { class: 'sub', texto: T('familiaTexto') }));
     tela.appendChild(h('button', { class: 'bt', type: 'button', onclick: function () { janelaPessoa(null); } }, '＋ ' + T('addPessoa')));
     if (!estado.pessoas.length) tela.appendChild(h('p', { class: 'sub', texto: T('semPessoas') }));
-    estado.pessoas.forEach(function (p) {
-      var nome = p.apelido || T('par_' + p.parentesco), g = contarGostos(p.gostos);
-      var marc = [T('par_' + p.parentesco), p.idade !== '' && p.idade != null ? T('anos', { n: p.idade }) : null,
-        p.mobilidade && p.mobilidade !== 'normal' ? T('mob_' + p.mobilidade) : null, p.calor ? T('sensCalor') : null, p.frio ? T('sensFrio') : null,
-        p.soneca ? T('soneca') : null, p.restricoes ? '🔒 ' + T('temRestricoes') : null].filter(Boolean);
-      tela.appendChild(h('div', { class: 'cartao pessoa-cartao' }, [
-        h('span', { class: 'avatar', 'aria-hidden': 'true', texto: nome.trim().charAt(0).toUpperCase() }),
-        h('b', { class: 'nomeP', texto: nome }),
-        h('div', { class: 'marcadores' }, marc.map(function (m) { return h('span', { texto: m }); })),
-        g.total ? h('div', { class: 'resumo-gostos', style: 'grid-column:1/-1;margin-top:.35rem' }, topGostos(p.gostos, 6).map(function (id) {
-          return h('span', { class: 'gosto', 'data-v': String(p.gostos[id]), texto: Gostos.nome(id, idioma()) }); })) : null,
-        h('div', { class: 'botoes' }, [
-          h('button', { class: 'bt sec', type: 'button', onclick: function () { janelaGostos(p, function () { mostrar('familia'); }); } }, g.total ? T('gostosN', { n: g.total }) : T('marcarGostos')),
-          h('button', { class: 'bt leve', type: 'button', onclick: function () { janelaPessoa(p); } }, T('editar')),
-          p.restricoes ? h('button', { class: 'bt leve', type: 'button', onclick: function () { cartaoAlergia(p); } }, T('cartaoAlergia')) : null
-        ])
-      ]));
+    var v = estado.viagem, naViagem = v && v.pessoas || [];
+    [['familia', 'grupoFamilia', 'grupoFamiliaTexto'], ['convidado', 'grupoConvidados', 'grupoConvidadosTexto'], ['viagem', 'grupoSoViagem', 'grupoSoViagemTexto']].forEach(function (gr) {
+      var ps = estado.pessoas.filter(function (p) { return grupoDe(p) === gr[0]; });
+      if (!ps.length) return;
+      tela.appendChild(h('div', { class: 'secao-cab' }, [h('h2', { texto: T(gr[1]) }), h('p', { class: 'pequeno', texto: T(gr[2]) })]));
+      ps.forEach(function (p) { tela.appendChild(cartaoPessoa(p, v && naViagem.indexOf(p.id) > -1 ? v : null)); });
     });
   };
+  function cartaoPessoa(p, v) {
+    var x = v ? perfilNaViagem(p, v) : p;
+    var nome = p.apelido || T('par_' + p.parentesco), g = contarGostos(x.gostos);
+    var marc = [T('par_' + p.parentesco), p.idade !== '' && p.idade != null ? T('anos', { n: p.idade }) : null,
+      x.mobilidade && x.mobilidade !== 'normal' ? T('mob_' + x.mobilidade) : null, x.calor ? T('sensCalor') : null, x.frio ? T('sensFrio') : null,
+      x.soneca ? T('soneca') : null, p.restricoes ? '🔒 ' + T('temRestricoes') : null].filter(Boolean);
+    return h('div', { class: 'cartao pessoa-cartao' }, [
+      h('span', { class: 'avatar', 'aria-hidden': 'true', texto: nome.trim().charAt(0).toUpperCase() }),
+      h('b', { class: 'nomeP', texto: nome }),
+      h('div', { class: 'marcadores' }, marc.map(function (m) { return h('span', { texto: m }); })),
+      x._ajustado ? h('p', { class: 'ajustado', texto: T('ajustadoNaViagem', { viagem: v.nome }) }) : null,
+      g.total ? h('div', { class: 'resumo-gostos', style: 'grid-column:1/-1;margin-top:.35rem' }, topGostos(x.gostos, 6).map(function (id) {
+        return h('span', { class: 'gosto', 'data-v': String(x.gostos[id]), texto: Gostos.nome(id, idioma()) }); })) : null,
+      h('div', { class: 'botoes' }, [
+        h('button', { class: 'bt sec', type: 'button', onclick: function () { janelaGostos(p, function () { mostrar('familia'); }); } }, contarGostos(p.gostos).total ? T('gostosN', { n: contarGostos(p.gostos).total }) : T('marcarGostos')),
+        h('button', { class: 'bt leve', type: 'button', onclick: function () { janelaPessoa(p); } }, T('editar')),
+        v ? h('button', { class: 'bt leve', type: 'button', onclick: function () { janelaAjuste(p, v, function () { mostrar('familia'); }); } }, T('ajustarViagem')) : null,
+        p.restricoes ? h('button', { class: 'bt leve', type: 'button', onclick: function () { cartaoAlergia(p); } }, T('cartaoAlergia')) : null
+      ])
+    ]);
+  }
+
+  /* "Mudar só nesta viagem": guarda só as diferenças em viagem.ajustes; o perfil fixo não muda */
+  function janelaAjuste(p, v, depois) {
+    var x = perfilNaViagem(p, v), nome = p.apelido || T('par_' + p.parentesco);
+    var a = Object.assign({}, v.ajustes && v.ajustes[p.id] || {});
+    var mob = h('select', { class: 'campo', id: 'gx-a-mob' }, ['normal', 'evitaSubidas', 'cadeira', 'carrinho'].map(function (k) { return h('option', { value: k, selected: x.mobilidade === k }, T('mob_' + k)); }));
+    var chk = function (id, k, rot) { var c = h('input', { type: 'checkbox', id: id }); c.checked = !!x[k]; return [c, h('label', { for: id, texto: ' ' + rot })]; };
+    var calor = chk('gx-a-calor', 'calor', T('sensCalor')), frio = chk('gx-a-frio', 'frio', T('sensFrio')), son = chk('gx-a-soneca', 'soneca', T('soneca'));
+    var nG = function () { var gg = a.gostos ? Object.keys(a.gostos).length : 0; return gg ? T('gostosViagemN', { n: gg }) : T('gostosViagem'); };
+    var bG = h('button', { class: 'bt sec', type: 'button', texto: nG() });
+    var ok = h('button', { class: 'bt', type: 'button', texto: T('salvar') });
+    var voltar = v.ajustes && v.ajustes[p.id] ? h('button', { class: 'bt perigo', type: 'button', texto: T('voltarPerfilFixo') }) : null;
+    var j = janela(T('ajusteTitulo', { nome: nome }), h('div', { class: 'linha', style: 'flex-direction:column;align-items:stretch' }, [
+      h('p', { class: 'sub', texto: T('ajusteTexto', { viagem: v.nome }) }),
+      h('label', { class: 'rot', for: 'gx-a-mob', texto: T('mobilidade') }), mob,
+      h('div', {}, calor), h('div', {}, frio), h('div', {}, son), bG,
+      h('p', { class: 'dica', texto: T('ajusteComida') }),
+      h('div', { class: 'acoes' }, [voltar, ok])]), depois);
+    function gravar(fechar) {
+      var ajustes = Object.assign({}, v.ajustes || {});
+      var limpo = {};
+      CAMPOS_AJUSTE.forEach(function (k) { if (a[k] !== undefined && a[k] !== (k === 'mobilidade' ? (p[k] || 'normal') : !!p[k])) limpo[k] = a[k]; });
+      if (a.gostos && Object.keys(a.gostos).length) limpo.gostos = a.gostos;
+      if (Object.keys(limpo).length) ajustes[p.id] = limpo; else delete ajustes[p.id];
+      v.ajustes = ajustes;
+      return Banco.gravar('viagens', v).then(function (nv) { if (estado.viagem && estado.viagem.id === nv.id) estado.viagem = nv; v = nv; if (fechar) { avisar(T('salvo')); j.fechar(); } });
+    }
+    function lerCampos() { a.mobilidade = mob.value; a.calor = calor[0].checked; a.frio = frio[0].checked; a.soneca = son[0].checked; }
+    bG.addEventListener('click', function () {
+      lerCampos();
+      janelaGostos(p, function () { bG.textContent = nG(); }, {
+        titulo: T('gostosNaViagem', { nome: nome }), gostos: perfilNaViagem(p, v).gostos,
+        salvar: function (novo) {
+          /* diferença em relação ao perfil fixo: 0 = "não nesta viagem" */
+          var base = p.gostos || {}, dif = {};
+          Object.keys(novo).forEach(function (id) { if (novo[id] !== base[id]) dif[id] = novo[id]; });
+          Object.keys(base).forEach(function (id) { if (!novo[id]) dif[id] = 0; });
+          a.gostos = dif; gravar(false);
+        }
+      });
+    });
+    ok.addEventListener('click', function () { lerCampos(); gravar(true); });
+    if (voltar) voltar.addEventListener('click', function () {
+      var ajustes = Object.assign({}, v.ajustes || {}); delete ajustes[p.id]; v.ajustes = ajustes;
+      Banco.gravar('viagens', v).then(function (nv) { if (estado.viagem && estado.viagem.id === nv.id) estado.viagem = nv; avisar(T('voltouPerfil')); j.fechar(); });
+    });
+  }
   function contarGostos(g) {
     var c = { ama: 0, curte: 0, evita: 0, total: 0 };
     Object.keys(g || {}).forEach(function (id) { var v = g[id]; if (v === 2) c.ama++; else if (v === 1) c.curte++; else if (v === -1) c.evita++; else return; c.total++; });
@@ -967,11 +1042,12 @@
 
   /* Gostos: tocar muda o estado (curte → ama → evita → nada). Ao marcar,
      os parecidos do mesmo grupinho aparecem logo ao lado. Salva a cada toque. */
-  function janelaGostos(p, depois) {
-    var g = Object.assign({}, p.gostos || {}), lg = idioma(), nome = p.apelido || T('par_' + p.parentesco);
+  function janelaGostos(p, depois, modo) {
+    modo = modo || {};
+    var g = Object.assign({}, modo.gostos || p.gostos || {}), lg = idioma(), nome = p.apelido || T('par_' + p.parentesco);
     var abertos = {}, novos = {};
     var corpo = h('div', { style: 'display:flex;flex-direction:column;gap:.4rem;flex:1' });
-    var j = janela(T('gostosTitulo', { nome: nome }), corpo, function () { if (depois) depois(); });
+    var j = janela(modo.titulo || T('gostosTitulo', { nome: nome }), corpo, function () { if (depois) depois(); });
     j.caixa.classList.add('cheia');
     var busca = h('input', { class: 'campo', type: 'search', id: 'gx-gosto-busca', placeholder: T('buscarGosto'), 'aria-label': T('buscarGosto'), autocomplete: 'off' });
     var temas = h('div', { class: 'temas', role: 'group', 'aria-label': T('temas') });
@@ -988,6 +1064,7 @@
 
     function salvar() {
       Object.keys(g).forEach(function (k) { if (!g[k]) delete g[k]; });
+      if (modo.salvar) { modo.salvar(Object.assign({}, g)); return; }
       p.gostos = Object.assign({}, g);
       if (p.id) Banco.gravar('pessoas', p).then(function (nv) { p.versao = nv.versao; p.atualizado_em = nv.atualizado_em; });
     }
@@ -1042,12 +1119,13 @@
     /* não abrir o teclado do celular sozinho: o foco vai para o fechar */
     setTimeout(function () { var x = j.caixa.querySelector('.ic'); if (x) x.focus(); }, 60);
   }
-  function janelaPessoa(p) {
-    p = p || {};
+  function janelaPessoa(p, novo) {
+    p = p || Object.assign({}, novo || {});
     var apelido = h('input', { class: 'campo', id: 'gx-p-apelido', maxlength: '30', value: p.apelido || '', placeholder: T('exApelido') });
     var par = h('select', { class: 'campo', id: 'gx-p-par' }, PARENTESCO.map(function (x) { return h('option', { value: x, selected: p.parentesco === x }, T('par_' + x)); }));
     var idade = h('input', { class: 'campo', id: 'gx-p-idade', type: 'number', min: '0', max: '110', inputmode: 'numeric', value: p.idade != null ? p.idade : '' });
     var mob = h('select', { class: 'campo', id: 'gx-p-mob' }, ['normal', 'evitaSubidas', 'cadeira', 'carrinho'].map(function (x) { return h('option', { value: x, selected: p.mobilidade === x }, T('mob_' + x)); }));
+    var grupo = h('select', { class: 'campo', id: 'gx-p-grupo' }, ['familia', 'convidado', 'viagem'].map(function (x) { return h('option', { value: x, selected: grupoDe(p) === x }, T('grupo_' + x)); }));
     var chk = function (id, k, rot) { var c = h('input', { type: 'checkbox', id: id }); c.checked = !!p[k]; return [c, h('label', { for: id, texto: ' ' + rot })]; };
     var calor = chk('gx-p-calor', 'calor', T('sensCalor')), frio = chk('gx-p-frio', 'frio', T('sensFrio')), son = chk('gx-p-soneca', 'soneca', T('soneca'));
     var bRestr = h('button', { class: 'bt leve', type: 'button' }, '🔒 ' + T('comidaSaude'));
@@ -1061,13 +1139,14 @@
     var j = janela(p.id ? T('editar') : T('addPessoa'), h('div', { class: 'linha', style: 'flex-direction:column;align-items:stretch' }, [
       h('label', { class: 'rot', for: 'gx-p-apelido', texto: T('apelidoOpcional') }), apelido, h('p', { class: 'dica', texto: T('apelidoDica') }),
       h('div', { class: 'dois' }, [h('div', {}, [h('label', { class: 'rot', for: 'gx-p-par', texto: T('parentesco') }), par]), h('div', {}, [h('label', { class: 'rot', for: 'gx-p-idade', texto: T('idade') }), idade])]),
+      h('label', { class: 'rot', for: 'gx-p-grupo', texto: T('fazParte') }), grupo, h('p', { class: 'dica', texto: T('fazParteDica') }),
       h('label', { class: 'rot', for: 'gx-p-mob', texto: T('mobilidade') }), mob,
       h('div', {}, calor), h('div', {}, frio), h('div', {}, son), bRestr, bGostos, h('div', { class: 'acoes' }, [apagar, ok])]));
     var novaRestr;
     bRestr.addEventListener('click', function () { janelaRestricoes(p, function (r) { novaRestr = r; bRestr.textContent = '🔒 ' + T('comidaSaude') + ' ✓'; }); });
     ok.addEventListener('click', function () {
       var reg = Object.assign({}, p, { apelido: apelido.value.trim(), parentesco: par.value, idade: idade.value === '' ? '' : Math.max(0, Math.min(110, +idade.value)),
-        mobilidade: mob.value, calor: calor[0].checked, frio: frio[0].checked, soneca: son[0].checked });
+        mobilidade: mob.value, calor: calor[0].checked, frio: frio[0].checked, soneca: son[0].checked, grupo: grupo.value });
       reg.faixa = faixa(reg.idade);
       (novaRestr !== undefined ? (novaRestr ? Cofre.cifrar(novaRestr) : Promise.resolve(null)).then(function (b) { reg.restricoes = b; }) : Promise.resolve())
         .then(function () { return Banco.gravar('pessoas', reg); })
@@ -1152,7 +1231,13 @@
       if (campo.value.trim() !== v.nome) { campo.focus(); avisar(T('nomeNaoConfere')); return; }
       Banco.listar('roteiros', function (r) { return r.viagem_id === v.id; }).then(function (rs) {
         return Promise.all(rs.map(function (r) { return Banco.apagar('roteiros', r.id); }));
-      }).then(function () { return Banco.apagar('viagens', v.id); }).then(function () { j.fechar(); return carregarViagem(); }).then(function () { Nav.ir('viagens'); });
+      }).then(function () { return Banco.apagar('viagens', v.id); }).then(function () {
+        return Banco.listar('viagens').then(function (outras) {
+          var usados = {}; outras.forEach(function (o) { (o.pessoas || []).forEach(function (id) { usados[id] = 1; }); });
+          var soDela = estado.pessoas.filter(function (p) { return grupoDe(p) === 'viagem' && (v.pessoas || []).indexOf(p.id) > -1 && !usados[p.id]; });
+          return Promise.all(soDela.map(function (p) { return Banco.apagar('pessoas', p.id); }));
+        });
+      }).then(function () { j.fechar(); return carregarViagem(); }).then(function () { Nav.ir('viagens'); });
     });
   }
 
@@ -1162,7 +1247,7 @@
      ------------------------------------------------------------------ */
   var PASSOS = ['destino', 'datas', 'quem', 'estilo', 'estadia', 'pronto'];
   TELAS.nova = function (tela) {
-    var r = estado.rascunho || (estado.rascunho = { passo: 0, destino: null, destinoTexto: '', inicio: '', fim: '', pessoas: [], preferencias: { ritmo: 'equilibrado', orcamento: 'medio', interesses: [], transporte: 'carro' }, estadias: [], usarPacote: true, ia: false });
+    var r = estado.rascunho || (estado.rascunho = { passo: 0, destino: null, destinoTexto: '', inicio: '', fim: '', pessoas: estado.pessoas.filter(function (p) { return grupoDe(p) === 'familia'; }).map(function (p) { return p.id; }), preferencias: { ritmo: 'equilibrado', orcamento: 'medio', interesses: [], transporte: 'carro' }, estadias: [], usarPacote: true, ia: false });
     var i = r.passo, total = PASSOS.length;
     tela.appendChild(h('p', { class: 'passo', texto: T('passoDe', { i: i + 1, n: total }) }));
     tela.appendChild(h('div', { class: 'progresso', role: 'progressbar', 'aria-valuemin': '1', 'aria-valuemax': String(total), 'aria-valuenow': String(i + 1) }, h('i', { style: 'width:' + Math.round((i + 1) / total * 100) + '%' })));
@@ -1217,16 +1302,29 @@
   PASSO.quem = function (c, r, val) {
     c.appendChild(h('h1', { texto: T('pQuem') }));
     c.appendChild(h('p', { class: 'sub', texto: T('pQuemTexto') }));
-    estado.pessoas.forEach(function (p) {
-      var cb = h('input', { type: 'checkbox', id: 'gx-w-p-' + p.id }); cb.checked = r.pessoas.indexOf(p.id) > -1;
-      cb.addEventListener('change', function () { r.pessoas = r.pessoas.filter(function (x) { return x !== p.id; }); if (cb.checked) r.pessoas.push(p.id); });
-      c.appendChild(h('div', { class: 'cartao pessoa' }, [h('label', { for: 'gx-w-p-' + p.id }, [cb, ' ', h('b', { texto: p.apelido || T('par_' + p.parentesco) }), ' · ' + T('par_' + p.parentesco) + (p.idade !== '' ? ' · ' + T('anos', { n: p.idade }) : '')]),
-        h('button', { class: 'bt leve', type: 'button', onclick: function () { janelaPessoa.depois = function () { carregarViagem(estado.viagem && estado.viagem.id).then(function () { mostrar('nova'); }); }; janelaPessoa(p); } }, T('editar'))]));
+    var depoisEditar = function () { Banco.listar('pessoas').then(function (ps) { estado.pessoas = ps; mostrar('nova'); }); };
+    [['familia', 'grupoFamilia'], ['convidado', 'grupoConvidados'], ['viagem', 'grupoSoEsta']].forEach(function (gr) {
+      /* "só de uma viagem" de outra viagem não aparece aqui */
+      var ps = estado.pessoas.filter(function (p) { return grupoDe(p) === gr[0] && (gr[0] !== 'viagem' || r.pessoas.indexOf(p.id) > -1); });
+      if (!ps.length) return;
+      c.appendChild(h('h2', { class: 'secao-cab', texto: T(gr[1]) }));
+      ps.forEach(function (p) {
+        var cb = h('input', { type: 'checkbox', id: 'gx-w-p-' + p.id }); cb.checked = r.pessoas.indexOf(p.id) > -1;
+        cb.addEventListener('change', function () { r.pessoas = r.pessoas.filter(function (x) { return x !== p.id; }); if (cb.checked) r.pessoas.push(p.id); });
+        c.appendChild(h('div', { class: 'cartao pessoa' }, [h('label', { for: 'gx-w-p-' + p.id }, [cb, ' ', h('b', { texto: p.apelido || T('par_' + p.parentesco) }), ' ', h('span', { class: 'pequeno', texto: T('par_' + p.parentesco) + (p.idade !== '' && p.idade != null ? ', ' + T('anos', { n: p.idade }) : '') })]),
+          h('button', { class: 'bt leve', type: 'button', onclick: function () { janelaPessoa.depois = depoisEditar; janelaPessoa(p); } }, T('editar'))]));
+      });
     });
-    c.appendChild(h('button', { class: 'bt sec', type: 'button', onclick: function () {
-      janelaPessoa.depois = function (nova) { r.pessoas.push(nova.id); Banco.listar('pessoas').then(function (ps) { estado.pessoas = ps; mostrar('nova'); }); };
-      janelaPessoa(null);
-    } }, '＋ ' + T('addPessoa')));
+    var add = function (grupo) {
+      return function () {
+        janelaPessoa.depois = function (nova) { r.pessoas.push(nova.id); depoisEditar(); };
+        janelaPessoa(null, { grupo: grupo });
+      };
+    };
+    c.appendChild(h('div', { class: 'grade' }, [
+      h('button', { class: 'bt sec', type: 'button', onclick: add('familia') }, '＋ ' + T('addFamilia')),
+      h('button', { class: 'bt leve', type: 'button', onclick: add('viagem') }, '＋ ' + T('addSoEsta'))]));
+    c.appendChild(h('p', { class: 'dica', texto: T('dicaAjustarDepois') }));
     c.appendChild(h('p', { class: 'dica', texto: T('privacidadePessoas') }));
     val(function () { return r.pessoas.length ? true : T('faltaPessoas'); });
   };

@@ -2,6 +2,24 @@
   "app": "guiaxpert",
   "versoes": [
     {
+      "versao": "0.3.0",
+      "data": "2026-10-30",
+      "itens": {
+        "pt": [
+          "Família fixa e convidados: em Quem viaja, cada pessoa é da 'Minha família' (já vem marcada em toda viagem nova), 'Convidado' (fica guardado e você escolhe quando vai) ou 'Só de uma viagem' (sai da lista quando a viagem é apagada).",
+          "No wizard, botão 'Convidado só desta viagem' para quem vai uma vez, como a sogra.",
+          "'Ajustar nesta viagem': muda para andar, calor, frio, soneca e gostos só naquela viagem; o perfil fixo continua igual. 'Voltar ao perfil fixo' desfaz.",
+          "A lista 'Para vocês', o roteiro com IA e os avisos do clima usam o perfil da viagem: quem sente calor ou frio faz o aviso aparecer antes; quem faz soneca ganha um lembrete na tela Hoje."
+        ],
+        "en": [
+          "Fixed family and guests: in Travelers, each person is 'My family' (preselected on every new trip), 'Guest' (kept on file, you choose when) or 'One trip only' (removed when that trip is deleted).",
+          "In the new-trip wizard, a 'Guest for this trip only' button for one-off travelers like in-laws.",
+          "'Adjust for this trip': change mobility, heat, cold, naps and likes for that trip only; the fixed profile stays the same. 'Back to fixed profile' undoes it.",
+          "The 'For you' list, the AI itinerary and weather alerts use the trip profile: heat- or cold-sensitive travelers trigger alerts earlier; nappers get a reminder on Today."
+        ]
+      }
+    },
+    {
       "versao": "0.2.0",
       "data": "2026-10-30",
       "itens": {
