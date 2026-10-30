@@ -30,6 +30,9 @@ HTML, CSS e JavaScript puros. Sem framework, sem passo de build. Abra e edite.
 | `js/clima.js` | `Clima`: Open-Meteo, guarda 1 h, avisos práticos | pouco |
 | `js/gostos.js` | `Gostos`: catálogo de 249 gostos em 15 temas (PT/EN), ciclo curte → ama → evita, soma do grupo, "combina" com lugares e resumo para a IA | ao acrescentar gosto |
 | `js/descobrir.js` | `Descobrir`: OpenStreetMap (Overpass) e roteiro pela IA da pessoa (`DGO.ia`) | sim |
+| `js/contexto.js` | `Contexto`: VIAGEM ou EXPLORAR (meta `contexto`); automático = entra na viagem em curso | pouco |
+| `js/mapa.js` | `Mapa.tela`: mapa + busca + filtros + painel (lista/cartão); pontos do dia numerados e com linha; cores por situação | sim |
+| `js/explorar.js` | `Explorar`: cidade por GPS ou busca, descobrir (OSM), salvar, pôr numa viagem, planejar hoje aqui | sim |
 | `js/nuvem.js` | `Nuvem`: sincroniza pessoas, viagens, roteiros, favoritos e lugares com `guiaxpert_dados` (baixa o que mudou, sobe a fila; vence o mais novo). Nunca sobe reservas nem `restricoes` | com cuidado |
 | `js/conta.js` | `Conta`: login REST, sessão comum `solverone.sessao.v1`, `acesso_app`, códigos de degustação | com cuidado |
 | `js/app.js` | telas, navegação (`Nav`) e wizard "Nova viagem" | sim |
@@ -49,7 +52,8 @@ HTML, CSS e JavaScript puros. Sem framework, sem passo de build. Abra e edite.
 3. **Texto da pessoa nunca vai por `innerHTML`.** Use `h()` (vira `textContent`). `svg` em `h()` só com ícone fixo do código.
 4. **Dado sensível só embaralhado:** reservas e comida/alergias/dieta (saúde e religião, LGPD art. 11) passam pelo `Cofre`.
 5. **Nome de pessoa nunca vai para a IA** (LGPD art. 14 para crianças): `Descobrir.resumoGrupo` manda só faixa, idade e cuidados.
-6. **Histórico do navegador só pelo `Nav`** (o Voltar do celular navega dentro do app; camada = gaveta, busca, janela).
+6. **Módulos de tela** (mapa, explorar) só falam com `app.js` por `window.GX` (ajudantes publicados no fim do app.js).
+7. **Histórico do navegador só pelo `Nav`** (o Voltar do celular navega dentro do app; camada = gaveta, busca, janela).
 7. **Todo texto nasce em PT e EN** em `js/textos.js`.
 8. **Formato das lojas = formato das tabelas.** Campo novo entra nos dois (ver "Nuvem").
 9. **Localização só com toque**, aproximada no aparelho, nunca para a nuvem.

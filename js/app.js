@@ -12,7 +12,7 @@
 (function () {
   'use strict';
   var d = document, $ = function (id) { return d.getElementById(id); };
-  var VERSAO_APP = '0.5.1';
+  var VERSAO_APP = '0.6.0';
 
   /* ------------------------------------------------------------------
      1. UTILIDADES
@@ -69,7 +69,11 @@
     lugares: '<svg viewBox="0 0 24 24"><path d="M8 6h12M8 12h12M8 18h12M4 6h.01M4 12h.01M4 18h.01"/></svg>',
     mapa: '<svg viewBox="0 0 24 24"><path d="M9 4 3 6v14l6-2 6 2 6-2V4l-6 2-6-2z"/><path d="M9 4v14M15 6v14"/></svg>',
     reservas: '<svg viewBox="0 0 24 24"><rect x="3" y="7" width="18" height="12" rx="2"/><path d="M8 7V5h8v2M3 12h18"/></svg>',
-    lupa: '<svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="6.5"/><path d="m16 16 5 5"/></svg>'
+    lupa: '<svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="6.5"/><path d="m16 16 5 5"/></svg>',
+    quem: '<svg viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.2"/><circle cx="17" cy="9.5" r="2.4"/><path d="M3 19c.6-3.2 2.8-5 6-5s5.4 1.8 6 5M15.5 19c.3-2 1.4-3.3 3.2-3.6 1.3-.2 2.3.6 2.3 2"/></svg>',
+    salvos: '<svg viewBox="0 0 24 24"><path d="M6 3h12v18l-6-4-6 4z"/></svg>',
+    viagens: '<svg viewBox="0 0 24 24"><rect x="3" y="7" width="18" height="13" rx="2"/><path d="M8 7V4h8v3M3 12h18"/></svg>',
+    alvo: '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="1.5"/><path d="M12 2v4M12 18v4M2 12h4M18 12h4"/></svg>'
   };
   /* pictogramas da placa turística (desenhos simples, sem fonte externa) */
   var PICTO = {
@@ -91,7 +95,7 @@
   var estado = {
     idioma: 'pt', rota: 'inicio', pronto: false, acesso: null,
     viagem: null, pacote: null, pessoas: [], roteiros: [], favoritos: {}, lugaresProprios: [],
-    opcao: null, dia: 0, filtro: 'todos', busca: '', descobertas: [], pos: null
+    opcao: null, dia: 0, filtro: 'todos', busca: '', descobertas: [], pos: null, soDia: false
   };
 
   function carregarViagem(id) {
@@ -99,6 +103,7 @@
       vs.sort(function (a, b) { return a.inicio < b.inicio ? -1 : 1; });
       var v = (id && vs.filter(function (x) { return x.id === id; })[0]) ||
               vs.filter(function (x) { return x.fim >= hojeIso(); })[0] || vs[vs.length - 1] || null;
+      if (window.Contexto && !Contexto.emViagem()) v = null;      /* Explorar: sem viagem aberta */
       estado.viagem = v;
       return Promise.all([
         v && v.destino ? Pacotes.carregar(v.destino).catch(function () { return null; }) : Promise.resolve(null),
@@ -129,8 +134,12 @@
   }
   function todosLugares() {
     var base = (estado.pacote && estado.pacote.lugares) || [];
-    var meus = estado.lugaresProprios.filter(function (l) { return !estado.viagem || !l.viagem_id || l.viagem_id === estado.viagem.id; });
+    var meus = estado.lugaresProprios.filter(function (l) { return estado.viagem ? l.viagem_id === estado.viagem.id : !l.viagem_id; });
     return base.concat(meus);
+  }
+  /* troca de contexto (chip): recarrega a viagem (ou nenhuma) e a tela */
+  function recarregarContexto() {
+    return Contexto.carregar().then(function (c) { return carregarViagem(c.viagemId); }).then(atualizarRestricoesGrupo).then(function () { estado.descobertas = []; desenharChip(); });
   }
   function lugarPorId(id) { return todosLugares().filter(function (l) { return l.id === id; })[0] || null; }
   function centroViagem() {
@@ -146,10 +155,10 @@
      busca e janelas são camadas: o Voltar fecha só a de cima. Na base,
      o primeiro Voltar avisa; o segundo sai do app.
      ------------------------------------------------------------------ */
-  var ROTAS = { inicio: 1, roteiro: 1, lugares: 1, mapa: 1, reservas: 1, viagens: 1, nova: 1, familia: 1, conta: 1, config: 1, entrar: 1 };
+  var ROTAS = { inicio: 1, roteiro: 1, lugares: 1, mapa: 1, reservas: 1, viagens: 1, nova: 1, familia: 1, conta: 1, config: 1, entrar: 1, explorar: 1, salvos: 1 };
   var Nav = {
     camadas: [], depois: [], guarda: false,
-    base: function (r) { return r === 'inicio' || r === 'entrar'; },
+    base: function (r) { return r === 'inicio' || r === 'entrar' || r === 'explorar'; },
     iniciar: function () {
       var r = Nav.rotaDoEndereco() || 'inicio';
       history.replaceState({ gx: 1, rota: r, base: 1 }, '', '#/' + r);
@@ -229,17 +238,19 @@
   /* ------------------------------------------------------------------
      4. MOLDURA: gaveta ☰, barra de baixo, cabeçalho, busca
      ------------------------------------------------------------------ */
-  var BARRA = ['inicio', 'roteiro', 'lugares', 'mapa', 'reservas'];
-  var ICONE_ROTA = { inicio: 'hoje', roteiro: 'roteiro', lugares: 'lugares', mapa: 'mapa', reservas: 'reservas' };
+  var BARRA_VIAGEM = ['inicio', 'roteiro', 'mapa', 'reservas', 'familia'];
+  var BARRA_EXPLORAR = ['explorar', 'salvos', 'viagens'];
+  var ICONE_ROTA = { inicio: 'hoje', roteiro: 'roteiro', mapa: 'mapa', reservas: 'reservas', familia: 'quem', explorar: 'mapa', salvos: 'salvos', viagens: 'viagens' };
+  function emViagem() { return !!(window.Contexto && Contexto.emViagem()); }
 
   function montarBarra() {
     var b = $('barra'); b.textContent = '';
     var liberado = estado.acesso && estado.acesso.liberado;
     b.hidden = !liberado;
     if (!liberado) return;
-    BARRA.forEach(function (r) {
+    (emViagem() ? BARRA_VIAGEM : BARRA_EXPLORAR).forEach(function (r) {
       var bt = h('button', { type: 'button', svg: ICONES[ICONE_ROTA[r]], 'aria-current': estado.rota === r ? 'page' : null, onclick: function () { Nav.ir(r); } });
-      bt.appendChild(h('span', { texto: T('rota_' + r) }));
+      bt.appendChild(h('span', { texto: T(r === 'familia' ? 'barraQuem' : r === 'viagens' ? 'barraViagens' : 'rota_' + r) }));
       b.appendChild(bt);
     });
   }
@@ -251,7 +262,8 @@
     g.appendChild(h('div', { class: 'gaveta-cab' }, [h('strong', { id: 'gaveta-titulo', texto: 'GuiaXpert' }), fechar]));
     var lib = estado.acesso && estado.acesso.liberado;
     var grupos = lib ? [
-      ['grupoViagem', [['inicio', '☀️'], ['roteiro', '🗓'], ['lugares', '📋'], ['mapa', '🗺'], ['reservas', '🎫']]],
+      ['grupoViagem', [['inicio', '☀️'], ['roteiro', '🗓'], ['mapa', '🗺'], ['reservas', '🎫']]],
+      ['grupoExplorar', [['explorar', '🌍'], ['salvos', '🔖']]],
       ['grupoPlanejar', [['viagens', '🧳'], ['nova', '➕'], ['familia', '👨‍👩‍👧']]],
       ['grupoAjustes', [['config', '⚙'], ['conta', '👤']]]
     ] : [['grupoAjustes', [['entrar', '🔑'], ['config', '⚙']]]];
@@ -278,6 +290,29 @@
     setTimeout(function () { fechar.focus(); }, 30);
   }
 
+  /* chip "🧳 Gramado, nov ▾" / "🌍 Explorar ▾": toca e troca de contexto */
+  function desenharChip() {
+    var c = $('chip'); if (!c) return;
+    c.textContent = ''; c.appendChild(h('span', { texto: Contexto.rotulo(estado.viagem, T, idioma()) })); c.appendChild(h('span', { class: 'seta', 'aria-hidden': 'true', texto: '▾' }));
+    c.hidden = !(estado.acesso && estado.acesso.liberado);
+  }
+  function janelaContexto() {
+    Banco.listar('viagens').then(function (vs) {
+      vs.sort(function (a, b) { return a.inicio > b.inicio ? -1 : 1; });
+      var corpo = h('div', { class: 'linha', style: 'flex-direction:column;align-items:stretch;gap:.4rem' });
+      var j = janela(T('ondeVoceEsta'), corpo);
+      var item = function (ativo, rotulo, sub, fn) {
+        return h('button', { class: 'escolha' + (ativo ? ' ativa' : ''), type: 'button', onclick: function () { j.fechar(fn); } }, [h('b', { texto: rotulo }), sub ? h('span', { class: 'pequeno', texto: sub }) : null]);
+      };
+      corpo.appendChild(item(!emViagem(), '🌍 ' + T('explorar'), T('explorarSub'), function () { Contexto.definir('explorar').then(recarregarContexto).then(function () { Nav.ir('explorar', { substituir: true }); }); }));
+      vs.forEach(function (v) {
+        corpo.appendChild(item(emViagem() && estado.viagem && estado.viagem.id === v.id, '🧳 ' + v.nome, fData(v.inicio, true) + ' – ' + fData(v.fim, true),
+          function () { Contexto.definir('viagem', v.id).then(recarregarContexto).then(function () { Nav.ir('inicio', { substituir: true }); }); }));
+      });
+      corpo.appendChild(h('button', { class: 'bt sec', type: 'button', texto: '＋ ' + T('rota_nova'), onclick: function () { j.fechar(function () { Nav.ir('nova'); }); } }));
+    });
+  }
+
   function trocarIdioma(l) {
     estado.idioma = l;
     if (window.DGO && DGO.trocarIdioma) { try { DGO.trocarIdioma(l); } catch (e) {} }
@@ -289,6 +324,7 @@
     d.querySelectorAll('[data-t]').forEach(function (n) { n.textContent = T(n.getAttribute('data-t')); });
     d.querySelectorAll('[data-ta]').forEach(function (n) { n.setAttribute('aria-label', T(n.getAttribute('data-ta'))); n.title = T(n.getAttribute('data-ta')); });
     $('bt-idioma').textContent = idioma() === 'en' ? 'PT' : 'EN';
+    desenharChip();
   }
 
   /* busca 🔍: funções do app + lugares */
@@ -306,7 +342,7 @@
       });
       todosLugares().filter(function (l) { return normalizar(l.nome + ' ' + (l.descricao || '') + ' ' + (l.endereco || '')).indexOf(q) > -1; }).slice(0, 20).forEach(function (l) {
         lista.appendChild(h('button', { class: 'bt leve', type: 'button', onclick: function () {
-          estado.busca = l.nome; estado.filtro = 'todos'; estado.abrirLugar = l.id; j.fechar(); setTimeout(function () { Nav.ir('lugares'); }, 0);
+          estado.busca = ''; estado.filtro = 'todos'; estado.abrirLugar = l.id; j.fechar(); setTimeout(function () { Nav.ir(emViagem() ? 'mapa' : 'explorar'); }, 0);
         } }, [placa(l.categoria), ' ', l.nome]));
       });
       if (!lista.childNodes.length) lista.appendChild(h('p', { class: 'sub', texto: T('nadaAchado') }));
@@ -323,12 +359,16 @@
     var lib = estado.acesso && estado.acesso.liberado;
     if (!lib && rota !== 'config') rota = 'entrar';
     if (lib && rota === 'entrar') rota = 'inicio';
+    if (rota === 'lugares') rota = emViagem() ? 'mapa' : 'explorar';
+    if (lib && !emViagem() && (rota === 'inicio' || rota === 'roteiro' || rota === 'mapa' || rota === 'reservas')) rota = 'explorar';
+    if (lib && emViagem() && (rota === 'explorar' || rota === 'salvos')) { /* permitido: explorar de dentro da viagem */ }
     estado.rota = rota;
+    if (window.Mapa) Mapa.destruir();
     var m = $('conteudo'); m.textContent = '';
-    var tela = h('section', { class: 'tela' + (rota === 'mapa' || rota === 'lugares' ? ' larga' : '') });
+    var tela = h('section', { class: 'tela' + (rota === 'mapa' || rota === 'explorar' ? ' larga' : '') });
     m.appendChild(tela);
-    $('bt-inicio').setAttribute('aria-current', rota === 'inicio' ? 'page' : 'false');
-    montarBarra();
+    $('bt-inicio').setAttribute('aria-current', rota === 'inicio' || rota === 'explorar' ? 'page' : 'false');
+    montarBarra(); desenharChip();
     try { TELAS[rota](tela); } catch (e) { console.error(e); tela.appendChild(h('div', { class: 'alerta' }, [h('b', { texto: T('erroTela') }), String(e.message || e)])); }
     window.scrollTo(0, 0);
   }
@@ -389,7 +429,7 @@
 
     var ac = h('div', { class: 'grade' }, [
       h('button', { class: 'bt', type: 'button', onclick: function () { Nav.ir('roteiro'); } }, T('verRoteiro')),
-      h('button', { class: 'bt sec', type: 'button', onclick: function () { estado.filtro = 'perto'; Nav.ir('lugares'); } }, '📍 ' + T('pertoDeMim')),
+      h('button', { class: 'bt sec', type: 'button', onclick: function () { estado.filtro = 'perto'; Nav.ir('mapa'); } }, '📍 ' + T('pertoDeMim')),
       h('button', { class: 'bt leve', type: 'button', onclick: function () { Nav.ir('reservas'); } }, '🎫 ' + T('rota_reservas'))
     ]);
     tela.appendChild(ac);
@@ -407,7 +447,7 @@
     if (l && l.lat != null) c.appendChild(h('div', { class: 'acoes-sinal' }, [
       h('a', { href: Geo.linkRota(l, estado.pos), target: '_blank', rel: 'noopener', texto: T('rota') }),
       h('a', { href: Geo.linkWaze(l), target: '_blank', rel: 'noopener', texto: 'Waze' }),
-      h('button', { type: 'button', texto: T('verNaLista'), onclick: function () { estado.abrirLugar = l.id; estado.filtro = 'todos'; Nav.ir('lugares'); } })
+      h('button', { type: 'button', texto: T('verNoMapa'), onclick: function () { estado.abrirLugar = l.id; estado.filtro = 'todos'; Nav.ir('mapa'); } })
     ]));
     return c;
   }
@@ -495,14 +535,17 @@
       if (agora) marcouAgora = true;
       var x = h('div', { class: 'x' }, [
         h('div', { class: 'linha' }, [l ? placa(l.categoria) : null,
-          l ? h('button', { class: 'lk', type: 'button', onclick: function () { estado.busca = ''; estado.filtro = 'todos'; estado.abrirLugar = l.id; Nav.ir('lugares'); } }, it.titulo) : h('b', { texto: it.titulo }),
+          l ? h('button', { class: 'lk', type: 'button', onclick: function () { estado.busca = ''; estado.filtro = 'todos'; estado.abrirLugar = l.id; Nav.ir('mapa'); } }, it.titulo) : h('b', { texto: it.titulo }),
           it.tipo === 'gratis' ? h('span', { class: 'etq gratis', texto: T('gratis') }) : null,
           it.tipo === 'ingresso' ? h('span', { class: 'etq', texto: T('ingresso') }) : null]),
         it.nota ? h('span', { class: 'nota', texto: it.nota }) : null
       ]);
+      var conf = it.estado === 'confirmado';
+      var btConf = h('button', { class: 'conf', type: 'button', 'aria-pressed': conf ? 'true' : 'false', 'aria-label': T(conf ? 'confirmado' : 'confirmar'), texto: '✓', onclick: function () {
+        mudarItem(o, dmod, idx, function (item) { item.estado = item.estado === 'confirmado' ? null : 'confirmado'; }).then(recarregarTela); } });
       var rm = o.origem !== 'pacote' ? h('button', { class: 'fav', type: 'button', 'aria-label': T('tirarItem'), texto: '✕', onclick: function () {
-        dmod.itens.splice(idx, 1); Banco.gravar('roteiros', o).then(recarregarTela); } }) : h('span');
-      bloco.appendChild(h('div', { class: 'item' + (agora ? ' agora' : '') }, [h('span', { class: 'h', texto: it.hora || '—' }), x, rm]));
+        dmod.itens.splice(idx, 1); Banco.gravar('roteiros', o).then(recarregarTela); } }) : null;
+      bloco.appendChild(h('div', { class: 'item' + (agora ? ' agora' : '') + (conf ? ' confirmado' : '') }, [h('span', { class: 'h', texto: it.hora || '—' }), x, h('span', { class: 'linha', style: 'flex-wrap:nowrap;gap:0' }, [btConf, rm])]));
     });
     if (!(dmod.itens || []).length) bloco.appendChild(h('p', { class: 'sub', style: 'padding:1rem', texto: T('diaVazio') }));
     tela.appendChild(bloco);
@@ -563,6 +606,15 @@
       addItemNaOpcao(o, dmod, { hora: hora.value, titulo: tit.value.trim(), nota: null, tipo: null, lugarId: sel.value || null }).then(function () { j.fechar(); recarregar(); });
     });
   }
+  /* muda um item (o roteiro do pacote não muda: cria a cópia "minha" e muda a cópia) */
+  function mudarItem(o, dmod, idx, mudar) {
+    var alvo = o, i = o.dias.indexOf(dmod), pr = Promise.resolve();
+    if (o.origem === 'pacote') {
+      alvo = { viagem_id: o.viagem_id, nome: o.nome + ' (' + T('minhaVersao') + ')', origem: 'manual', base_id: null, favorito: false, ordem: (o.ordem || 0) + 0.5, dias: JSON.parse(JSON.stringify(o.dias)) };
+      pr = Banco.gravar('roteiros', alvo).then(function (n) { alvo = n; estado.viagem.opcao_ativa = n.id; return Banco.gravar('viagens', estado.viagem); });
+    }
+    return pr.then(function () { mudar(alvo.dias[i].itens[idx]); return Banco.gravar('roteiros', alvo); });
+  }
   function addItemNaOpcao(o, dmod, item) {
     var alvo = o, idx = o.dias.indexOf(dmod);
     var pr = Promise.resolve();
@@ -604,68 +656,54 @@
     });
   }
 
-  /* ---------- Lugares ---------- */
+  /* ---------- Mapa da viagem (mapa + lista + cartão: mapa.js) ---------- */
   var FILTROS = ['todos', 'paraVoces', 'favoritos', 'perto', 'comer', 'atracao', 'gratis', 'bebidas', 'doces', 'logistica'];
-  TELAS.lugares = function (tela) {
-    tela.appendChild(h('div', { class: 'linha entre' }, [h('h1', { texto: T('listaLugares') }),
-      h('button', { class: 'bt leve', type: 'button', onclick: janelaNovoLugar }, '＋ ' + T('novoLugar'))]));
-    if (!todosLugares().length && !estado.descobertas.length) {
-      tela.appendChild(h('p', { class: 'sub', texto: estado.viagem ? T('semLugares') : T('semViagemTexto') }));
-    }
-    var chips = h('div', { class: 'chips rolar', role: 'group', 'aria-label': T('filtrar') }, FILTROS.map(function (f) {
-      return h('button', { class: 'chip', type: 'button', 'aria-pressed': estado.filtro === f ? 'true' : 'false', onclick: function () {
-        estado.filtro = f;
-        if (f === 'perto' && !estado.pos) { pegarPosicao().then(function () { mostrar('lugares'); }); return; }
-        mostrar('lugares'); } }, T('f_' + f));
-    }));
-    tela.appendChild(chips);
-    var caixa = h('div', { class: 'busca-caixa', svg: ICONES.lupa });
-    var campo = h('input', { type: 'search', id: 'gx-busca-lugares', placeholder: T('buscarLugarDica'), 'aria-label': T('buscar'), value: estado.busca, autocomplete: 'off' });
-    caixa.appendChild(campo); tela.appendChild(caixa);
-    var info = h('p', { class: 'pequeno' }); tela.appendChild(info);
-    var lista = h('div', { class: 'linha', style: 'flex-direction:column;align-items:stretch;gap:.5rem' }); tela.appendChild(lista);
-
-    var restr = restricoesDoGrupo();
+  TELAS.mapa = function (tela) {
+    if (!estado.viagem) return semViagem(tela);
     somaGostos = Gostos.doGrupo(pessoasDaViagem());
-    function desenhar() {
-      var q = normalizar(estado.busca).trim(), f = estado.filtro;
-      var base = todosLugares().concat(estado.descobertas.filter(function (x) { return !lugarPorId(x.id); }));
-      var itens = base.filter(function (l) {
-        if (f === 'favoritos' && !estado.favoritos['lugar:' + l.id]) return false;
-        if (f === 'paraVoces' && Gostos.combina(l, somaGostos) <= 0) return false;
-        if (f === 'gratis' && !l.gratis) return false;
-        if (['comer', 'atracao', 'bebidas', 'doces', 'logistica'].indexOf(f) > -1 && l.categoria !== f) return false;
-        if (f === 'perto' && l.lat == null) return false;
-        if (q && normalizar([l.nome, l.descricao, l.endereco, l.subcategoria, T('cat_' + l.categoria)].join(' ')).indexOf(q) < 0) return false;
-        return true;
-      });
-      var pos = estado.pos;
-      if (pos) itens.forEach(function (l) { l._km = Geo.distancia(pos, l); });
-      if (f === 'paraVoces') itens.sort(function (a, b) { return Gostos.combina(b, somaGostos) - Gostos.combina(a, somaGostos); });
-      else if (f === 'perto' || pos) itens.sort(function (a, b) { return (a._km == null ? 1e9 : a._km) - (b._km == null ? 1e9 : b._km); });
-      lista.textContent = '';
-      info.textContent = T('nLugares', { n: itens.length }) + (pos ? ' · ' + T('ordemDistancia') : '');
-      itens.slice(0, 200).forEach(function (l) { lista.appendChild(cartaoLugar(l, restr)); });
-      if (!itens.length) lista.appendChild(h('p', { class: 'sub', texto: f === 'paraVoces' && !Object.keys(somaGostos).length ? T('semGostosAinda') : T('nadaAchado') }));
-      if (estado.abrirLugar) {
-        var alvo = lista.querySelector('[data-id="' + CSS.escape(estado.abrirLugar) + '"]');
-        if (alvo) { alvo.open = true; alvo.scrollIntoView({ block: 'center' }); }
-        estado.abrirLugar = null;
+    var v = estado.viagem, dias = diasDaViagem(v);
+    Mapa.tela(tela, {
+      lugares: function () { return todosLugares().concat(estado.descobertas.filter(function (x) { return !lugarPorId(x.id); })); },
+      itensDoDia: function () {
+        var o = estado.opcao; if (!o) return [];
+        var dmod = o.dias[mapearDia(estado.dia, dias.length, o.dias.length)];
+        return (dmod && dmod.itens || []).filter(function (it) { return it.lugarId; });
+      },
+      centro: centroViagem(), zoom: 13, cidade: v.destino, filtros: FILTROS,
+      topo: function (topo) {
+        /* dia do roteiro (os mesmos chips do Roteiro) */
+        if (!estado.opcao) return;
+        var tabs = h('div', { class: 'dias', role: 'tablist', 'aria-label': T('diasDaViagem') });
+        dias.forEach(function (dt, i) {
+          tabs.appendChild(h('button', { class: 'dia', role: 'tab', type: 'button', 'aria-selected': i === estado.dia ? 'true' : 'false', onclick: function () { estado.dia = i; mostrar('mapa'); } },
+            [h('span', { texto: semana(dt) }), h('small', { texto: fData(dt, true) })]));
+        });
+        topo.appendChild(tabs);
+      },
+      rodape: function () {
+        var c = centroViagem();
+        return h('div', { class: 'cartao', style: 'margin:.5rem' }, [
+          h('div', { class: 'linha' }, [
+            h('button', { class: 'bt sec', type: 'button', disabled: !c, texto: T('descobrirBotao'), onclick: function (e) {
+              var bt = e.currentTarget; bt.disabled = true; bt.textContent = T('carregando');
+              Descobrir.perto(estado.pos || c, 8000).then(function (l) { estado.descobertas = l; avisar(T('descobertos', { n: l.length })); mostrar('mapa'); })
+                .catch(function () { bt.disabled = false; bt.textContent = T('descobrirBotao'); avisar(navigator.onLine ? T('osmErro') : T('semInternet')); });
+            } }),
+            h('button', { class: 'bt leve', type: 'button', texto: '＋ ' + T('novoLugar'), onclick: janelaNovoLugar })
+          ]),
+          h('p', { class: 'pequeno', texto: '© OpenStreetMap contributors (ODbL)' })
+        ]);
       }
-    }
-    campo.addEventListener('input', function () { estado.busca = campo.value; desenhar(); });
-    desenhar();
-
-    var c = centroViagem();
-    tela.appendChild(h('div', { class: 'cartao' }, [
-      h('h3', { texto: T('descobrirTitulo') }), h('p', { class: 'sub', texto: T('descobrirTexto') }),
-      h('button', { class: 'bt sec', type: 'button', disabled: !c, onclick: function (e) {
-        var bt = e.currentTarget; bt.disabled = true; bt.textContent = T('carregando');
-        Descobrir.perto(estado.pos || c, 8000).then(function (l) { estado.descobertas = l; avisar(T('descobertos', { n: l.length })); mostrar('lugares'); })
-          .catch(function () { bt.disabled = false; bt.textContent = T('descobrirBotao'); avisar(navigator.onLine ? T('osmErro') : T('semInternet')); });
-      } }, T('descobrirBotao')),
-      h('p', { class: 'pequeno', texto: '© OpenStreetMap contributors (ODbL)' })
-    ]));
+    });
+  };
+  TELAS.explorar = function (tela) { Explorar.tela(tela); };
+  TELAS.salvos = function (tela) {
+    tela.appendChild(h('h1', { texto: T('rota_salvos') }));
+    tela.appendChild(h('p', { class: 'sub', texto: T('salvosTexto') }));
+    var ls = estado.lugaresProprios.filter(function (l) { return !l.viagem_id; });
+    if (!ls.length) tela.appendChild(h('p', { class: 'sub', texto: T('semSalvos') }));
+    var restr = restricoesDoGrupo();
+    ls.forEach(function (l) { tela.appendChild(cartaoLugar(l, restr)); });
   };
   var somaGostos = {};
   /* quem vai nesta viagem, já com os ajustes "só nesta viagem" por cima do perfil fixo */
@@ -707,9 +745,10 @@
     if (l.categoria === 'comer' && restr.length) corpo.appendChild(h('div', { class: 'alerta' }, [h('b', { texto: T('restricoesGrupo') }), restr.join(', ') + '. ' + T('pergunteAntes')]));
     if (l.dieta) { var dd = Object.keys(l.dieta).filter(function (k) { return l.dieta[k]; }); if (dd.length) corpo.appendChild(h('p', { class: 'pequeno', texto: T('osmDieta') + ': ' + dd.map(function (k) { return T('r_' + k); }).join(', ') })); }
     corpo.appendChild(linksLugar(l));
-    if (estado.opcao) corpo.appendChild(h('button', { class: 'bt leve', type: 'button', onclick: function () { janelaAddAoRoteiro(l); } }, '＋ ' + T('addAoRoteiro')));
-    if (l.confianca === 'osm' && !estado.lugaresProprios.some(function (x) { return x.id === l.id; })) corpo.appendChild(h('button', { class: 'bt leve', type: 'button', onclick: function () {
-      Banco.gravar('lugares', Object.assign({}, l, { viagem_id: estado.viagem ? estado.viagem.id : null })).then(function () { avisar(T('salvo')); recarregar(); }); } }, T('salvarLugar')));
+    if (estado.viagem && estado.opcao) corpo.appendChild(h('button', { class: 'bt', type: 'button', onclick: function () { janelaAddAoRoteiro(l); } }, '＋ ' + T('porNoDia')));
+    if (!estado.viagem && window.Explorar) Explorar.acoes(l, corpo);
+    else if (l.confianca === 'osm' && !estado.lugaresProprios.some(function (x) { return x.id === l.id; })) corpo.appendChild(h('button', { class: 'bt leve', type: 'button', onclick: function () {
+      Banco.gravar('lugares', Object.assign({}, l, { viagem_id: estado.viagem.id })).then(function () { avisar(T('salvo')); recarregar(); }); } }, T('salvarLugar')));
     if (estado.lugaresProprios.some(function (x) { return x.id === l.id; })) corpo.appendChild(h('button', { class: 'bt perigo', type: 'button', onclick: function () {
       Banco.apagar('lugares', l.id).then(recarregar); } }, T('tirarDaLista')));
     corpo.appendChild(h('p', { class: 'pequeno', texto: T('conf_' + (l.confianca || 'baixa')) }));
@@ -776,43 +815,6 @@
       avisar(e.message === 'negado' ? T('gpsNegado') : T('gpsErro'));
       throw e;
     });
-  }
-
-  /* ---------- Mapa ---------- */
-  TELAS.mapa = function (tela) {
-    tela.appendChild(h('div', { class: 'linha entre' }, [h('h1', { texto: T('rota_mapa') }),
-      h('button', { class: 'bt sec', type: 'button', onclick: function () { pegarPosicao().then(function () { mostrar('mapa'); }); } }, '📍 ' + T('ondeEstou'))]));
-    var caixa = h('div', { id: 'mapa', role: 'application', 'aria-label': T('rota_mapa') });
-    tela.appendChild(caixa);
-    var info = h('p', { class: 'pequeno', texto: navigator.onLine ? '© OpenStreetMap contributors' : T('mapaOffline') });
-    tela.appendChild(info);
-    carregarLeaflet().then(function (L) {
-      var c = estado.pos || centroViagem() || { lat: -15.78, lng: -47.93 };
-      var m = L.map(caixa, { zoomControl: true }).setView([c.lat, c.lng], centroViagem() ? 13 : 4);
-      L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19, attribution: '© OpenStreetMap' }).addTo(m);
-      todosLugares().concat(estado.descobertas).forEach(function (l) {
-        if (l.lat == null) return;
-        var fav = estado.favoritos['lugar:' + l.id];
-        var mk = L.circleMarker([l.lat, l.lng], { radius: fav ? 9 : 7, color: '#fff', weight: 2, fillColor: l.categoria === 'logistica' ? '#16222b' : (fav ? '#9a7330' : '#6b3f1f'), fillOpacity: 1 }).addTo(m);
-        var div = d.createElement('div');
-        div.appendChild(h('b', { texto: l.nome })); div.appendChild(d.createElement('br'));
-        div.appendChild(h('a', { href: Geo.linkRota(l, estado.pos), target: '_blank', rel: 'noopener', texto: T('rota') }));
-        mk.bindPopup(div);
-      });
-      if (estado.pos) L.circleMarker([estado.pos.lat, estado.pos.lng], { radius: 8, color: '#fff', weight: 3, fillColor: '#1e5b48', fillOpacity: 1 }).addTo(m).bindPopup(T('voceAqui'));
-    }).catch(function () { caixa.textContent = T('mapaErro'); });
-  };
-  var leaflet = null;
-  function carregarLeaflet() {
-    if (window.L) return Promise.resolve(window.L);
-    if (leaflet) return leaflet;
-    leaflet = new Promise(function (ok, erro) {
-      var css = h('link', { rel: 'stylesheet', href: 'vendor/leaflet/leaflet.css' }); d.head.appendChild(css);
-      var s = h('script', { src: 'vendor/leaflet/leaflet.js' });
-      s.onload = function () { ok(window.L); }; s.onerror = function () { leaflet = null; erro(new Error('leaflet')); };
-      d.head.appendChild(s);
-    });
-    return leaflet;
   }
 
   /* ---------- Reservas (no cofre) ---------- */
@@ -1230,7 +1232,7 @@
           h('div', { class: 'linha entre' }, [h('b', { texto: v.nome }), atual ? h('span', { class: 'etq gratis', texto: T('emUso') }) : null]),
           h('span', { class: 'sub', texto: fData(v.inicio) + ' – ' + fData(v.fim) + ' · ' + T('nPessoas', { n: (v.pessoas || []).length }) }),
           h('div', { class: 'linha' }, [
-            !atual ? h('button', { class: 'bt sec', type: 'button', onclick: function () { Banco.definirMeta('viagem-atual', v.id).then(function () { return carregarViagem(v.id); }).then(function () { Nav.ir('inicio'); }); } }, T('abrirViagem')) : null,
+            !atual ? h('button', { class: 'bt sec', type: 'button', onclick: function () { Contexto.definir('viagem', v.id).then(recarregarContexto).then(function () { Nav.ir('inicio'); }); } }, T('abrirViagem')) : null,
             h('button', { class: 'bt perigo', type: 'button', onclick: function () { confirmarApagarViagem(v); } }, T('apagar'))
           ])
         ]));
@@ -1252,7 +1254,7 @@
           var soDela = estado.pessoas.filter(function (p) { return grupoDe(p) === 'viagem' && (v.pessoas || []).indexOf(p.id) > -1 && !usados[p.id]; });
           return Promise.all(soDela.map(function (p) { return Banco.apagar('pessoas', p.id); }));
         });
-      }).then(function () { j.fechar(); return carregarViagem(); }).then(function () { Nav.ir('viagens'); });
+      }).then(function () { j.fechar(); return Contexto.definir('explorar'); }).then(recarregarContexto).then(function () { Nav.ir('viagens'); });
     });
   }
 
@@ -1418,7 +1420,7 @@
       if (e.lat == null && (e.endereco || e.nome)) p = p.then(function () { return geocodificar([e.endereco || e.nome, v.destinoTexto].join(', ')).then(function (c) { if (c) { e.lat = c.lat; e.lng = c.lng; } }); });
     });
     return p.then(function () { return Banco.gravar('viagens', v); }).then(function (nv) {
-      return Banco.definirMeta('viagem-atual', nv.id).then(function () { return carregarViagem(nv.id); }).then(function () {
+      return Contexto.definir('viagem', nv.id).then(function () { return carregarViagem(nv.id); }).then(function () {
         var pr = Promise.resolve();
         if (r.destino && r.usarPacote && estado.pacote) pr = pr.then(function () { return criarOpcoesDoPacote(estado.viagem, estado.pacote); });
         return pr.then(function () { return carregarViagem(nv.id); }).then(function () {
@@ -1617,8 +1619,8 @@
     return Conta.acesso().then(function (a) {
       estado.acesso = a;
       if (!a.liberado) { mostrar('entrar'); return; }
-      return Banco.meta('viagem-atual', null).then(carregarViagem).then(atualizarRestricoesGrupo).then(function () {
-        mostrar(estado.rota === 'entrar' ? 'inicio' : estado.rota);
+      return recarregarContexto().then(function () {
+        mostrar(estado.rota === 'entrar' ? (emViagem() ? 'inicio' : 'explorar') : estado.rota);
         oferecerBio();
         sincronizarNuvem();
       });
@@ -1629,7 +1631,11 @@
   function sincronizarNuvem() {
     if (!window.Nuvem) return Promise.resolve();
     return Nuvem.sincronizar().then(function (r) {
-      if (r && r.baixados) return Banco.meta('viagem-atual', null).then(carregarViagem).then(function () { mostrar(estado.rota); });
+      if (r && r.baixados) return recarregarContexto().then(function () {
+        /* chegou uma viagem e a pessoa ainda não tinha escolhido contexto: entra nela */
+        var pulou = Contexto.automatico() && emViagem() && (estado.rota === 'explorar' || estado.rota === 'salvos');
+        mostrar(pulou ? 'inicio' : estado.rota);
+      });
     });
   }
   /* convite único depois do login: "da próxima vez, entre com digital ou rosto" */
@@ -1671,9 +1677,10 @@
     $('bt-menu').addEventListener('click', abrirGaveta);
     $('fundo-gaveta').addEventListener('click', function () { Nav.fecharCamada(); });
     d.addEventListener('keydown', function (e) { if (e.key === 'Escape' && !$('gaveta').hidden) Nav.fecharCamada(); });
-    $('marca').addEventListener('click', function () { Nav.ir('inicio'); });
-    $('marca').addEventListener('keydown', function (e) { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); Nav.ir('inicio'); } });
-    $('bt-inicio').addEventListener('click', function () { Nav.ir('inicio'); });
+    $('marca').addEventListener('click', function () { Nav.ir(emViagem() ? 'inicio' : 'explorar'); });
+    $('marca').addEventListener('keydown', function (e) { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); Nav.ir(emViagem() ? 'inicio' : 'explorar'); } });
+    $('chip').addEventListener('click', janelaContexto);
+    $('bt-inicio').addEventListener('click', function () { Nav.ir(emViagem() ? 'inicio' : 'explorar'); });
     $('bt-config').addEventListener('click', function () { Nav.ir('config'); });
     $('bt-conta').addEventListener('click', function () { Nav.ir(estado.acesso && estado.acesso.liberado ? 'conta' : 'entrar'); });
     $('bt-busca').addEventListener('click', abrirBusca);
@@ -1698,6 +1705,10 @@
 
   if (d.readyState === 'loading') d.addEventListener('DOMContentLoaded', iniciar); else iniciar();
   window.GuiaXpert = { versao: VERSAO_APP, estado: estado, ir: function (r) { Nav.ir(r); } };
+  /* ajudantes para os módulos de tela (mapa.js, explorar.js): uma porta só */
+  window.GX = { h: h, T: T, idioma: idioma, estado: estado, Nav: Nav, janela: janela, mostrar: mostrar, avisar: avisar, fData: fData, semana: semana, hojeIso: hojeIso,
+    normalizar: normalizar, ICONES: ICONES, placa: placa, cartaoLugar: cartaoLugar, pegarPosicao: pegarPosicao, restricoesDoGrupo: restricoesDoGrupo,
+    somaGostos: function () { return somaGostos; }, recarregarContexto: recarregarContexto, recarregar: recarregar, lugarPorId: lugarPorId, todosLugares: todosLugares };
 })();
 /* erro em promessa sem tratamento aparece no console (ajuda o suporte), sem derrubar a tela */
 window.addEventListener('unhandledrejection', function (e) { console.error('GuiaXpert: promessa sem tratamento', e.reason && (e.reason.message || e.reason)); });

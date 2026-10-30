@@ -2,6 +2,24 @@
   "app": "guiaxpert",
   "versoes": [
     {
+      "versao": "0.6.0",
+      "data": "2026-10-30",
+      "itens": {
+        "pt": [
+          "Dois lugares para estar: dentro de uma VIAGEM (tudo é daquela viagem) ou em EXPLORAR (qualquer cidade, sem viagem). O chip no topo diz onde você está e troca em um toque.",
+          "Mapa novo: busca, filtros e a lista no mesmo lugar (painel que sobe). Toque num ponto para ver o cartão, pôr no dia ou traçar a rota. Os pontos do dia aparecem numerados e ligados por uma linha.",
+          "Explorar: busque uma cidade ou use o GPS, descubra lugares, salve ou ponha numa viagem. 'Planejar hoje aqui' cria uma viagem de 1 dia no lugar.",
+          "Roteiro: ✓ marca um item como confirmado (verde no mapa). Barra de baixo: Hoje · Roteiro · Mapa · Reservas · Quem."
+        ],
+        "en": [
+          "Two places to be: inside a TRIP (everything belongs to that trip) or EXPLORE (any city, no trip). The chip at the top shows where you are and switches in one tap.",
+          "New map: search, filters and the list in one place (sliding panel). Tap a point for its card, add it to a day or get directions. The day's points are numbered and linked by a line.",
+          "Explore: search a city or use GPS, discover places, save them or add to a trip. 'Plan today here' creates a one-day trip on the spot.",
+          "Itinerary: ✓ marks an item as confirmed (green on the map). Bottom bar: Today · Itinerary · Map · Bookings · Who."
+        ]
+      }
+    },
+    {
       "versao": "0.5.1",
       "data": "2026-10-30",
       "itens": {
