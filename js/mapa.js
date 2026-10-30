@@ -201,8 +201,9 @@
 
     /* fundo do mapa: por enquanto OSM online; mapa offline por cidade entra na fatia B (offline.js) */
     fundo: function (m, cidade) {
-      if (window.Offline && Offline.fundo && Offline.fundo(m, cidade)) return;
-      L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19, attribution: '© OpenStreetMap' }).addTo(m);
+      var osm = function () { if (m && m._container) L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19, attribution: '© OpenStreetMap' }).addTo(m); };
+      if (!window.Offline) { osm(); return; }
+      Offline.fundo(m, cidade).then(function (ok) { if (!ok) osm(); });
     },
 
     cores: CORES,

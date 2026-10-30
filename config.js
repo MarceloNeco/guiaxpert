@@ -17,5 +17,9 @@ window.GUIAXPERT_CONFIG = {
 
   /* pacotes de cidade: primeiro o central (publicado pelo RootifyONE), depois a cópia local */
   PACOTES_CENTRAL: '/solverone-dados/conteudo/guiaxpert/pacotes/',
-  PACOTES_LOCAL: 'pacotes/'
+  PACOTES_LOCAL: 'pacotes/',
+
+  /* mapas de fundo para usar sem internet (recortes do OpenStreetMap por cidade): central, depois a cópia local */
+  MAPAS_CENTRAL: '/solverone-dados/conteudo/guiaxpert/mapas/',
+  MAPAS_LOCAL: 'mapas/'
 };

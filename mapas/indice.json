@@ -1,0 +1,7 @@
+{
+  "formato": 1,
+  "fonte": "OpenStreetMap (ODbL) via Protomaps, build 2026-10-29",
+  "mapas": {
+    "gramado": { "arquivo": "gramado.pmtiles", "bytes": 3926823, "zoomMax": 15, "bbox": [-51.0, -29.48, -50.72, -29.22], "versao": "2026-10-29", "nome": { "pt": "Gramado e Canela", "en": "Gramado and Canela" } }
+  }
+}

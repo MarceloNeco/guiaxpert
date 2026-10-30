@@ -2,7 +2,7 @@
    como app no celular e no computador.
    Ao publicar uma versao nova do seu site, troque o numero de VERSAO
    abaixo (ex.: 'v1' -> 'v2') para o aparelho pegar os arquivos novos. */
-var VERSAO = 'guiaxpert-v0.6.0';
+var VERSAO = 'guiaxpert-v0.7.0';
 /* Todos os apps moram no mesmo endereco (marceloneco.github.io) e dividem
    os caches. Por isso o nome leva a pasta do app: assim um app nunca apaga
    o modo sem internet de outro. A pasta vem do proprio endereco, entao este
@@ -33,6 +33,7 @@ self.addEventListener('fetch', function (e) {
   if (req.method !== 'GET') return;
   var url = new URL(req.url);
   if (url.origin !== self.location.origin) return;   // nao mexe em API externa
+  if (req.headers.get('range') || /\.pmtiles$/i.test(url.pathname)) return;   // arquivos grandes lidos por pedacos: o app guarda por conta propria
 
   /* Codigo do app (pagina, .js, .css, .json): REDE PRIMEIRO, conferindo com o
      servidor (cache: 'no-cache' evita o cache de ate 10 min do GitHub Pages).

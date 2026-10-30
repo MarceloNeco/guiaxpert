@@ -12,7 +12,7 @@
 (function () {
   'use strict';
   var d = document, $ = function (id) { return d.getElementById(id); };
-  var VERSAO_APP = '0.6.0';
+  var VERSAO_APP = '0.7.0';
 
   /* ------------------------------------------------------------------
      1. UTILIDADES
@@ -427,6 +427,7 @@
     if (c) Clima.previsao(c.lat, c.lng).then(function (p) { desenharClima(cx, p, dias); }).catch(function () { cx.lastChild.textContent = T('climaSem'); });
     else cx.lastChild.textContent = T('climaSemLugar');
 
+    tela.appendChild(cartaoOffline(v));
     var ac = h('div', { class: 'grade' }, [
       h('button', { class: 'bt', type: 'button', onclick: function () { Nav.ir('roteiro'); } }, T('verRoteiro')),
       h('button', { class: 'bt sec', type: 'button', onclick: function () { estado.filtro = 'perto'; Nav.ir('mapa'); } }, '📍 ' + T('pertoDeMim')),
@@ -435,6 +436,30 @@
     tela.appendChild(ac);
     if (estado.pacote && estado.pacote.aviso) tela.appendChild(h('p', { class: 'pequeno', texto: estado.pacote.aviso[idioma()] || estado.pacote.aviso.pt }));
   };
+  /* "Guardar para usar sem internet": mapa + pacote desta viagem */
+  function cartaoOffline(v) {
+    var c = h('div', { class: 'cartao' }), cidade = v && v.destino;
+    if (!cidade || !window.Offline) return h('span', { hidden: true });
+    Offline.estado(cidade).then(function (e) {
+      if (!e.temMapa) { c.remove(); return; }
+      var mb = (e.bytes / 1048576).toFixed(1).replace('.', ',');
+      if (e.guardado) {
+        c.appendChild(h('div', { class: 'linha entre' }, [h('b', { texto: '✓ ' + T('prontoSemInternet') }), h('span', { class: 'pequeno', texto: mb + ' MB' })]));
+        c.appendChild(h('p', { class: 'sub', texto: T('prontoSemInternetTexto') }));
+        return;
+      }
+      var prog = h('div', { class: 'progresso', hidden: true }, h('i', { style: 'width:0%' }));
+      var bt = h('button', { class: 'bt sec', type: 'button', texto: '⬇ ' + T('guardarSemInternet', { mb: mb }) });
+      bt.addEventListener('click', function () {
+        bt.disabled = true; prog.hidden = false;
+        Offline.guardarViagem(cidade, function (f) { prog.firstChild.style.width = Math.round(f * 100) + '%'; })
+          .then(function () { avisar(T('guardadoSemInternet')); mostrar(estado.rota); })
+          .catch(function () { bt.disabled = false; prog.hidden = true; avisar(navigator.onLine ? T('erroRede') : T('semInternet')); });
+      });
+      c.appendChild(h('h3', { texto: T('semInternetTitulo') })); c.appendChild(h('p', { class: 'sub', texto: T('semInternetTexto') })); c.appendChild(bt); c.appendChild(prog);
+    });
+    return c;
+  }
   function minutos(hh) { var p = String(hh).split(':'); return (+p[0]) * 60 + (+p[1] || 0); }
   function cartaoAgora(it) {
     var l = it.lugarId ? lugarPorId(it.lugarId) : null;
@@ -1580,6 +1605,7 @@
     if (window.DGO) tela.appendChild(h('div', { class: 'cartao' }, [h('h3', { texto: T('iaTitulo') }), h('p', { class: 'sub', texto: T('iaTexto') }),
       h('button', { class: 'bt leve', type: 'button', onclick: function () { DGO.ia.guia(null, 'texto'); } }, T('iaConfigurar')),
       h('button', { class: 'bt leve', type: 'button', onclick: function () { DGO.abrirConfiguracoes && DGO.abrirConfiguracoes(); } }, T('maisAjustes'))]));
+    if (estado.viagem) tela.appendChild(cartaoOffline(estado.viagem));
     var cBio = h('div', { class: 'cartao' }, [h('h3', { texto: T('bioCartao') })]);
     tela.appendChild(cBio);
     Bio.suportada().then(function (ok) {

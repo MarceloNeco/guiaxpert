@@ -31,11 +31,13 @@ HTML, CSS e JavaScript puros. Sem framework, sem passo de build. Abra e edite.
 | `js/gostos.js` | `Gostos`: catálogo de 249 gostos em 15 temas (PT/EN), ciclo curte → ama → evita, soma do grupo, "combina" com lugares e resumo para a IA | ao acrescentar gosto |
 | `js/descobrir.js` | `Descobrir`: OpenStreetMap (Overpass) e roteiro pela IA da pessoa (`DGO.ia`) | sim |
 | `js/contexto.js` | `Contexto`: VIAGEM ou EXPLORAR (meta `contexto`); automático = entra na viagem em curso | pouco |
+| `js/offline.js` | `Offline`: arquivo de mapa por cidade (.pmtiles) baixado inteiro e guardado no Cache Storage; fundo vetorial; 'Guardar para usar sem internet' | com cuidado |
 | `js/mapa.js` | `Mapa.tela`: mapa + busca + filtros + painel (lista/cartão); pontos do dia numerados e com linha; cores por situação | sim |
 | `js/explorar.js` | `Explorar`: cidade por GPS ou busca, descobrir (OSM), salvar, pôr numa viagem, planejar hoje aqui | sim |
 | `js/nuvem.js` | `Nuvem`: sincroniza pessoas, viagens, roteiros, favoritos e lugares com `guiaxpert_dados` (baixa o que mudou, sobe a fila; vence o mais novo). Nunca sobe reservas nem `restricoes` | com cuidado |
 | `js/conta.js` | `Conta`: login REST, sessão comum `solverone.sessao.v1`, `acesso_app`, códigos de degustação | com cuidado |
 | `js/app.js` | telas, navegação (`Nav`) e wizard "Nova viagem" | sim |
+| `mapas/indice.json`, `mapas/<id>.pmtiles` | mapas de fundo por cidade (gerados com `pmtiles extract` do build Protomaps; bbox e zoom no índice) | ao publicar cidade |
 | `pacotes/indice.json`, `pacotes/<id>.json` | pacotes de cidade (formato em `docs/FORMATO-PACOTE.md`) | ao publicar cidade |
 | `vendor/leaflet/` | biblioteca do mapa (hospedada, sem CDN) | não |
 | `diretrizes.js` | módulo comum SolverONE (igual em todos os apps) | **não** — troque pela versão nova |

@@ -2,6 +2,22 @@
   "app": "guiaxpert",
   "versoes": [
     {
+      "versao": "0.7.0",
+      "data": "2026-10-30",
+      "itens": {
+        "pt": [
+          "Mapa sem internet de verdade: Gramado e Canela vêm num arquivo de 3,7 MB (recorte do OpenStreetMap, zoom até a rua) desenhado no próprio celular. Na primeira vez que o mapa abre, ele já fica guardado.",
+          "Botão 'Guardar (3,7 MB)' na tela Hoje e em Configurações: guarda mapa e guia da viagem de uma vez, com barra de progresso.",
+          "Mapa no tema escuro acompanha o app."
+        ],
+        "en": [
+          "True offline map: Gramado and Canela ship as a 3.7 MB file (OpenStreetMap extract, street-level zoom) drawn on the phone itself. The first time the map opens, it's already saved.",
+          "'Save (3.7 MB)' button on Today and in Settings: saves the trip's map and guide at once, with a progress bar.",
+          "Dark theme map follows the app."
+        ]
+      }
+    },
+    {
       "versao": "0.6.0",
       "data": "2026-10-30",
       "itens": {
