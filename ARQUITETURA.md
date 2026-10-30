@@ -34,6 +34,7 @@ HTML, CSS e JavaScript puros. Sem framework, sem passo de build. Abra e edite.
 | `js/offline.js` | `Offline`: arquivo de mapa por cidade (.pmtiles) baixado inteiro e guardado no Cache Storage; fundo vetorial; 'Guardar para usar sem internet' | com cuidado |
 | `js/mapa.js` | `Mapa.tela`: mapa + busca + filtros + painel (lista/cartão); pontos do dia numerados e com linha; cores por situação | sim |
 | `js/explorar.js` | `Explorar`: cidade por GPS ou busca, descobrir (OSM), salvar, pôr numa viagem, planejar hoje aqui | sim |
+| `js/importar.js` | `Importar`: e-mail de reserva → candidatos (regras no aparelho; IA opcional com aviso); `doEndereco` lê o que chegou por Compartilhar | sim |
 | `js/nuvem.js` | `Nuvem`: sincroniza pessoas, viagens, roteiros, favoritos e lugares com `guiaxpert_dados` (baixa o que mudou, sobe a fila; vence o mais novo). Nunca sobe reservas nem `restricoes` | com cuidado |
 | `js/conta.js` | `Conta`: login REST, sessão comum `solverone.sessao.v1`, `acesso_app`, códigos de degustação | com cuidado |
 | `js/app.js` | telas, navegação (`Nav`) e wizard "Nova viagem" | sim |
@@ -70,6 +71,13 @@ roteiro: viagem.opcao_ativa → loja roteiros (várias opções; pacote | manual
          editar opção do pacote = cria cópia "minha versão" (o pacote nunca muda)
 dia da viagem → dia do modelo: 1º = chegada, último = volta, meio = repete os do meio
 ```
+
+## Cofre em mais de um celular
+
+- A chave de dados nasce no aparelho. Sobem para a conta: as reservas (cifradas) e o embrulho da chave pelo
+  **código de recuperação** (loja `cofre`, id `recuperacao`, 100 bits). O embrulho pelo PIN e o da digital NÃO sobem.
+- Celular novo: `caixaTrazerCofre` → QR do celular antigo (`Cofre.exportarChave` → `GXK1:<base64>`, lido por câmera
+  ou colado) ou código de recuperação (`Cofre.importarPorCodigo`); em ambos, PIN próprio do aparelho.
 
 ## Entrar e digital/rosto
 

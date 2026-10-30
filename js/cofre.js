@@ -66,7 +66,8 @@
         dados = k;
         return Promise.all([embrulhar(k, pin), embrulhar(k, normalizarCodigo(codigo))]);
       }).then(function (p) {
-        return Banco.definirMeta('cofre', { formato: 1, pin: p[0], recuperacao: p[1], iter: ITER, criado_em: new Date().toISOString() });
+        return Banco.definirMeta('cofre', { formato: 1, pin: p[0], recuperacao: p[1], iter: ITER, criado_em: new Date().toISOString() })
+          .then(function () { return Banco.gravar('cofre', { id: 'recuperacao', formato: 1, recuperacao: p[1], iter: ITER }); });
       }).then(function () {
         chave = dados; armar();
         return Banco.definirMeta('cofre-erros', { n: 0, ate: 0 });
@@ -124,6 +125,41 @@
     desligarBio: function () {
       return Banco.meta('cofre', null).then(function (c) { if (c && c.bio) { delete c.bio; return Banco.definirMeta('cofre', c); } });
     },
+
+    /* ---- levar o cofre para outro celular ---- */
+    /* a chave crua (base64) para o QR; só com o cofre aberto, e some em 2 min */
+    exportarChave: function () {
+      if (!chave) return Promise.reject(new Error('fechado'));
+      return crypto.subtle.exportKey('raw', chave).then(function (raw) { return b64(raw); });
+    },
+    /* no celular novo: chave vinda do QR + PIN novo; o código de recuperação antigo continua valendo se o embrulho veio da conta */
+    importarChave: function (b64chave, pin) {
+      if (!/^\d{6}$/.test(pin)) return Promise.reject(new Error('pin-formato'));
+      var raw = deB64(b64chave); if (raw.length !== 32) return Promise.reject(new Error('chave-formato'));
+      var dados;
+      return crypto.subtle.importKey('raw', raw, { name: 'AES-GCM', length: 256 }, true, ['encrypt', 'decrypt']).then(function (k) {
+        dados = k;
+        return Promise.all([embrulhar(k, pin), Banco.ler('cofre', 'recuperacao')]);
+      }).then(function (r) {
+        var rec = r[1] && r[1].recuperacao, codigo = null;
+        var pr = rec ? Promise.resolve(rec) : (function () { codigo = novoCodigo(); return embrulhar(dados, normalizarCodigo(codigo)).then(function (w) { return Banco.gravar('cofre', { id: 'recuperacao', formato: 1, recuperacao: w, iter: ITER }).then(function () { return w; }); }); })();
+        return pr.then(function (recW) {
+          return Banco.definirMeta('cofre', { formato: 1, pin: r[0], recuperacao: recW, iter: ITER, criado_em: new Date().toISOString() });
+        }).then(function () { chave = dados; armar(); return Banco.definirMeta('cofre-erros', { n: 0, ate: 0 }); }).then(function () { return codigo; });
+      });
+    },
+    /* no celular novo: código de recuperação (o embrulho veio da conta) + PIN novo */
+    importarPorCodigo: function (codigo, pin) {
+      if (!/^\d{6}$/.test(pin)) return Promise.reject(new Error('pin-formato'));
+      return Banco.ler('cofre', 'recuperacao').then(function (r) {
+        if (!r || !r.recuperacao) throw new Error('sem-recuperacao');
+        return desembrulhar(r.recuperacao, normalizarCodigo(codigo)).then(function (k) {
+          return crypto.subtle.exportKey('raw', k).then(function (raw) { return Cofre.importarChave(b64(raw), pin); });
+        });
+      });
+    },
+    /* a conta tem um cofre (de outro celular) e este aparelho ainda não? */
+    temNaConta: function () { return Banco.ler('cofre', 'recuperacao').then(function (r) { return !!(r && r.recuperacao); }); },
 
     fechar: function () { chave = null; clearTimeout(relogio); document.dispatchEvent(new CustomEvent('gx:cofre', { detail: { aberto: false } })); },
 

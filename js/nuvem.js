@@ -6,14 +6,15 @@
    - Sincronizar = BAIXAR o que mudou desde a última vez (recebido_em) e
      depois SUBIR a fila do aparelho. Conflito: vence o mais novo
      (atualizado_em), registro por registro.
-   - NÃO SOBE: reservas e "restricoes" de pessoas (comida/alergias). Ficam
-     só no aparelho, embaralhadas.
+   - Reservas sobem SEMPRE cifradas (o servidor não tem a chave). Da chave,
+     sobe só o embrulho pelo código de recuperação (100 bits), nunca o do
+     PIN. "restricoes" de pessoas (comida/alergias) não sobem.
    - Aparelho usado por outra conta: não mistura (guarda o dono em meta).
    ===================================================================== */
 (function () {
   'use strict';
   var cfg = window.GUIAXPERT_CONFIG || {};
-  var LOJAS = ['pessoas', 'viagens', 'roteiros', 'favoritos', 'lugares'];
+  var LOJAS = ['pessoas', 'viagens', 'roteiros', 'favoritos', 'lugares', 'reservas', 'cofre'];
   var rodando = null, relogio = null;
 
   function base() { return String(cfg.SUPABASE_URL || '').replace(/\/+$/, '') + '/rest/v1/guiaxpert_dados'; }

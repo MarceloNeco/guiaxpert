@@ -16,14 +16,15 @@
      favoritos   lugares e roteiros marcados com ★
      lugares     lugares que a pessoa acrescentou ou salvou da busca
      reservas    voos, hotel, carro… (conteúdo cifrado pelo cofre)
+     cofre       a chave do cofre embrulhada pelo código de recuperação (sobe; o PIN não)
      pacotes     cópia offline dos pacotes de cidade
      meta        ajustes soltos (chave → valor)
      fila        mudanças esperando para subir à nuvem
    ===================================================================== */
 (function () {
   'use strict';
-  var NOME = 'guiaxpert', VERSAO_BANCO = 1;
-  var LOJAS = ['pessoas', 'viagens', 'roteiros', 'favoritos', 'lugares', 'reservas', 'pacotes', 'meta', 'fila'];
+  var NOME = 'guiaxpert', VERSAO_BANCO = 2;
+  var LOJAS = ['pessoas', 'viagens', 'roteiros', 'favoritos', 'lugares', 'reservas', 'pacotes', 'meta', 'fila', 'cofre'];
   var promessa = null;
 
   function abrir() {

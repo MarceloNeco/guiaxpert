@@ -2,6 +2,22 @@
   "app": "guiaxpert",
   "versoes": [
     {
+      "versao": "0.8.0",
+      "data": "2026-10-30",
+      "itens": {
+        "pt": [
+          "Reservas acompanham a sua conta: sobem sempre embaralhadas (o servidor nunca tem a chave) e aparecem no outro celular.",
+          "Para abrir no celular novo: Configurações → Mostrar QR no celular antigo e ler no novo, ou usar o código de recuperação. Cada celular tem o seu PIN.",
+          "E-mail de confirmação vira reserva: cole o texto em Reservas → Colar e-mail (ou, no Android, Compartilhar → GuiaXpert). Lê voo, hotel, carro, ingresso. Com chave de IA, lê qualquer e-mail. Você confirma antes de guardar."
+        ],
+        "en": [
+          "Bookings follow your account: always uploaded scrambled (the server never has the key) and show up on your other phone.",
+          "To open on a new phone: Settings → Show QR on the old phone and scan on the new one, or use the recovery code. Each phone has its own PIN.",
+          "Confirmation emails become bookings: paste the text in Bookings → Paste email (or, on Android, Share → GuiaXpert). Reads flights, hotels, cars, tickets. With an AI key, any email. You confirm before saving."
+        ]
+      }
+    },
+    {
       "versao": "0.7.0",
       "data": "2026-10-30",
       "itens": {

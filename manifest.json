@@ -11,6 +11,7 @@
   "background_color": "#f3f5f4",
   "theme_color": "#1e5b48",
   "categories": ["travel", "navigation"],
+  "share_target": { "action": "./index.html", "method": "GET", "enctype": "application/x-www-form-urlencoded", "params": { "title": "title", "text": "text", "url": "url" } },
   "icons": [
     { "src": "icone-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
     { "src": "icone-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },

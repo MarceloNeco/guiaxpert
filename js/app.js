@@ -12,7 +12,7 @@
 (function () {
   'use strict';
   var d = document, $ = function (id) { return d.getElementById(id); };
-  var VERSAO_APP = '0.7.0';
+  var VERSAO_APP = '0.8.0';
 
   /* ------------------------------------------------------------------
      1. UTILIDADES
@@ -853,7 +853,9 @@
         return Promise.all(lista.map(function (r) { return Cofre.decifrar(r.conteudo).then(function (c) { return { reg: r, c: c }; }); }));
       }).then(function (itens) {
         itens.sort(function (a, b) { return (a.c.quando || '') < (b.c.quando || '') ? -1 : 1; });
-        tela.appendChild(h('button', { class: 'bt', type: 'button', onclick: function () { janelaReserva(null); } }, '＋ ' + T('novaReserva')));
+        tela.appendChild(h('div', { class: 'linha' }, [
+          h('button', { class: 'bt', type: 'button', onclick: function () { janelaReserva(null); } }, '＋ ' + T('novaReserva')),
+          h('button', { class: 'bt sec', type: 'button', onclick: function () { janelaImportar(''); } }, '✉ ' + T('colarEmail'))]));
         if (!itens.length) tela.appendChild(h('p', { class: 'sub', texto: T('semReservas') }));
         itens.forEach(function (x) {
           var c = x.c;
@@ -905,6 +907,10 @@
   function pedirCofre(tela, pronto) {
     if (Cofre.aberto()) { pronto(); return; }
     Cofre.existe().then(function (existe) {
+      if (!existe) return Cofre.temNaConta().then(function (naConta) { if (naConta) { caixaTrazerCofre(tela, pronto); return null; } return false; });
+      return true;
+    }).then(function (existe) {
+      if (existe === null) return;
       var pin = h('input', { class: 'campo', id: 'gx-pin', type: 'password', inputmode: 'numeric', autocomplete: existe ? 'current-password' : 'new-password', maxlength: '6', placeholder: '••••••' });
       var msg = h('p', { class: 'pequeno', role: 'status', 'aria-live': 'polite' });
       var bt = h('button', { class: 'bt', type: 'button' }, existe ? T('abrirCofre') : T('criarCofre'));
@@ -938,6 +944,123 @@
       bt.addEventListener('click', ir);
       pin.addEventListener('keydown', function (e) { if (e.key === 'Enter') ir(); });
     });
+  }
+  /* este celular não tem o cofre, mas a conta tem (reservas de outro celular) */
+  function caixaTrazerCofre(tela, pronto) {
+    var caixa = h('div', { class: 'cartao' }, [h('h3', { texto: T('trazerCofre') }), h('p', { class: 'sub', texto: T('trazerCofreTexto') })]);
+    var pin = h('input', { class: 'campo', id: 'gx-tc-pin', type: 'password', inputmode: 'numeric', autocomplete: 'new-password', maxlength: '6', placeholder: '••••••' });
+    var msg = h('p', { class: 'pequeno', role: 'status', 'aria-live': 'polite' });
+    var fim = function (p) { return p.then(function (codigo) { return codigo ? mostrarCodigo(codigo) : null; }).then(function () { caixa.remove(); avisar(T('cofreTrazido')); pronto(); }); };
+    var erro = function (e) { msg.textContent = e.message === 'pin-formato' ? T('pinFormato') : e.message === 'cancelado' ? '' : T('codigoErrado'); };
+    var bQR = h('button', { class: 'bt', type: 'button', texto: '📷 ' + T('lerQR'), onclick: function () {
+      if (!/^\d{6}$/.test(pin.value)) { msg.textContent = T('pinFormato'); pin.focus(); return; }
+      lerQR().then(function (b64) { return fim(Cofre.importarChave(b64, pin.value)); }).catch(erro);
+    } });
+    var cod = h('input', { class: 'campo', id: 'gx-tc-cod', autocomplete: 'off', placeholder: 'XXXXX-XXXXX-XXXXX-XXXXX' });
+    var bCod = h('button', { class: 'bt sec', type: 'button', texto: T('usarCodigoRecuperacao'), onclick: function () {
+      if (!/^\d{6}$/.test(pin.value)) { msg.textContent = T('pinFormato'); pin.focus(); return; }
+      if (cod.hidden) { cod.hidden = false; cod.focus(); return; }
+      fim(Cofre.importarPorCodigo(cod.value, pin.value)).catch(erro);
+    } });
+    cod.hidden = true;
+    var bNovo = h('button', { class: 'lk', type: 'button', texto: T('criarCofreNovo'), onclick: function () {
+      if (!confirm(T('criarCofreNovoAviso'))) return;
+      Banco.apagar('cofre', 'recuperacao').then(function () { caixa.remove(); pedirCofre(tela, pronto); });
+    } });
+    caixa.appendChild(h('label', { class: 'rot', for: 'gx-tc-pin', texto: T('pinNovoAqui') })); caixa.appendChild(pin);
+    caixa.appendChild(bQR); caixa.appendChild(bCod); caixa.appendChild(cod); caixa.appendChild(msg); caixa.appendChild(bNovo);
+    tela.appendChild(caixa);
+  }
+  var qrLibs = null;
+  function carregarQR() {
+    if (window.qrcode && window.jsQR) return Promise.resolve();
+    if (qrLibs) return qrLibs;
+    qrLibs = ['vendor/qr/qrcode.js', 'vendor/qr/jsqr.js'].reduce(function (p, src) {
+      return p.then(function () { return new Promise(function (ok, erro) { var s = h('script', { src: src }); s.onload = ok; s.onerror = function () { qrLibs = null; erro(new Error('qr')); }; d.head.appendChild(s); }); });
+    }, Promise.resolve());
+    return qrLibs;
+  }
+  /* celular antigo: QR com a chave (só com o cofre aberto; some em 2 min) */
+  function mostrarQR() {
+    var corpo = h('div', { class: 'linha', style: 'flex-direction:column;align-items:center;gap:.6rem' }, [h('p', { class: 'sub', texto: T('qrTexto') })]);
+    var j = janela(T('qrTitulo'), corpo);
+    Promise.all([carregarQR(), Cofre.exportarChave()]).then(function (r) {
+      var q = qrcode(0, 'M'); q.addData('GXK1:' + r[1]); q.make();
+      var img = h('img', { src: q.createDataURL(6, 8), alt: T('qrTitulo'), style: 'width:min(70vw,18rem);height:auto;border-radius:12px;background:#fff' });
+      corpo.appendChild(img);
+      corpo.appendChild(h('p', { class: 'pequeno', texto: T('qrSome') }));
+      setTimeout(function () { j.fechar(); }, 120000);
+    }).catch(function () { corpo.appendChild(h('p', { class: 'conferir', texto: T('cofreErro') })); });
+  }
+  /* celular novo: lê o QR pela câmera (ou cola o texto do QR) */
+  function lerQR() {
+    return new Promise(function (ok, erro) {
+      var video = h('video', { playsinline: true, autoplay: true, muted: true, style: 'width:100%;border-radius:12px;background:#000;max-height:50vh' });
+      var manual = h('input', { class: 'campo', placeholder: 'GXK1:…', 'aria-label': T('colarQR'), autocomplete: 'off' });
+      var msg = h('p', { class: 'pequeno', role: 'status' });
+      var corpo = h('div', { class: 'linha', style: 'flex-direction:column;align-items:stretch' }, [h('p', { class: 'sub', texto: T('lerQRTexto') }), video, manual, msg]);
+      var fluxo = null, parar = function () { if (fluxo) fluxo.getTracks().forEach(function (t) { t.stop(); }); fluxo = null; };
+      var j = janela(T('lerQR'), corpo, function () { parar(); erro(new Error('cancelado')); });
+      var achou = function (txt) { var m = /^GXK1:([A-Za-z0-9+\/=]{40,48})$/.exec(String(txt || '').trim()); if (!m) { msg.textContent = T('qrInvalido'); return; } parar(); j.fechar(function () { ok(m[1]); }); };
+      manual.addEventListener('change', function () { achou(manual.value); });
+      carregarQR().then(function () {
+        if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) { video.hidden = true; msg.textContent = T('semCamera'); return; }
+        return navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } }).then(function (s) {
+          fluxo = s; video.srcObject = s;
+          var cv = d.createElement('canvas'), cx = cv.getContext('2d', { willReadFrequently: true });
+          (function tick() {
+            if (!fluxo) return;
+            if (video.readyState >= 2) {
+              cv.width = video.videoWidth; cv.height = video.videoHeight; cx.drawImage(video, 0, 0);
+              var im = cx.getImageData(0, 0, cv.width, cv.height), r = jsQR(im.data, im.width, im.height);
+              if (r && r.data) { achou(r.data); return; }
+            }
+            requestAnimationFrame(tick);
+          })();
+        }).catch(function () { video.hidden = true; msg.textContent = T('semCamera'); });
+      });
+    });
+  }
+  /* e-mail de reserva → reservas (regras no aparelho; IA se a pessoa pedir) */
+  function janelaImportar(textoInicial) {
+    if (!estado.viagem) { avisar(T('semViagemTexto')); return; }
+    var txt = h('textarea', { class: 'campo', id: 'gx-imp', rows: '7', placeholder: T('colarEmailDica') }, textoInicial || '');
+    var lista = h('div', { class: 'linha', style: 'flex-direction:column;align-items:stretch;gap:.5rem' });
+    var msg = h('p', { class: 'pequeno', role: 'status', 'aria-live': 'polite' });
+    var bLer = h('button', { class: 'bt', type: 'button', texto: T('lerEmail') });
+    var bIA = h('button', { class: 'bt sec', type: 'button', texto: '✨ ' + T('lerComIA') });
+    var corpo = h('div', { class: 'linha', style: 'flex-direction:column;align-items:stretch' }, [h('p', { class: 'sub', texto: T('importarTexto') }), txt, h('div', { class: 'linha' }, [bLer, bIA]), msg, lista]);
+    var j = janela(T('importarTitulo'), corpo, function () { if (estado.rota === 'reservas') mostrar('reservas'); });
+    function mostrarCandidatos(cs) {
+      lista.textContent = '';
+      if (!cs.length) { msg.textContent = T('nadaEncontrado'); return; }
+      msg.textContent = T('encontrei', { n: cs.length });
+      cs.forEach(function (c) {
+        var card = h('div', { class: 'cartao', style: 'background:var(--sup2)' }, [
+          h('span', { class: 'pequeno', texto: T('res_' + c.tipo) + (c.fonte === 'ia' ? ' · ✨' : '') }), h('b', { texto: c.titulo }),
+          c.quando ? h('span', { texto: fData(c.quando.slice(0, 10)) + (c.quando.length > 10 ? ' · ' + c.quando.slice(11, 16) : '') }) : null,
+          c.codigo ? h('span', { class: 'linha' }, [T('codigo') + ': ', h('code', { texto: c.codigo })]) : null,
+          c.local ? h('span', { class: 'sub', texto: c.local }) : null, c.nota ? h('span', { class: 'sub', texto: c.nota }) : null]);
+        var add = h('button', { class: 'bt', type: 'button', texto: '＋ ' + T('adicionarReserva') });
+        add.addEventListener('click', function () {
+          add.disabled = true;
+          var gravar = function () {
+            return Cofre.cifrar({ tipo: c.tipo, titulo: c.titulo, quando: c.quando || '', codigo: c.codigo || '', local: c.local || '', nota: c.nota || '' })
+              .then(function (blob) { return Banco.gravar('reservas', { viagem_id: estado.viagem.id, tipo: c.tipo, conteudo: blob }); })
+              .then(function () { add.textContent = '✓ ' + T('adicionado2'); });
+          };
+          if (Cofre.aberto()) gravar(); else { var cx = h('div', {}); card.appendChild(cx); pedirCofre(cx, function () { cx.remove(); gravar(); }); add.disabled = false; }
+        });
+        card.appendChild(add); lista.appendChild(card);
+      });
+    }
+    bLer.addEventListener('click', function () { mostrarCandidatos(Importar.porRegras(txt.value)); });
+    bIA.addEventListener('click', function () {
+      if (!confirm(T('lerComIAAviso'))) return;
+      bIA.disabled = true; msg.textContent = T('carregando');
+      Importar.porIA(txt.value, idioma()).then(mostrarCandidatos).catch(function (e) { msg.textContent = e.message === 'sem-ia' ? T('iaSemChave') : T('iaErro'); }).then(function () { bIA.disabled = false; });
+    });
+    if (textoInicial) setTimeout(function () { mostrarCandidatos(Importar.porRegras(textoInicial)); }, 50);
   }
   function mostrarCodigo(codigo) {
     return new Promise(function (ok) {
@@ -1606,6 +1729,11 @@
       h('button', { class: 'bt leve', type: 'button', onclick: function () { DGO.ia.guia(null, 'texto'); } }, T('iaConfigurar')),
       h('button', { class: 'bt leve', type: 'button', onclick: function () { DGO.abrirConfiguracoes && DGO.abrirConfiguracoes(); } }, T('maisAjustes'))]));
     if (estado.viagem) tela.appendChild(cartaoOffline(estado.viagem));
+    tela.appendChild(h('div', { class: 'cartao' }, [h('h3', { texto: T('cofreOutroCelular') }), h('p', { class: 'sub', texto: T('cofreOutroCelularTexto') }),
+      h('button', { class: 'bt leve', type: 'button', texto: '▦ ' + T('mostrarQR'), onclick: function () {
+        if (Cofre.aberto()) { mostrarQR(); return; }
+        var cx = h('div', {}); var j = janela(T('cofreFechado'), cx); pedirCofre(cx, function () { j.fechar(mostrarQR); });
+      } })]));
     var cBio = h('div', { class: 'cartao' }, [h('h3', { texto: T('bioCartao') })]);
     tela.appendChild(cBio);
     Bio.suportada().then(function (ok) {
@@ -1649,6 +1777,8 @@
         mostrar(estado.rota === 'entrar' ? (emViagem() ? 'inicio' : 'explorar') : estado.rota);
         oferecerBio();
         sincronizarNuvem();
+        var compartilhado = window.Importar && Importar.doEndereco();
+        if (compartilhado) setTimeout(function () { if (estado.viagem) { Nav.ir('reservas'); setTimeout(function () { janelaImportar(compartilhado); }, 200); } else avisar(T('semViagemTexto')); }, 400);
       });
     });
   }
