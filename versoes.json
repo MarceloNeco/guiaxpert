@@ -2,6 +2,22 @@
   "app": "guiaxpert",
   "versoes": [
     {
+      "versao": "0.9.0",
+      "data": "2026-10-31",
+      "itens": {
+        "pt": [
+          "Família na mesma viagem: em Quem viaja → Compartilhar a viagem, mande um link de convite pelo WhatsApp. Quem abre entra na viagem e vê (ou edita) roteiro, lugares e mapa. Reservas e alergias continuam só com você.",
+          "O dono muda quem só vê e quem edita, e pode tirar alguém. Quem foi convidado pode sair.",
+          "Para quem fica em casa: cartão de texto com hotel ou voos, sem códigos de reserva, para mandar pelo WhatsApp."
+        ],
+        "en": [
+          "Family on the same trip: in Travelers → Share the trip, send an invite link on WhatsApp. Whoever opens it joins the trip and views (or edits) the itinerary, places and map. Bookings and allergies stay with you.",
+          "The owner sets who views and who edits, and can remove someone. Invitees can leave.",
+          "For those staying home: a text card with hotel or flights, no booking codes, to send on WhatsApp."
+        ]
+      }
+    },
+    {
       "versao": "0.8.0",
       "data": "2026-10-30",
       "itens": {

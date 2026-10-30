@@ -441,3 +441,4 @@ h2.secao-cab, .secao-cab h2 { font-size: 1.15rem; font-weight: 800; }
   body { padding: 0; background: #fff; color: #000; }
   .lugar .corpo { display: flex !important; }
 }
+.cartao-texto { white-space: pre-wrap; font: inherit; background: var(--sup2); border-radius: 14px; padding: .8rem; margin: 0; }

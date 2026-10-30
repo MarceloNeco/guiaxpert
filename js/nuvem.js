@@ -29,6 +29,12 @@
     return o;
   }
 
+  /* que viagens alcanço e com que papel (dono | edita | ve) → meta 'papeis' */
+  function papeis(t) {
+    return fetch(String(cfg.SUPABASE_URL || '').replace(/\/+$/, '') + '/rest/v1/rpc/guiaxpert_viagens_acesso', { method: 'POST', headers: cab(t), body: '{}' })
+      .then(ok).then(function (ls) { var m = {}; (ls || []).forEach(function (x) { m[x.viagem_id] = x.papel; }); return Banco.definirMeta('papeis', m).then(function () { document.dispatchEvent(new CustomEvent('gx:papeis', { detail: m })); }); })
+      .catch(function () {});
+  }
   function baixar(t) {
     return Banco.meta('nuvem-cursor', '1970-01-01T00:00:00Z').then(function (cursor) {
       var u = base() + '?select=loja,id,dados,atualizado_em,versao,apagado,recebido_em&recebido_em=gt.' + encodeURIComponent(cursor) + '&order=recebido_em.asc&limit=1000';
@@ -64,11 +70,19 @@
       return Promise.all(Object.keys(unicos).map(function (k) { var f = unicos[k]; return Banco.lerBruto(f.loja, f.id).then(function (r) { return r && { loja: f.loja, r: r }; }); }))
         .then(function (regs) {
           var linhas = regs.filter(Boolean).map(function (x) {
-            return { loja: x.loja, id: x.r.id, dados: limpar(x.loja, x.r), atualizado_em: x.r.atualizado_em || new Date().toISOString(), versao: x.r.versao || 1, apagado: !!x.r.apagado };
+            var vid = x.loja === 'viagens' ? x.r.id : (x.r.viagem_id || null);
+            if (x.loja === 'pessoas' || x.loja === 'cofre') vid = null;
+            return { loja: x.loja, id: x.r.id, viagem_id: vid, dados: limpar(x.loja, x.r), atualizado_em: x.r.atualizado_em || new Date().toISOString(), versao: x.r.versao || 1, apagado: !!x.r.apagado };
           });
           if (!linhas.length) return Banco.limparFila(todos).then(function () { return 0; });
-          return fetch(base() + '?on_conflict=user_id,loja,id', { method: 'POST', headers: cab(t, { Prefer: 'resolution=merge-duplicates,return=minimal' }), body: JSON.stringify(linhas) })
-            .then(ok).then(function () { return Banco.limparFila(todos); }).then(function () { return linhas.length; });
+          var enviar = function (ls) {
+            return fetch(base() + '?on_conflict=loja,id', { method: 'POST', headers: cab(t, { Prefer: 'resolution=merge-duplicates,return=minimal' }), body: JSON.stringify(ls) }).then(ok);
+          };
+          return enviar(linhas).catch(function (e) {
+            /* alguma linha sem permissão (ex.: membro que só vê): manda uma a uma e deixa as recusadas de lado */
+            if (!e || (e.status !== 403 && e.status !== 401 && e.status !== 409 && e.status !== 400)) throw e;
+            return linhas.reduce(function (p, l) { return p.then(function () { return enviar([l]).catch(function (e2) { if (e2 && (e2.status === 403 || e2.status === 409 || e2.status === 400)) return null; throw e2; }); }); }, Promise.resolve());
+          }).then(function () { return Banco.limparFila(todos); }).then(function () { return linhas.length; });
         });
     });
   }
@@ -83,11 +97,14 @@
         if (dono && dono !== s.email) return null;               /* aparelho com dados de outra conta */
         return Conta.token().then(function (t) {
           if (!t) return null;
-          return baixar(t).then(function (b) {
+          return papeis(t).then(function () { return baixar(t); }).then(function (b) {
             return subir(t).then(function (u) {
               return (dono ? Promise.resolve() : Banco.definirMeta('nuvem-dono', s.email)).then(function () {
                 return Banco.definirMeta('nuvem-ultima', new Date().toISOString());
-              }).then(function () { return { baixados: b, subidos: u }; });
+              }).then(function () {
+                if (b) document.dispatchEvent(new CustomEvent('gx:nuvem', { detail: { baixados: b } }));
+                return { baixados: b, subidos: u };
+              });
             });
           });
         });
@@ -97,6 +114,13 @@
     /* depois de mudar algo: sobe em alguns segundos (junta várias mudanças) */
     logo: function () { clearTimeout(relogio); relogio = setTimeout(function () { Nuvem.sincronizar(); }, 4000); },
     ultima: function () { return Banco.meta('nuvem-ultima', null); },
+    papel: function (viagemId) { return Banco.meta('papeis', {}).then(function (m) { return m[viagemId] || 'dono'; }); },
+    /* convites e membros (funções do banco) */
+    criarConvite: function (viagemId, papel, dias) { return Conta.rpc('guiaxpert_criar_convite', { p_viagem: viagemId, p_papel: papel || 've', p_dias: dias || 7 }); },
+    aceitarConvite: function (token) { return Conta.rpc('guiaxpert_aceitar_convite', { p_token: token }).then(function (r) { return Array.isArray(r) ? r[0] : r; }); },
+    membros: function (viagemId) { return Conta.rpc('guiaxpert_listar_membros', { p_viagem: viagemId }); },
+    mudarMembro: function (viagemId, userId, papel) { return Conta.rpc('guiaxpert_mudar_membro', { p_viagem: viagemId, p_user: userId, p_papel: papel }); },
+    sairViagem: function (viagemId) { return Conta.rpc('guiaxpert_sair_viagem', { p_viagem: viagemId }); },
     /* LGPD: apagar o que está na conta */
     apagarTudo: function () {
       return Conta.token().then(function (t) {
@@ -108,6 +132,9 @@
 
   document.addEventListener('gx:dados', function (e) { if (!(e.detail && e.detail.fora)) Nuvem.logo(); });
   window.addEventListener('online', function () { Nuvem.logo(); });
+  /* com o app aberto: confere a cada minuto e ao voltar para a tela (a família pode ter mudado o roteiro) */
+  setInterval(function () { if (!document.hidden) Nuvem.sincronizar(); }, 60000);
+  document.addEventListener('visibilitychange', function () { if (!document.hidden) Nuvem.logo(); });
 
   window.Nuvem = Nuvem;
 })();

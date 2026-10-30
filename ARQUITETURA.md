@@ -72,6 +72,16 @@ roteiro: viagem.opcao_ativa → loja roteiros (várias opções; pacote | manual
 dia da viagem → dia do modelo: 1º = chegada, último = volta, meio = repete os do meio
 ```
 
+## Família: membros e convites
+
+- `guiaxpert_membros (viagem_id, user_id, papel edita|ve, dono)` e `guiaxpert_convites` (só o hash do token).
+  `guiaxpert_dados` tem `viagem_id` e chave `(loja, id)`: um roteiro é UMA linha, editada por quem tem papel.
+- RLS: dono vê tudo o seu; membro vê viagens/roteiros/lugares/favoritos da viagem (e as pessoas que ela inclui, via
+  `guiaxpert_pessoa_compartilhada`, security definer para não haver recursão); `edita` muda roteiros/lugares/favoritos;
+  reservas e cofre nunca. Funções: `guiaxpert_criar_convite`, `aceitar_convite`, `listar_membros`, `mudar_membro`, `sair_viagem`.
+- App: link `#convite=TOKEN` fica guardado até a pessoa entrar; `estado.papel` vem de `Nuvem.papel()` (evento `gx:papeis`);
+  `podeEditar()` esconde os botões de edição para quem só vê (o banco recusa de qualquer jeito).
+
 ## Cofre em mais de um celular
 
 - A chave de dados nasce no aparelho. Sobem para a conta: as reservas (cifradas) e o embrulho da chave pelo

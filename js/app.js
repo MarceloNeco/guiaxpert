@@ -12,7 +12,7 @@
 (function () {
   'use strict';
   var d = document, $ = function (id) { return d.getElementById(id); };
-  var VERSAO_APP = '0.8.0';
+  var VERSAO_APP = '0.9.0';
 
   /* ------------------------------------------------------------------
      1. UTILIDADES
@@ -114,6 +114,8 @@
       ]);
     }).then(function (r) {
       estado.pacote = r[0]; estado.pessoas = r[1]; estado.roteiros = r[2];
+      estado.papel = 'dono';
+      if (estado.viagem && window.Nuvem) Nuvem.papel(estado.viagem.id).then(function (p) { estado.papel = p; });
       estado.favoritos = {}; r[3].forEach(function (f) { estado.favoritos[f.id] = f; });
       estado.lugaresProprios = r[4];
       /* ordem das opções: favoritas primeiro, depois a ordem em que foram criadas */
@@ -575,7 +577,8 @@
     if (!(dmod.itens || []).length) bloco.appendChild(h('p', { class: 'sub', style: 'padding:1rem', texto: T('diaVazio') }));
     tela.appendChild(bloco);
     if (o.origem === 'pacote') tela.appendChild(h('p', { class: 'pequeno', texto: T('pacoteEditar') }));
-    tela.appendChild(h('button', { class: 'bt leve', type: 'button', onclick: function () { janelaItem(o, dmod); } }, '＋ ' + T('addItem')));
+    if (podeEditar()) tela.appendChild(h('button', { class: 'bt leve', type: 'button', onclick: function () { janelaItem(o, dmod); } }, '＋ ' + T('addItem')));
+    else tela.appendChild(h('p', { class: 'pequeno', texto: T('soVe') }));
   };
   function recarregar() { return carregarViagem(estado.viagem && estado.viagem.id).then(function () { mostrar(estado.rota); }); }
   function recarregarTela() { return recarregar(); }
@@ -751,6 +754,9 @@
     return c;
   }
   function grupoDe(p) { return p.grupo || 'familia'; }
+  /* dono | edita | ve (vem da nuvem; sem nuvem, dono) */
+  function papelViagem() { return estado.papel || 'dono'; }
+  function podeEditar() { return papelViagem() !== 've'; }
   function cartaoLugar(l, restr) {
     var fav = !!estado.favoritos['lugar:' + l.id];
     var det = h('details', { class: 'lugar', 'data-id': l.id });
@@ -770,7 +776,7 @@
     if (l.categoria === 'comer' && restr.length) corpo.appendChild(h('div', { class: 'alerta' }, [h('b', { texto: T('restricoesGrupo') }), restr.join(', ') + '. ' + T('pergunteAntes')]));
     if (l.dieta) { var dd = Object.keys(l.dieta).filter(function (k) { return l.dieta[k]; }); if (dd.length) corpo.appendChild(h('p', { class: 'pequeno', texto: T('osmDieta') + ': ' + dd.map(function (k) { return T('r_' + k); }).join(', ') })); }
     corpo.appendChild(linksLugar(l));
-    if (estado.viagem && estado.opcao) corpo.appendChild(h('button', { class: 'bt', type: 'button', onclick: function () { janelaAddAoRoteiro(l); } }, '＋ ' + T('porNoDia')));
+    if (estado.viagem && estado.opcao && podeEditar()) corpo.appendChild(h('button', { class: 'bt', type: 'button', onclick: function () { janelaAddAoRoteiro(l); } }, '＋ ' + T('porNoDia')));
     if (!estado.viagem && window.Explorar) Explorar.acoes(l, corpo);
     else if (l.confianca === 'osm' && !estado.lugaresProprios.some(function (x) { return x.id === l.id; })) corpo.appendChild(h('button', { class: 'bt leve', type: 'button', onclick: function () {
       Banco.gravar('lugares', Object.assign({}, l, { viagem_id: estado.viagem.id })).then(function () { avisar(T('salvo')); recarregar(); }); } }, T('salvarLugar')));
@@ -1117,6 +1123,7 @@
     tela.appendChild(h('p', { class: 'sub', texto: T('familiaTexto') }));
     tela.appendChild(h('button', { class: 'bt', type: 'button', onclick: function () { janelaPessoa(null); } }, '＋ ' + T('addPessoa')));
     if (!estado.pessoas.length) tela.appendChild(h('p', { class: 'sub', texto: T('semPessoas') }));
+    if (estado.viagem) tela.appendChild(cartaoCompartilhar(estado.viagem));
     var v = estado.viagem, naViagem = v && v.pessoas || [];
     [['familia', 'grupoFamilia', 'grupoFamiliaTexto'], ['convidado', 'grupoConvidados', 'grupoConvidadosTexto'], ['viagem', 'grupoSoViagem', 'grupoSoViagemTexto']].forEach(function (gr) {
       var ps = estado.pessoas.filter(function (p) { return grupoDe(p) === gr[0]; });
@@ -1125,6 +1132,104 @@
       ps.forEach(function (p) { tela.appendChild(cartaoPessoa(p, v && naViagem.indexOf(p.id) > -1 ? v : null)); });
     });
   };
+  /* compartilhar a viagem: membros, convite por link, e cartão de texto para quem fica em casa */
+  function cartaoCompartilhar(v) {
+    var c = h('div', { class: 'cartao' }, [h('h3', { texto: T('compartilharViagem') })]);
+    var s = Conta.sessao();
+    if (!s || !window.Nuvem) { c.appendChild(h('p', { class: 'sub', texto: T('compartilharPrecisaConta') })); return c; }
+    var papel = papelViagem();
+    if (papel !== 'dono') {
+      c.appendChild(h('p', { class: 'sub', texto: T(papel === 'edita' ? 'vocePodeEditar' : 'voceSoVe') }));
+      c.appendChild(h('button', { class: 'bt perigo', type: 'button', texto: T('sairDaViagem'), onclick: function () {
+        if (!confirm(T('sairDaViagemAviso'))) return;
+        Nuvem.sairViagem(v.id).then(function () { return apagarViagemLocal(v); }).then(function () { return Contexto.definir('explorar'); }).then(recarregarContexto).then(function () { Nav.ir('viagens'); });
+      } }));
+      return c;
+    }
+    c.appendChild(h('p', { class: 'sub', texto: T('compartilharTexto') }));
+    var lista = h('div', { class: 'linha', style: 'flex-direction:column;align-items:stretch;gap:.3rem' });
+    c.appendChild(lista);
+    Nuvem.membros(v.id).then(function (ms) {
+      (ms || []).forEach(function (m) {
+        lista.appendChild(h('div', { class: 'linha entre' }, [h('span', { texto: m.email }), h('span', { class: 'linha', style: 'gap:.3rem' }, [
+          h('button', { class: 'chip', type: 'button', 'aria-pressed': m.papel === 've' ? 'true' : 'false', texto: T('papelVe'), onclick: function () { Nuvem.mudarMembro(v.id, m.user_id, 've').then(function () { mostrar('familia'); }); } }),
+          h('button', { class: 'chip', type: 'button', 'aria-pressed': m.papel === 'edita' ? 'true' : 'false', texto: T('papelEdita'), onclick: function () { Nuvem.mudarMembro(v.id, m.user_id, 'edita').then(function () { mostrar('familia'); }); } }),
+          h('button', { class: 'fav', type: 'button', 'aria-label': T('tirarMembro'), texto: '✕', onclick: function () { Nuvem.mudarMembro(v.id, m.user_id, null).then(function () { mostrar('familia'); }); } })])]));
+      });
+      if (!(ms || []).length) lista.appendChild(h('p', { class: 'pequeno', texto: T('semMembros') }));
+    }).catch(function () { lista.appendChild(h('p', { class: 'pequeno', texto: navigator.onLine ? T('erroRede') : T('semInternet') })); });
+    c.appendChild(h('div', { class: 'linha' }, [
+      h('button', { class: 'bt sec', type: 'button', texto: '🔗 ' + T('convidarVe'), onclick: function () { convidar(v, 've'); } }),
+      h('button', { class: 'bt sec', type: 'button', texto: '🔗 ' + T('convidarEdita'), onclick: function () { convidar(v, 'edita'); } })
+    ]));
+    c.appendChild(h('p', { class: 'pequeno', texto: T('convitePrivacidade') }));
+    c.appendChild(h('h3', { texto: T('quemFicaEmCasa'), style: 'margin-top:.5rem' }));
+    c.appendChild(h('p', { class: 'sub', texto: T('quemFicaEmCasaTexto') }));
+    c.appendChild(h('div', { class: 'linha' }, [
+      h('button', { class: 'bt leve', type: 'button', texto: '🏨 ' + T('compartilharHotel'), onclick: function () { compartilharCartao(v, 'hotel'); } }),
+      h('button', { class: 'bt leve', type: 'button', texto: '✈ ' + T('compartilharVoos'), onclick: function () { compartilharCartao(v, 'voo'); } })
+    ]));
+    return c;
+  }
+  function convidar(v, papel) {
+    avisar(T('carregando'));
+    Nuvem.criarConvite(v.id, papel, 14).then(function (tok) {
+      var link = location.origin + location.pathname + '#convite=' + tok;
+      var texto = T('conviteMensagem', { nome: v.nome, papel: T(papel === 'edita' ? 'papelEdita' : 'papelVe').toLowerCase() }) + '\n' + link;
+      enviarTexto(T('convite'), texto);
+    }).catch(function () { avisar(navigator.onLine ? T('erroRede') : T('semInternet')); });
+  }
+  /* cartão de texto (hotel ou voos) para mandar pelo WhatsApp: pede o cofre, monta só o essencial */
+  function compartilharCartao(v, tipo) {
+    var corpo = h('div', {}), j = janela(T(tipo === 'hotel' ? 'compartilharHotel' : 'compartilharVoos'), corpo);
+    pedirCofre(corpo, function () {
+      Banco.listar('reservas', function (r) { return r.viagem_id === v.id && r.tipo === tipo; }).then(function (rs) {
+        return Promise.all(rs.map(function (r) { return Cofre.decifrar(r.conteudo).catch(function () { return null; }); }));
+      }).then(function (cs) {
+        cs = cs.filter(Boolean);
+        var linhas = [T('cartaoTitulo', { nome: v.nome, de: fData(v.inicio, true), ate: fData(v.fim, true) })];
+        if (tipo === 'hotel') {
+          var e = (v.estadias || [])[0];
+          if (e && e.nome) linhas.push('🏨 ' + e.nome + (e.endereco ? ' · ' + e.endereco : ''));
+          cs.forEach(function (c) { linhas.push('🏨 ' + c.titulo + (c.local ? ' · ' + c.local : '') + (c.quando ? ' · ' + fData(c.quando.slice(0, 10), true) : '') + (c.nota ? ' · ' + c.nota : '')); });
+        } else {
+          cs.sort(function (a, b) { return (a.quando || '') < (b.quando || '') ? -1 : 1; });
+          cs.forEach(function (c) { linhas.push('✈ ' + c.titulo + (c.quando ? ' · ' + fData(c.quando.slice(0, 10), true) + (c.quando.length > 10 ? ' ' + c.quando.slice(11, 16) : '') : '')); });
+        }
+        if (linhas.length === 1) linhas.push(T('cartaoVazio'));
+        linhas.push(T('cartaoRodape'));
+        var texto = linhas.join('\n');
+        corpo.textContent = '';
+        corpo.appendChild(h('pre', { class: 'cartao-texto', texto: texto }));
+        corpo.appendChild(h('p', { class: 'pequeno', texto: T('cartaoSemCodigo') }));
+        corpo.appendChild(h('button', { class: 'bt', type: 'button', texto: T('enviar'), onclick: function () { enviarTexto(v.nome, texto); } }));
+      });
+    });
+  }
+  function enviarTexto(titulo, texto) {
+    if (navigator.share) return navigator.share({ title: titulo, text: texto }).catch(function () {});
+    return navigator.clipboard.writeText(texto).then(function () { avisar(T('copiadoCole')); }).catch(function () { prompt(T('copieManual'), texto); });
+  }
+  function apagarViagemLocal(v) {
+    return Banco.listar('roteiros', function (r) { return r.viagem_id === v.id; }).then(function (rs) { return Promise.all(rs.map(function (r) { return Banco.gravarDeFora('roteiros', Object.assign(r, { apagado: true })); })); })
+      .then(function () { return Banco.gravarDeFora('viagens', Object.assign(v, { apagado: true })); });
+  }
+  /* link de convite (#convite=…): guardado até a pessoa entrar; depois aceita e abre a viagem */
+  function lerConvite() {
+    var m = (location.hash || '').match(/^#convite=([a-z0-9]{16,40})$/);
+    if (m) { try { localStorage.setItem('guiaxpert.convite', m[1]); } catch (e) {} history.replaceState(null, '', location.pathname); }
+  }
+  function aceitarConvitePendente() {
+    var tok = null; try { tok = localStorage.getItem('guiaxpert.convite'); } catch (e) {}
+    if (!tok || !Conta.sessao() || !window.Nuvem) return Promise.resolve(false);
+    try { localStorage.removeItem('guiaxpert.convite'); } catch (e) {}
+    avisar(T('aceitandoConvite'));
+    return Nuvem.aceitarConvite(tok).then(function (r) {
+      return Nuvem.sincronizar().then(function () { return Contexto.definir('viagem', r.viagem_id); }).then(recarregarContexto).then(function () {
+        avisar(T('conviteAceito', { nome: r.nome || '' })); Nav.ir('inicio', { substituir: true }); return true;
+      });
+    }).catch(function (e) { avisar(e && /inválido|vencido/i.test(e.message) ? T('conviteInvalido') : T('erroRede')); return false; });
+  }
   function cartaoPessoa(p, v) {
     var x = v ? perfilNaViagem(p, v) : p;
     var nome = p.apelido || T('par_' + p.parentesco), g = contarGostos(x.gostos);
@@ -1776,7 +1881,7 @@
       return recarregarContexto().then(function () {
         mostrar(estado.rota === 'entrar' ? (emViagem() ? 'inicio' : 'explorar') : estado.rota);
         oferecerBio();
-        sincronizarNuvem();
+        aceitarConvitePendente().then(function (aceito) { if (!aceito) sincronizarNuvem(); });
         var compartilhado = window.Importar && Importar.doEndereco();
         if (compartilhado) setTimeout(function () { if (estado.viagem) { Nav.ir('reservas'); setTimeout(function () { janelaImportar(compartilhado); }, 200); } else avisar(T('semViagemTexto')); }, 400);
       });
@@ -1787,10 +1892,9 @@
   function sincronizarNuvem() {
     if (!window.Nuvem) return Promise.resolve();
     return Nuvem.sincronizar().then(function (r) {
-      if (r && r.baixados) return recarregarContexto().then(function () {
+      if (r && r.baixados && Contexto.automatico()) return recarregarContexto().then(function () {
         /* chegou uma viagem e a pessoa ainda não tinha escolhido contexto: entra nela */
-        var pulou = Contexto.automatico() && emViagem() && (estado.rota === 'explorar' || estado.rota === 'salvos');
-        mostrar(pulou ? 'inicio' : estado.rota);
+        if (emViagem() && (estado.rota === 'explorar' || estado.rota === 'salvos')) mostrar('inicio');
       });
     });
   }
@@ -1828,6 +1932,7 @@
     try { estado.idioma = localStorage.getItem('dgo:guiaxpert:idioma') || ((navigator.language || 'pt').indexOf('pt') === 0 ? 'pt' : 'en'); } catch (e) {}
     try { aplicarTema(localStorage.getItem('dgo:guiaxpert:tema') || 'auto'); } catch (e) {}
     traduzirMoldura();
+    lerConvite();
     var rota = Nav.iniciar();
     estado.rota = rota;
     $('bt-menu').addEventListener('click', abrirGaveta);
@@ -1842,6 +1947,17 @@
     $('bt-busca').addEventListener('click', abrirBusca);
     $('bt-idioma').addEventListener('click', function () { trocarIdioma(idioma() === 'en' ? 'pt' : 'en'); });
     d.addEventListener('dgo:idioma', function (e) { if (e.detail && e.detail.idioma) { estado.idioma = e.detail.idioma; traduzirMoldura(); mostrar(estado.rota); } });
+    /* chegou algo da conta (ex.: a família mudou o roteiro): recarrega sem a pessoa fazer nada */
+    d.addEventListener('gx:nuvem', function () {
+      if (!estado.acesso || !estado.acesso.liberado || d.querySelector('.janela')) return;   /* não atrapalha quem está digitando numa janela */
+      recarregarContexto().then(function () { if (estado.rota !== 'nova') mostrar(estado.rota); });
+    });
+    /* papel na viagem mudou (dono promoveu/tirou): redesenha */
+    d.addEventListener('gx:papeis', function (e) {
+      if (!estado.viagem) return;
+      var p = (e.detail || {})[estado.viagem.id] || 'dono';
+      if (p !== estado.papel) { estado.papel = p; mostrar(estado.rota); }
+    });
     d.addEventListener('gx:cofre', function () { cacheRestr = []; if (estado.rota === 'reservas') mostrar('reservas'); });
     window.addEventListener('online', function () { if (!estado.acesso || !estado.acesso.liberado || estado.acesso.offline) iniciarAcesso(); });
     estado.pronto = true;
