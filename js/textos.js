@@ -225,7 +225,7 @@ window.TEXTOS = (function () {
 
     /* conta e configurações */
     semContaAberto: ['Sem conta (modo de teste aberto).', 'No account (open test mode).'],
-    acesso_plano: ['Acesso pelo seu plano SolverONE', 'Access through your SolverONE plan'], acesso_codigo: ['Acesso por código de degustação', 'Access through a trial code'],
+    acesso_plano: ['Acesso pelo seu plano SolverONE', 'Access through your SolverONE plan'], acesso_codigo: ['Acesso por código de degustação', 'Access through a trial code'], acesso_manual: ['Acesso liberado por convite', 'Access by invitation'],
     acesso_aberto: ['Acesso aberto (teste)', 'Open access (test)'], acesso_bloqueado: ['Sem acesso', 'No access'], 'acesso_sem-conta': ['Sem conta', 'No account'],
     ate: ['até {d}', 'until {d}'], semInternetUsando: ['sem internet, usando a última conferência', 'offline, using the last check'],
     meusDados: ['Meus dados', 'My data'], meusDadosTexto: ['Tudo fica neste aparelho. Você pode baixar uma cópia ou apagar tudo quando quiser.', 'Everything stays on this device. You can download a copy or delete everything anytime.'],

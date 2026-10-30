@@ -71,10 +71,10 @@ begin
   if found then
     return query select true, 'plano'::text, a.plano, a.valida_ate; return;
   end if;
-  select c.valida_ate into x from public.acessos_app c
+  select c.valida_ate, c.origem into x from public.acessos_app c
    where c.user_id = auth.uid() and c.app = p_app and c.valida_ate > now();
   if found then
-    return query select true, 'codigo'::text, 'degustacao'::text, x.valida_ate; return;
+    return query select true, x.origem::text, (case when x.origem = 'manual' then 'convite' else 'degustacao' end)::text, x.valida_ate; return;
   end if;
   return query select false, 'bloqueado'::text, null::text, null::timestamptz;
 end; $$;
