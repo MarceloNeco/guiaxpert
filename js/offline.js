@@ -107,6 +107,13 @@
       });
       return passos.reduce(function (p, f) { return p.then(f); }, Promise.resolve()).then(function () { return Offline.estado(cidade); });
     },
+    /* mapas guardados neste aparelho: [{ id, nome, bytes, em }] */
+    guardados: function () {
+      return lerIndice().then(function (j) {
+        var ids = Object.keys(j.mapas || {});
+        return Promise.all(ids.map(function (id) { return Banco.meta('mapa-guardado-' + id, null).then(function (g) { return g ? { id: id, nome: j.mapas[id].nome, bytes: g.bytes, em: g.em } : null; }); }));
+      }).then(function (ls) { return ls.filter(Boolean); });
+    },
     apagar: function (cidade) {
       return caches.open(CACHE).then(function (c) { return c.delete(chaveCache(cidade)); }).then(function () { return Banco.definirMeta('mapa-guardado-' + cidade, null); });
     },

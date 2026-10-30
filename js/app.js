@@ -12,7 +12,7 @@
 (function () {
   'use strict';
   var d = document, $ = function (id) { return d.getElementById(id); };
-  var VERSAO_APP = '1.0.1';
+  var VERSAO_APP = '1.0.2';
 
   /* ------------------------------------------------------------------
      1. UTILIDADES
@@ -451,6 +451,9 @@
       if (e.guardado) {
         c.appendChild(h('div', { class: 'linha entre' }, [h('b', { texto: '✓ ' + T('prontoSemInternet') }), h('span', { class: 'pequeno', texto: mb + ' MB' })]));
         c.appendChild(h('p', { class: 'sub', texto: T('prontoSemInternetTexto') }));
+        c.appendChild(h('button', { class: 'bt leve', type: 'button', texto: T('apagarMapa', { mb: mb }), onclick: function () {
+          Offline.apagar(cidade).then(function () { avisar(T('mapaApagado')); mostrar(estado.rota); });
+        } }));
         return;
       }
       var prog = h('div', { class: 'progresso', hidden: true }, h('i', { style: 'width:0%' }));
@@ -1616,6 +1619,10 @@
           var soDela = estado.pessoas.filter(function (p) { return grupoDe(p) === 'viagem' && (v.pessoas || []).indexOf(p.id) > -1 && !usados[p.id]; });
           return Promise.all(soDela.map(function (p) { return Banco.apagar('pessoas', p.id); }));
         });
+      }).then(function () {
+        /* a cidade não tem mais viagem? tira o mapa guardado também */
+        if (!v.destino || !window.Offline) return;
+        return Banco.listar('viagens', function (x) { return x.destino === v.destino; }).then(function (outras) { if (!outras.length) return Offline.apagar(v.destino); });
       }).then(function () { j.fechar(); return Contexto.definir('explorar'); }).then(recarregarContexto).then(function () { Nav.ir('viagens'); });
     });
   }
@@ -1944,6 +1951,17 @@
       h('button', { class: 'bt leve', type: 'button', onclick: function () { DGO.ia.guia(null, 'texto'); } }, T('iaConfigurar')),
       h('button', { class: 'bt leve', type: 'button', onclick: function () { DGO.abrirConfiguracoes && DGO.abrirConfiguracoes(); } }, T('maisAjustes'))]));
     if (estado.viagem) tela.appendChild(cartaoOffline(estado.viagem));
+    else if (window.Offline) {
+      var cm = h('div', { class: 'cartao' }, [h('h3', { texto: T('mapasGuardados') })]); tela.appendChild(cm);
+      Offline.guardados().then(function (ls) {
+        if (!ls.length) { cm.appendChild(h('p', { class: 'sub', texto: T('semMapasGuardados') })); return; }
+        ls.forEach(function (m) {
+          var mb = (m.bytes / 1048576).toFixed(1).replace('.', ',');
+          cm.appendChild(h('div', { class: 'linha entre' }, [h('span', { texto: (m.nome && (m.nome[idioma()] || m.nome.pt)) || m.id }),
+            h('button', { class: 'bt leve', type: 'button', texto: T('apagarMapa', { mb: mb }), onclick: function () { Offline.apagar(m.id).then(function () { avisar(T('mapaApagado')); mostrar('config'); }); } })]));
+        });
+      });
+    }
     tela.appendChild(h('div', { class: 'cartao' }, [h('h3', { texto: T('cofreOutroCelular') }), h('p', { class: 'sub', texto: T('cofreOutroCelularTexto') }),
       h('button', { class: 'bt leve', type: 'button', texto: '▦ ' + T('mostrarQR'), onclick: function () {
         if (Cofre.aberto()) { mostrarQR(); return; }

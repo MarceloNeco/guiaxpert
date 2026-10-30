@@ -2,6 +2,18 @@
   "app": "guiaxpert",
   "versoes": [
     {
+      "versao": "1.0.2",
+      "data": "2026-10-31",
+      "itens": {
+        "pt": [
+          "Apagar mapa do celular: botão na tela Hoje e em Configurações (lista de mapas guardados, com tamanho). Apagar a última viagem de uma cidade apaga o mapa dela junto."
+        ],
+        "en": [
+          "Delete map from phone: button on Today and in Settings (list of saved maps, with size). Deleting a city's last trip deletes its map too."
+        ]
+      }
+    },
+    {
       "versao": "1.0.1",
       "data": "2026-10-31",
       "itens": {

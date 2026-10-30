@@ -146,6 +146,9 @@ window.TEXTOS = (function () {
     iaRegras: ['Para a IA vão: idades, cuidados, gostos, o plano do dia, a previsão e a lista de lugares. Nunca nomes, reservas nem alergias (a não ser que você cole um e-mail).', 'The AI receives: ages, care needs, likes, today’s plan, the forecast and the list of places. Never names, bookings or allergies (unless you paste an email).'],
     guiaPlaceholder: ['Pergunte sobre a viagem…', 'Ask about the trip…'], guiaOla: ['Oi! Sou o guia desta viagem. Pergunte sobre lugares, horários ou o que fazer hoje.', 'Hi! I’m this trip’s guide. Ask about places, hours or what to do today.'],
     guiaSug1: ['O que fazer hoje se chover?', 'What to do today if it rains?'], guiaSug2: ['Onde almoçar com criança perto daqui?', 'Where to have lunch with a kid nearby?'], guiaSug3: ['Qual passeio dá para fazer em 2 horas?', 'Which outing fits in 2 hours?'],
+    apagarMapa: ['Apagar mapa do celular ({mb} MB)', 'Delete map from phone ({mb} MB)'], mapaApagado: ['Mapa apagado do celular.', 'Map deleted from the phone.'],
+    mapasGuardados: ['Mapas guardados', 'Saved maps'], semMapasGuardados: ['Nenhum mapa guardado.', 'No saved maps.'],
+    apagarViagemTexto: ['Isto apaga a viagem "{nome}" e os roteiros dela deste celular e da conta. Se a cidade não tiver outra viagem, o mapa guardado sai junto.', 'This deletes the trip "{nome}" and its itineraries from this phone and your account. If the city has no other trip, the saved map goes too.'],
     salveAntes: ['Salve a pessoa primeiro, depois marque os gostos.', 'Save the person first, then mark what they like.'], faltamDiasTexto: ['Bom momento para reservar o que lota.', 'Good time to book what sells out.'],
     aSeguir: ['A seguir', 'Up next'], verRoteiro: ['Ver roteiro do dia', 'See today’s plan'], pertoDeMim: ['Perto de mim', 'Near me'],
     climaTitulo: ['Previsão do tempo', 'Weather forecast'], climaSem: ['Sem previsão agora. Tente com internet.', 'No forecast right now. Try online.'],
@@ -243,7 +246,7 @@ window.TEXTOS = (function () {
 
     /* viagens */
     emUso: ['em uso', 'in use'], nPessoas: ['{n} pessoas', '{n} people'], abrirViagem: ['Usar esta', 'Use this one'],
-    apagarViagem: ['Apagar viagem', 'Delete trip'], apagarViagemTexto: ['Isto apaga a viagem "{nome}" e os roteiros dela neste aparelho.', 'This deletes trip "{nome}" and its itineraries on this device.'],
+    apagarViagem: ['Apagar viagem', 'Delete trip'], 
     digiteNome: ['Digite o nome da viagem para confirmar', 'Type the trip name to confirm'], nomeNaoConfere: ['O nome não confere.', 'The name does not match.'],
 
     /* wizard */
