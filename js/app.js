@@ -12,7 +12,7 @@
 (function () {
   'use strict';
   var d = document, $ = function (id) { return d.getElementById(id); };
-  var VERSAO_APP = '1.0.2';
+  var VERSAO_APP = '1.0.3';
 
   /* ------------------------------------------------------------------
      1. UTILIDADES
@@ -1988,7 +1988,8 @@
     });
     var esp = h('p', { class: 'sub', texto: T('carregando') });
     tela.appendChild(h('div', { class: 'cartao' }, [h('h3', { texto: T('espaco') }), esp,
-      h('p', { class: 'pequeno', texto: T('semInternetComo') })]));
+      h('p', { class: 'pequeno', texto: T('semInternetComo') }),
+      jaInstalado() ? h('p', { class: 'pequeno', texto: '✓ ' + T('jaInstalado') }) : h('button', { class: 'bt sec', type: 'button', texto: '⬇ ' + T('instalarNaTela'), onclick: function () { instalarApp(); } })]));
     Promise.all([Banco.espaco(), Banco.pendentes()]).then(function (r) {
       esp.textContent = (r[0] ? T('espacoUsado', { mb: (r[0].usage / 1048576).toFixed(1) }) : '') + ' · ' + T('pendentesNuvem', { n: r[1] });
     });
@@ -2009,6 +2010,7 @@
       return recarregarContexto().then(function () {
         mostrar(estado.rota === 'entrar' ? (emViagem() ? 'inicio' : 'explorar') : estado.rota);
         oferecerBio();
+        setTimeout(oferecerInstalar, 2500);
         aceitarConvitePendente().then(function (aceito) { if (!aceito) sincronizarNuvem(); });
         var compartilhado = window.Importar && Importar.doEndereco();
         if (compartilhado) setTimeout(function () { if (estado.viagem) { Nav.ir('reservas'); setTimeout(function () { janelaImportar(compartilhado); }, 200); } else avisar(T('semViagemTexto')); }, 400);
@@ -2026,6 +2028,41 @@
       });
     });
   }
+  /* ---- instalar na tela inicial (PWA) ---- */
+  var pedidoInstalar = null;
+  window.addEventListener('beforeinstallprompt', function (e) { e.preventDefault(); pedidoInstalar = e; });
+  function jaInstalado() { return (window.matchMedia && matchMedia('(display-mode: standalone)').matches) || navigator.standalone === true; }
+  function ehIphone() { return /iPhone|iPad|iPod/.test(navigator.userAgent) && !window.MSStream; }
+  function instalarApp() {
+    if (pedidoInstalar) {
+      var ev = pedidoInstalar; pedidoInstalar = null;
+      ev.prompt();
+      return ev.userChoice.then(function (r) { if (r && r.outcome === 'accepted') { avisar(T('instalado')); try { localStorage.setItem('guiaxpert.instalar', 'nunca'); } catch (e) {} } });
+    }
+    /* sem pedido do navegador (iPhone, ou Chrome que ainda não liberou): mostra o caminho */
+    var j = janela(T('instalarTitulo'), h('div', { class: 'linha', style: 'flex-direction:column;align-items:stretch' }, [
+      h('p', { texto: T(ehIphone() ? 'instalarIphone' : 'instalarAndroid') }),
+      h('button', { class: 'bt', type: 'button', texto: T('entendi'), onclick: function () { j.fechar(); } })]));
+    return Promise.resolve();
+  }
+  /* convite depois do login: Instalar / Agora não (volta em 3 dias) / Não mostrar mais */
+  function oferecerInstalar() {
+    if (jaInstalado() || !(estado.acesso && estado.acesso.liberado)) return;
+    var pref = null; try { pref = localStorage.getItem('guiaxpert.instalar'); } catch (e) { return; }
+    if (pref === 'nunca') return;
+    if (pref && /^\d+$/.test(pref) && Date.now() < +pref) return;
+    if (d.querySelector('.janela')) { setTimeout(oferecerInstalar, 4000); return; }   /* espera outra janela (digital, convite) fechar */
+    var depois = function (v) { try { localStorage.setItem('guiaxpert.instalar', v); } catch (e) {} };
+    var sim = h('button', { class: 'bt', type: 'button', texto: '⬇ ' + T('instalar') });
+    var nao = h('button', { class: 'bt leve', type: 'button', texto: T('agoraNao') });
+    var nunca = h('button', { class: 'lk', type: 'button', texto: T('naoMostrarMais') });
+    var j = janela(T('instalarTitulo'), h('div', { class: 'linha', style: 'flex-direction:column;align-items:stretch' }, [
+      h('p', { class: 'sub', texto: T('instalarTexto') }), h('div', { class: 'acoes' }, [nao, sim]), nunca]));
+    sim.addEventListener('click', function () { j.fechar(function () { instalarApp(); }); });
+    nao.addEventListener('click', function () { depois(String(Date.now() + 3 * 86400000)); j.fechar(); });
+    nunca.addEventListener('click', function () { depois('nunca'); j.fechar(); });
+  }
+
   /* convite único depois do login: "da próxima vez, entre com digital ou rosto" */
   function oferecerBio() {
     var s = Conta.sessao();

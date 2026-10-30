@@ -2,6 +2,18 @@
   "app": "guiaxpert",
   "versoes": [
     {
+      "versao": "1.0.3",
+      "data": "2026-10-31",
+      "itens": {
+        "pt": [
+          "Convite para instalar na tela inicial depois de entrar: Instalar, Agora não (volta em 3 dias) ou Não mostrar mais. Botão fixo em Configurações. No iPhone, mostra o caminho (Compartilhar → Tela de Início)."
+        ],
+        "en": [
+          "Prompt to install on the home screen after sign-in: Install, Not now (back in 3 days) or Don't show again. Fixed button in Settings. On iPhone, shows the way (Share → Home Screen)."
+        ]
+      }
+    },
+    {
       "versao": "1.0.2",
       "data": "2026-10-31",
       "itens": {
