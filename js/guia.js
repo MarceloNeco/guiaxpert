@@ -34,8 +34,83 @@
     return JSON.parse(txt.slice(i, f + 1));
   }
 
+  /* ---- "Pedir ao guia para procurar": a IA da pessoa, com busca na web quando o provedor tem ----
+     Devolve [{ nome, endereco, cidade, telefone, site, fonte }] (até 3). Nunca vai nome de ninguém. */
+  function perguntaLugar(texto, ctx) {
+    return 'Procure na internet o lugar "' + texto + '" perto de ' + (ctx.cidade || 'onde a pessoa está') + (ctx.pais ? ', ' + ctx.pais : '') + '.\n' +
+      'Pode ser bar, restaurante, pousada, igreja, atração ou loja. Devolva até 3 opções que existam de verdade, com endereço completo.\n' +
+      'Responda SÓ com JSON: {"lugares":[{"nome":"…","endereco":"rua, número, bairro","cidade":"…","telefone":"… ou null","site":"… ou null","fonte":"URL de onde tirou ou null"}]}\n' +
+      'Se não achar nada confiável, responda {"lugares":[]}. Nunca invente.';
+  }
+  function extrairLugares(txt) {
+    var j; try { j = json(txt); } catch (e) { return []; }
+    return (j && Array.isArray(j.lugares) ? j.lugares : []).filter(function (l) { return l && l.nome; }).slice(0, 3).map(function (l) {
+      return { nome: String(l.nome).slice(0, 100), endereco: l.endereco ? String(l.endereco).slice(0, 160) : null, cidade: l.cidade ? String(l.cidade).slice(0, 60) : null,
+        telefone: l.telefone ? String(l.telefone).slice(0, 30) : null, site: l.site ? String(l.site).slice(0, 200) : null, fonte: l.fonte ? String(l.fonte).slice(0, 300) : null };
+    });
+  }
+  function lerJson(r) { return r.json().then(function (j) { if (!r.ok) throw new Error((j && j.error && (j.error.message || j.error.type)) || ('http-' + r.status)); return j; }); }
+  /* chamadas com busca na web, por provedor (o módulo comum não tem ferramentas) */
+  var COM_WEB = {
+    gemini: function (chave, modelo, pergunta, sistema) {
+      return fetch('https://generativelanguage.googleapis.com/v1beta/models/' + encodeURIComponent(modelo || 'gemini-2.0-flash') + ':generateContent?key=' + encodeURIComponent(chave), {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ system_instruction: { parts: [{ text: sistema }] }, contents: [{ role: 'user', parts: [{ text: pergunta }] }], tools: [{ google_search: {} }] })
+      }).then(lerJson).then(function (j) {
+        var c = j.candidates && j.candidates[0];
+        return ((c && c.content && c.content.parts) || []).map(function (p) { return p.text || ''; }).join('');
+      });
+    },
+    anthropic: function (chave, modelo, pergunta, sistema, ctx) {
+      var loc = { type: 'approximate', country: ctx.paisCodigo || 'BR' }; if (ctx.cidade) loc.city = ctx.cidade;
+      return fetch('https://api.anthropic.com/v1/messages', {
+        method: 'POST', headers: { 'Content-Type': 'application/json', 'x-api-key': chave, 'anthropic-version': '2023-06-01', 'anthropic-dangerous-direct-browser-access': 'true' },
+        body: JSON.stringify({ model: modelo || 'claude-3-5-haiku-20241022', max_tokens: 1200, system: sistema, messages: [{ role: 'user', content: pergunta }],
+          tools: [{ type: 'web_search_20250305', name: 'web_search', max_uses: 3, user_location: loc }] })
+      }).then(lerJson).then(function (j) { return (j.content || []).filter(function (x) { return x.type === 'text'; }).map(function (x) { return x.text; }).join(''); });
+    },
+    openai: function (chave, modelo, pergunta, sistema) {
+      return fetch('https://api.openai.com/v1/responses', {
+        method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + chave },
+        body: JSON.stringify({ model: modelo || 'gpt-4o-mini', instructions: sistema, input: pergunta, tools: [{ type: 'web_search' }] })
+      }).then(lerJson).then(function (j) {
+        if (j.output_text) return j.output_text;
+        var t = []; (j.output || []).forEach(function (o) { (o.content || []).forEach(function (c) { if (c.text) t.push(c.text); }); }); return t.join('');
+      });
+    },
+    groq: function (chave, modelo, pergunta, sistema) {
+      return fetch('https://api.groq.com/openai/v1/chat/completions', {
+        method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + chave },
+        body: JSON.stringify({ model: 'groq/compound-mini', messages: [{ role: 'system', content: sistema }, { role: 'user', content: pergunta }] })
+      }).then(lerJson).then(function (j) { return (j.choices && j.choices[0] && j.choices[0].message && j.choices[0].message.content) || ''; });
+    },
+    openrouter: function (chave, modelo, pergunta, sistema) {
+      var m = modelo || 'openrouter/free'; if (m.indexOf(':online') < 0) m += ':online';
+      return fetch('https://openrouter.ai/api/v1/chat/completions', {
+        method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + chave, 'HTTP-Referer': location.origin, 'X-Title': 'GuiaXpert' },
+        body: JSON.stringify({ model: m, messages: [{ role: 'system', content: sistema }, { role: 'user', content: pergunta }] })
+      }).then(lerJson).then(function (j) { return (j.choices && j.choices[0] && j.choices[0].message && j.choices[0].message.content) || ''; });
+    }
+  };
+
   var Guia = {
     pronta: pronta,
+
+    /* procura um lugar na internet com a IA da pessoa. ctx: { cidade, pais, paisCodigo, idioma }
+       resolve { lugares: [...], comWeb: true|false } */
+    procurarLugar: function (texto, ctx) {
+      if (!pronta()) return Promise.reject(new Error('sem-ia'));
+      if (!navigator.onLine) return Promise.reject(new Error('sem-internet'));
+      ctx = ctx || {};
+      var sistema = 'Você ajuda uma família a achar um lugar de viagem. Use a busca na web. Responda só JSON.';
+      var pergunta = perguntaLugar(texto, ctx);
+      var prov = DGO.ia.provedorPara('texto'), chave = DGO.ia.chavePara('texto'), modelo = DGO.ia.modelo(prov);
+      if (COM_WEB[prov] && chave) {
+        return COM_WEB[prov](chave, modelo, pergunta, sistema, ctx).then(function (txt) { return { lugares: extrairLugares(txt), comWeb: true }; })
+          .catch(function () { return DGO.ia.perguntar(pergunta, { contexto: sistema, limite: 1200 }).then(function (txt) { return { lugares: extrairLugares(txt), comWeb: false }; }); });
+      }
+      return DGO.ia.perguntar(pergunta, { contexto: sistema, limite: 1200 }).then(function (txt) { return { lugares: extrairLugares(txt), comWeb: false }; });
+    },
 
     /* ctx: { viagem, pessoas, pacote, lugares, dia (do roteiro), data, clima, idioma } */
     replanejar: function (ctx) {

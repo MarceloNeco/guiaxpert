@@ -12,7 +12,7 @@
 (function () {
   'use strict';
   var d = document, $ = function (id) { return d.getElementById(id); };
-  var VERSAO_APP = '1.1.3';
+  var VERSAO_APP = '1.2.0';
 
   /* ------------------------------------------------------------------
      1. UTILIDADES
@@ -625,6 +625,131 @@
       h('button', { class: 'bt perigo', type: 'button', onclick: function () { Banco.apagar('roteiros', o.id).then(function () { j.fechar(); recarregar(); }); } }, T('apagar'))
     ]));
   }
+  /* ---------- "Vamos achar juntos?": quando a busca não acha ----------
+     Três caminhos, pensados para quem não é do computador: o guia procura (IA + web),
+     lista do Google (só ao vivo; guardamos só o que a pessoa confirma) e marcar no mapa.
+     Em todos, termina em confirmarLugar(). aoCriar(lugar) recebe o lugar gravado. */
+  var googleLugaresDisponivel = null;   /* null = ainda não sei; false = servidor sem chave */
+  function buscarNoGoogle(q) {
+    var cfg = window.GUIAXPERT_CONFIG || {};
+    if (!cfg.SUPABASE_URL || !window.Conta || !Conta.sessao()) return Promise.resolve({ semChave: true, sugestoes: [] });
+    var c = estado.pos || centroViagem();
+    return Conta.token().then(function (tk) {
+      var u = String(cfg.SUPABASE_URL).replace(/\/+$/, '') + '/functions/v1/google-lugares?q=' + encodeURIComponent(q) + '&lang=' + (idioma() === 'en' ? 'en' : 'pt') + (c ? '&lat=' + c.lat + '&lng=' + c.lng : '');
+      return fetch(u, { headers: { apikey: cfg.SUPABASE_PUBLISHABLE_KEY, Authorization: 'Bearer ' + tk } });
+    }).then(function (r) {
+      if (r.status === 503) { googleLugaresDisponivel = false; return { semChave: true, sugestoes: [] }; }
+      if (!r.ok) throw new Error('google-' + r.status);
+      googleLugaresDisponivel = true;
+      return r.json().then(function (j) { return { sugestoes: j.sugestoes || [] }; });
+    });
+  }
+  function cidadeAtual() {
+    var v = estado.viagem;
+    return (v && (v.destinoTexto || v.nome)) || (window.Explorar && Explorar.estado.nome) || '';
+  }
+  function janelaAcharJuntos(q, aoCriar) {
+    var corpo = h('div', { class: 'achar-juntos' });
+    var j = janela(T('acharJuntos'), corpo);
+    function botaoGrande(icone, titulo, dica, acao) {
+      return h('button', { class: 'bt-grande', type: 'button', onclick: acao }, [h('span', { class: 'ic-grande', 'aria-hidden': 'true', texto: icone }), h('span', { class: 'tx' }, [h('b', { texto: titulo }), h('small', { texto: dica })])]);
+    }
+    function inicio() {
+      corpo.textContent = '';
+      corpo.appendChild(h('p', { class: 'grande', texto: T('naoAchei', { q: q }) }));
+      corpo.appendChild(h('p', { class: 'sub', texto: navigator.onLine ? T('acharJuntosDica') : T('precisaInternetPara') }));
+      if (navigator.onLine) {
+        corpo.appendChild(botaoGrande('🧭', T('pedirAoGuia'), T('pedirAoGuiaDica'), pedirAoGuia));
+        if (googleLugaresDisponivel !== false) corpo.appendChild(botaoGrande('G', T('procurarNoGoogle'), T('procurarNoGoogleDica'), procurarNoGoogle));
+      }
+      corpo.appendChild(botaoGrande('📍', T('marcarNoMapa'), T('marcarNoMapaDica'), marcarNoMapa));
+      if (navigator.onLine) corpo.appendChild(h('a', { class: 'lk', href: 'https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(q + (cidadeAtual() ? ' ' + cidadeAtual() : '')), target: '_blank', rel: 'noopener',
+        texto: '↗ ' + T('abrirNoGoogleMaps'), title: T('abrirNoGoogleMapsDica') }));
+    }
+    function voltar() { return h('button', { class: 'lk', type: 'button', texto: '‹ ' + T('voltar'), onclick: inicio }); }
+    function carregando(txt) { corpo.textContent = ''; corpo.appendChild(h('p', { class: 'grande', texto: txt })); corpo.appendChild(h('div', { class: 'carregando', 'aria-hidden': 'true' })); }
+    function pedirAoGuia() {
+      if (!window.Guia || !Guia.pronta()) { avisar(T('guiaPrecisaChave')); return; }
+      carregando(T('guiaProcurando'));
+      Guia.procurarLugar(q, { cidade: cidadeAtual(), pais: estado.viagem && estado.viagem.pais, idioma: idioma() }).then(function (r) {
+        corpo.textContent = ''; corpo.appendChild(voltar());
+        if (!r.lugares.length) { corpo.appendChild(h('p', { class: 'grande', texto: T('guiaNaoAchou') })); corpo.appendChild(botaoGrande('📍', T('marcarNoMapa'), T('marcarNoMapaDica'), marcarNoMapa)); return; }
+        if (!r.comWeb) corpo.appendChild(h('p', { class: 'dica', texto: T('guiaSemWeb') }));
+        corpo.appendChild(h('p', { class: 'sub', texto: T('eEsse') + '?' }));
+        r.lugares.forEach(function (l) {
+          corpo.appendChild(h('button', { class: 'bt-grande', type: 'button', onclick: function () {
+            confirmar({ nome: l.nome, endereco: [l.endereco, l.cidade].filter(Boolean).join(', '), telefone: l.telefone, site: l.site, fonte: l.fonte, origem: 'ia' });
+          } }, [h('span', { class: 'ic-grande', 'aria-hidden': 'true', texto: '📌' }), h('span', { class: 'tx' }, [h('b', { texto: l.nome }), h('small', { texto: [l.endereco, l.cidade].filter(Boolean).join(', ') || '' })])]));
+        });
+      }).catch(function (e) { corpo.textContent = ''; corpo.appendChild(voltar()); corpo.appendChild(h('p', { class: 'alerta', texto: e && e.message === 'sem-chave' ? T('guiaPrecisaChave') : T('iaErro') })); });
+    }
+    function procurarNoGoogle() {
+      carregando(T('carregando'));
+      buscarNoGoogle(q).then(function (r) {
+        corpo.textContent = ''; corpo.appendChild(voltar());
+        if (r.semChave) { corpo.appendChild(h('p', { class: 'sub', texto: T('googleSemChave') })); return; }
+        if (!r.sugestoes.length) { corpo.appendChild(h('p', { class: 'grande', texto: T('googleNaoAchou') })); return; }
+        corpo.appendChild(h('p', { class: 'sub', texto: T('resultadosDoGoogle') }));
+        r.sugestoes.forEach(function (sg) {
+          corpo.appendChild(h('button', { class: 'bt-grande', type: 'button', onclick: function () {
+            /* o que vai para o roteiro: o nome que a pessoa confirma e o ponto achado pelo ENDEREÇO na base aberta; do Google fica só o ID */
+            confirmar({ nome: sg.nome, enderecoParaAchar: sg.endereco, google_place_id: sg.id, origem: 'google' });
+          } }, [h('span', { class: 'ic-grande', 'aria-hidden': 'true', texto: '📌' }), h('span', { class: 'tx' }, [h('b', { texto: sg.nome }), h('small', { texto: sg.endereco || '' })])]));
+        });
+        corpo.appendChild(h('p', { class: 'pequeno atrib-google', texto: 'powered by Google' }));
+      }).catch(function () { corpo.textContent = ''; corpo.appendChild(voltar()); corpo.appendChild(h('p', { class: 'alerta', texto: T('osmErro') })); });
+    }
+    function marcarNoMapa() {
+      Mapa.escolherPonto({ centro: estado.pos || centroViagem(), zoom: estado.pos ? 16 : 14, cidade: estado.viagem && estado.viagem.destino, titulo: T('marcarNoMapa') }).then(function (p) {
+        if (!p) { inicio(); return; }
+        confirmar({ nome: q, lat: p.lat, lng: p.lng, origem: 'mapa' });
+      });
+    }
+    /* passo final, igual para os três caminhos */
+    function confirmar(l) {
+      corpo.textContent = ''; corpo.appendChild(voltar());
+      corpo.appendChild(h('h3', { texto: T('confirmarLugar') }));
+      var nome = h('input', { class: 'campo', id: 'gx-aj-nome', maxlength: '80', value: l.nome || q });
+      var cat = h('select', { class: 'campo', id: 'gx-aj-cat' }, ['comer', 'bebidas', 'doces', 'atracao', 'logistica'].map(function (c) { return h('option', { value: c }, T('cat_' + c)); }));
+      cat.value = /bar|chop|cervej|pub/i.test(l.nome || q) ? 'bebidas' : /sorvet|doce|chocolat|confeit/i.test(l.nome || q) ? 'doces' : /igreja|capela|museu|parque|cachoeira|mirante|praça/i.test(l.nome || q) ? 'atracao' : /hotel|pousada|posto|farm/i.test(l.nome || q) ? 'logistica' : 'comer';
+      var onde = h('p', { class: 'sub', texto: l.lat != null ? '📍 ' + (l.endereco || T('eAqui')) : T('semPontoNoMapa') });
+      var marcar = h('button', { class: 'bt leve', type: 'button', texto: '📍 ' + T('marcarNoMapa') });
+      var ok = h('button', { class: 'bt cheio', type: 'button', texto: '✓ ' + T('salvar') });
+      corpo.appendChild(h('label', { class: 'rot', for: 'gx-aj-nome', texto: T('nome') })); corpo.appendChild(nome);
+      corpo.appendChild(h('label', { class: 'rot', for: 'gx-aj-cat', texto: T('tipoLugar') })); corpo.appendChild(cat);
+      corpo.appendChild(h('div', { class: 'rot', texto: T('ondeFica') })); corpo.appendChild(onde); corpo.appendChild(marcar); corpo.appendChild(ok);
+      marcar.addEventListener('click', function () {
+        Mapa.escolherPonto({ centro: l.lat != null ? { lat: l.lat, lng: l.lng } : (estado.pos || centroViagem()), zoom: l.lat != null ? 16 : 14, cidade: estado.viagem && estado.viagem.destino })
+          .then(function (p) { if (p) { l.lat = p.lat; l.lng = p.lng; onde.textContent = '📍 ' + (l.endereco || T('eAqui')); } });
+      });
+      /* endereço sem ponto: acha na base aberta (OpenStreetMap); o ponto passa a ser nosso */
+      var paraAchar = l.enderecoParaAchar || (l.lat == null ? l.endereco : null);
+      if (paraAchar && navigator.onLine) {
+        onde.textContent = T('achandoEndereco'); ok.disabled = true;
+        Descobrir.buscarNome(paraAchar, estado.pos || centroViagem(), idioma()).then(function (ls) {
+          ok.disabled = false;
+          var a = ls[0];
+          if (!a) { onde.textContent = T('enderecoNaoAchado'); return; }
+          l.lat = a.lat; l.lng = a.lng; if (!l.endereco) l.endereco = a.endereco || null;
+          onde.textContent = '📍 ' + (l.endereco || a.nome);
+        }).catch(function () { ok.disabled = false; onde.textContent = T('enderecoNaoAchado'); });
+      }
+      ok.addEventListener('click', function () {
+        if (!nome.value.trim()) { nome.focus(); return; }
+        if (l.lat == null) { avisar(T('semPontoNoMapa')); marcar.focus(); return; }
+        var reg = { nome: nome.value.trim(), categoria: cat.value, subcategoria: null, descricao: l.origem === 'ia' ? T('fonteIA') : null, endereco: l.endereco || null,
+          telefone: l.telefone || null, site: l.site || null, fonte_url: l.fonte || null, google_place_id: l.google_place_id || null,
+          lat: +l.lat.toFixed(5), lng: +l.lng.toFixed(5), confianca: 'meu', gratis: false, viagem_id: estado.viagem ? estado.viagem.id : null };
+        Banco.gravar('lugares', reg).then(function (n) {
+          estado.lugaresProprios.push(n); avisar(T('lugarCriado'));
+          j.fechar(function () { if (aoCriar) aoCriar(n); });
+        });
+      });
+      setTimeout(function () { nome.focus(); }, 50);
+    }
+    inicio();
+  }
+
   /* campo "Lugar" com busca na internet: a pessoa digita "O Legítimo" e escolhe; o lugar vira da viagem e fica no select */
   function campoLugarComBusca(sel, aoEscolher) {
     var q = h('input', { class: 'campo', type: 'search', placeholder: T('exProcurarLugar'), 'aria-label': T('procurarLugar'), autocomplete: 'off' });
@@ -635,7 +760,13 @@
       bt.disabled = true; lista.textContent = ''; lista.appendChild(h('p', { class: 'sub', texto: T('carregando') }));
       Descobrir.buscarNome(t, estado.pos || centroViagem(), idioma()).then(function (achados) {
         bt.disabled = false; lista.textContent = '';
-        if (!achados.length) { lista.appendChild(h('p', { class: 'sub', texto: T('nadaNaInternet') })); return; }
+        if (!achados.length) {
+          lista.appendChild(h('p', { class: 'sub', texto: T('nadaNaInternet') }));
+          lista.appendChild(h('button', { class: 'bt sec', type: 'button', texto: '🤝 ' + T('acharJuntos'), onclick: function () {
+            janelaAcharJuntos(t, function (n) { if (!sel.querySelector('option[value="' + n.id + '"]')) sel.appendChild(h('option', { value: n.id }, n.nome)); sel.value = n.id; lista.textContent = ''; q.value = ''; if (aoEscolher) aoEscolher(n); });
+          } }));
+          return;
+        }
         if (achados.some(function (l) { return l.confianca === 'foursquare'; })) lista.appendChild(h('p', { class: 'pequeno', texto: 'Powered by Foursquare · OpenStreetMap' }));
         achados.slice(0, 6).forEach(function (l) {
           lista.appendChild(h('button', { class: 'bt leve', type: 'button', style: 'text-align:left;display:block;line-height:1.3', onclick: function () {
@@ -894,6 +1025,7 @@
       centro: centroViagem(), zoom: 13, cidade: v.destino, filtros: FILTROS,
       buscarFora: function (q) { return Descobrir.buscarNome(q, estado.pos || centroViagem(), idioma()); },
       acrescentar: function (ls) { var ids = {}; estado.descobertas.forEach(function (x) { ids[x.id] = 1; }); ls.forEach(function (l) { if (!ids[l.id] && !lugarPorId(l.id)) estado.descobertas.push(l); }); },
+      acharJuntos: function (q, aoCriar) { janelaAcharJuntos(q, aoCriar); },
       topo: function (topo) {
         /* dia do roteiro (os mesmos chips do Roteiro) */
         if (!estado.opcao) return;
@@ -2279,7 +2411,7 @@
   /* ajudantes para os módulos de tela (mapa.js, explorar.js): uma porta só */
   window.GX = { h: h, T: T, idioma: idioma, estado: estado, Nav: Nav, janela: janela, mostrar: mostrar, avisar: avisar, fData: fData, semana: semana, hojeIso: hojeIso,
     normalizar: normalizar, ICONES: ICONES, placa: placa, cartaoLugar: cartaoLugar, pegarPosicao: pegarPosicao, restricoesDoGrupo: restricoesDoGrupo,
-    somaGostos: function () { return somaGostos; }, recarregarContexto: recarregarContexto, recarregar: recarregar, lugarPorId: lugarPorId, todosLugares: todosLugares };
+    somaGostos: function () { return somaGostos; }, recarregarContexto: recarregarContexto, recarregar: recarregar, lugarPorId: lugarPorId, todosLugares: todosLugares, acharJuntos: janelaAcharJuntos };
 })();
 /* erro em promessa sem tratamento aparece no console (ajuda o suporte), sem derrubar a tela */
 window.addEventListener('unhandledrejection', function (e) { console.error('GuiaXpert: promessa sem tratamento', e.reason && (e.reason.message || e.reason)); });

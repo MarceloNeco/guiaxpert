@@ -123,7 +123,15 @@
             if (!navigator.onLine) { GX.avisar(T('semInternet')); return; }
             bf.disabled = true; bf.textContent = T('carregando');
             op.buscarFora(q).then(function (achados) {
-              if (!achados.length) { bf.disabled = false; bf.textContent = T('nadaNaInternet'); return; }
+              if (!achados.length) {
+                bf.disabled = false; bf.textContent = T('nadaNaInternet');
+                if (op.acharJuntos) {
+                  var aj = h('button', { class: 'bt', type: 'button', style: 'margin:.25rem 1rem', texto: '🤝 ' + T('acharJuntos') });
+                  aj.addEventListener('click', function () { op.acharJuntos(q, function (n) { estado.busca = ''; campo.value = ''; redesenhar(); abrirLugar(n); if (mapa) mapa.setView([n.lat, n.lng], 16); }); });
+                  bf.insertAdjacentElement('afterend', aj);
+                }
+                return;
+              }
               op.acrescentar(achados);
               if (achados.some(function (l) { return l.confianca === 'foursquare'; })) GX.avisar('Powered by Foursquare · OpenStreetMap');
               estado.busca = ''; campo.value = '';
@@ -226,6 +234,35 @@
     },
 
     cores: CORES,
+
+    /* "Marcar eu mesmo no mapa": folha cheia com o mapa e um pino fixo no centro; a pessoa arrasta o mapa
+       e toca em "É aqui". op: { centro, zoom, cidade, titulo }. Resolve { lat, lng } ou null. */
+    escolherPonto: function (op) {
+      op = op || {};
+      var GX = window.GX, h = GX.h, T = GX.T;
+      return new Promise(function (resolver) {
+        var caixa = h('div', { class: 'mapa-caixa escolher', 'aria-label': T('mapaDoLugar') });
+        var pino = h('div', { class: 'pino-centro', 'aria-hidden': 'true', texto: '📍' });
+        var ok = h('button', { class: 'bt cheio', type: 'button', texto: '✓ ' + T('eAqui') });
+        var gps = h('button', { class: 'bt leve', type: 'button', texto: '📍 ' + T('usarOndeEstou') });
+        var corpo = h('div', { class: 'escolher-ponto' }, [h('p', { class: 'sub', texto: T('arrasteOMapa') }), h('div', { class: 'escolher-mapa' }, [caixa, pino]), h('div', { class: 'linha' }, [gps, ok])]);
+        var respondido = false, m = null;
+        var j = GX.janela(op.titulo || T('marcarNoMapa'), corpo, function () { if (m) { try { m.remove(); } catch (e) {} } if (!respondido) { respondido = true; resolver(null); } });
+        j.caixa.classList.add('cheia');
+        carregarLeaflet().then(function (lf) {
+          var c = op.centro || GX.estado.pos || { lat: -15.78, lng: -47.93 };
+          m = lf.map(caixa, { zoomControl: true, attributionControl: true }).setView([c.lat, c.lng], op.zoom || (op.centro ? 15 : 4));
+          L = L || lf; Mapa.fundo(m, op.cidade);
+          setTimeout(function () { m.invalidateSize(); }, 150);
+        }).catch(function () { caixa.textContent = T('mapaErro'); });
+        gps.addEventListener('click', function () { GX.pegarPosicao().then(function (p) { if (m) m.setView([p.lat, p.lng], 16); }).catch(function () {}); });
+        ok.addEventListener('click', function () {
+          if (!m) return;
+          var c = m.getCenter(); respondido = true;
+          j.fechar(function () { resolver({ lat: +c.lat.toFixed(5), lng: +c.lng.toFixed(5) }); });
+        });
+      });
+    },
     destruir: function () { if (mapa) { try { mapa.remove(); } catch (e) {} mapa = null; camadas = []; } }
   };
 

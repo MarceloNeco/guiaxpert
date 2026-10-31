@@ -51,6 +51,14 @@ segue só com OpenStreetMap. A função pede só campos "Pro" (nome, endereço, 
 cobrados à parte pelo Foursquare. Uso: 500 chamadas/mês grátis (junho/2026) e sem guardar dados em cache pelos termos
 do plano pago-por-uso; ver `docs/ROADMAP.md` para o caminho com a base aberta FSQ OS Places.
 
+## 2c. "Procurar no Google" (opcional)
+
+Quando a busca não acha, o cartão "Vamos achar juntos?" oferece a lista do Google (Places Autocomplete) pela função
+`supabase/functions/google-lugares`. Para ligar: Google Cloud → APIs e serviços → ativar **Places API (New)** → criar
+chave restrita a essa API → Supabase → Edge Functions → Secrets → `GOOGLE_PLACES_KEY`. Grátis até 10 mil buscas/mês.
+Regra do Google que o app respeita: a lista aparece só ao vivo e sem mapa, com "powered by Google"; no roteiro fica o
+nome que a pessoa confirma, o ponto achado pelo endereço na base aberta e o ID do Google (único dado dele que pode ficar).
+
 ## 3. Publicar
 
 1. Crie o repositório **guiaxpert** (público, como os outros apps) e suba estes arquivos.

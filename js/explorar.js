@@ -39,6 +39,7 @@
         centro: centro, zoom: centro ? 13 : 4,
         filtros: ['todos', 'favoritos', 'perto', 'comer', 'atracao', 'gratis', 'bebidas', 'doces'],
         buscarFora: function (q) { return Descobrir.buscarNome(q, estadoEx.centro || estado.pos, g.idioma()); },
+        acharJuntos: function (q, aoCriar) { g.acharJuntos(q, aoCriar); },
         acrescentar: function (ls) { var ids = {}; estadoEx.descobertas.forEach(function (x) { ids[x.id] = 1; }); ls.forEach(function (l) { if (!ids[l.id]) estadoEx.descobertas.push(l); }); },
         topo: function (topo) {
           var cidade = h('input', { class: 'campo', id: 'gx-ex-cidade', placeholder: T('ondeExplorar'), 'aria-label': T('ondeExplorar'), value: estadoEx.nome, autocomplete: 'off' });
