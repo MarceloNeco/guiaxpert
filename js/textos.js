@@ -193,6 +193,7 @@ window.TEXTOS = (function () {
     meuRoteiro: ['Meu roteiro', 'My itinerary'], minhaVersao: ['minha versão', 'my version'],
     exItem: ['Ex.: Almoço no centro', 'E.g.: Lunch downtown'], hora: ['Hora', 'Time'], oQue: ['O quê', 'What'], lugarOpcional: ['Lugar (opcional)', 'Place (optional)'],
     semLugar: ['Sem lugar', 'No place'],
+    creditosFotos: ['Fotos', 'Photos'], creditosFotosTexto: ['Fotos de lugares do mundo, do Wikimedia Commons, com licença livre. Obrigado a quem fotografou.', 'Photos of places around the world from Wikimedia Commons, under free licenses. Thanks to the photographers.'],
     assistente: ['Assistente', 'Assistant'], astPlaceholder: ['Fale ou escreva o que você quer…', 'Say or type what you want…'], falar: ['Falar', 'Speak'],
     astOla: ['Oi! Fale ou escreva. Exemplos: "acha um lugar para almoçar", "põe o Bar do Zé no roteiro de hoje", "e se chover?".', 'Hi! Speak or type. Examples: "find a place for lunch", "add Bar do Zé to today", "what if it rains?".'],
     astSug1: ['Acha um lugar para almoçar perto daqui', 'Find a place for lunch nearby'], astSug2: ['O que fazer hoje se chover?', 'What to do today if it rains?'], astSug3: ['Onde fica o próximo lugar do roteiro?', 'Where is the next place in the plan?'],

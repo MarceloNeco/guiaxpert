@@ -485,3 +485,21 @@ body.sem-rolagem main { height: calc(100% - var(--topo)); overflow: hidden; }
 .bt-assistente:active { transform: scale(.95); }
 body.sem-rolagem .bt-assistente { bottom: calc(var(--barra) + env(safe-area-inset-bottom, 0px) + .8rem); }
 .bt.mic { flex: none; min-width: 3.25rem; font-size: 1.3rem; }
+
+/* ---------- faixa de fotos (home) ---------- */
+.hero { position: relative; overflow: hidden; height: 42vh; min-height: 13rem; max-height: 22rem; border-radius: 0 0 28px 28px;
+  margin: -.5rem calc(-1 * max(1rem, env(safe-area-inset-right, 0px))) .2rem calc(-1 * max(1rem, env(safe-area-inset-left, 0px))); background: var(--sup2); }
+.hero.compacta { height: 26vh; min-height: 9rem; max-height: 14rem; }
+.hero-foto { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; opacity: 0; transition: opacity 1.4s ease; will-change: opacity; }
+.hero-foto.ativa { opacity: 1; }
+.hero-veu { position: absolute; inset: 0; background: linear-gradient(180deg, rgba(0, 0, 0, .18) 0%, rgba(0, 0, 0, 0) 35%, rgba(0, 0, 0, .55) 100%); }
+.hero-texto { position: absolute; left: 1.15rem; right: 3.4rem; bottom: 1rem; color: #fff; text-shadow: 0 1px 2px rgba(0, 0, 0, .55), 0 0 18px rgba(0, 0, 0, .35); }
+.hero-titulo { font-size: clamp(1.6rem, 6vw, 2.2rem); font-weight: 800; line-height: 1.08; letter-spacing: -.02em; text-wrap: balance; }
+.hero-sub { font-size: 1rem; margin-top: .3rem; opacity: .95; max-width: 34rem; }
+.hero.compacta .hero-titulo { font-size: clamp(1.4rem, 5vw, 1.8rem); }
+.hero-cred { position: absolute; right: .8rem; bottom: .8rem; width: 2.2rem; height: 2.2rem; border-radius: 50%; border: 0; background: rgba(0, 0, 0, .35); color: #fff; font-size: 1rem; cursor: pointer; backdrop-filter: blur(6px); }
+@media (min-width: 700px) {
+  .hero { height: 46vh; max-height: 26rem; border-radius: 28px; margin: .2rem 0 .2rem; }
+  .hero-texto { left: 1.6rem; bottom: 1.4rem; }
+}
+@media (prefers-reduced-motion: reduce) { .hero-foto { transition: none; } }

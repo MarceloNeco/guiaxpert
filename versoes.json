@@ -2,6 +2,18 @@
   "app": "guiaxpert",
   "versoes": [
     {
+      "versao": "1.4.0",
+      "data": "2026-10-31",
+      "itens": {
+        "pt": [
+          "Fotos de lugares do mundo na home, na lista de viagens e na entrada: leves (WebP, dois tamanhos), troca suave a cada 8 s, foto do dia diferente a cada dia, créditos no botão 📷. Nada no roteiro, no mapa ou nas reservas."
+        ],
+        "en": [
+          "Photos of places around the world on the home, trips list and sign-in: lightweight (WebP, two sizes), gentle crossfade every 8 s, a different photo each day, credits behind the 📷 button. Nothing on the itinerary, map or bookings."
+        ]
+      }
+    },
+    {
       "versao": "1.3.1",
       "data": "2026-10-31",
       "itens": {

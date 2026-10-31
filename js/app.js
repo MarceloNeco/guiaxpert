@@ -12,7 +12,7 @@
 (function () {
   'use strict';
   var d = document, $ = function (id) { return d.getElementById(id); };
-  var VERSAO_APP = '1.3.1';
+  var VERSAO_APP = '1.4.0';
 
   /* ------------------------------------------------------------------
      1. UTILIDADES
@@ -387,11 +387,52 @@
   }
 
   /* ---------- Hoje ---------- */
+  /* ---------- faixa de fotos (home, lista de viagens, entrar): leve, troca suave, créditos ----------
+     Fotos de lugares icônicos sem pessoas (Wikimedia Commons, licenças livres; créditos em img/fundos/creditos.json).
+     640 px no celular, 1280 px em tela grande. Começa pela foto do dia e troca a cada 8 s; para com "reduzir
+     movimento" do aparelho e com a aba escondida. Nunca nas telas de uso (roteiro, mapa, reservas). */
+  var FOTOS = ['cristo', 'iguacu', 'noronha', 'lencois', 'veadeiros', 'eiffel', 'kyoto', 'machu', 'muralha', 'sydney'];
+  var fotosTimer = null, creditosFotos = null;
+  function faixaFotos(titulo, sub, op) {
+    op = op || {};
+    var n = FOTOS.length, inicio = (op.indice != null ? op.indice : Math.floor((Date.now() - new Date(new Date().getFullYear(), 0, 0)) / 86400000)) % n;
+    var img = function (id, ativa) { return h('img', { class: 'hero-foto' + (ativa ? ' ativa' : ''), alt: '', decoding: 'async', loading: 'eager', sizes: '100vw',
+      src: 'img/fundos/' + id + '-640.webp', srcset: 'img/fundos/' + id + '-640.webp 640w, img/fundos/' + id + '-1280.webp 1280w' }); };
+    var a = img(FOTOS[inicio], true), b = img(FOTOS[(inicio + 1) % n], false);
+    var cred = h('button', { class: 'hero-cred', type: 'button', texto: '📷', 'aria-label': T('creditosFotos'), onclick: janelaCreditosFotos });
+    var caixa = h('div', { class: 'hero' + (op.compacta ? ' compacta' : ''), 'aria-hidden': 'true' }, [a, b, h('div', { class: 'hero-veu' }),
+      h('div', { class: 'hero-texto' }, [titulo ? h('p', { class: 'hero-titulo', texto: titulo }) : null, sub ? h('p', { class: 'hero-sub', texto: sub }) : null]), cred]);
+    cred.removeAttribute('aria-hidden');
+    var i = inicio, atual = a, prox = b;
+    var reduz = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+    clearInterval(fotosTimer); fotosTimer = null;
+    if (!reduz && n > 1) {
+      fotosTimer = setInterval(function () {
+        if (!caixa.isConnected) { clearInterval(fotosTimer); fotosTimer = null; return; }
+        if (d.hidden) return;
+        i = (i + 1) % n;
+        prox.classList.add('ativa'); atual.classList.remove('ativa');
+        var t = atual; atual = prox; prox = t;
+        var seguinte = FOTOS[(i + 1) % n];
+        setTimeout(function () { prox.src = 'img/fundos/' + seguinte + '-640.webp'; prox.srcset = 'img/fundos/' + seguinte + '-640.webp 640w, img/fundos/' + seguinte + '-1280.webp 1280w'; }, 1200);
+      }, 8000);
+    }
+    return caixa;
+  }
+  function janelaCreditosFotos() {
+    var corpo = h('div', { class: 'linha', style: 'flex-direction:column;align-items:stretch;gap:.5rem' }, [h('p', { class: 'sub', texto: T('creditosFotosTexto') })]);
+    var j = janela(T('creditosFotos'), corpo);
+    (creditosFotos ? Promise.resolve(creditosFotos) : fetch('img/fundos/creditos.json').then(function (r) { return r.json(); }).then(function (x) { creditosFotos = x; return x; })).then(function (lista) {
+      lista.forEach(function (c) {
+        corpo.appendChild(h('p', { class: 'pequeno' }, [h('a', { href: c.pagina, target: '_blank', rel: 'noopener', texto: c.titulo.replace(/\.(jpe?g|png)$/i, '').slice(0, 60) }), ' · ' + c.autor + ' · ' + c.licenca]));
+      });
+    }).catch(function () { corpo.appendChild(h('p', { class: 'sub', texto: 'Wikimedia Commons' })); });
+  }
+
   TELAS.inicio = function (tela) {
     var v = estado.viagem;
     if (!v) {
-      tela.appendChild(h('h1', { texto: T('boasVindas') }));
-      tela.appendChild(h('p', { class: 'sub', texto: T('boasVindasTexto') }));
+      tela.appendChild(faixaFotos(T('boasVindas'), T('boasVindasTexto')));
       tela.appendChild(h('button', { class: 'bt cheio', type: 'button', onclick: function () { estado.rascunho = null; Nav.ir('nova'); } }, '＋ ' + T('novoPasseioOuViagem')));
       tela.appendChild(h('div', { class: 'cartao' }, [
         h('h3', { texto: T('comoFunciona') }),
@@ -400,8 +441,9 @@
       return;
     }
     var dias = diasDaViagem(v), hj = hojeIso(), di = dias.indexOf(hj);
-    var cab = h('div', {}, [h('h1', { texto: v.nome }), h('p', { class: 'sub', texto: fData(v.inicio) + ' – ' + fData(v.fim) })]);
-    tela.appendChild(cab);
+    var antes = di < 0 && dataDe(v.inicio) > dataDe(hj);
+    if (antes) tela.appendChild(faixaFotos(v.nome, fData(v.inicio) + ' – ' + fData(v.fim)));
+    else tela.appendChild(h('div', {}, [h('h1', { texto: v.nome }), h('p', { class: 'sub', texto: fData(v.inicio) + ' – ' + fData(v.fim) })]));
     if (estado.pacote && estado.pacote.offline) tela.appendChild(h('p', { class: 'pequeno', texto: T('usandoCopia') }));
 
     var dias2 = Math.round((dataDe(v.inicio) - dataDe(hj)) / 86400000);
@@ -1913,7 +1955,8 @@
 
   /* ---------- Viagens ---------- */
   TELAS.viagens = function (tela) {
-    tela.appendChild(h('div', { class: 'linha entre' }, [h('h1', { texto: T('rota_viagens') }), h('button', { class: 'bt', type: 'button', onclick: function () { estado.rascunho = null; Nav.ir('nova'); } }, '＋ ' + T('novo'))]));
+    tela.appendChild(faixaFotos(T('rota_viagens'), null, { compacta: true }));
+    tela.appendChild(h('div', { class: 'linha entre' }, [h('span'), h('button', { class: 'bt', type: 'button', onclick: function () { estado.rascunho = null; Nav.ir('nova'); } }, '＋ ' + T('novo'))]));
     tela.appendChild(h('p', { class: 'sub', texto: T('viagensTexto') }));
     Banco.listar('viagens').then(function (vs) {
       vs.sort(function (a, b) { return a.inicio > b.inicio ? -1 : 1; });
@@ -2161,8 +2204,7 @@
      ------------------------------------------------------------------ */
   TELAS.entrar = function (tela) {
     var a = estado.acesso || {}, s = Conta.sessao();
-    tela.appendChild(h('h1', { texto: T('entrarTitulo') }));
-    tela.appendChild(h('p', { class: 'sub', texto: T('entrarTexto') }));
+    tela.appendChild(faixaFotos(T('entrarTitulo'), T('entrarTexto')));
     if (a.motivo === 'sql-faltando') tela.appendChild(h('div', { class: 'alerta' }, [h('b', { texto: T('sqlFaltando') }), T('sqlFaltandoTexto')]));
     if (a.motivo === 'conferir' || a.motivo === 'sem-internet') tela.appendChild(h('div', { class: 'alerta' }, [h('b', { texto: T('conferirAcesso') }), T('conferirAcessoTexto')]));
     if (!s) {
