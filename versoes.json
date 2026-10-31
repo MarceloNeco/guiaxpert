@@ -2,6 +2,18 @@
   "app": "guiaxpert",
   "versoes": [
     {
+      "versao": "1.4.2",
+      "data": "2026-10-31",
+      "itens": {
+        "pt": [
+          "A busca ordena como um guia: restaurante, bar, museu, igreja, parque e atração primeiro; hotel, farmácia e posto no meio; prédio, condomínio e endereço solto no fim, marcados como 'Prédio ou endereço'."
+        ],
+        "en": [
+          "Search ranks like a guide: restaurants, bars, museums, churches, parks and attractions first; hotels, pharmacies and gas stations in the middle; buildings, condos and bare addresses last, labeled 'Building or address'."
+        ]
+      }
+    },
+    {
       "versao": "1.4.1",
       "data": "2026-10-31",
       "itens": {

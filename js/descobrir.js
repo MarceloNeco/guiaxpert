@@ -27,6 +27,27 @@
     return ['atracao', null];
   }
 
+  /* O que um guia de viagem procura primeiro. Nota maior = aparece antes.
+     Comer, beber, doce, atração com tipo definido: topo. Hotel, farmácia, posto: meio.
+     Prédio, condomínio, escritório, rua e endereço solto: fim, e marcados como "prédio ou endereço". */
+  var RX_PREDIO = /\b(edif[ií]cio|condom[ií]nio|residencial|apartamentos?|escrit[óo]rio|office|building|galpão|dep[óo]sito|ltda|s\.?a\.?|eireli|mei)\b/i;
+  function notaGuia(l, qn) {
+    var n = 0, nome = String(l.nome || '').toLowerCase();
+    var classe = l._classe || '', tipo = l._tipo || '';
+    var comercial = /^(amenity|shop|tourism|leisure|craft)$/.test(classe) || l.confianca === 'foursquare';
+    var predio = classe === 'building' || classe === 'office' || classe === 'place' || classe === 'highway' || classe === 'landuse' || RX_PREDIO.test(nome) ||
+      /^(apartments|residential|house|yes|commercial|industrial)$/.test(tipo);
+    if (predio) { l.categoria = 'logistica'; l.subcategoria = 'predio'; n -= 6; }
+    else if (comercial) n += 4;
+    if (l.categoria === 'comer' || l.categoria === 'bebidas' || l.categoria === 'doces') n += 3;
+    else if (l.categoria === 'atracao' && l.subcategoria) n += 3;
+    else if (l.categoria === 'atracao') n += 1;
+    if (l.confianca === 'foursquare') n += 1;                     /* base comercial: nome de placa */
+    if (nome === qn) n += 3; else if (nome.indexOf(qn) === 0) n += 2; else if (nome.indexOf(qn) > -1) n += 1;
+    if (l.horario || l.telefone || l.site) n += 1;               /* tem dado de verdade */
+    return n;
+  }
+
   var Descobrir = {
     /* jeito 2: OpenStreetMap ao redor de um ponto (raio em metros) */
     perto: function (centro, raio) {
@@ -88,7 +109,7 @@
                 descricao: ex.cuisine ? ex.cuisine.replace(/;/g, ', ').replace(/_/g, ' ') : null, endereco: end || (x.display_name || '').split(',').slice(1, 4).join(',').trim() || null,
                 site: ex.website || ex['contact:website'] || null, telefone: ex.phone || ex['contact:phone'] || null, horario: ex.opening_hours || null,
                 reserva: null, preco: null, criancas: null, confianca: 'osm', gratis: false, lat: +(+x.lat).toFixed(5), lng: +(+x.lon).toFixed(5), fonte: 'OpenStreetMap',
-                _peso: /^(amenity|shop|tourism|leisure|craft)$/.test(x.class) ? 2 : (x.class === 'building' ? 0 : 1) };
+                _classe: x.class, _tipo: x.type };
             }).filter(function (l) { return l.nome; });
           });
       }
@@ -105,7 +126,7 @@
               return { id: 'osm-' + String(p.osm_type || 'N').charAt(0).toLowerCase() + '-' + p.osm_id, nome: p.name, categoria: c[0], subcategoria: c[1] || (p.osm_key === 'amenity' || p.osm_key === 'shop' ? String(p.osm_value).replace(/_/g, ' ') : null),
                 descricao: null, endereco: end || null, site: null, telefone: null, horario: null, reserva: null, preco: null, criancas: null, confianca: 'osm', gratis: false,
                 lat: +(+g[1]).toFixed(5), lng: +(+g[0]).toFixed(5), fonte: 'OpenStreetMap',
-                _peso: /^(amenity|shop|tourism|leisure|craft)$/.test(p.osm_key) ? 2 : (p.osm_key === 'building' ? 0 : 1) };
+                _classe: p.osm_key, _tipo: p.osm_value };
             }).filter(Boolean);
           });
       }
@@ -132,13 +153,13 @@
           if (perto.length >= 3) todos = perto;
         }
         var qn = q.toLowerCase();
+        todos.forEach(function (l) { l._nota = notaGuia(l, qn); });
         todos.sort(function (a, b) {
-          var pa = a._peso + (a.nome.toLowerCase().indexOf(qn) === 0 ? 1 : 0), pb = b._peso + (b.nome.toLowerCase().indexOf(qn) === 0 ? 1 : 0);
-          if (pa !== pb) return pb - pa;
+          if (a._nota !== b._nota) return b._nota - a._nota;
           if (centro && centro.lat != null) return dist(a, centro) - dist(b, centro);
           return 0;
         });
-        return todos.map(function (l) { delete l._peso; return l; }).slice(0, 10);
+        return todos.map(function (l) { delete l._nota; delete l._classe; delete l._tipo; delete l._peso; return l; }).slice(0, 10);
       });
       function dist(l, c) { var dx = (l.lng - c.lng) * Math.cos(c.lat * Math.PI / 180), dy = l.lat - c.lat; return dx * dx + dy * dy; }
     },

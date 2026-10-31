@@ -32,7 +32,7 @@ window.TEXTOS = (function () {
 
     /* placas e categorias */
     cat_comer: ['Restaurante ou lanche', 'Restaurant or snack'], cat_atracao: ['Passeio ou atração', 'Outing or attraction'], cat_bebidas: ['Bar, cervejaria ou vinícola', 'Bar, brewery or winery'], cat_doces: ['Doces, café ou sorvete', 'Sweets, coffee or ice cream'], cat_logistica: ['Hotel, aeroporto ou transporte', 'Hotel, airport or transport'],
-    sub_restaurante: ['restaurante', 'restaurant'], sub_fondue: ['fondue', 'fondue'], 'sub_pizza-massas': ['pizza e massas', 'pizza & pasta'],
+    sub_predio: ['Prédio ou endereço', 'Building or address'], sub_restaurante: ['restaurante', 'restaurant'], sub_fondue: ['fondue', 'fondue'], 'sub_pizza-massas': ['pizza e massas', 'pizza & pasta'],
     'sub_cafe-colonial': ['café colonial', 'colonial tea'], sub_gratis: ['grátis', 'free'], sub_cerveja: ['cerveja', 'beer'], sub_chocolate: ['chocolate', 'chocolate'],
     sub_cafe: ['café', 'café'], sub_sorvete: ['sorvete', 'ice cream'], sub_bar: ['bar', 'bar'], sub_museu: ['museu', 'museum'], sub_mirante: ['mirante', 'viewpoint'], sub_parque: ['parque', 'park'],
     conf_oficial: ['Conferido no site oficial.', 'Checked on the official site.'], conf_guia: ['Fonte: guia ou blog recente.', 'Source: recent guide or blog.'],
