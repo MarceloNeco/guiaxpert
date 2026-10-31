@@ -20,6 +20,9 @@ QR/código para outro celular, e-mail → reserva, família (membros, convites, 
    500 chamadas/mês grátis, termos do pago-por-uso proíbem guardar os dados). Para uso em escala: (a) contrato Enterprise
    com o Foursquare, ou (b) subir a base aberta **FSQ OS Places** (Apache 2.0, 100 M lugares, pode copiar e guardar)
    no Postgres do Supabase com PostGIS + pg_trgm, recortada por país, e entregar também nos pacotes offline. Preferir (b).
+   **Pronto e opcional (31/Out/2026):** tabela `lugares_abertos` + `buscar_lugares_abertos` (vazios), script
+   `ferramentas/fsq-os-places/recortar.py` e a função `lugares` já escolhe a base aberta quando não há chave. Falta só
+   baixar os parquet e carregar (ver `ferramentas/fsq-os-places/README.md`).
 1. **Mapa offline para cidades sem pacote**: Edge Function que recorta o PMTiles sob demanda (`pmtiles extract`). Hoje só cidades com pacote.
 2. **Tela de códigos no RootifyONE** (criar, listar com uso, desativar) usando `admin_criar_codigo`,
    `admin_listar_codigos`, `admin_desativar_codigo`.

@@ -1,6 +1,7 @@
 // GuiaXpert — busca de lugares comerciais (Foursquare Places) com a chave guardada no servidor.
 // O app chama GET /functions/v1/lugares?q=legitimo%20bar&lat=-23.6&lng=-46.63&lang=pt
-// A chave fica no segredo FOURSQUARE_KEY (Supabase → Edge Functions → Secrets). Sem chave: 503 { erro: 'sem-chave' }.
+// Fontes: FOURSQUARE_KEY (API do Foursquare, só campos Pro) ou a base aberta FSQ OS Places carregada em lugares_abertos.
+// FONTE_LUGARES=api|aberta escolhe; sem a variável: API se houver chave, senão base aberta. Sem nenhuma: 503 { erro: 'sem-chave' }.
 // Só quem está logado chama (verify_jwt). Devolve lugares no formato do app (sem dado pessoal).
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 
@@ -29,18 +30,43 @@ function categoria(cats: Array<{ id?: string; fsq_category_id?: string; name?: s
   return ["atracao", null];
 }
 
+// Base aberta no próprio Postgres (tabela lugares_abertos, FSQ OS Places). Usada quando FONTE_LUGARES=aberta,
+// ou automaticamente quando não há FOURSQUARE_KEY. Vazia → devolve [].
+async function daBaseAberta(req: Request, q: string, lat: number, lng: number, temCentro: boolean) {
+  const url = Deno.env.get("SUPABASE_URL"), anon = Deno.env.get("SUPABASE_ANON_KEY");
+  if (!url || !anon) return null;
+  const r = await fetch(url + "/rest/v1/rpc/buscar_lugares_abertos", {
+    method: "POST",
+    headers: { apikey: anon, Authorization: req.headers.get("Authorization") || "", "Content-Type": "application/json" },
+    body: JSON.stringify({ p_q: q, p_lat: temCentro ? lat : null, p_lng: temCentro ? lng : null, p_raio_m: 50000, p_limite: 10 }),
+  });
+  if (!r.ok) return null;
+  const rows = await r.json();
+  return (rows || []).map((x: any) => ({
+    id: x.id, nome: x.nome, categoria: x.categoria, subcategoria: x.subcategoria || null, descricao: x.descricao || null,
+    endereco: x.endereco || null, site: x.site || null, telefone: x.telefone || null, horario: null,
+    reserva: null, preco: null, criancas: null, confianca: "foursquare", gratis: false, lat: x.lat, lng: x.lng, fonte: "Foursquare",
+  }));
+}
+
 Deno.serve(async (req: Request) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: CORS });
-  const key = Deno.env.get("FOURSQUARE_KEY");
-  if (!key) return json({ erro: "sem-chave" }, 503);
-
   const u = new URL(req.url);
   const q = (u.searchParams.get("q") || "").trim().slice(0, 80);
   const lat = Number(u.searchParams.get("lat")), lng = Number(u.searchParams.get("lng"));
   const lang = u.searchParams.get("lang") === "en" ? "en" : "pt";
   if (q.length < 2) return json({ lugares: [] });
-
   const temCentro = Number.isFinite(lat) && Number.isFinite(lng);
+
+  const key = Deno.env.get("FOURSQUARE_KEY");
+  const fonte = Deno.env.get("FONTE_LUGARES") || (key ? "api" : "aberta");
+  if (fonte === "aberta") {
+    const lista = await daBaseAberta(req, q, lat, lng, temCentro);
+    if (lista) return json({ lugares: lista, fonte: "aberta" });
+    if (!key) return json({ erro: "sem-chave" }, 503);
+  }
+  if (!key) return json({ erro: "sem-chave" }, 503);
+
   const legado = key.startsWith("fsq3");
   // só campos "Pro" (os "Premium": hours, rating, price, photos são cobrados à parte e sem faixa grátis)
   const campos = "fsq_id,fsq_place_id,name,latitude,longitude,geocodes,categories,location,tel,website";
@@ -69,5 +95,5 @@ Deno.serve(async (req: Request) => {
       confianca: "foursquare", gratis: false, lat: +Number(la).toFixed(5), lng: +Number(lo).toFixed(5), fonte: "Foursquare",
     };
   }).filter(Boolean);
-  return json({ lugares: lista });
+  return json({ lugares: lista, fonte: "api" });
 });
