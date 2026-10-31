@@ -2,6 +2,22 @@
   "app": "guiaxpert",
   "versoes": [
     {
+      "versao": "1.4.1",
+      "data": "2026-10-31",
+      "itens": {
+        "pt": [
+          "Abertura com a foto do dia e a marca enquanto o app carrega.",
+          "Fundo discreto com a foto do dia nas telas de leitura (Hoje, Roteiro, Reservas, Quem), mais forte no tema escuro; nunca no mapa.",
+          "Busca por nome não traz mais lugares a centenas de quilômetros quando há resultado perto."
+        ],
+        "en": [
+          "Opening screen with the photo of the day and the brand while the app loads.",
+          "Subtle photo-of-the-day background on reading screens (Today, Itinerary, Bookings, Who), stronger in dark theme; never on the map.",
+          "Name search no longer returns places hundreds of km away when there are nearby results."
+        ]
+      }
+    },
+    {
       "versao": "1.4.0",
       "data": "2026-10-31",
       "itens": {

@@ -17,6 +17,11 @@
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
+  <!-- abertura: foto do dia + marca, enquanto o app carrega (some sozinha) -->
+  <div id="abertura" aria-hidden="true"><img id="abertura-foto" alt="" decoding="async"><div class="abertura-veu"></div>
+    <div class="abertura-marca"><img src="icone-192.png" alt="" width="72" height="72"><strong>GuiaXpert</strong><span>Seu guia, do seu jeito</span></div></div>
+  <!-- fundo discreto com a foto do dia (só nas telas de leitura) -->
+  <img id="fundo-foto" alt="" aria-hidden="true" decoding="async">
   <a class="pular" href="#conteudo" data-t="pular">Pular para o conteúdo</a>
   <div id="app">
     <header class="topo">
@@ -45,6 +50,7 @@
   </div>
 
   <!-- ordem importa: dados e serviços antes da tela -->
+  <script src="js/abertura.js"></script>
   <script src="config.js"></script>
   <script src="js/textos.js"></script>
   <script src="js/banco.js"></script>

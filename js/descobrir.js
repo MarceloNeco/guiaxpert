@@ -126,6 +126,11 @@
         var vistos = {}, todos = [];
         rs[0].concat(rs[1], rs[2]).forEach(function (l) { if (!vistos[l.id]) { vistos[l.id] = 1; todos.push(l); } });
         if (!todos.length && !navigator.onLine) throw new Error('offline');
+        /* com um centro conhecido, o que está a mais de 200 km só entra se faltar resultado perto */
+        if (centro && centro.lat != null) {
+          var perto = todos.filter(function (l) { return dist(l, centro) < 1.8 * 1.8; });   /* ~200 km em graus */
+          if (perto.length >= 3) todos = perto;
+        }
         var qn = q.toLowerCase();
         todos.sort(function (a, b) {
           var pa = a._peso + (a.nome.toLowerCase().indexOf(qn) === 0 ? 1 : 0), pb = b._peso + (b.nome.toLowerCase().indexOf(qn) === 0 ? 1 : 0);

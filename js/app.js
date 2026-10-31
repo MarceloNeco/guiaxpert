@@ -12,7 +12,7 @@
 (function () {
   'use strict';
   var d = document, $ = function (id) { return d.getElementById(id); };
-  var VERSAO_APP = '1.4.0';
+  var VERSAO_APP = '1.4.1';
 
   /* ------------------------------------------------------------------
      1. UTILIDADES
@@ -368,6 +368,7 @@
     estado.rota = rota;
     /* telas de mapa: a página não rola; só o mapa e a lista */
     d.body.classList.toggle('sem-rolagem', rota === 'mapa' || rota === 'explorar');
+    d.body.classList.toggle('com-fundo', rota !== 'mapa' && rota !== 'explorar' && rota !== 'entrar');
     if (window.Mapa) Mapa.destruir();
     var m = $('conteudo'); m.textContent = '';
     var tela = h('section', { class: 'tela' + (rota === 'mapa' || rota === 'explorar' ? ' larga' : '') });
@@ -2525,6 +2526,7 @@
     d.addEventListener('gx:cofre', function () { cacheRestr = []; if (estado.rota === 'reservas') mostrar('reservas'); });
     window.addEventListener('online', function () { if (!estado.acesso || !estado.acesso.liberado || estado.acesso.offline) iniciarAcesso(); });
     estado.pronto = true;
+    var ab = $('abertura'); if (ab) { ab.classList.add('sai'); setTimeout(function () { ab.remove(); }, 600); }
     mostrar('entrar');
     Conta.lerVolta().then(function (volta) {
       if (!volta) return;
