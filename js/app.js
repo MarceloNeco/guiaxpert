@@ -12,7 +12,7 @@
 (function () {
   'use strict';
   var d = document, $ = function (id) { return d.getElementById(id); };
-  var VERSAO_APP = '1.1.0';
+  var VERSAO_APP = '1.1.1';
 
   /* ------------------------------------------------------------------
      1. UTILIDADES
@@ -623,6 +623,34 @@
       h('button', { class: 'bt perigo', type: 'button', onclick: function () { Banco.apagar('roteiros', o.id).then(function () { j.fechar(); recarregar(); }); } }, T('apagar'))
     ]));
   }
+  /* campo "Lugar" com busca na internet: a pessoa digita "O Legítimo" e escolhe; o lugar vira da viagem e fica no select */
+  function campoLugarComBusca(sel, aoEscolher) {
+    var q = h('input', { class: 'campo', type: 'search', placeholder: T('exProcurarLugar'), 'aria-label': T('procurarLugar'), autocomplete: 'off' });
+    var bt = h('button', { class: 'bt sec', type: 'button', texto: '🔎' , 'aria-label': T('buscar') });
+    var lista = h('div', { class: 'linha', style: 'flex-direction:column;align-items:stretch;gap:.25rem' });
+    function procurar() {
+      var t = q.value.trim(); if (t.length < 3) { q.focus(); return; }
+      bt.disabled = true; lista.textContent = ''; lista.appendChild(h('p', { class: 'sub', texto: T('carregando') }));
+      Descobrir.buscarNome(t, estado.pos || centroViagem(), idioma()).then(function (achados) {
+        bt.disabled = false; lista.textContent = '';
+        if (!achados.length) { lista.appendChild(h('p', { class: 'sub', texto: T('nadaNaInternet') })); return; }
+        achados.slice(0, 6).forEach(function (l) {
+          lista.appendChild(h('button', { class: 'bt leve', type: 'button', style: 'text-align:left;display:block;line-height:1.3', onclick: function () {
+            var ja = lugarPorId(l.id);
+            var pr = ja ? Promise.resolve(ja) : Banco.gravar('lugares', Object.assign({}, l, { viagem_id: estado.viagem ? estado.viagem.id : null })).then(function (n) { estado.lugaresProprios.push(n); return n; });
+            pr.then(function (n) {
+              if (!sel.querySelector('option[value="' + n.id + '"]')) sel.appendChild(h('option', { value: n.id }, n.nome));
+              sel.value = n.id; lista.textContent = ''; q.value = '';
+              if (aoEscolher) aoEscolher(n);
+            });
+          } }, [h('strong', { texto: ({ comer: '🍽', atracao: '🎡', bebidas: '🍷', doces: '🍰', logistica: '🅿️' }[l.categoria] || '📍') + ' ' + l.nome }), l.endereco ? h('span', { class: 'sub', style: 'display:block', texto: l.endereco }) : null]));
+        });
+      }).catch(function () { bt.disabled = false; lista.textContent = ''; lista.appendChild(h('p', { class: 'sub', texto: navigator.onLine ? T('osmErro') : T('semInternet') })); });
+    }
+    bt.addEventListener('click', procurar);
+    q.addEventListener('keydown', function (e) { if (e.key === 'Enter') { e.preventDefault(); procurar(); } });
+    return h('div', { class: 'linha', style: 'flex-direction:column;align-items:stretch' }, [sel, h('div', { class: 'linha', style: 'flex-wrap:nowrap' }, [q, bt]), lista]);
+  }
   /* item novo no roteiro (opção editável; a do pacote vira cópia "minha") */
   function janelaItem(o, dmod) {
     var hora = h('input', { class: 'campo', type: 'time', id: 'gx-item-hora' });
@@ -633,7 +661,7 @@
     var corpo = h('div', { class: 'linha', style: 'flex-direction:column;align-items:stretch' }, [
       h('label', { class: 'rot', for: 'gx-item-hora', texto: T('hora') }), hora,
       h('label', { class: 'rot', for: 'gx-item-tit', texto: T('oQue') }), tit,
-      h('label', { class: 'rot', for: 'gx-item-lugar', texto: T('lugarOpcional') }), sel, ok]);
+      h('label', { class: 'rot', for: 'gx-item-lugar', texto: T('lugarOpcional') }), campoLugarComBusca(sel, function (n) { if (!tit.value) tit.value = n.nome; }), ok]);
     var j = janela(T('addItem'), corpo);
     sel.addEventListener('change', function () { if (sel.value && !tit.value) tit.value = lugarPorId(sel.value).nome; });
     ok.addEventListener('click', function () {
@@ -655,7 +683,7 @@
       h('label', { class: 'rot', for: 'gx-ed-hora', texto: T('hora') }), hora,
       h('label', { class: 'rot', for: 'gx-ed-tit', texto: T('oQue') }), tit,
       h('label', { class: 'rot', for: 'gx-ed-nota', texto: T('nota') }), nota,
-      h('label', { class: 'rot', for: 'gx-ed-lugar', texto: T('lugarOpcional') }), sel,
+      h('label', { class: 'rot', for: 'gx-ed-lugar', texto: T('lugarOpcional') }), campoLugarComBusca(sel, function (n) { if (!tit.value.trim()) tit.value = n.nome; }),
       l ? h('div', { class: 'linha' }, [h('button', { class: 'bt sec', type: 'button', texto: '🗺 ' + T('verNoMapa'), onclick: function () { estado.abrirLugar = l.id; estado.filtro = 'todos'; j.fechar(function () { Nav.ir('mapa'); }); } }),
         h('a', { class: 'bt leve', href: Geo.linkRota(l, estado.pos), target: '_blank', rel: 'noopener' }, T('rota'))]) : null,
       h('div', { class: 'acoes' }, [tirar, ok])]);

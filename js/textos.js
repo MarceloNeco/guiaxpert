@@ -190,7 +190,7 @@ window.TEXTOS = (function () {
     usarDoPacote: ['Usar os {n} roteiros prontos', 'Use the {n} ready-made itineraries'], gerarIA: ['Montar com a minha IA', 'Build with my AI'], emBranco: ['Começar em branco', 'Start blank'],
     meuRoteiro: ['Meu roteiro', 'My itinerary'], minhaVersao: ['minha versão', 'my version'],
     exItem: ['Ex.: Almoço no centro', 'E.g.: Lunch downtown'], hora: ['Hora', 'Time'], oQue: ['O quê', 'What'], lugarOpcional: ['Lugar (opcional)', 'Place (optional)'],
-    semLugar: ['Sem lugar', 'No place'], adicionar: ['Acrescentar', 'Add'], faltaOque: ['Escreva o que vão fazer.', 'Write what you will do.'],
+    semLugar: ['Sem lugar', 'No place'], procurarLugar: ['Procurar lugar na internet', 'Search place online'], exProcurarLugar: ['Ex.: O Legítimo, Rua Luiz Góes', 'E.g.: Joe\'s Pizza, Main St'], adicionar: ['Acrescentar', 'Add'], faltaOque: ['Escreva o que vão fazer.', 'Write what you will do.'],
     iaConfira: ['Gerado por IA: confira', 'Made by AI: check it'], iaConfiraTexto: ['A IA pode errar horário e endereço. Confirme antes de ir.', 'AI can get hours and addresses wrong. Check before going.'],
     iaSemChave: ['Para montar com IA, cole uma chave de IA (há opções grátis). Ela fica só no seu aparelho e vale para todos os apps SolverONE.', 'To build with AI, paste an AI key (free options exist). It stays on your device and works across all SolverONE apps.'],
     iaConfigurar: ['Configurar a IA', 'Set up AI'], iaMontando: ['A IA está montando uma opção nova…', 'The AI is building a new option…'],

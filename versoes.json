@@ -2,6 +2,18 @@
   "app": "guiaxpert",
   "versoes": [
     {
+      "versao": "1.1.1",
+      "data": "2026-10-31",
+      "itens": {
+        "pt": [
+          "No item do roteiro (novo ou editando), o campo Lugar agora procura na internet: digite 'O Legítimo', toque na lupa e escolha. O restaurante vira lugar da viagem e fica ligado ao item."
+        ],
+        "en": [
+          "In an itinerary item (new or editing), the Place field now searches online: type the name, tap the magnifier and pick. The place is saved to the trip and linked to the item."
+        ]
+      }
+    },
+    {
       "versao": "1.1.0",
       "data": "2026-10-31",
       "itens": {
