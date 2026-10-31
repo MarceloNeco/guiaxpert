@@ -1,3 +1,7 @@
 node_modules/
 .DS_Store
 *.zip
+
+# pesquisas desta sessão (não publicar no site)
+research_notes/
+reports/
