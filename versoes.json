@@ -2,6 +2,18 @@
   "app": "guiaxpert",
   "versoes": [
     {
+      "versao": "1.3.1",
+      "data": "2026-10-31",
+      "itens": {
+        "pt": [
+          "O botão do assistente agora mostra ✦ IA (AI em inglês)."
+        ],
+        "en": [
+          "The assistant button now reads ✦ AI (IA in Portuguese)."
+        ]
+      }
+    },
+    {
       "versao": "1.3.0",
       "data": "2026-10-31",
       "itens": {

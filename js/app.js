@@ -12,7 +12,7 @@
 (function () {
   'use strict';
   var d = document, $ = function (id) { return d.getElementById(id); };
-  var VERSAO_APP = '1.3.0';
+  var VERSAO_APP = '1.3.1';
 
   /* ------------------------------------------------------------------
      1. UTILIDADES
@@ -1093,8 +1093,10 @@
   /* o passo "Confira e salve" do Vamos achar juntos, aberto direto com um lugar já achado */
   function janelaAcharJuntosConfirmar(l) { janelaAcharJuntos(l.nome, function (n) { if (estado.viagem && estado.opcao && podeEditar()) janelaAddAoRoteiro(n); }, l); }
   function botaoAssistente() {
-    if ($('bt-assistente')) return;
-    var b = h('button', { class: 'bt-assistente', id: 'bt-assistente', type: 'button', 'aria-label': T('assistente'), title: T('assistente'), texto: '✦', onclick: function () { janelaAssistente(); } });
+    var antigo = $('bt-assistente');
+    if (antigo) { var r = antigo.querySelector('.ia-rotulo'); if (r) r.textContent = idioma() === 'en' ? 'AI' : 'IA'; return; }
+    var b = h('button', { class: 'bt-assistente', id: 'bt-assistente', type: 'button', 'aria-label': T('assistente'), title: T('assistente'), onclick: function () { janelaAssistente(); } },
+      [h('span', { 'aria-hidden': 'true', texto: '✦' }), h('span', { class: 'ia-rotulo', 'aria-hidden': 'true', texto: idioma() === 'en' ? 'AI' : 'IA' })]);
     d.body.appendChild(b);
   }
 
