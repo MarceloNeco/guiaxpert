@@ -12,7 +12,7 @@
 (function () {
   'use strict';
   var d = document, $ = function (id) { return d.getElementById(id); };
-  var VERSAO_APP = '1.1.1';
+  var VERSAO_APP = '1.1.2';
 
   /* ------------------------------------------------------------------
      1. UTILIDADES
@@ -358,6 +358,7 @@
   var TELAS = {};
   function mostrar(rota) {
     if (!estado.pronto) { estado.rota = rota; return; }
+    var mesmaTela = rota === estado.rota, rolagem = window.scrollY;
     var lib = estado.acesso && estado.acesso.liberado;
     if (!lib && rota !== 'config') rota = 'entrar';
     if (lib && rota === 'entrar') rota = 'inicio';
@@ -374,7 +375,8 @@
     $('bt-inicio').setAttribute('aria-current', rota === 'inicio' || rota === 'explorar' ? 'page' : 'false');
     montarBarra(); desenharChip();
     try { TELAS[rota](tela); } catch (e) { console.error(e); tela.appendChild(h('div', { class: 'alerta' }, [h('b', { texto: T('erroTela') }), String(e.message || e)])); }
-    window.scrollTo(0, 0);
+    /* redesenho da mesma tela (marcou uma opção) fica onde estava; tela nova começa no topo */
+    window.scrollTo(0, mesmaTela && !estado.irAoTopo ? rolagem : 0); estado.irAoTopo = false;
   }
 
   function semViagem(tela) {
@@ -1567,6 +1569,7 @@
       });
     }
     function desenhar(foco) {
+      var rolagem = j.caixa ? j.caixa.scrollTop : 0;   /* a folha não pode pular a cada toque */
       var c = contarGostos(g);
       resumo.textContent = c.total ? T('resumoGostos', { a: c.ama, c: c.curte, e: c.evita }) : T('nadaMarcado');
       desenharTemas();
@@ -1590,7 +1593,8 @@
         });
       }
       /* o foco fica no mesmo item depois de redesenhar (teclado e leitor de tela) */
-      if (foco) { var b = lista.querySelector('.gosto[data-id="' + foco + '"]'); if (b) b.focus(); }
+      if (j.caixa) j.caixa.scrollTop = rolagem;
+      if (foco) { var b = lista.querySelector('.gosto[data-id="' + foco + '"]'); if (b) b.focus({ preventScroll: true }); }
     }
     busca.addEventListener('input', function () { desenhar(); });
     desenhar();
@@ -1739,7 +1743,7 @@
     var corpo = h('div', { class: 'linha', style: 'flex-direction:column;align-items:stretch;gap:.75rem' });
     tela.appendChild(corpo);
     var erro = h('p', { class: 'conferir', role: 'alert' });
-    var voltar = h('button', { class: 'bt leve', type: 'button', disabled: i === 0, onclick: function () { r.passo--; mostrar('nova'); } }, T('voltar'));
+    var voltar = h('button', { class: 'bt leve', type: 'button', disabled: i === 0, onclick: function () { r.passo--; estado.irAoTopo = true; mostrar('nova'); } }, T('voltar'));
     var prox = h('button', { class: 'bt', type: 'button' }, i === total - 1 ? T('criarViagem') : T('proximo'));
     var validar = function () { return true; };
     PASSO[PASSOS[i]](corpo, r, function (f) { validar = f; });
@@ -1748,7 +1752,7 @@
     prox.addEventListener('click', function () {
       var msg = validar();
       if (msg !== true) { erro.textContent = msg; return; }
-      if (i < total - 1) { r.passo++; mostrar('nova'); return; }
+      if (i < total - 1) { r.passo++; estado.irAoTopo = true; mostrar('nova'); return; }
       prox.disabled = true; prox.textContent = T('criando');
       criarViagem(r).then(function () { estado.rascunho = null; Nav.ir('roteiro', { substituir: true }); }).catch(function () { prox.disabled = false; erro.textContent = T('erroSalvar'); });
     });
@@ -1760,7 +1764,7 @@
       return h('button', { class: 'escolha' + (r.tipo === tipo ? ' ativa' : ''), type: 'button', onclick: function () {
         r.tipo = tipo;
         if (tipo === 'passeio') { r.inicio = r.inicio || hojeIso(); r.fim = r.inicio; }
-        r.passo = 1; mostrar('nova');
+        r.passo = 1; estado.irAoTopo = true; mostrar('nova');
       } }, [h('b', { texto: icone + ' ' + titulo }), h('span', { class: 'pequeno', texto: texto })]);
     };
     c.appendChild(opcao('passeio', '🚶', T('tipoPasseio'), T('tipoPasseioTexto')));

@@ -56,7 +56,9 @@
 :root[data-tema="claro"] { color-scheme: only light; }
 
 * { box-sizing: border-box; }
-html { -webkit-text-size-adjust: 100%; scroll-padding-top: calc(var(--topo) + 1rem); }
+html { -webkit-text-size-adjust: 100%; scroll-padding-top: calc(var(--topo) + 1rem); overflow-x: clip; }
+/* toque duplo não dá zoom (a pinça continua); nada passa da borda da tela */
+body { touch-action: manipulation; overflow-x: clip; }
 body {
   margin: 0; background: var(--fundo); color: var(--tinta);
   font: 400 1.0625rem/1.5 var(--fonte); font-feature-settings: "tnum" 0;

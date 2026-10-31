@@ -2,6 +2,22 @@
   "app": "guiaxpert",
   "versoes": [
     {
+      "versao": "1.1.2",
+      "data": "2026-10-31",
+      "itens": {
+        "pt": [
+          "Toque duplo não dá mais zoom na página e nada passa da borda da tela.",
+          "Marcar uma opção (gostos, assistente de viagem) não faz mais a tela pular: ela fica onde estava.",
+          "Busca por nome com duas fontes (Nominatim e Photon), tolerante a erro de digitação, e restaurante, bar e loja vêm antes de prédio e rua."
+        ],
+        "en": [
+          "Double tap no longer zooms the page and nothing overflows the screen edge.",
+          "Choosing an option (likes, trip wizard) no longer makes the screen jump.",
+          "Name search with two sources (Nominatim and Photon), typo tolerant; restaurants, bars and shops rank above buildings and streets."
+        ]
+      }
+    },
+    {
       "versao": "1.1.1",
       "data": "2026-10-31",
       "itens": {

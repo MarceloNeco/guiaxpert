@@ -67,25 +67,62 @@
         });
     },
 
-    /* busca livre por nome ou endereço (Nominatim, 1 pedido por vez), perto de um centro */
+    /* busca livre por nome ou endereço, perto de um centro.
+       Duas fontes abertas em paralelo: Nominatim (endereços) e Photon/komoot (nomes, tolera erro de digitação).
+       Lugares de verdade (restaurante, bar, loja, atração) vêm antes de prédio e rua. */
     buscarNome: function (texto, centro, idioma) {
-      var q = String(texto || '').trim();
+      var q = String(texto || '').trim().replace(/^(o|a|os|as|the)\s+/i, '');
       if (q.length < 3) return Promise.resolve([]);
-      var u = 'https://nominatim.openstreetmap.org/search?format=jsonv2&limit=8&addressdetails=1&extratags=1&dedupe=1&q=' + encodeURIComponent(q);
-      if (centro && centro.lat != null) u += '&viewbox=' + (centro.lng - 0.35).toFixed(3) + ',' + (centro.lat + 0.3).toFixed(3) + ',' + (centro.lng + 0.35).toFixed(3) + ',' + (centro.lat - 0.3).toFixed(3) + '&bounded=0';
-      return fetch(u, { headers: { 'Accept-Language': idioma === 'en' ? 'en' : 'pt-BR' } }).then(function (r) { if (!r.ok) throw new Error('osm-' + r.status); return r.json(); })
-        .then(function (lista) {
-          return (lista || []).map(function (x) {
-            var t = { amenity: x.class === 'amenity' ? x.type : null, tourism: x.class === 'tourism' ? x.type : null, shop: x.class === 'shop' ? x.type : null, leisure: x.class === 'leisure' ? x.type : null, craft: x.class === 'craft' ? x.type : null };
-            var c = categoria(t), a = x.address || {}, ex = x.extratags || {};
-            var nome = x.name || (x.display_name || '').split(',')[0];
-            var end = [a.road, a.house_number].filter(Boolean).join(', ') + (a.suburb || a.neighbourhood ? ', ' + (a.suburb || a.neighbourhood) : '') + (a.city || a.town || a.municipality ? ', ' + (a.city || a.town || a.municipality) : '');
-            return { id: 'osm-' + (x.osm_type || 'n').charAt(0) + '-' + x.osm_id, nome: nome, categoria: c[0], subcategoria: c[1] || (x.class === 'amenity' || x.class === 'shop' ? x.type.replace(/_/g, ' ') : null),
-              descricao: ex.cuisine ? ex.cuisine.replace(/;/g, ', ').replace(/_/g, ' ') : null, endereco: end || (x.display_name || '').split(',').slice(1, 4).join(',').trim() || null,
-              site: ex.website || ex['contact:website'] || null, telefone: ex.phone || ex['contact:phone'] || null, horario: ex.opening_hours || null,
-              reserva: null, preco: null, criancas: null, confianca: 'osm', gratis: false, lat: +(+x.lat).toFixed(5), lng: +(+x.lon).toFixed(5), fonte: 'OpenStreetMap' };
-          }).filter(function (l) { return l.nome; });
+      var lg = idioma === 'en' ? 'en' : 'pt-BR';
+      function deNominatim() {
+        var u = 'https://nominatim.openstreetmap.org/search?format=jsonv2&limit=8&addressdetails=1&extratags=1&dedupe=1&q=' + encodeURIComponent(q);
+        if (centro && centro.lat != null) u += '&viewbox=' + (centro.lng - 0.35).toFixed(3) + ',' + (centro.lat + 0.3).toFixed(3) + ',' + (centro.lng + 0.35).toFixed(3) + ',' + (centro.lat - 0.3).toFixed(3) + '&bounded=0';
+        return fetch(u, { headers: { 'Accept-Language': lg } }).then(function (r) { if (!r.ok) throw new Error('osm-' + r.status); return r.json(); })
+          .then(function (lista) {
+            return (lista || []).map(function (x) {
+              var t = { amenity: x.class === 'amenity' ? x.type : null, tourism: x.class === 'tourism' ? x.type : null, shop: x.class === 'shop' ? x.type : null, leisure: x.class === 'leisure' ? x.type : null, craft: x.class === 'craft' ? x.type : null };
+              var c = categoria(t), a = x.address || {}, ex = x.extratags || {};
+              var nome = x.name || (x.display_name || '').split(',')[0];
+              var end = [a.road, a.house_number].filter(Boolean).join(', ') + (a.suburb || a.neighbourhood ? ', ' + (a.suburb || a.neighbourhood) : '') + (a.city || a.town || a.municipality ? ', ' + (a.city || a.town || a.municipality) : '');
+              return { id: 'osm-' + (x.osm_type || 'n').charAt(0) + '-' + x.osm_id, nome: nome, categoria: c[0], subcategoria: c[1] || (x.class === 'amenity' || x.class === 'shop' ? x.type.replace(/_/g, ' ') : null),
+                descricao: ex.cuisine ? ex.cuisine.replace(/;/g, ', ').replace(/_/g, ' ') : null, endereco: end || (x.display_name || '').split(',').slice(1, 4).join(',').trim() || null,
+                site: ex.website || ex['contact:website'] || null, telefone: ex.phone || ex['contact:phone'] || null, horario: ex.opening_hours || null,
+                reserva: null, preco: null, criancas: null, confianca: 'osm', gratis: false, lat: +(+x.lat).toFixed(5), lng: +(+x.lon).toFixed(5), fonte: 'OpenStreetMap',
+                _peso: /^(amenity|shop|tourism|leisure|craft)$/.test(x.class) ? 2 : (x.class === 'building' ? 0 : 1) };
+            }).filter(function (l) { return l.nome; });
+          });
+      }
+      function dePhoton() {
+        var u = 'https://photon.komoot.io/api/?limit=8&lang=' + (idioma === 'en' ? 'en' : 'default') + '&q=' + encodeURIComponent(q);
+        if (centro && centro.lat != null) u += '&lat=' + centro.lat + '&lon=' + centro.lng + '&location_bias_scale=0.4&zoom=12';
+        return fetch(u).then(function (r) { if (!r.ok) throw new Error('photon-' + r.status); return r.json(); })
+          .then(function (j) {
+            return ((j && j.features) || []).map(function (f) {
+              var p = f.properties || {}, g = (f.geometry && f.geometry.coordinates) || [];
+              if (!p.name || p.osm_key === 'highway' || p.osm_key === 'place' || p.osm_key === 'boundary') return null;
+              var t = {}; t[p.osm_key] = p.osm_value; var c = categoria(t);
+              var end = [p.street, p.housenumber].filter(Boolean).join(', ') + (p.district ? ', ' + p.district : '') + (p.city ? ', ' + p.city : '');
+              return { id: 'osm-' + String(p.osm_type || 'N').charAt(0).toLowerCase() + '-' + p.osm_id, nome: p.name, categoria: c[0], subcategoria: c[1] || (p.osm_key === 'amenity' || p.osm_key === 'shop' ? String(p.osm_value).replace(/_/g, ' ') : null),
+                descricao: null, endereco: end || null, site: null, telefone: null, horario: null, reserva: null, preco: null, criancas: null, confianca: 'osm', gratis: false,
+                lat: +(+g[1]).toFixed(5), lng: +(+g[0]).toFixed(5), fonte: 'OpenStreetMap',
+                _peso: /^(amenity|shop|tourism|leisure|craft)$/.test(p.osm_key) ? 2 : (p.osm_key === 'building' ? 0 : 1) };
+            }).filter(Boolean);
+          });
+      }
+      return Promise.all([deNominatim().catch(function () { return []; }), dePhoton().catch(function () { return []; })]).then(function (rs) {
+        var vistos = {}, todos = [];
+        rs[0].concat(rs[1]).forEach(function (l) { if (!vistos[l.id]) { vistos[l.id] = 1; todos.push(l); } });
+        if (!todos.length && !navigator.onLine) throw new Error('offline');
+        var qn = q.toLowerCase();
+        todos.sort(function (a, b) {
+          var pa = a._peso + (a.nome.toLowerCase().indexOf(qn) === 0 ? 1 : 0), pb = b._peso + (b.nome.toLowerCase().indexOf(qn) === 0 ? 1 : 0);
+          if (pa !== pb) return pb - pa;
+          if (centro && centro.lat != null) return dist(a, centro) - dist(b, centro);
+          return 0;
         });
+        return todos.map(function (l) { delete l._peso; return l; }).slice(0, 10);
+      });
+      function dist(l, c) { var dx = (l.lng - c.lng) * Math.cos(c.lat * Math.PI / 180), dy = l.lat - c.lat; return dx * dx + dy * dy; }
     },
 
     /* resumo do grupo para a IA: sem nome de ninguém */
