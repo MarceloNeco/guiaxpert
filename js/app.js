@@ -12,7 +12,7 @@
 (function () {
   'use strict';
   var d = document, $ = function (id) { return d.getElementById(id); };
-  var VERSAO_APP = '1.2.0';
+  var VERSAO_APP = '1.3.0';
 
   /* ------------------------------------------------------------------
      1. UTILIDADES
@@ -373,7 +373,7 @@
     var tela = h('section', { class: 'tela' + (rota === 'mapa' || rota === 'explorar' ? ' larga' : '') });
     m.appendChild(tela);
     $('bt-inicio').setAttribute('aria-current', rota === 'inicio' || rota === 'explorar' ? 'page' : 'false');
-    montarBarra(); desenharChip();
+    montarBarra(); desenharChip(); if (lib) botaoAssistente();
     try { TELAS[rota](tela); } catch (e) { console.error(e); tela.appendChild(h('div', { class: 'alerta' }, [h('b', { texto: T('erroTela') }), String(e.message || e)])); }
     /* redesenho da mesma tela (marcou uma opção) fica onde estava; tela nova começa no topo */
     window.scrollTo(0, mesmaTela && !estado.irAoTopo ? rolagem : 0); estado.irAoTopo = false;
@@ -648,7 +648,7 @@
     var v = estado.viagem;
     return (v && (v.destinoTexto || v.nome)) || (window.Explorar && Explorar.estado.nome) || '';
   }
-  function janelaAcharJuntos(q, aoCriar) {
+  function janelaAcharJuntos(q, aoCriar, lugarPronto) {
     var corpo = h('div', { class: 'achar-juntos' });
     var j = janela(T('acharJuntos'), corpo);
     function botaoGrande(icone, titulo, dica, acao) {
@@ -747,7 +747,7 @@
       });
       setTimeout(function () { nome.focus(); }, 50);
     }
-    inicio();
+    if (lugarPronto) confirmar(lugarPronto); else inicio();
   }
 
   /* campo "Lugar" com busca na internet: a pessoa digita "O Legítimo" e escolhe; o lugar vira da viagem e fica no select */
@@ -905,19 +905,24 @@
 
   /* ---------- IA: o que a chave dá, com exemplos da viagem ---------- */
   function contextoGuia() {
-    var v = estado.viagem, dias = diasDaViagem(v), hj = hojeIso(), di = dias.indexOf(hj);
+    var v = estado.viagem;
+    if (!v) return Promise.resolve({ viagem: null, pessoas: [], pacote: null, lugares: todosLugares(), dia: null, di: 0, data: hojeIso(), clima: null, idioma: idioma(), opcao: null, tela: estado.rota, onde: ondeEstouTexto() });
+    var dias = diasDaViagem(v), hj = hojeIso(), di = dias.indexOf(hj);
     if (di < 0) di = Math.max(0, Math.min(estado.dia, dias.length - 1));
     var o = estado.opcao, dia = o ? o.dias[mapearDia(di, dias.length, o.dias.length)] : null;
     var c = centroViagem();
     return (c ? Clima.previsao(c.lat, c.lng).catch(function () { return null; }) : Promise.resolve(null)).then(function (p) {
       var clima = p && p.dias.filter(function (x) { return x.data === dias[di]; })[0] || null;
-      return { viagem: v, pessoas: pessoasDaViagem(v), pacote: estado.pacote, lugares: todosLugares(), dia: dia, di: di, data: dias[di], clima: clima, idioma: idioma(), opcao: o };
+      return { viagem: v, pessoas: pessoasDaViagem(v), pacote: estado.pacote, lugares: todosLugares(), dia: dia, di: di, data: dias[di], clima: clima, idioma: idioma(), opcao: o, tela: estado.rota, onde: ondeEstouTexto() };
     });
   }
   TELAS.ia = function (tela) {
     tela.appendChild(h('h1', { texto: T('iaTela') }));
     var ok = window.Guia && Guia.pronta();
-    tela.appendChild(h('p', { class: 'sub', texto: T(ok ? 'iaTelaOk' : 'iaTelaSem') }));
+    var propria = !!(window.DGO && DGO.ia && (DGO.ia.chavePara('texto') || DGO.ia.provedores().some(function (p) { return p.temChave && !(DGO.ia.proxyDe && DGO.ia.proxyDe(p.id)); })));
+    tela.appendChild(h('p', { class: 'sub', texto: T(ok ? (propria ? 'iaTelaOk' : 'iaTelaFabrica') : 'iaTelaSem') }));
+    if (ok && !propria) tela.appendChild(h('div', { class: 'cartao' }, [h('p', { texto: T('iaChavePropriaOpcional') }),
+      h('button', { class: 'bt leve', type: 'button', onclick: function () { DGO.ia.guia(null, 'texto'); } }, T('iaConfigurar'))]));
     if (!ok) tela.appendChild(h('div', { class: 'cartao' }, [h('p', { texto: T('iaSemChave') }),
       h('button', { class: 'bt', type: 'button', onclick: function () { DGO.ia.guia(null, 'texto'); } }, T('iaConfigurar')),
       h('p', { class: 'pequeno', texto: T('iaChaveOnde') })]));
@@ -1007,6 +1012,90 @@
     enviar.addEventListener('click', mandar);
     campo.addEventListener('keydown', function (e) { if (e.key === 'Enter') mandar(); });
     setTimeout(function () { campo.focus(); }, 80);
+  }
+
+  /* ---------- ✦ o assistente: fala ou digita, o app age ---------- */
+  function ondeEstouTexto() {
+    var p = estado.pos; if (!p) return '';
+    var c = cidadeAtual();
+    return p.lat.toFixed(4) + ',' + p.lng.toFixed(4) + (c ? ' (perto de ' + c + ')' : '');
+  }
+  var conversaAssistente = [];
+  function janelaAssistente(textoInicial) {
+    var lista = h('div', { class: 'conversa' });
+    var campo = h('input', { class: 'campo', id: 'gx-ast', placeholder: T('astPlaceholder'), autocomplete: 'off', maxlength: '300' });
+    var mic = h('button', { class: 'bt sec mic', type: 'button', texto: '🎤', 'aria-label': T('falar') });
+    var enviar = h('button', { class: 'bt', type: 'button', texto: '➤', 'aria-label': T('enviar') });
+    var corpo = h('div', { class: 'linha', style: 'flex-direction:column;align-items:stretch;flex:1;min-height:0' }, [lista, h('div', { class: 'linha', style: 'flex-wrap:nowrap' }, [mic, campo, enviar])]);
+    var j = janela('✦ ' + T('assistente'), corpo);
+    j.caixa.classList.add('cheia');
+    function balao(papel, texto, extra) { var el = h('div', { class: 'balao ' + papel, texto: texto }); if (extra) el.appendChild(extra); lista.appendChild(el); lista.scrollTop = lista.scrollHeight; return el; }
+    if (!(window.Guia && Guia.pronta())) {
+      balao('ia', navigator.onLine ? T('astSemIA') : T('semInternet'));
+      lista.appendChild(h('button', { class: 'bt leve', type: 'button', texto: T('iaConfigurar'), onclick: function () { j.fechar(function () { Nav.ir('ia'); }); } }));
+    } else if (!conversaAssistente.length) balao('ia', T('astOla'));
+    conversaAssistente.forEach(function (m) { balao(m.papel, m.texto); });
+    if (!conversaAssistente.length) [T('astSug1'), T('astSug2'), T('astSug3')].forEach(function (s) {
+      lista.appendChild(h('button', { class: 'chip', type: 'button', texto: s, style: 'align-self:flex-start', onclick: function () { campo.value = s; mandar(); } }));
+    });
+    if (!(window.Guia && Guia.temVoz())) mic.hidden = true;
+    mic.addEventListener('click', function () {
+      mic.disabled = true; mic.textContent = '…';
+      Guia.ouvir(idioma()).then(function (t) { campo.value = t; mandar(); }).catch(function () { avisar(T('naoOuvi')); }).then(function () { mic.disabled = false; mic.textContent = '🎤'; });
+    });
+    function mandar() {
+      var t = campo.value.trim(); if (!t) return;
+      if (!(window.Guia && Guia.pronta())) return;
+      campo.value = ''; enviar.disabled = true;
+      balao('pessoa', t); var pensando = balao('ia', '…');
+      contextoGuia().then(function (ctx) { return Guia.pedir(ctx, t, conversaAssistente); }).then(function (r) {
+        pensando.remove();
+        conversaAssistente.push({ papel: 'pessoa', texto: t }, { papel: 'ia', texto: r.texto }); conversaAssistente = conversaAssistente.slice(-12);
+        if (r.tipo === 'lugar' && r.busca) {
+          balao('ia', r.texto || T('astProcurando'));
+          acharPeloAssistente(r.busca, j);
+        } else if (r.tipo === 'mapa' && r.busca) {
+          var l = todosLugares().filter(function (x) { return x.nome.toLowerCase() === r.busca.toLowerCase(); })[0];
+          balao('ia', r.texto, l ? h('button', { class: 'bt sec', type: 'button', style: 'margin-top:.4rem', texto: '🗺 ' + T('verNoMapa'), onclick: function () { estado.abrirLugar = l.id; estado.filtro = 'todos'; j.fechar(function () { Nav.ir('mapa'); }); } }) : null);
+        } else if (r.tipo === 'replanejar') {
+          balao('ia', r.texto, estado.viagem ? h('button', { class: 'bt sec', type: 'button', style: 'margin-top:.4rem', texto: '🌦 ' + T('replanejarHoje'), onclick: function () { j.fechar(function () { replanejarHoje(); }); } }) : null);
+        } else balao('ia', r.texto || T('iaErro'));
+      }).catch(function (e) { pensando.remove(); balao('ia', e.message === 'sem-internet' ? T('semInternet') : (/cota/.test(e.message) ? T('astCota') : T('iaErro'))); }).then(function () { enviar.disabled = false; });
+    }
+    /* "acha o bar do zé": primeiro as bases (catálogo, OSM, Foursquare), depois o guia na internet; a pessoa confirma e salva */
+    function acharPeloAssistente(busca, jan) {
+      var caixa = h('div', { class: 'linha', style: 'flex-direction:column;align-items:stretch;gap:.35rem' });
+      var el = balao('ia', '', caixa);
+      function opcao(l, origem) {
+        return h('button', { class: 'bt-grande', type: 'button', onclick: function () {
+          var pr = origem === 'ia' ? Promise.resolve(null) : Banco.gravar('lugares', Object.assign({}, l, { viagem_id: estado.viagem ? estado.viagem.id : null })).then(function (n) { estado.lugaresProprios.push(n); return n; });
+          if (origem === 'ia') { jan.fechar(function () { janelaAcharJuntosConfirmar({ nome: l.nome, endereco: [l.endereco, l.cidade].filter(Boolean).join(', '), telefone: l.telefone, site: l.site, fonte: l.fonte, origem: 'ia' }); }); return; }
+          pr.then(function (n) { avisar(T('lugarCriado')); jan.fechar(function () { if (estado.viagem && estado.opcao && podeEditar()) janelaAddAoRoteiro(n); else { estado.abrirLugar = n.id; Nav.ir(emViagem() ? 'mapa' : 'explorar'); } }); });
+        } }, [h('span', { class: 'ic-grande', 'aria-hidden': 'true', texto: '📌' }), h('span', { class: 'tx' }, [h('b', { texto: l.nome }), h('small', { texto: [l.endereco, l.cidade].filter(Boolean).join(', ') || (l.fonte || '') })])]);
+      }
+      Descobrir.buscarNome(busca, estado.pos || centroViagem(), idioma()).catch(function () { return []; }).then(function (ls) {
+        var bons = ls.filter(function (l) { return l.categoria !== 'atracao' || l.subcategoria; }).slice(0, 3);
+        if (bons.length) { caixa.appendChild(h('p', { class: 'sub', texto: T('eEsse') + '?' })); bons.forEach(function (l) { caixa.appendChild(opcao(l, 'base')); }); }
+        return Guia.procurarLugar(busca, { cidade: cidadeAtual(), idioma: idioma() }).catch(function () { return { lugares: [] }; }).then(function (r) {
+          var novos = r.lugares.filter(function (l) { return !bons.some(function (b) { return b.nome.toLowerCase() === l.nome.toLowerCase(); }); });
+          if (novos.length) { caixa.appendChild(h('p', { class: 'sub', texto: T('fonteIA') + ':' })); novos.forEach(function (l) { caixa.appendChild(opcao(l, 'ia')); }); }
+          if (!bons.length && !novos.length) caixa.appendChild(h('p', { texto: T('guiaNaoAchou') }));
+          caixa.appendChild(h('button', { class: 'bt leve', type: 'button', texto: '🤝 ' + T('acharJuntos'), onclick: function () { jan.fechar(function () { janelaAcharJuntos(busca, function (n) { if (estado.viagem && estado.opcao && podeEditar()) janelaAddAoRoteiro(n); }); }); } }));
+          lista.scrollTop = lista.scrollHeight;
+        });
+      });
+    }
+    enviar.addEventListener('click', mandar);
+    campo.addEventListener('keydown', function (e) { if (e.key === 'Enter') mandar(); });
+    if (textoInicial) { campo.value = textoInicial; setTimeout(mandar, 50); }
+    else setTimeout(function () { (Guia.temVoz && Guia.temVoz() ? mic : campo).focus(); }, 80);
+  }
+  /* o passo "Confira e salve" do Vamos achar juntos, aberto direto com um lugar já achado */
+  function janelaAcharJuntosConfirmar(l) { janelaAcharJuntos(l.nome, function (n) { if (estado.viagem && estado.opcao && podeEditar()) janelaAddAoRoteiro(n); }, l); }
+  function botaoAssistente() {
+    if ($('bt-assistente')) return;
+    var b = h('button', { class: 'bt-assistente', id: 'bt-assistente', type: 'button', 'aria-label': T('assistente'), title: T('assistente'), texto: '✦', onclick: function () { janelaAssistente(); } });
+    d.body.appendChild(b);
   }
 
   /* ---------- Mapa da viagem (mapa + lista + cartão: mapa.js) ---------- */

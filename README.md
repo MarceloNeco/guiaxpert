@@ -59,6 +59,14 @@ chave restrita a essa API → Supabase → Edge Functions → Secrets → `GOOGL
 Regra do Google que o app respeita: a lista aparece só ao vivo e sem mapa, com "powered by Google"; no roteiro fica o
 nome que a pessoa confirma, o ponto achado pelo endereço na base aberta e o ID do Google (único dado dele que pode ficar).
 
+## 2d. Assistente ✦ sem chave (IA de fábrica)
+
+A função `supabase/functions/ia` responde com a chave da SolverONE quando a pessoa não tem chave própria, com cota por
+pessoa (60 por dia, 900 por mês; mude com os segredos `IA_LIMITE_DIA` e `IA_LIMITE_MES`). Para ligar: crie uma chave no
+Google AI Studio (https://aistudio.google.com/apikey) e cadastre em Supabase → Edge Functions → Secrets → `GEMINI_KEY`.
+Sem a chave, o ✦ avisa que ainda não está ligado e aponta para a configuração. Rode `supabase/2026-10-31-ia-cota.sql`
+(já aplicado em 31/Out/2026). Diretriz completa em `docs/DIRETRIZ-IA-NATIVA.md`.
+
 ## 3. Publicar
 
 1. Crie o repositório **guiaxpert** (público, como os outros apps) e suba estes arquivos.

@@ -4326,14 +4326,17 @@
       var sistema = opcoes.contexto || IA.contexto();
 
       var proxy = IA.proxyDe(prov);
-      if (proxy) {
-        /* o servidor guarda a chave; o navegador so manda a pergunta */
-        return fetch(proxy, {
-          method: 'POST', headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ provedor: prov, modelo: modelo, sistema: sistema, mensagens: msgs, app: cfg.app, limite: opcoes.limite || null })
+      var chave = IA.chave(prov);
+      if (proxy && !chave) {
+        /* sem chave propria: o servidor guarda a chave e controla a cota; o navegador so manda a pergunta
+           (cfg.ia.proxyCabecalhos devolve os cabecalhos de conta, ex.: Authorization) */
+        return Promise.resolve(cfg.ia.proxyCabecalhos ? cfg.ia.proxyCabecalhos() : {}).then(function (cab) {
+          return fetch(proxy, {
+            method: 'POST', headers: Object.assign({ 'Content-Type': 'application/json' }, cab || {}),
+            body: JSON.stringify({ provedor: prov, modelo: modelo, sistema: sistema, mensagens: msgs, app: cfg.app, limite: opcoes.limite || null, web: !!opcoes.web })
+          });
         }).then(lerResposta).then(function (j) { return String(j.texto || j.resposta || '').trim(); });
       }
-      var chave = IA.chave(prov);
       if (!chave && prov !== 'personalizado') return Promise.reject(new Error('sem-chave'));
       /* opcoes.limite: tamanho maximo da resposta (textos longos, como termos) */
       return pr.chamar(chave, modelo, sistema, msgs, opcoes.limite);
@@ -5181,6 +5184,7 @@
       definirPara: function (cap, prov) { if (cap === 'texto') IA.definirProvedor(prov); else PorUso.definir(cap, prov); },
       guia: function (prov, cap) { return abrirChaves(prov, cap); },
       provedoresProntos: function () { return IA.provedoresProntos(); },
+      proxyDe: function (prov) { return IA.proxyDe(prov); },
       modelo: function (prov) { return IA.modelo(prov); },
       definirModelo: function (prov, m) { return IA.definirModelo(prov, m); },
       listarModelos: function (prov) { return IA.listarModelos(prov); },

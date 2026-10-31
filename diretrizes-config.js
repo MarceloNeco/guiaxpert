@@ -30,6 +30,13 @@ DGO.iniciar({
     ativo: true,
     botaoNaFaixa: false,
     provedorPadrao: 'gemini',
+    /* sem chave propria: a funcao 'ia' do Supabase responde com a chave da SolverONE (cota por pessoa) */
+    proxy: { gemini: (window.GUIAXPERT_CONFIG && window.GUIAXPERT_CONFIG.SUPABASE_URL ? String(window.GUIAXPERT_CONFIG.SUPABASE_URL).replace(/\/+$/, '') + '/functions/v1/ia' : '') },
+    proxyCabecalhos: function () {
+      var cfg = window.GUIAXPERT_CONFIG || {};
+      if (!window.Conta || !Conta.sessao()) return Promise.reject(new Error('sem-conta'));
+      return Conta.token().then(function (tk) { return { apikey: cfg.SUPABASE_PUBLISHABLE_KEY, Authorization: 'Bearer ' + tk }; });
+    },
     contexto: {
       pt: 'Você ajuda quem usa o GuiaXpert, um guia de viagem para famílias. Responda curto, em português simples. Nunca invente endereço, preço ou horário. Nunca peça senha, chave ou dado pessoal.',
       en: 'You help people using GuiaXpert, a family travel guide. Answer briefly in plain English. Never make up addresses, prices or hours. Never ask for passwords, keys or personal data.'

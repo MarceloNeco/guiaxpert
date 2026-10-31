@@ -2,6 +2,20 @@
   "app": "guiaxpert",
   "versoes": [
     {
+      "versao": "1.3.0",
+      "data": "2026-10-31",
+      "itens": {
+        "pt": [
+          "Botão ✦ em toda tela: fale ou escreva o que quer. O assistente já sabe onde você está, a viagem, o dia e a previsão, e age: acha e salva lugar, põe no roteiro, mostra no mapa, replaneja o dia.",
+          "Funciona de fábrica, sem cadastrar chave de IA (cota diária por pessoa). Quem tem chave própria continua usando a sua."
+        ],
+        "en": [
+          "✦ button on every screen: speak or type what you want. The assistant already knows where you are, the trip, the day and the forecast, and acts: finds and saves places, adds to the plan, shows on the map, replans the day.",
+          "Works out of the box, no AI key needed (daily quota per person). Your own key still takes precedence."
+        ]
+      }
+    },
+    {
       "versao": "1.2.0",
       "data": "2026-10-31",
       "itens": {

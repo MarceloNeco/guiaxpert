@@ -105,6 +105,10 @@
       var sistema = 'Você ajuda uma família a achar um lugar de viagem. Use a busca na web. Responda só JSON.';
       var pergunta = perguntaLugar(texto, ctx);
       var prov = DGO.ia.provedorPara('texto'), chave = DGO.ia.chavePara('texto'), modelo = DGO.ia.modelo(prov);
+      /* sem chave própria: o proxy da SolverONE (Gemini com busca na web) */
+      if (!chave && DGO.ia.proxyDe && DGO.ia.proxyDe(prov)) {
+        return DGO.ia.perguntar(pergunta, { provedor: prov, contexto: sistema, limite: 1200, web: true }).then(function (txt) { return { lugares: extrairLugares(txt), comWeb: true }; });
+      }
       if (COM_WEB[prov] && chave) {
         return COM_WEB[prov](chave, modelo, pergunta, sistema, ctx).then(function (txt) { return { lugares: extrairLugares(txt), comWeb: true }; })
           .catch(function () { return DGO.ia.perguntar(pergunta, { contexto: sistema, limite: 1200 }).then(function (txt) { return { lugares: extrairLugares(txt), comWeb: false }; }); });
@@ -136,6 +140,45 @@
     },
 
     /* conversa presa à viagem; historico = [{papel:'pessoa'|'ia', texto}] */
+    /* o ✦: um pedido livre vira uma intenção. ctx igual ao de perguntar + { onde: 'texto da posição', tela }.
+       Devolve { tipo: 'resposta'|'lugar'|'replanejar'|'mapa', texto, busca } */
+    pedir: function (ctx, texto, historico) {
+      if (!pronta()) return Promise.reject(new Error('sem-ia'));
+      var en = ctx.idioma === 'en';
+      var contexto = 'Você é o ✦ do GuiaXpert, um guia de viagem para famílias. A pessoa pode falar ou digitar qualquer coisa.\n' +
+        'Situação agora: ' + (ctx.viagem ? 'viagem a ' + (ctx.pacote ? ctx.pacote.nome.pt : ctx.viagem.destinoTexto) + ' (' + ctx.viagem.inicio + ' a ' + ctx.viagem.fim + '); ' : 'sem viagem escolhida; ') +
+        'data ' + (ctx.data || new Date().toISOString().slice(0, 10)) + '; tela: ' + (ctx.tela || '?') + '; posição: ' + (ctx.onde || 'desconhecida') + '.\n' +
+        (ctx.viagem ? Descobrir.resumoGrupo(ctx.viagem, ctx.pessoas) + '\nPlano de hoje:\n' + textoDia(ctx.dia) + '\nPrevisão: ' + textoClima(ctx.clima) + '\n' : '') +
+        'Lugares conhecidos (nome exato | tipo | detalhes):\n' + listaLugares(ctx.lugares) + '\n' +
+        'Decida o que a pessoa quer e responda SÓ com JSON:\n' +
+        '{"tipo":"lugar","busca":"nome ou tipo do lugar a procurar","texto":"uma frase curta"} quando ela quer achar, salvar ou pôr no roteiro um lugar que NÃO está na lista;\n' +
+        '{"tipo":"mapa","busca":"nome exato da lista","texto":"…"} quando quer ver no mapa um lugar da lista;\n' +
+        '{"tipo":"replanejar","texto":"…"} quando quer mudar o plano de hoje por chuva, cansaço ou tempo;\n' +
+        '{"tipo":"resposta","texto":"até 6 frases"} para perguntas e conversa.\n' +
+        'Texto em ' + (en ? 'inglês' : 'português do Brasil') + ', curto, para alguém que não é do computador. Cite lugares pelo nome exato da lista. Nunca invente preço, horário ou endereço.';
+      var msgs = (historico || []).slice(-8).concat([{ papel: 'pessoa', texto: texto }]);
+      return DGO.ia.perguntar(texto, { contexto: contexto, historico: msgs, limite: 900 }).then(function (r) {
+        var j = null; try { j = json(String(r || '')); } catch (e) {}
+        if (!j || !j.tipo) return { tipo: 'resposta', texto: String(r || '').trim() };
+        return { tipo: ['lugar', 'mapa', 'replanejar', 'resposta'].indexOf(j.tipo) > -1 ? j.tipo : 'resposta', texto: String(j.texto || '').trim(), busca: j.busca ? String(j.busca).slice(0, 100) : null };
+      });
+    },
+
+    /* voz do celular (Web Speech API). Resolve o texto falado; rejeita 'sem-voz' se o navegador não tem. */
+    ouvir: function (idioma) {
+      var SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+      if (!SR) return Promise.reject(new Error('sem-voz'));
+      return new Promise(function (ok, erro) {
+        var r = new SR(); r.lang = idioma === 'en' ? 'en-US' : 'pt-BR'; r.interimResults = false; r.maxAlternatives = 1;
+        var fim = false;
+        r.onresult = function (e) { fim = true; ok(String(e.results[0][0].transcript || '').trim()); };
+        r.onerror = function (e) { fim = true; erro(new Error(e.error || 'voz')); };
+        r.onend = function () { if (!fim) erro(new Error('nada')); };
+        try { r.start(); } catch (e) { erro(e); }
+      });
+    },
+    temVoz: function () { return !!(window.SpeechRecognition || window.webkitSpeechRecognition); },
+
     perguntar: function (ctx, texto, historico) {
       if (!pronta()) return Promise.reject(new Error('sem-ia'));
       var en = ctx.idioma === 'en';
