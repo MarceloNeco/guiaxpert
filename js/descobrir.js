@@ -109,9 +109,22 @@
             }).filter(Boolean);
           });
       }
-      return Promise.all([deNominatim().catch(function () { return []; }), dePhoton().catch(function () { return []; })]).then(function (rs) {
+      /* fonte comercial (Foursquare) pela função 'lugares' do Supabase: a chave fica no servidor; sem chave, ignora */
+      function doServidor() {
+        var cfg = window.GUIAXPERT_CONFIG || {};
+        if (!cfg.SUPABASE_URL || !window.Conta || !Conta.sessao()) return Promise.resolve([]);
+        return Conta.token().then(function (tk) {
+          if (!tk) return [];
+          var u = String(cfg.SUPABASE_URL).replace(/\/+$/, '') + '/functions/v1/lugares?q=' + encodeURIComponent(q) + '&lang=' + (idioma === 'en' ? 'en' : 'pt') +
+            (centro && centro.lat != null ? '&lat=' + centro.lat + '&lng=' + centro.lng : '');
+          return fetch(u, { headers: { apikey: cfg.SUPABASE_PUBLISHABLE_KEY, Authorization: 'Bearer ' + tk } })
+            .then(function (r) { return r.ok ? r.json() : { lugares: [] }; })
+            .then(function (j) { return (j.lugares || []).map(function (l) { l._peso = 3; return l; }); });
+        }).catch(function () { return []; });
+      }
+      return Promise.all([doServidor(), deNominatim().catch(function () { return []; }), dePhoton().catch(function () { return []; })]).then(function (rs) {
         var vistos = {}, todos = [];
-        rs[0].concat(rs[1]).forEach(function (l) { if (!vistos[l.id]) { vistos[l.id] = 1; todos.push(l); } });
+        rs[0].concat(rs[1], rs[2]).forEach(function (l) { if (!vistos[l.id]) { vistos[l.id] = 1; todos.push(l); } });
         if (!todos.length && !navigator.onLine) throw new Error('offline');
         var qn = q.toLowerCase();
         todos.sort(function (a, b) {

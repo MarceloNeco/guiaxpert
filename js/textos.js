@@ -36,7 +36,7 @@ window.TEXTOS = (function () {
     'sub_cafe-colonial': ['café colonial', 'colonial tea'], sub_gratis: ['grátis', 'free'], sub_cerveja: ['cerveja', 'beer'], sub_chocolate: ['chocolate', 'chocolate'],
     sub_cafe: ['café', 'café'], sub_sorvete: ['sorvete', 'ice cream'], sub_bar: ['bar', 'bar'], sub_museu: ['museu', 'museum'], sub_mirante: ['mirante', 'viewpoint'], sub_parque: ['parque', 'park'],
     conf_oficial: ['Conferido no site oficial.', 'Checked on the official site.'], conf_guia: ['Fonte: guia ou blog recente.', 'Source: recent guide or blog.'],
-    conf_baixa: ['Pouco confirmado: ligue antes de ir.', 'Barely confirmed: call before going.'], conf_osm: ['Fonte: OpenStreetMap (comunidade).', 'Source: OpenStreetMap (community).'],
+    conf_baixa: ['Pouco confirmado: ligue antes de ir.', 'Barely confirmed: call before going.'], conf_osm: ['Fonte: OpenStreetMap (comunidade).', 'Source: OpenStreetMap (community).'], conf_foursquare: ['Powered by Foursquare.', 'Powered by Foursquare.'],
     conf_meu: ['Você acrescentou.', 'You added this.'],
     conferir: ['Confirme antes de ir', 'Check before going'], gratis: ['grátis', 'free'], ingresso: ['ingresso', 'ticket'],
 

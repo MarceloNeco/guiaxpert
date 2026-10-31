@@ -42,6 +42,15 @@ A pessoa abre o GuiaXpert, cria a conta (ou entra), digita o código e fica libe
 O "Receber código por e-mail" já funciona com o link do e-mail. Para o e-mail trazer também o código de 6 números:
 Supabase → Authentication → Emails → **Magic link** → acrescente no texto: `Seu código: {{ .Token }}`. Vale para todos os apps.
 
+## 2b. Busca de restaurantes e bares (Foursquare, opcional)
+
+O OpenStreetMap não tem todo comércio. A função `supabase/functions/lugares` consulta o Foursquare Places com uma chave
+que fica **só no servidor**. Para ligar: crie a chave em https://foursquare.com/developers (projeto → Service API Key),
+depois Supabase → projeto solverone-app → Edge Functions → Secrets → `FOURSQUARE_KEY` = a chave. Sem a chave a busca
+segue só com OpenStreetMap. A função pede só campos "Pro" (nome, endereço, telefone, site); horário, nota e foto são
+cobrados à parte pelo Foursquare. Uso: 500 chamadas/mês grátis (junho/2026) e sem guardar dados em cache pelos termos
+do plano pago-por-uso; ver `docs/ROADMAP.md` para o caminho com a base aberta FSQ OS Places.
+
 ## 3. Publicar
 
 1. Crie o repositório **guiaxpert** (público, como os outros apps) e suba estes arquivos.

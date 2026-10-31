@@ -125,6 +125,7 @@
             op.buscarFora(q).then(function (achados) {
               if (!achados.length) { bf.disabled = false; bf.textContent = T('nadaNaInternet'); return; }
               op.acrescentar(achados);
+              if (achados.some(function (l) { return l.confianca === 'foursquare'; })) GX.avisar('Powered by Foursquare · OpenStreetMap');
               estado.busca = ''; campo.value = '';
               redesenhar(); estadoPainel('lista');
               if (mapa && achados[0].lat != null) mapa.setView([achados[0].lat, achados[0].lng], achados.length === 1 ? 16 : 13);

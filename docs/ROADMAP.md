@@ -16,6 +16,10 @@ QR/código para outro celular, e-mail → reserva, família (membros, convites, 
 
 ## Próximos
 
+0. **Lugares comerciais sem limite de cache**: hoje a função `lugares` usa o Foursquare Places API (chave no servidor,
+   500 chamadas/mês grátis, termos do pago-por-uso proíbem guardar os dados). Para uso em escala: (a) contrato Enterprise
+   com o Foursquare, ou (b) subir a base aberta **FSQ OS Places** (Apache 2.0, 100 M lugares, pode copiar e guardar)
+   no Postgres do Supabase com PostGIS + pg_trgm, recortada por país, e entregar também nos pacotes offline. Preferir (b).
 1. **Mapa offline para cidades sem pacote**: Edge Function que recorta o PMTiles sob demanda (`pmtiles extract`). Hoje só cidades com pacote.
 2. **Tela de códigos no RootifyONE** (criar, listar com uso, desativar) usando `admin_criar_codigo`,
    `admin_listar_codigos`, `admin_desativar_codigo`.

@@ -12,7 +12,7 @@
 (function () {
   'use strict';
   var d = document, $ = function (id) { return d.getElementById(id); };
-  var VERSAO_APP = '1.1.2';
+  var VERSAO_APP = '1.1.3';
 
   /* ------------------------------------------------------------------
      1. UTILIDADES
@@ -636,6 +636,7 @@
       Descobrir.buscarNome(t, estado.pos || centroViagem(), idioma()).then(function (achados) {
         bt.disabled = false; lista.textContent = '';
         if (!achados.length) { lista.appendChild(h('p', { class: 'sub', texto: T('nadaNaInternet') })); return; }
+        if (achados.some(function (l) { return l.confianca === 'foursquare'; })) lista.appendChild(h('p', { class: 'pequeno', texto: 'Powered by Foursquare · OpenStreetMap' }));
         achados.slice(0, 6).forEach(function (l) {
           lista.appendChild(h('button', { class: 'bt leve', type: 'button', style: 'text-align:left;display:block;line-height:1.3', onclick: function () {
             var ja = lugarPorId(l.id);
@@ -959,7 +960,9 @@
       l._km != null ? Geo.formatarKm(l._km) : null, l.gratis ? h('span', { class: 'etq gratis', texto: T('gratis') }) : null,
       Gostos.combina(l, somaGostos) > 0 ? h('span', { class: 'etq combina', texto: '♥ ' + T('combina') }) : null,
       l.confianca === 'baixa' ? h('span', { class: 'conferir', texto: T('conferir') }) : null,
-      l.confianca === 'osm' ? h('span', { class: 'pequeno', texto: 'OSM' }) : null]);
+      l.nota != null ? h('span', { class: 'etq', texto: '★ ' + String(l.nota).replace('.', ',') }) : null,
+      l.confianca === 'osm' ? h('span', { class: 'pequeno', texto: 'OSM' }) : null,
+      l.confianca === 'foursquare' ? h('span', { class: 'pequeno', texto: 'Foursquare' }) : null]);
     var bfav = h('button', { class: 'fav', type: 'button', 'aria-pressed': fav ? 'true' : 'false', 'aria-label': T('favoritar') + ': ' + l.nome, texto: fav ? '★' : '☆',
       onclick: function (e) { e.preventDefault(); alternarFavorito(l).then(function (on) { bfav.textContent = on ? '★' : '☆'; bfav.setAttribute('aria-pressed', on ? 'true' : 'false'); }); } });
     det.appendChild(h('summary', {}, [h('span', { class: 'nome', texto: l.nome }), bfav, meta]));
@@ -973,7 +976,7 @@
     corpo.appendChild(linksLugar(l));
     if (estado.viagem && estado.opcao && podeEditar()) corpo.appendChild(h('button', { class: 'bt', type: 'button', onclick: function () { janelaAddAoRoteiro(l); } }, '＋ ' + T('porNoDia')));
     if (!estado.viagem && window.Explorar) Explorar.acoes(l, corpo);
-    else if (l.confianca === 'osm' && !estado.lugaresProprios.some(function (x) { return x.id === l.id; })) corpo.appendChild(h('button', { class: 'bt leve', type: 'button', onclick: function () {
+    else if ((l.confianca === 'osm' || l.confianca === 'foursquare') && !estado.lugaresProprios.some(function (x) { return x.id === l.id; })) corpo.appendChild(h('button', { class: 'bt leve', type: 'button', onclick: function () {
       Banco.gravar('lugares', Object.assign({}, l, { viagem_id: estado.viagem.id })).then(function () { avisar(T('salvo')); recarregar(); }); } }, T('salvarLugar')));
     if (estado.lugaresProprios.some(function (x) { return x.id === l.id; })) corpo.appendChild(h('button', { class: 'bt perigo', type: 'button', onclick: function () {
       Banco.apagar('lugares', l.id).then(recarregar); } }, T('tirarDaLista')));
