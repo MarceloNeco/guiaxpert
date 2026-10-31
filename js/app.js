@@ -12,7 +12,7 @@
 (function () {
   'use strict';
   var d = document, $ = function (id) { return d.getElementById(id); };
-  var VERSAO_APP = '1.0.3';
+  var VERSAO_APP = '1.1.0';
 
   /* ------------------------------------------------------------------
      1. UTILIDADES
@@ -311,7 +311,7 @@
         corpo.appendChild(item(emViagem() && estado.viagem && estado.viagem.id === v.id, '🧳 ' + v.nome, fData(v.inicio, true) + ' – ' + fData(v.fim, true),
           function () { Contexto.definir('viagem', v.id).then(recarregarContexto).then(function () { Nav.ir('inicio', { substituir: true }); }); }));
       });
-      corpo.appendChild(h('button', { class: 'bt sec', type: 'button', texto: '＋ ' + T('rota_nova'), onclick: function () { j.fechar(function () { Nav.ir('nova'); }); } }));
+      corpo.appendChild(h('button', { class: 'bt sec', type: 'button', texto: '＋ ' + T('novoPasseioOuViagem'), onclick: function () { estado.rascunho = null; j.fechar(function () { Nav.ir('nova'); }); } }));
     });
   }
 
@@ -390,7 +390,7 @@
     if (!v) {
       tela.appendChild(h('h1', { texto: T('boasVindas') }));
       tela.appendChild(h('p', { class: 'sub', texto: T('boasVindasTexto') }));
-      tela.appendChild(h('button', { class: 'bt cheio', type: 'button', onclick: function () { Nav.ir('nova'); } }, T('criarPrimeira')));
+      tela.appendChild(h('button', { class: 'bt cheio', type: 'button', onclick: function () { estado.rascunho = null; Nav.ir('nova'); } }, '＋ ' + T('novoPasseioOuViagem')));
       tela.appendChild(h('div', { class: 'cartao' }, [
         h('h3', { texto: T('comoFunciona') }),
         h('p', { class: 'sub', texto: T('comoFuncionaTexto') })
@@ -413,8 +413,9 @@
         h('p', { class: 'nota', texto: T('faltamDiasTexto') })
       ]));
     }
-    /* avisos que a própria pessoa guardou na viagem (texto, nunca HTML) */
-    (v.avisos || []).forEach(function (a) { tela.appendChild(h('div', { class: 'alerta' }, [h('b', { texto: a.titulo }), a.texto || ''])); });
+    /* avisos que a própria pessoa guardou na viagem (texto, nunca HTML); toque para editar */
+    (v.avisos || []).forEach(function (a, k) { tela.appendChild(h('button', { class: 'alerta alerta-bt', type: 'button', onclick: function () { if (podeEditar()) janelaAviso(v, k); } }, [h('b', { texto: a.titulo }), a.texto || ''])); });
+    if (podeEditar()) tela.appendChild(h('button', { class: 'lk', type: 'button', style: 'align-self:flex-start', texto: '＋ ' + T('novoAviso'), onclick: function () { janelaAviso(v, null); } }));
 
     /* agora / próximo item de hoje */
     if (di >= 0 && estado.opcao) {
@@ -568,7 +569,7 @@
       if (agora) marcouAgora = true;
       var x = h('div', { class: 'x' }, [
         h('div', { class: 'linha' }, [l ? placa(l.categoria) : null,
-          l ? h('button', { class: 'lk', type: 'button', onclick: function () { estado.busca = ''; estado.filtro = 'todos'; estado.abrirLugar = l.id; Nav.ir('mapa'); } }, it.titulo) : h('b', { texto: it.titulo }),
+          h('button', { class: 'lk', type: 'button', style: 'text-decoration:none', onclick: function () { janelaEditarItem(o, dmod, idx); } }, it.titulo),
           it.tipo === 'gratis' ? h('span', { class: 'etq gratis', texto: T('gratis') }) : null,
           it.tipo === 'ingresso' ? h('span', { class: 'etq', texto: T('ingresso') }) : null]),
         it.nota ? h('span', { class: 'nota', texto: it.nota }) : null
@@ -640,6 +641,37 @@
       addItemNaOpcao(o, dmod, { hora: hora.value, titulo: tit.value.trim(), nota: null, tipo: null, lugarId: sel.value || null }).then(function () { j.fechar(); recarregar(); });
     });
   }
+  /* editar um item do dia: hora, o que, nota, lugar; ver no mapa; tirar */
+  function janelaEditarItem(o, dmod, idx) {
+    var it = dmod.itens[idx], l = it.lugarId ? lugarPorId(it.lugarId) : null;
+    var hora = h('input', { class: 'campo', type: 'time', id: 'gx-ed-hora', value: it.hora || '' });
+    var tit = h('input', { class: 'campo', type: 'text', id: 'gx-ed-tit', maxlength: '100', value: it.titulo || '' });
+    var nota = h('input', { class: 'campo', type: 'text', id: 'gx-ed-nota', maxlength: '200', value: it.nota || '', placeholder: T('exNotaItem') });
+    var sel = h('select', { class: 'campo', id: 'gx-ed-lugar' }, [h('option', { value: '' }, T('semLugar'))].concat(
+      todosLugares().slice().sort(function (a, b) { return a.nome < b.nome ? -1 : 1; }).map(function (x) { return h('option', { value: x.id, selected: x.id === it.lugarId }, x.nome); })));
+    var ok = h('button', { class: 'bt', type: 'button' }, T('salvar'));
+    var tirar = h('button', { class: 'bt perigo', type: 'button' }, T('tirarItem'));
+    var corpo = h('div', { class: 'linha', style: 'flex-direction:column;align-items:stretch' }, [
+      h('label', { class: 'rot', for: 'gx-ed-hora', texto: T('hora') }), hora,
+      h('label', { class: 'rot', for: 'gx-ed-tit', texto: T('oQue') }), tit,
+      h('label', { class: 'rot', for: 'gx-ed-nota', texto: T('nota') }), nota,
+      h('label', { class: 'rot', for: 'gx-ed-lugar', texto: T('lugarOpcional') }), sel,
+      l ? h('div', { class: 'linha' }, [h('button', { class: 'bt sec', type: 'button', texto: '🗺 ' + T('verNoMapa'), onclick: function () { estado.abrirLugar = l.id; estado.filtro = 'todos'; j.fechar(function () { Nav.ir('mapa'); }); } }),
+        h('a', { class: 'bt leve', href: Geo.linkRota(l, estado.pos), target: '_blank', rel: 'noopener' }, T('rota'))]) : null,
+      h('div', { class: 'acoes' }, [tirar, ok])]);
+    var j = janela(T('editarItem'), corpo);
+    if (!podeEditar()) { ok.disabled = true; tirar.disabled = true; }
+    ok.addEventListener('click', function () {
+      if (!tit.value.trim()) { tit.focus(); avisar(T('faltaOque')); return; }
+      mudarItem(o, dmod, idx, function (item) { item.hora = hora.value; item.titulo = tit.value.trim(); item.nota = nota.value.trim() || null; item.lugarId = sel.value || null; })
+        .then(function (alvo) { alvo.dias.forEach(function (dd) { (dd.itens || []).sort(function (a, b) { return (a.hora || '99') < (b.hora || '99') ? -1 : 1; }); }); return Banco.gravar('roteiros', alvo); })
+        .then(function () { j.fechar(); avisar(T('salvo')); recarregar(); });
+    });
+    tirar.addEventListener('click', function () {
+      mudarItem(o, dmod, idx, function () {}).then(function (alvo) { var i2 = o.dias.indexOf(dmod); alvo.dias[i2].itens.splice(idx, 1); return Banco.gravar('roteiros', alvo); })
+        .then(function () { j.fechar(); recarregar(); });
+    });
+  }
   /* muda um item (o roteiro do pacote não muda: cria a cópia "minha" e muda a cópia) */
   function mudarItem(o, dmod, idx, mudar) {
     var alvo = o, i = o.dias.indexOf(dmod), pr = Promise.resolve();
@@ -648,6 +680,25 @@
       pr = Banco.gravar('roteiros', alvo).then(function (n) { alvo = n; estado.viagem.opcao_ativa = n.id; return Banco.gravar('viagens', estado.viagem); });
     }
     return pr.then(function () { mudar(alvo.dias[i].itens[idx]); return Banco.gravar('roteiros', alvo); });
+  }
+  /* avisos da viagem (estacionamento pago, feriado…): a pessoa cria, edita e tira */
+  function janelaAviso(v, idx) {
+    var a = idx != null ? v.avisos[idx] : { titulo: '', texto: '' };
+    var tit = h('input', { class: 'campo', id: 'gx-av-tit', maxlength: '60', value: a.titulo, placeholder: T('exAvisoTitulo') });
+    var txt = h('input', { class: 'campo', id: 'gx-av-txt', maxlength: '200', value: a.texto || '', placeholder: T('exAvisoTexto') });
+    var ok = h('button', { class: 'bt', type: 'button' }, T('salvar'));
+    var tirar = idx != null ? h('button', { class: 'bt perigo', type: 'button' }, T('apagar')) : null;
+    var j = janela(T(idx != null ? 'editarAviso' : 'novoAviso'), h('div', { class: 'linha', style: 'flex-direction:column;align-items:stretch' }, [
+      h('label', { class: 'rot', for: 'gx-av-tit', texto: T('titulo') }), tit, h('label', { class: 'rot', for: 'gx-av-txt', texto: T('detalhe') }), txt, h('div', { class: 'acoes' }, [tirar, ok])]));
+    var gravar = function () { return Banco.gravar('viagens', v).then(function (nv) { estado.viagem = nv; j.fechar(); mostrar(estado.rota); }); };
+    ok.addEventListener('click', function () {
+      if (!tit.value.trim()) { tit.focus(); return; }
+      v.avisos = v.avisos || [];
+      var novo = { titulo: tit.value.trim(), texto: txt.value.trim() };
+      if (idx != null) v.avisos[idx] = novo; else v.avisos.push(novo);
+      gravar();
+    });
+    if (tirar) tirar.addEventListener('click', function () { v.avisos.splice(idx, 1); gravar(); });
   }
   function addItemNaOpcao(o, dmod, item) {
     var alvo = o, idx = o.dias.indexOf(dmod);
@@ -810,6 +861,8 @@
         return (dmod && dmod.itens || []).filter(function (it) { return it.lugarId; });
       },
       centro: centroViagem(), zoom: 13, cidade: v.destino, filtros: FILTROS,
+      buscarFora: function (q) { return Descobrir.buscarNome(q, estado.pos || centroViagem(), idioma()); },
+      acrescentar: function (ls) { var ids = {}; estado.descobertas.forEach(function (x) { ids[x.id] = 1; }); ls.forEach(function (l) { if (!ids[l.id] && !lugarPorId(l.id)) estado.descobertas.push(l); }); },
       topo: function (topo) {
         /* dia do roteiro (os mesmos chips do Roteiro) */
         if (!estado.opcao) return;
@@ -936,12 +989,27 @@
     var end = h('input', { class: 'campo', id: 'gx-nl-end', maxlength: '160', placeholder: T('exEndereco') });
     var nota = h('input', { class: 'campo', id: 'gx-nl-nota', maxlength: '160', placeholder: T('exNota') });
     var aqui = h('button', { class: 'bt leve', type: 'button' }, '📍 ' + T('usarOndeEstou'));
+    var achar = h('button', { class: 'bt leve', type: 'button' }, '🔎 ' + T('acharNoMapa'));
     var ok = h('button', { class: 'bt', type: 'button' }, T('salvar'));
     var pos = null;
     var j = janela(T('novoLugar'), h('div', { class: 'linha', style: 'flex-direction:column;align-items:stretch' }, [
-      h('label', { class: 'rot', for: 'gx-nl-nome', texto: T('nome') }), nome, h('label', { class: 'rot', for: 'gx-nl-cat', texto: T('tipo') }), cat,
-      h('label', { class: 'rot', for: 'gx-nl-end', texto: T('endereco') }), end, aqui, h('label', { class: 'rot', for: 'gx-nl-nota', texto: T('nota') }), nota, ok]));
+      h('p', { class: 'sub', texto: T('novoLugarDica') }),
+      h('label', { class: 'rot', for: 'gx-nl-nome', texto: T('nome') }), nome, h('label', { class: 'rot', for: 'gx-nl-cat', texto: T('tipoLugar') }), cat,
+      h('label', { class: 'rot', for: 'gx-nl-end', texto: T('endereco') }), end, h('div', { class: 'linha' }, [achar, aqui]), h('label', { class: 'rot', for: 'gx-nl-nota', texto: T('nota') }), nota, ok]));
     aqui.addEventListener('click', function () { pegarPosicao().then(function (p) { pos = p; aqui.textContent = '📍 ✓ ±' + p.precisao + ' m'; }); });
+    achar.addEventListener('click', function () {
+      var q = [nome.value.trim(), end.value.trim()].filter(Boolean).join(', ');
+      if (!q) { nome.focus(); return; }
+      achar.disabled = true; achar.textContent = T('carregando');
+      Descobrir.buscarNome(q, estado.pos || centroViagem(), idioma()).then(function (ls) {
+        achar.disabled = false;
+        if (!ls.length) { achar.textContent = '🔎 ' + T('nadaNaInternet'); return; }
+        var l = ls[0]; pos = { lat: l.lat, lng: l.lng, precisao: 0 };
+        if (!end.value.trim() && l.endereco) end.value = l.endereco;
+        if (l.categoria) cat.value = l.categoria;
+        achar.textContent = '✓ ' + (l.endereco || l.nome).slice(0, 40);
+      }).catch(function () { achar.disabled = false; achar.textContent = '🔎 ' + T(navigator.onLine ? 'osmErro' : 'semInternet'); });
+    });
     ok.addEventListener('click', function () {
       if (!nome.value.trim()) { nome.focus(); return; }
       Banco.gravar('lugares', { nome: nome.value.trim(), categoria: cat.value, subcategoria: null, descricao: nota.value.trim() || null, endereco: end.value.trim() || null,
@@ -1587,7 +1655,8 @@
 
   /* ---------- Viagens ---------- */
   TELAS.viagens = function (tela) {
-    tela.appendChild(h('div', { class: 'linha entre' }, [h('h1', { texto: T('rota_viagens') }), h('button', { class: 'bt', type: 'button', onclick: function () { Nav.ir('nova'); } }, '＋ ' + T('rota_nova'))]));
+    tela.appendChild(h('div', { class: 'linha entre' }, [h('h1', { texto: T('rota_viagens') }), h('button', { class: 'bt', type: 'button', onclick: function () { estado.rascunho = null; Nav.ir('nova'); } }, '＋ ' + T('novo'))]));
+    tela.appendChild(h('p', { class: 'sub', texto: T('viagensTexto') }));
     Banco.listar('viagens').then(function (vs) {
       vs.sort(function (a, b) { return a.inicio > b.inicio ? -1 : 1; });
       if (!vs.length) tela.appendChild(h('p', { class: 'sub', texto: T('semViagemTexto') }));
@@ -1631,11 +1700,13 @@
      7. WIZARD "NOVA VIAGEM" — Passo X de N, Voltar/Próximo, guarda o
      rascunho para continuar depois. Reaproveita a família já cadastrada.
      ------------------------------------------------------------------ */
-  var PASSOS = ['destino', 'datas', 'quem', 'estilo', 'estadia', 'pronto'];
+  var PASSOS_VIAGEM = ['tipo', 'destino', 'datas', 'quem', 'estilo', 'estadia', 'pronto'];
+  var PASSOS_PASSEIO = ['tipo', 'destino', 'datas', 'quem', 'pronto'];
+  function passosDe(r) { return r.tipo === 'passeio' ? PASSOS_PASSEIO : PASSOS_VIAGEM; }
   TELAS.nova = function (tela) {
-    var r = estado.rascunho || (estado.rascunho = { passo: 0, destino: null, destinoTexto: '', inicio: '', fim: '', pessoas: estado.pessoas.filter(function (p) { return grupoDe(p) === 'familia'; }).map(function (p) { return p.id; }), preferencias: { ritmo: 'equilibrado', orcamento: 'medio', interesses: [], transporte: 'carro' }, estadias: [], usarPacote: true, ia: false });
-    var i = r.passo, total = PASSOS.length;
-    tela.appendChild(h('p', { class: 'passo', texto: T('passoDe', { i: i + 1, n: total }) }));
+    var r = estado.rascunho || (estado.rascunho = { passo: 0, tipo: null, destino: null, destinoTexto: '', inicio: '', fim: '', pessoas: estado.pessoas.filter(function (p) { return grupoDe(p) === 'familia'; }).map(function (p) { return p.id; }), preferencias: { ritmo: 'equilibrado', orcamento: 'medio', interesses: [], transporte: 'carro' }, estadias: [], usarPacote: true, ia: false });
+    var PASSOS = passosDe(r), i = r.passo, total = PASSOS.length;
+    tela.appendChild(h('p', { class: 'passo', texto: (r.tipo ? T(r.tipo === 'passeio' ? 'novoPasseio' : 'novaViagem') + ' · ' : '') + T('passoDe', { i: i + 1, n: total }) }));
     tela.appendChild(h('div', { class: 'progresso', role: 'progressbar', 'aria-valuemin': '1', 'aria-valuemax': String(total), 'aria-valuenow': String(i + 1) }, h('i', { style: 'width:' + Math.round((i + 1) / total * 100) + '%' })));
     var corpo = h('div', { class: 'linha', style: 'flex-direction:column;align-items:stretch;gap:.75rem' });
     tela.appendChild(corpo);
@@ -1655,6 +1726,19 @@
     });
   };
   var PASSO = {};
+  PASSO.tipo = function (c, r, val) {
+    c.appendChild(h('h1', { texto: T('pTipo') }));
+    var opcao = function (tipo, icone, titulo, texto) {
+      return h('button', { class: 'escolha' + (r.tipo === tipo ? ' ativa' : ''), type: 'button', onclick: function () {
+        r.tipo = tipo;
+        if (tipo === 'passeio') { r.inicio = r.inicio || hojeIso(); r.fim = r.inicio; }
+        r.passo = 1; mostrar('nova');
+      } }, [h('b', { texto: icone + ' ' + titulo }), h('span', { class: 'pequeno', texto: texto })]);
+    };
+    c.appendChild(opcao('passeio', '🚶', T('tipoPasseio'), T('tipoPasseioTexto')));
+    c.appendChild(opcao('viagem', '🧳', T('tipoViagem'), T('tipoViagemTexto')));
+    val(function () { return r.tipo ? true : T('escolhaTipo'); });
+  };
   PASSO.destino = function (c, r, val) {
     c.appendChild(h('h1', { texto: T('pDestino') }));
     var lista = h('div', { class: 'grade' }); c.appendChild(lista);
@@ -1672,6 +1756,19 @@
     val(function () { return (r.destino || r.destinoTexto) ? true : T('faltaDestino'); });
   };
   PASSO.datas = function (c, r, val) {
+    if (r.tipo === 'passeio') {
+      c.appendChild(h('h1', { texto: T('pQueDia') }));
+      var hj = hojeIso(), am = iso(new Date(Date.now() + 86400000));
+      var escolher = function (dt) { r.inicio = dt; r.fim = dt; mostrar('nova'); };
+      c.appendChild(h('div', { class: 'chips' }, [
+        h('button', { class: 'chip', type: 'button', 'aria-pressed': r.inicio === hj ? 'true' : 'false', texto: T('hoje'), onclick: function () { escolher(hj); } }),
+        h('button', { class: 'chip', type: 'button', 'aria-pressed': r.inicio === am ? 'true' : 'false', texto: T('amanha'), onclick: function () { escolher(am); } })]));
+      var um = h('input', { class: 'campo', type: 'date', id: 'gx-w-ini', value: r.inicio });
+      um.addEventListener('change', function () { r.inicio = um.value; r.fim = um.value; });
+      c.appendChild(h('label', { class: 'rot', for: 'gx-w-ini', texto: T('ouOutroDia') })); c.appendChild(um);
+      val(function () { return r.inicio ? true : T('faltaDatas'); });
+      return;
+    }
     c.appendChild(h('h1', { texto: T('pDatas') }));
     var ini = h('input', { class: 'campo', type: 'date', id: 'gx-w-ini', value: r.inicio });
     var fim = h('input', { class: 'campo', type: 'date', id: 'gx-w-fim', value: r.fim });
@@ -1760,10 +1857,12 @@
   };
   PASSO.pronto = function (c, r) {
     c.appendChild(h('h1', { texto: T('pPronto') }));
-    var nome = h('input', { class: 'campo', id: 'gx-w-nome', maxlength: '60', value: r.nome || (r.destinoTexto + ' ' + (r.inicio ? r.inicio.slice(0, 4) : '')) });
+    var sugestao = r.tipo === 'passeio' ? T('nomePasseioSugestao', { d: semana(r.inicio) + ' ' + fData(r.inicio, true) }) + (r.destinoTexto ? ' · ' + r.destinoTexto : '') : (r.destinoTexto + ', ' + fData(r.inicio, true).split('/')[1] + ' ' + r.inicio.slice(0, 4));
+    var nome = h('input', { class: 'campo', id: 'gx-w-nome', maxlength: '60', value: r.nome || sugestao, placeholder: T('exNomeViagem') });
     nome.addEventListener('input', function () { r.nome = nome.value; });
     r.nome = nome.value;
-    c.appendChild(h('label', { class: 'rot', for: 'gx-w-nome', texto: T('nomeViagem') })); c.appendChild(nome);
+    c.appendChild(h('label', { class: 'rot', for: 'gx-w-nome', texto: T(r.tipo === 'passeio' ? 'nomePasseio' : 'nomeViagem') })); c.appendChild(nome);
+    c.appendChild(h('p', { class: 'dica', texto: T('nomeDica') }));
     c.appendChild(h('div', { class: 'cartao' }, [
       h('span', { texto: '📍 ' + r.destinoTexto }), h('span', { texto: '🗓 ' + fData(r.inicio) + ' – ' + fData(r.fim) }),
       h('span', { texto: '👥 ' + T('nPessoas', { n: r.pessoas.length }) }), h('span', { texto: '🏨 ' + (r.estadias.filter(function (e) { return e.nome; }).map(function (e) { return e.nome; }).join(', ') || '—') })]));
@@ -1780,7 +1879,7 @@
       .then(function (x) { return x.ok ? x.json() : []; }).then(function (j) { return j && j[0] ? { lat: +(+j[0].lat).toFixed(4), lng: +(+j[0].lon).toFixed(4) } : null; }).catch(function () { return null; });
   }
   function criarViagem(r) {
-    var v = { nome: (r.nome || r.destinoTexto).trim(), destino: r.destino, destinoTexto: r.destinoTexto, centro: r.centro || null, inicio: r.inicio, fim: r.fim,
+    var v = { nome: (r.nome || r.destinoTexto).trim(), tipo: r.tipo || 'viagem', destino: r.destino, destinoTexto: r.destinoTexto, centro: r.centro || null, inicio: r.inicio, fim: r.fim,
       pessoas: r.pessoas.slice(), preferencias: r.preferencias, estadias: r.estadias.filter(function (e) { return e.nome || e.endereco; }), opcao_ativa: null };
     /* coordenadas: cidade digitada e hotel pelo endereço (1 pedido por vez, regra do OpenStreetMap) */
     var p = Promise.resolve();

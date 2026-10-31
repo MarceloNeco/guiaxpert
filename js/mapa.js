@@ -115,6 +115,24 @@
           lista.appendChild(lin);
         });
         if (!itens.length) lista.appendChild(h('p', { class: 'sub', style: 'padding:1rem', texto: estado.filtro === 'paraVoces' && !Object.keys(GX.somaGostos()).length ? T('semGostosAinda') : T('nadaAchado') }));
+        /* não achou aqui? procura na internet pelo nome ou endereço (só quando a pessoa toca) */
+        var q = (estado.busca || '').trim();
+        if (q.length >= 3 && op.buscarFora) {
+          var bf = h('button', { class: 'bt sec', type: 'button', style: 'margin:.5rem 1rem', texto: '🔎 ' + T('buscarNaInternet', { q: q }) });
+          bf.addEventListener('click', function () {
+            if (!navigator.onLine) { GX.avisar(T('semInternet')); return; }
+            bf.disabled = true; bf.textContent = T('carregando');
+            op.buscarFora(q).then(function (achados) {
+              if (!achados.length) { bf.disabled = false; bf.textContent = T('nadaNaInternet'); return; }
+              op.acrescentar(achados);
+              estado.busca = ''; campo.value = '';
+              redesenhar(); estadoPainel('lista');
+              if (mapa && achados[0].lat != null) mapa.setView([achados[0].lat, achados[0].lng], achados.length === 1 ? 16 : 13);
+              if (achados.length === 1) abrirLugar(achados[0]); else GX.avisar(T('descobertos', { n: achados.length }));
+            }).catch(function () { bf.disabled = false; bf.textContent = T('osmErro'); });
+          });
+          lista.insertBefore(bf, lista.firstChild);
+        }
         if (op.rodape) lista.appendChild(op.rodape());
         corpo.appendChild(lista);
       }

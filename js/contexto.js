@@ -37,9 +37,11 @@
     /* texto do chip: "🧳 Gramado, nov" ou "🌍 Explorar" */
     rotulo: function (viagem, T, lg) {
       if (atual.modo !== 'viagem' || !viagem) return '🌍 ' + T('explorar');
-      var nome = viagem.destinoTexto || viagem.nome || '';
+      var nome = viagem.nome || viagem.destinoTexto || '';   /* o nome que a pessoa escolheu */
       var mes = viagem.inicio ? ({ pt: ['jan', 'fev', 'mar', 'abr', 'mai', 'jun', 'jul', 'ago', 'set', 'out', 'nov', 'dez'], en: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'] }[lg === 'en' ? 'en' : 'pt'][+viagem.inicio.slice(5, 7) - 1]) : '';
-      return '🧳 ' + nome.split(/,|\(| e | and /)[0].trim().slice(0, 16) + (mes ? ', ' + mes : '');
+      var curto = nome.split(/,|\(/)[0].trim();
+      if (curto.length > 18) curto = curto.slice(0, 17).trim() + '…';
+      return (viagem.tipo === 'passeio' ? '🚶 ' : '🧳 ') + curto + (mes && viagem.tipo !== 'passeio' ? ', ' + mes : '');
     }
   };
 

@@ -67,6 +67,27 @@
         });
     },
 
+    /* busca livre por nome ou endereço (Nominatim, 1 pedido por vez), perto de um centro */
+    buscarNome: function (texto, centro, idioma) {
+      var q = String(texto || '').trim();
+      if (q.length < 3) return Promise.resolve([]);
+      var u = 'https://nominatim.openstreetmap.org/search?format=jsonv2&limit=8&addressdetails=1&extratags=1&dedupe=1&q=' + encodeURIComponent(q);
+      if (centro && centro.lat != null) u += '&viewbox=' + (centro.lng - 0.35).toFixed(3) + ',' + (centro.lat + 0.3).toFixed(3) + ',' + (centro.lng + 0.35).toFixed(3) + ',' + (centro.lat - 0.3).toFixed(3) + '&bounded=0';
+      return fetch(u, { headers: { 'Accept-Language': idioma === 'en' ? 'en' : 'pt-BR' } }).then(function (r) { if (!r.ok) throw new Error('osm-' + r.status); return r.json(); })
+        .then(function (lista) {
+          return (lista || []).map(function (x) {
+            var t = { amenity: x.class === 'amenity' ? x.type : null, tourism: x.class === 'tourism' ? x.type : null, shop: x.class === 'shop' ? x.type : null, leisure: x.class === 'leisure' ? x.type : null, craft: x.class === 'craft' ? x.type : null };
+            var c = categoria(t), a = x.address || {}, ex = x.extratags || {};
+            var nome = x.name || (x.display_name || '').split(',')[0];
+            var end = [a.road, a.house_number].filter(Boolean).join(', ') + (a.suburb || a.neighbourhood ? ', ' + (a.suburb || a.neighbourhood) : '') + (a.city || a.town || a.municipality ? ', ' + (a.city || a.town || a.municipality) : '');
+            return { id: 'osm-' + (x.osm_type || 'n').charAt(0) + '-' + x.osm_id, nome: nome, categoria: c[0], subcategoria: c[1] || (x.class === 'amenity' || x.class === 'shop' ? x.type.replace(/_/g, ' ') : null),
+              descricao: ex.cuisine ? ex.cuisine.replace(/;/g, ', ').replace(/_/g, ' ') : null, endereco: end || (x.display_name || '').split(',').slice(1, 4).join(',').trim() || null,
+              site: ex.website || ex['contact:website'] || null, telefone: ex.phone || ex['contact:phone'] || null, horario: ex.opening_hours || null,
+              reserva: null, preco: null, criancas: null, confianca: 'osm', gratis: false, lat: +(+x.lat).toFixed(5), lng: +(+x.lon).toFixed(5), fonte: 'OpenStreetMap' };
+          }).filter(function (l) { return l.nome; });
+        });
+    },
+
     /* resumo do grupo para a IA: sem nome de ninguém */
     resumoGrupo: function (viagem, pessoas) {
       var linhas = (pessoas || []).map(function (p) {

@@ -455,3 +455,5 @@ body.sem-rolagem main { height: calc(100% - var(--topo)); overflow: hidden; }
 .balao.ia { align-self: flex-start; background: var(--sup2); border-bottom-left-radius: 4px; }
 .balao.pessoa { align-self: flex-end; background: var(--rodovia); color: #fff; border-bottom-right-radius: 4px; }
 .balao .lk { color: inherit; }
+.alerta-bt { text-align: left; border: 0; cursor: pointer; font: inherit; width: 100%; display: block; }
+.alerta-bt b { display: block; }

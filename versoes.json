@@ -2,6 +2,24 @@
   "app": "guiaxpert",
   "versoes": [
     {
+      "versao": "1.1.0",
+      "data": "2026-10-31",
+      "itens": {
+        "pt": [
+          "Busca de lugares na internet: digite o nome ou endereço no mapa e toque em 'Buscar na internet'. Acha restaurante, atração, rua, em qualquer cidade.",
+          "Novo passeio ou viagem: a primeira pergunta é 'o que você quer planejar?'. Passeio de um dia escolhe só o dia (Hoje, Amanhã ou outro), sem hotel, e você dá o nome na hora.",
+          "Toque num item do roteiro para editar hora, nome, nota e lugar, ou tirar. Avisos da viagem (estacionamento pago, feriado) agora se criam na tela Hoje.",
+          "Cadastro manual de lugar com 'Achar no mapa' pelo endereço e tipos em palavras simples (Restaurante ou lanche, Passeio ou atração…)."
+        ],
+        "en": [
+          "Online place search: type a name or address on the map and tap 'Search online'. Finds restaurants, sights, streets, in any city.",
+          "New outing or trip: the first question is 'what do you want to plan?'. A one-day outing picks just the day (Today, Tomorrow or another), no hotel, and you name it right away.",
+          "Tap an itinerary item to edit time, name, note and place, or remove it. Trip notices (paid parking, holiday) can now be created on Today.",
+          "Manual place entry with 'Find on map' by address and plain-word types (Restaurant or snack, Outing or attraction…)."
+        ]
+      }
+    },
+    {
       "versao": "1.0.3",
       "data": "2026-10-31",
       "itens": {
