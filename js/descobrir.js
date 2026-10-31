@@ -34,7 +34,7 @@
   function notaGuia(l, qn) {
     var n = 0, nome = String(l.nome || '').toLowerCase();
     var classe = l._classe || '', tipo = l._tipo || '';
-    var comercial = /^(amenity|shop|tourism|leisure|craft)$/.test(classe) || l.confianca === 'foursquare';
+    var comercial = /^(amenity|shop|tourism|leisure|craft)$/.test(classe) || l.confianca === 'foursquare' || l.confianca === 'tripadvisor';
     var predio = classe === 'building' || classe === 'office' || classe === 'place' || classe === 'highway' || classe === 'landuse' || RX_PREDIO.test(nome) ||
       /^(apartments|residential|house|yes|commercial|industrial)$/.test(tipo);
     if (predio) { l.categoria = 'logistica'; l.subcategoria = 'predio'; n -= 6; }
@@ -42,7 +42,7 @@
     if (l.categoria === 'comer' || l.categoria === 'bebidas' || l.categoria === 'doces') n += 3;
     else if (l.categoria === 'atracao' && l.subcategoria) n += 3;
     else if (l.categoria === 'atracao') n += 1;
-    if (l.confianca === 'foursquare') n += 1;                     /* base comercial: nome de placa */
+    if (l.confianca === 'foursquare' || l.confianca === 'tripadvisor') n += 1;   /* base comercial: nome de placa */
     if (nome === qn) n += 3; else if (nome.indexOf(qn) === 0) n += 2; else if (nome.indexOf(qn) > -1) n += 1;
     if (l.horario || l.telefone || l.site) n += 1;               /* tem dado de verdade */
     return n;
@@ -113,6 +113,10 @@
             }).filter(function (l) { return l.nome; });
           });
       }
+      function geocodar(endereco, lg) {
+        return fetch('https://nominatim.openstreetmap.org/search?format=jsonv2&limit=1&q=' + encodeURIComponent(endereco), { headers: { 'Accept-Language': lg } })
+          .then(function (r) { return r.ok ? r.json() : []; }).then(function (j) { return j && j[0] ? { lat: +(+j[0].lat).toFixed(5), lng: +(+j[0].lon).toFixed(5) } : null; }).catch(function () { return null; });
+      }
       function dePhoton() {
         var u = 'https://photon.komoot.io/api/?limit=8&lang=' + (idioma === 'en' ? 'en' : 'default') + '&q=' + encodeURIComponent(q);
         if (centro && centro.lat != null) u += '&lat=' + centro.lat + '&lon=' + centro.lng + '&location_bias_scale=0.4&zoom=12';
@@ -140,7 +144,12 @@
             (centro && centro.lat != null ? '&lat=' + centro.lat + '&lng=' + centro.lng : '');
           return fetch(u, { headers: { apikey: cfg.SUPABASE_PUBLISHABLE_KEY, Authorization: 'Bearer ' + tk } })
             .then(function (r) { return r.ok ? r.json() : { lugares: [] }; })
-            .then(function (j) { return (j.lugares || []).map(function (l) { l._peso = 3; return l; }); });
+            .then(function (j) { return (j.lugares || []).map(function (l) { l._peso = 3; return l; }); })
+            .then(function (ls) {
+              /* TripAdvisor não traz coordenada: acha pelo endereço (Nominatim), uma de cada vez, só para os 3 primeiros */
+              var semPonto = ls.filter(function (l) { return l.lat == null && l.endereco; }).slice(0, 3);
+              return semPonto.reduce(function (pr, l) { return pr.then(function () { return geocodar(l.endereco, lg).then(function (p) { if (p) { l.lat = p.lat; l.lng = p.lng; } }); }); }, Promise.resolve()).then(function () { return ls.filter(function (l) { return l.lat != null; }); });
+            });
         }).catch(function () { return []; });
       }
       return Promise.all([doServidor(), deNominatim().catch(function () { return []; }), dePhoton().catch(function () { return []; })]).then(function (rs) {

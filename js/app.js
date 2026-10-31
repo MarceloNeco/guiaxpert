@@ -12,7 +12,7 @@
 (function () {
   'use strict';
   var d = document, $ = function (id) { return d.getElementById(id); };
-  var VERSAO_APP = '1.4.2';
+  var VERSAO_APP = '1.4.3';
 
   /* ------------------------------------------------------------------
      1. UTILIDADES
@@ -810,7 +810,8 @@
           } }));
           return;
         }
-        if (achados.some(function (l) { return l.confianca === 'foursquare'; })) lista.appendChild(h('p', { class: 'pequeno', texto: 'Powered by Foursquare · OpenStreetMap' }));
+        var fontes = ['OpenStreetMap']; if (achados.some(function (l) { return l.confianca === 'foursquare'; })) fontes.unshift('Powered by Foursquare'); if (achados.some(function (l) { return l.confianca === 'tripadvisor'; })) fontes.unshift('Tripadvisor');
+        if (fontes.length > 1) lista.appendChild(h('p', { class: 'pequeno', texto: fontes.join(' · ') }));
         achados.slice(0, 6).forEach(function (l) {
           lista.appendChild(h('button', { class: 'bt leve', type: 'button', style: 'text-align:left;display:block;line-height:1.3', onclick: function () {
             var ja = lugarPorId(l.id);
@@ -1228,7 +1229,8 @@
       l.confianca === 'baixa' ? h('span', { class: 'conferir', texto: T('conferir') }) : null,
       l.nota != null ? h('span', { class: 'etq', texto: '★ ' + String(l.nota).replace('.', ',') }) : null,
       l.confianca === 'osm' ? h('span', { class: 'pequeno', texto: 'OSM' }) : null,
-      l.confianca === 'foursquare' ? h('span', { class: 'pequeno', texto: 'Foursquare' }) : null]);
+      l.confianca === 'foursquare' ? h('span', { class: 'pequeno', texto: 'Foursquare' }) : null,
+      l.confianca === 'tripadvisor' ? h('span', { class: 'pequeno', texto: 'Tripadvisor' }) : null]);
     var bfav = h('button', { class: 'fav', type: 'button', 'aria-pressed': fav ? 'true' : 'false', 'aria-label': T('favoritar') + ': ' + l.nome, texto: fav ? '★' : '☆',
       onclick: function (e) { e.preventDefault(); alternarFavorito(l).then(function (on) { bfav.textContent = on ? '★' : '☆'; bfav.setAttribute('aria-pressed', on ? 'true' : 'false'); }); } });
     det.appendChild(h('summary', {}, [h('span', { class: 'nome', texto: l.nome }), bfav, meta]));
@@ -1242,7 +1244,7 @@
     corpo.appendChild(linksLugar(l));
     if (estado.viagem && estado.opcao && podeEditar()) corpo.appendChild(h('button', { class: 'bt', type: 'button', onclick: function () { janelaAddAoRoteiro(l); } }, '＋ ' + T('porNoDia')));
     if (!estado.viagem && window.Explorar) Explorar.acoes(l, corpo);
-    else if ((l.confianca === 'osm' || l.confianca === 'foursquare') && !estado.lugaresProprios.some(function (x) { return x.id === l.id; })) corpo.appendChild(h('button', { class: 'bt leve', type: 'button', onclick: function () {
+    else if ((l.confianca === 'osm' || l.confianca === 'foursquare' || l.confianca === 'tripadvisor') && !estado.lugaresProprios.some(function (x) { return x.id === l.id; })) corpo.appendChild(h('button', { class: 'bt leve', type: 'button', onclick: function () {
       Banco.gravar('lugares', Object.assign({}, l, { viagem_id: estado.viagem.id })).then(function () { avisar(T('salvo')); recarregar(); }); } }, T('salvarLugar')));
     if (estado.lugaresProprios.some(function (x) { return x.id === l.id; })) corpo.appendChild(h('button', { class: 'bt perigo', type: 'button', onclick: function () {
       Banco.apagar('lugares', l.id).then(recarregar); } }, T('tirarDaLista')));

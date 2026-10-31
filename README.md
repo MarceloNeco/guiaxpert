@@ -51,6 +51,14 @@ segue só com OpenStreetMap. A função pede só campos "Pro" (nome, endereço, 
 cobrados à parte pelo Foursquare. Uso: 500 chamadas/mês grátis (junho/2026) e sem guardar dados em cache pelos termos
 do plano pago-por-uso; ver `docs/ROADMAP.md` para o caminho com a base aberta FSQ OS Places.
 
+## 2b-2. Tripadvisor na busca (opcional)
+
+A mesma função `lugares` soma resultados da Tripadvisor Content API quando existe o segredo `TRIPADVISOR_KEY`
+(developer-tripadvisor.com → Content API → criar chave; grátis até 5.000 chamadas/mês, pede cartão; na chave, libere
+o domínio solverone.com.br ou deixe sem restrição de IP). A busca da Tripadvisor não traz coordenada: o app acha o
+ponto pelo endereço na base aberta. Regra deles que o app respeita: só o `location_id` fica guardado; nome e endereço
+só do que a pessoa confirma; nota e fotos ficam no site deles.
+
 ## 2c. "Procurar no Google" (opcional)
 
 Quando a busca não acha, o cartão "Vamos achar juntos?" oferece a lista do Google (Places Autocomplete) pela função

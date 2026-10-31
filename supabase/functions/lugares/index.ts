@@ -1,6 +1,7 @@
 // GuiaXpert — busca de lugares comerciais (Foursquare Places) com a chave guardada no servidor.
 // O app chama GET /functions/v1/lugares?q=legitimo%20bar&lat=-23.6&lng=-46.63&lang=pt
-// Fontes: FOURSQUARE_KEY (API do Foursquare, só campos Pro) ou a base aberta FSQ OS Places carregada em lugares_abertos.
+// Fontes: FOURSQUARE_KEY (API do Foursquare, só campos Pro) ou a base aberta FSQ OS Places carregada em lugares_abertos;
+// TRIPADVISOR_KEY (Content API) soma resultados em qualquer caso.
 // FONTE_LUGARES=api|aberta escolhe; sem a variável: API se houver chave, senão base aberta. Sem nenhuma: 503 { erro: 'sem-chave' }.
 // Só quem está logado chama (verify_jwt). Devolve lugares no formato do app (sem dado pessoal).
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
@@ -59,13 +60,16 @@ Deno.serve(async (req: Request) => {
   const temCentro = Number.isFinite(lat) && Number.isFinite(lng);
 
   const key = Deno.env.get("FOURSQUARE_KEY");
+  const taKey = Deno.env.get("TRIPADVISOR_KEY");
   const fonte = Deno.env.get("FONTE_LUGARES") || (key ? "api" : "aberta");
+  // TripAdvisor em paralelo com o que vier abaixo (só ID pode ser guardado; o app mostra ao vivo e guarda o que a pessoa confirma)
+  const ta = taKey ? doTripAdvisor(taKey, q, lat, lng, temCentro, lang).catch(() => []) : Promise.resolve([]);
   if (fonte === "aberta") {
     const lista = await daBaseAberta(req, q, lat, lng, temCentro);
-    if (lista) return json({ lugares: lista, fonte: "aberta" });
-    if (!key) return json({ erro: "sem-chave" }, 503);
+    if (lista) return json({ lugares: juntar(lista, await ta), fonte: "aberta" });
+    if (!key) { const t = await ta; return t.length ? json({ lugares: t, fonte: "tripadvisor" }) : json({ erro: "sem-chave" }, 503); }
   }
-  if (!key) return json({ erro: "sem-chave" }, 503);
+  if (!key) { const t = await ta; return t.length ? json({ lugares: t, fonte: "tripadvisor" }) : json({ erro: "sem-chave" }, 503); }
 
   const legado = key.startsWith("fsq3");
   // só campos "Pro" (os "Premium": hours, rating, price, photos são cobrados à parte e sem faixa grátis)
@@ -95,5 +99,32 @@ Deno.serve(async (req: Request) => {
       confianca: "foursquare", gratis: false, lat: +Number(la).toFixed(5), lng: +Number(lo).toFixed(5), fonte: "Foursquare",
     };
   }).filter(Boolean);
-  return json({ lugares: lista, fonte: "api" });
+  return json({ lugares: juntar(lista, await ta), fonte: "api" });
 });
+
+// TripAdvisor Content API: busca por nome perto de um ponto. Devolve nome, endereço, categoria e o location_id.
+// Sem coordenada aqui (a busca não traz; o app acha o ponto pelo endereço na base aberta, como faz com o Google).
+async function doTripAdvisor(key: string, q: string, lat: number, lng: number, temCentro: boolean, lang: string) {
+  const u = new URL("https://api.content.tripadvisor.com/api/v1/location/search");
+  u.searchParams.set("key", key); u.searchParams.set("searchQuery", q); u.searchParams.set("language", lang === "en" ? "en" : "pt");
+  if (temCentro) { u.searchParams.set("latLong", lat + "," + lng); u.searchParams.set("radius", "50"); u.searchParams.set("radiusUnit", "km"); }
+  const r = await fetch(u.toString(), { headers: { accept: "application/json" } });
+  if (!r.ok) return [];
+  const j = await r.json();
+  return (j.data || []).slice(0, 6).map((x: any) => {
+    const a = x.address_obj || {};
+    const cat = x.category?.name || "";
+    const categoria = cat === "restaurant" ? "comer" : cat === "hotel" ? "logistica" : cat === "attraction" ? "atracao" : "atracao";
+    return {
+      id: "ta-" + x.location_id, nome: x.name, categoria, subcategoria: cat === "restaurant" ? "restaurante" : cat === "hotel" ? "hospedagem" : null,
+      descricao: null, endereco: a.address_string || [a.street1, a.city, a.state].filter(Boolean).join(", ") || null,
+      site: null, telefone: null, horario: null, reserva: null, preco: null, criancas: null,
+      confianca: "tripadvisor", gratis: false, lat: null, lng: null, fonte: "Tripadvisor", tripadvisor_id: String(x.location_id),
+    };
+  }).filter((x: any) => x.nome);
+}
+// junta listas sem repetir nome igual
+function juntar(a: any[], b: any[]) {
+  const vistos = new Set(a.map((x) => String(x.nome).toLowerCase()));
+  return a.concat(b.filter((x) => !vistos.has(String(x.nome).toLowerCase())));
+}

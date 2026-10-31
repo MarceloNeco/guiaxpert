@@ -2,6 +2,18 @@
   "app": "guiaxpert",
   "versoes": [
     {
+      "versao": "1.4.3",
+      "data": "2026-10-31",
+      "itens": {
+        "pt": [
+          "Tripadvisor entra na busca pela lupa (quando a chave estiver cadastrada no servidor): nome, endereço e tipo ao vivo; o ponto no mapa vem da base aberta. Só o que você confirma fica guardado."
+        ],
+        "en": [
+          "Tripadvisor joins search (once the key is set on the server): name, address and type live; the map point comes from the open base. Only what you confirm is saved."
+        ]
+      }
+    },
+    {
       "versao": "1.4.2",
       "data": "2026-10-31",
       "itens": {
