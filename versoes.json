@@ -2,6 +2,18 @@
   "app": "guiaxpert",
   "versoes": [
     {
+      "versao": "1.5.1",
+      "data": "2026-11-01",
+      "itens": {
+        "pt": [
+          "As chaves do serviço valem só para a equipe e para quem ela convidou para as viagens dela. Outras famílias usam a própria chave de IA; a busca aberta continua para todos."
+        ],
+        "en": [
+          "Service keys now serve only the team and the people it invited to its trips. Other families use their own AI key; open search still works for everyone."
+        ]
+      }
+    },
+    {
       "versao": "1.5.0",
       "data": "2026-11-01",
       "itens": {

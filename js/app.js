@@ -12,7 +12,7 @@
 (function () {
   'use strict';
   var d = document, $ = function (id) { return d.getElementById(id); };
-  var VERSAO_APP = '1.5.0';
+  var VERSAO_APP = '1.5.1';
 
   /* ------------------------------------------------------------------
      1. UTILIDADES
@@ -681,7 +681,7 @@
       var u = String(cfg.SUPABASE_URL).replace(/\/+$/, '') + '/functions/v1/google-lugares?q=' + encodeURIComponent(q) + '&lang=' + (idioma() === 'en' ? 'en' : 'pt') + (c ? '&lat=' + c.lat + '&lng=' + c.lng : '');
       return fetch(u, { headers: { apikey: cfg.SUPABASE_PUBLISHABLE_KEY, Authorization: 'Bearer ' + tk } });
     }).then(function (r) {
-      if (r.status === 503) { googleLugaresDisponivel = false; return { semChave: true, sugestoes: [] }; }
+      if (r.status === 503 || r.status === 403) { googleLugaresDisponivel = false; return { semChave: true, sugestoes: [] }; }
       if (!r.ok) throw new Error('google-' + r.status);
       googleLugaresDisponivel = true;
       return r.json().then(function (j) { return { sugestoes: j.sugestoes || [] }; });
@@ -724,7 +724,7 @@
             confirmar({ nome: l.nome, endereco: [l.endereco, l.cidade].filter(Boolean).join(', '), telefone: l.telefone, site: l.site, fonte: l.fonte, origem: 'ia' });
           } }, [h('span', { class: 'ic-grande', 'aria-hidden': 'true', texto: '📌' }), h('span', { class: 'tx' }, [h('b', { texto: l.nome }), h('small', { texto: [l.endereco, l.cidade].filter(Boolean).join(', ') || '' })])]));
         });
-      }).catch(function (e) { corpo.textContent = ''; corpo.appendChild(voltar()); corpo.appendChild(h('p', { class: 'alerta', texto: e && e.message === 'sem-chave' ? T('guiaPrecisaChave') : T('iaErro') })); });
+      }).catch(function (e) { corpo.textContent = ''; corpo.appendChild(voltar()); corpo.appendChild(h('p', { class: 'alerta', texto: e && e.message === 'sem-chave' ? T('guiaPrecisaChave') : (e && e.status === 403 ? T('astSemAcesso') : T('iaErro')) })); });
     }
     function procurarNoGoogle() {
       carregando(T('carregando'));
@@ -1104,7 +1104,7 @@
         } else if (r.tipo === 'replanejar') {
           balao('ia', r.texto, estado.viagem ? h('button', { class: 'bt sec', type: 'button', style: 'margin-top:.4rem', texto: '🌦 ' + T('replanejarHoje'), onclick: function () { j.fechar(function () { replanejarHoje(); }); } }) : null);
         } else balao('ia', r.texto || T('iaErro'));
-      }).catch(function (e) { pensando.remove(); balao('ia', e.message === 'sem-internet' ? T('semInternet') : (/cota/.test(e.message) ? T('astCota') : T('iaErro'))); }).then(function () { enviar.disabled = false; });
+      }).catch(function (e) { pensando.remove(); balao('ia', e.message === 'sem-internet' ? T('semInternet') : (/cota/.test(e.message) || e.status === 429 ? T('astCota') : (/sem-acesso|403/.test(e.message + ' ' + (e.status || '')) ? T('astSemAcesso') : T('iaErro')))); }).then(function () { enviar.disabled = false; });
     }
     /* "acha o bar do zé": primeiro as bases (catálogo, OSM, Foursquare), depois o guia na internet; a pessoa confirma e salva */
     function acharPeloAssistente(busca, jan) {

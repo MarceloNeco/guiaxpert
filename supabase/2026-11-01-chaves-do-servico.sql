@@ -102,3 +102,17 @@ begin
 end; $$;
 revoke all on function public.admin_historico_chaves() from public, anon;
 grant execute on function public.admin_historico_chaves() to authenticated;
+
+-- Quem pode GASTAR as chaves do serviço (ninguém vê a chave; isto decide só quem usa):
+--  1) a equipe (dono/admin);  2) quem foi convidado para uma viagem de alguém da equipe.
+-- Outras famílias usam a própria chave de IA (cofre pessoal) ou ficam sem; a busca aberta (OpenStreetMap) segue para todos.
+create or replace function public.pode_usar_chaves_servico()
+returns boolean language sql stable security definer set search_path = '' as $$
+  select auth.uid() is not null and (
+    exists (select 1 from public.equipe e where e.user_id = auth.uid() and e.papel in ('dono', 'admin'))
+    or exists (select 1 from public.guiaxpert_membros m join public.equipe e on e.user_id = m.dono
+               where m.user_id = auth.uid() and e.papel in ('dono', 'admin'))
+  )
+$$;
+revoke all on function public.pode_usar_chaves_servico() from public, anon;
+grant execute on function public.pode_usar_chaves_servico() to authenticated;

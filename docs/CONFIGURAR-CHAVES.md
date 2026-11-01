@@ -18,6 +18,19 @@ As chaves são cadastradas **pelo próprio GuiaXpert**, por quem é dono ou admi
 
 Ordem sugerida: **Gemini** (faz o ✦ IA funcionar para todos), **Tripadvisor**, **Foursquare**, **Google** (opcional).
 
+## Quem usa as chaves
+
+Ninguém recebe a chave. A regra decide só quem **gasta** dela:
+
+| Quem | Usa as chaves do serviço? |
+|---|---|
+| Você e a equipe (dono/admin) | Sim |
+| Quem você convidou para uma viagem sua (ex.: Roberta em Gramado) | Sim, em todo o app |
+| Outra família que usa o app com conta própria | **Não.** O ✦ IA pede que ela cadastre a própria chave de IA; a busca segue com OpenStreetMap. |
+
+A regra está no banco (`pode_usar_chaves_servico`) e as funções do servidor conferem a cada pedido.
+Para abrir para um cliente pagante no futuro, basta acrescentar o plano dele nessa regra.
+
 ## Por que é seguro
 
 | Camada | O que acontece |

@@ -33,9 +33,27 @@ async function chave(nome: string, ...alternativas: string[]): Promise<string> {
   return v;
 }
 
+// ---- quem pode GASTAR as chaves do serviço: a equipe e quem ela convidou para as viagens dela ----
+// (ninguém recebe a chave; outras famílias usam a própria chave de IA ou ficam só com a busca aberta)
+const cacheAcesso = new Map<string, number>();
+async function podeUsar(req: Request): Promise<boolean> {
+  const auth = req.headers.get("Authorization") || "";
+  if (!auth.startsWith("Bearer ")) return false;
+  const ate = cacheAcesso.get(auth); if (ate && ate > Date.now()) return true;
+  const url = Deno.env.get("SUPABASE_URL"), anon = Deno.env.get("SUPABASE_ANON_KEY");
+  try {
+    const r = await fetch(url + "/rest/v1/rpc/pode_usar_chaves_servico", { method: "POST", headers: { apikey: anon || "", Authorization: auth, "Content-Type": "application/json" }, body: "{}" });
+    if (!r.ok) return false;
+    const ok = (await r.json()) === true;
+    if (ok) cacheAcesso.set(auth, Date.now() + 120_000);
+    return ok;
+  } catch (_) { return false; }
+}
+
 Deno.serve(async (req: Request) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: CORS });
   if (req.method !== "POST") return json({ erro: "metodo" }, 405);
+  if (!(await podeUsar(req))) return json({ erro: "sem-acesso" }, 403);
   const key = await chave("GEMINI_API_KEY", "GEMINI_KEY");
   if (!key) return json({ erro: "sem-chave" }, 503);
 

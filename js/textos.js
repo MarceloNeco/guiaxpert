@@ -227,6 +227,7 @@ window.TEXTOS = (function () {
     assistente: ['Assistente', 'Assistant'], astPlaceholder: ['Fale ou escreva o que você quer…', 'Say or type what you want…'], falar: ['Falar', 'Speak'],
     astOla: ['Oi! Fale ou escreva. Exemplos: "acha um lugar para almoçar", "põe o Bar do Zé no roteiro de hoje", "e se chover?".', 'Hi! Speak or type. Examples: "find a place for lunch", "add Bar do Zé to today", "what if it rains?".'],
     astSug1: ['Acha um lugar para almoçar perto daqui', 'Find a place for lunch nearby'], astSug2: ['O que fazer hoje se chover?', 'What to do today if it rains?'], astSug3: ['Onde fica o próximo lugar do roteiro?', 'Where is the next place in the plan?'],
+    astSemAcesso: ['O assistente com a IA da SolverONE está liberado só para convidados. Para usar agora, cadastre a sua própria chave de IA em Configurações → IA (há opções grátis).', 'The SolverONE AI assistant is for invited guests only. To use it now, add your own AI key in Settings → AI (free options exist).'],
     astSemIA: ['O assistente ainda não está ligado neste aparelho.', 'The assistant is not enabled on this device yet.'], iaConfigurar: ['Ver configuração', 'See settings'],
     astProcurando: ['Deixa comigo, vou procurar.', 'On it, searching.'], naoOuvi: ['Não entendi. Tente de novo ou escreva.', 'Didn\'t catch that. Try again or type.'],
     astCota: ['O assistente atingiu o limite de hoje. Amanhã volta. Dá para marcar no mapa ou buscar na lupa.', 'The assistant hit today\'s limit. Back tomorrow. You can mark on the map or use search.'],
