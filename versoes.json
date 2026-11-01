@@ -2,6 +2,18 @@
   "app": "guiaxpert",
   "versoes": [
     {
+      "versao": "1.5.0",
+      "data": "2026-11-01",
+      "itens": {
+        "pt": [
+          "Chaves do serviço pelo app: em Configurações, a equipe cadastra as chaves do Gemini, Tripadvisor, Foursquare e Google com passo a passo, teste automático e histórico. Ficam cifradas no servidor e valem em qualquer aparelho; para mexer, o app pede que você confirme que é você."
+        ],
+        "en": [
+          "Service keys in the app: in Settings, the team adds Gemini, Tripadvisor, Foursquare and Google keys with step-by-step help, automatic test and history. Stored encrypted on the server and valid on any device; changing them asks you to confirm it is you."
+        ]
+      }
+    },
+    {
       "versao": "1.4.3",
       "data": "2026-10-31",
       "itens": {

@@ -12,7 +12,7 @@
 (function () {
   'use strict';
   var d = document, $ = function (id) { return d.getElementById(id); };
-  var VERSAO_APP = '1.4.3';
+  var VERSAO_APP = '1.5.0';
 
   /* ------------------------------------------------------------------
      1. UTILIDADES
@@ -2339,6 +2339,181 @@
     });
   }
 
+  /* ---------- Chaves do serviço (só dono/admin da equipe) ----------
+     A chave é colada uma vez, vai por HTTPS para o banco e fica CIFRADA no Supabase Vault. Nunca volta inteira:
+     a tela só mostra "termina em …4f2a". Salvar ou apagar pede que a pessoa confirme a identidade (login recente).
+     As funções do servidor (ia, lugares, google-lugares) leem do cofre; o celular nunca vê a chave. */
+  var SERVICOS_CHAVE = [
+    { nome: 'GEMINI_API_KEY', icone: '✦', titulo: 'chv_gemini', dica: 'chv_geminiDica', site: 'https://aistudio.google.com/apikey', siteNome: 'Google AI Studio',
+      passos: 'chv_geminiPassos', formato: /^AIza[0-9A-Za-z_-]{30,}$/, teste: 'gemini' },
+    { nome: 'TRIPADVISOR_KEY', icone: '🦉', titulo: 'chv_tripadvisor', dica: 'chv_tripadvisorDica', site: 'https://www.tripadvisor.com/developers', siteNome: 'Tripadvisor Developers',
+      passos: 'chv_tripadvisorPassos', formato: /^[0-9A-Za-z]{16,}$/, teste: 'tripadvisor' },
+    { nome: 'FOURSQUARE_KEY', icone: '📍', titulo: 'chv_foursquare', dica: 'chv_foursquareDica', site: 'https://foursquare.com/developers', siteNome: 'Foursquare Developers',
+      passos: 'chv_foursquarePassos', formato: /^\S{20,}$/, teste: 'foursquare' },
+    { nome: 'GOOGLE_PLACES_KEY', icone: 'G', titulo: 'chv_google', dica: 'chv_googleDica', site: 'https://console.cloud.google.com/apis/library/places.googleapis.com', siteNome: 'Google Cloud',
+      passos: 'chv_googlePassos', formato: /^AIza[0-9A-Za-z_-]{30,}$/, teste: 'google' }
+  ];
+  function chamarFuncao(nome, op) {
+    var cfg = window.GUIAXPERT_CONFIG || {};
+    return Conta.token().then(function (tk) {
+      if (!tk) throw new Error('sem-sessao');
+      var u = String(cfg.SUPABASE_URL).replace(/\/+$/, '') + '/functions/v1/' + nome + (op.query ? '?' + op.query : '');
+      return fetch(u, { method: op.corpo ? 'POST' : 'GET', headers: { apikey: cfg.SUPABASE_PUBLISHABLE_KEY, Authorization: 'Bearer ' + tk, 'Content-Type': 'application/json' },
+        body: op.corpo ? JSON.stringify(op.corpo) : undefined });
+    }).then(function (r) { return r.text().then(function (t) { var j = null; try { j = JSON.parse(t); } catch (e) {} return { status: r.status, j: j || {} }; }); });
+  }
+  /* testa se o serviço aceitou a chave: { ok, msg } */
+  function testarChave(sv) {
+    var p;
+    if (sv.teste === 'gemini') p = chamarFuncao('ia', { corpo: { app: 'guiaxpert', limite: 20, mensagens: [{ papel: 'pessoa', texto: 'Responda apenas: ok' }] } })
+      .then(function (r) { return r.status === 200 && r.j.texto ? { ok: true } : { ok: false, status: r.status, erro: r.j.erro, detalhe: r.j.detalhe }; });
+    else if (sv.teste === 'google') p = chamarFuncao('google-lugares', { query: 'q=Gramado' })
+      .then(function (r) { return r.status === 200 ? { ok: true } : { ok: false, status: r.status, erro: r.j.erro, detalhe: r.j.detalhe }; });
+    else p = chamarFuncao('lugares', { query: 'q=Gramado&teste=' + sv.teste })
+      .then(function (r) { return r.j.ok ? { ok: true } : { ok: false, status: r.j.status || r.status, erro: r.j.motivo || r.j.erro, detalhe: r.j.detalhe }; });
+    return p.then(function (x) {
+      if (x.ok) return { ok: true, msg: T('chv_testeOk') };
+      if (x.erro === 'sem-chave') return { ok: false, semChave: true, msg: T('chv_testeSemChave') };
+      if (x.erro === 'cota' || x.erro === 'cota-dia' || x.erro === 'cota-mes') return { ok: true, msg: T('chv_testeCota') };
+      var cod = x.status || (x.erro || '').replace(/\D/g, '');
+      return { ok: false, msg: T('chv_testeRecusou', { servico: T(sv.titulo), cod: cod || '?' }) };
+    }).catch(function () { return { ok: false, msg: navigator.onLine ? T('erroRede') : T('semInternet') }; });
+  }
+  /* "confirme que é você": senha ou código por e-mail; resolve quando há um login novo */
+  function confirmarIdentidade() {
+    return new Promise(function (ok, falha) {
+      var s = Conta.sessao() || {}, email = s.email || '';
+      var senha = h('input', { class: 'campo', type: 'password', id: 'gx-ri-senha', autocomplete: 'current-password', placeholder: T('senha') });
+      var bSenha = h('button', { class: 'bt', type: 'button', texto: T('confirmar') });
+      var bCod = h('button', { class: 'bt leve', type: 'button', texto: '✉ ' + T('chv_receberCodigo') });
+      var cod = h('input', { class: 'campo', id: 'gx-ri-cod', inputmode: 'numeric', autocomplete: 'one-time-code', maxlength: '8', placeholder: '123456', hidden: true });
+      var bCodOk = h('button', { class: 'bt', type: 'button', texto: T('confirmar'), hidden: true });
+      var msg = h('p', { class: 'sub', role: 'status' });
+      var feito = false;
+      var j = janela(T('chv_confirmeTitulo'), h('div', { class: 'linha', style: 'flex-direction:column;align-items:stretch' }, [
+        h('p', { texto: T('chv_confirmeTexto', { email: email }) }),
+        h('label', { class: 'rot', for: 'gx-ri-senha', texto: T('senha') }), senha, bSenha,
+        h('p', { class: 'pequeno', texto: T('chv_ouCodigo') }), bCod, cod, bCodOk, msg]), function () { if (!feito) falha(new Error('cancelado')); });
+      function pronto() { feito = true; j.fechar(function () { ok(); }); }
+      bSenha.addEventListener('click', function () {
+        if (!senha.value) { senha.focus(); return; }
+        bSenha.disabled = true; msg.textContent = T('carregando');
+        Conta.entrar(email, senha.value).then(pronto).catch(function () { bSenha.disabled = false; msg.textContent = T('chv_senhaErrada'); });
+      });
+      senha.addEventListener('keydown', function (e) { if (e.key === 'Enter') bSenha.click(); });
+      bCod.addEventListener('click', function () {
+        bCod.disabled = true;
+        Conta.enviarCodigo(email).then(function () { cod.hidden = false; bCodOk.hidden = false; msg.textContent = T('chv_codigoEnviado', { email: email }); cod.focus(); })
+          .catch(function () { bCod.disabled = false; msg.textContent = T('erroRede'); });
+      });
+      bCodOk.addEventListener('click', function () {
+        bCodOk.disabled = true; msg.textContent = T('carregando');
+        Conta.confirmarCodigo(email, cod.value).then(pronto).catch(function () { bCodOk.disabled = false; msg.textContent = T('chv_codigoErrado'); });
+      });
+    });
+  }
+  /* chama uma função admin; se o banco pedir login recente, confirma a identidade e tenta de novo uma vez */
+  function rpcAdmin(nome, args) {
+    return Conta.rpc(nome, args).catch(function (e) {
+      if (!/login-recente/.test(e.message)) throw e;
+      return confirmarIdentidade().then(function () { return Conta.rpc(nome, args); });
+    });
+  }
+  function cartaoChaves(caixa) {
+    Conta.rpc('sou_admin_equipe', {}).then(function (sim) {
+      if (sim !== true) return;
+      var cartao = h('div', { class: 'cartao chaves' }, [h('h3', { texto: '🔐 ' + T('chv_titulo') }), h('p', { class: 'sub', texto: T('chv_texto') })]);
+      var lista = h('div', { class: 'linha', style: 'flex-direction:column;align-items:stretch;gap:.6rem' });
+      cartao.appendChild(lista);
+      cartao.appendChild(h('button', { class: 'lk', type: 'button', style: 'align-self:flex-start', texto: T('chv_historico'), onclick: janelaHistoricoChaves }));
+      caixa.appendChild(cartao);
+      desenhar();
+      function desenhar() {
+        lista.textContent = ''; lista.appendChild(h('p', { class: 'sub', texto: T('carregando') }));
+        Conta.rpc('admin_status_chaves', {}).then(function (rows) {
+          lista.textContent = '';
+          var porNome = {}; (rows || []).forEach(function (r) { porNome[r.nome] = r; });
+          SERVICOS_CHAVE.forEach(function (sv) {
+            var st = porNome[sv.nome] || {};
+            var estadoTxt = st.cadastrada ? '✓ ' + T('chv_ligada', { final: st.final, data: fData(String(st.atualizado_em).slice(0, 10), true) }) : T('chv_desligada');
+            var linha = h('div', { class: 'chave-linha' + (st.cadastrada ? ' ligada' : '') }, [
+              h('div', { class: 'chave-cab' }, [h('span', { class: 'ic-grande', 'aria-hidden': 'true', texto: sv.icone }),
+                h('div', {}, [h('b', { texto: T(sv.titulo) }), h('small', { class: 'sub', style: 'display:block', texto: T(sv.dica) }), h('small', { class: 'chave-estado', texto: estadoTxt })])]),
+              h('div', { class: 'linha' }, [
+                h('button', { class: 'bt ' + (st.cadastrada ? 'leve' : 'sec'), type: 'button', texto: st.cadastrada ? T('chv_trocar') : T('chv_cadastrar'), onclick: function () { janelaCadastrarChave(sv, desenhar); } }),
+                st.cadastrada ? h('button', { class: 'bt leve', type: 'button', texto: T('chv_testar'), onclick: function (ev) {
+                  var b = ev.currentTarget; b.disabled = true; b.textContent = T('carregando');
+                  testarChave(sv).then(function (x) { b.disabled = false; b.textContent = T('chv_testar'); avisar(x.msg); });
+                } }) : null,
+                st.cadastrada ? h('button', { class: 'bt perigo', type: 'button', texto: T('apagar'), onclick: function () {
+                  if (!confirm(T('chv_apagarConfirma', { servico: T(sv.titulo) }))) return;
+                  rpcAdmin('admin_apagar_chave', { p_nome: sv.nome }).then(function () { avisar(T('chv_apagada')); desenhar(); }).catch(function (e) { if (e.message !== 'cancelado') avisar(T('erroRede')); });
+                } }) : null])]);
+            lista.appendChild(linha);
+          });
+        }).catch(function () { lista.textContent = ''; lista.appendChild(h('p', { class: 'alerta', texto: T('erroRede') })); });
+      }
+    }).catch(function () { /* sem login ou sem a função: não mostra nada */ });
+  }
+  function janelaCadastrarChave(sv, depois) {
+    var campo = h('input', { class: 'campo', type: 'password', id: 'gx-chv', autocomplete: 'off', autocapitalize: 'off', spellcheck: 'false', placeholder: T('chv_coleAqui') });
+    var ver = h('button', { class: 'bt leve', type: 'button', texto: '👁', 'aria-label': T('mostrarSenha'), 'aria-pressed': 'false' });
+    var colar = navigator.clipboard && navigator.clipboard.readText ? h('button', { class: 'bt sec', type: 'button', texto: '📋 ' + T('chv_colar') }) : null;
+    var salvar = h('button', { class: 'bt cheio', type: 'button', texto: '🔐 ' + T('chv_salvarCifrada') });
+    var msg = h('p', { class: 'sub', role: 'status' });
+    var passos = T(sv.passos).split('|').map(function (p) { return h('li', { texto: p }); });
+    var j = janela(T(sv.titulo), h('div', { class: 'linha chave-cadastro', style: 'flex-direction:column;align-items:stretch' }, [
+      h('p', { class: 'grande', texto: '1. ' + T('chv_passo1') }),
+      h('ol', { class: 'passos' }, passos),
+      h('a', { class: 'bt sec', href: sv.site, target: '_blank', rel: 'noopener', texto: '↗ ' + T('chv_abrirSite', { site: sv.siteNome }) }),
+      h('p', { class: 'grande', texto: '2. ' + T('chv_passo2') }),
+      h('div', { class: 'linha', style: 'flex-wrap:nowrap' }, [campo, ver]), colar,
+      h('p', { class: 'grande', texto: '3. ' + T('chv_passo3') }),
+      salvar, msg,
+      h('p', { class: 'pequeno', texto: '🔒 ' + T('chv_seguranca') })]), function () { campo.value = ''; });
+    ver.addEventListener('click', function () { var m = campo.type === 'password'; campo.type = m ? 'text' : 'password'; ver.setAttribute('aria-pressed', m ? 'true' : 'false'); });
+    if (colar) colar.addEventListener('click', function () { navigator.clipboard.readText().then(function (t) { campo.value = String(t || '').trim(); msg.textContent = campo.value ? T('chv_colado', { final: campo.value.slice(-4) }) : ''; }).catch(function () { campo.focus(); }); });
+    salvar.addEventListener('click', function () {
+      var v = campo.value.trim();
+      if (!v) { campo.focus(); msg.textContent = T('chv_vazia'); return; }
+      if (!sv.formato.test(v)) { msg.textContent = T('chv_formato', { servico: T(sv.titulo) }); return; }
+      salvar.disabled = true; msg.textContent = T('chv_salvando');
+      rpcAdmin('admin_salvar_chave', { p_nome: sv.nome, p_valor: v }).then(function () {
+        campo.value = ''; v = '';
+        try { if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText('').catch(function () {}); } catch (e) {}
+        msg.textContent = T('chv_salvaTestando');
+        /* as funções guardam a chave por até 1 minuto: testa já e, se precisar, de novo */
+        var tentativas = [0, 20000, 65000], i = 0;
+        (function tentar() {
+          setTimeout(function () {
+            testarChave(sv).then(function (x) {
+              if (!x.ok && i < tentativas.length - 1) { i++; msg.textContent = T('chv_aguardando'); tentar(); return; }
+              msg.textContent = x.msg; salvar.disabled = false; salvar.textContent = '✓ ' + T('pronto');
+              salvar.onclick = function () { j.fechar(depois); };
+              if (x.ok) { avisar(x.msg); setTimeout(function () { j.fechar(depois); }, 1800); }
+            });
+          }, tentativas[i]);
+        })();
+      }).catch(function (e) {
+        salvar.disabled = false;
+        msg.textContent = e.message === 'cancelado' ? T('chv_cancelado') : (/formato/i.test(e.message) ? T('chv_formato', { servico: T(sv.titulo) }) : T('erroRede'));
+      });
+    });
+  }
+  function janelaHistoricoChaves() {
+    var corpo = h('div', { class: 'linha', style: 'flex-direction:column;align-items:stretch;gap:.4rem' }, [h('p', { class: 'sub', texto: T('carregando') })]);
+    janela(T('chv_historico'), corpo);
+    Conta.rpc('admin_historico_chaves', {}).then(function (rows) {
+      corpo.textContent = '';
+      if (!rows || !rows.length) { corpo.appendChild(h('p', { class: 'sub', texto: T('chv_semHistorico') })); return; }
+      rows.forEach(function (r) {
+        var sv = SERVICOS_CHAVE.filter(function (x) { return x.nome === r.nome; })[0];
+        corpo.appendChild(h('p', { class: 'pequeno', texto: fData(String(r.quando).slice(0, 10), true) + ' ' + String(r.quando).slice(11, 16) + ' · ' +
+          (r.acao === 'chave-salva' ? T('chv_hSalva', { final: r.final || '' }) : T('chv_hApagada')) + ' · ' + (sv ? T(sv.titulo) : r.nome) + ' · ' + (r.quem || '') }));
+      });
+    }).catch(function () { corpo.textContent = ''; corpo.appendChild(h('p', { class: 'alerta', texto: T('erroRede') })); });
+  }
+
   TELAS.config = function (tela) {
     tela.appendChild(h('h1', { texto: T('rota_config') }));
     var tema = (function () { try { return localStorage.getItem('dgo:guiaxpert:tema') || 'auto'; } catch (e) { return 'auto'; } })();
@@ -2352,6 +2527,7 @@
       h('button', { class: 'bt sec', type: 'button', onclick: function () { Nav.ir('ia'); } }, '✨ ' + T('oQueAIAFaz')),
       h('button', { class: 'bt leve', type: 'button', onclick: function () { DGO.ia.guia(null, 'texto'); } }, T('iaConfigurar')),
       h('button', { class: 'bt leve', type: 'button', onclick: function () { DGO.abrirConfiguracoes && DGO.abrirConfiguracoes(); } }, T('maisAjustes'))]));
+    var caixaChaves = h('div', {}); tela.appendChild(caixaChaves); if (window.Conta && Conta.sessao()) cartaoChaves(caixaChaves);
     if (estado.viagem) tela.appendChild(cartaoOffline(estado.viagem));
     else if (window.Offline) {
       var cm = h('div', { class: 'cartao' }, [h('h3', { texto: T('mapasGuardados') })]); tela.appendChild(cm);

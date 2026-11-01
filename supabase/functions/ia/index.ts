@@ -1,6 +1,6 @@
 // SolverONE — proxy de IA: a chave fica aqui, a pessoa não cria chave nenhuma.
 // POST /functions/v1/ia  { provedor, modelo, sistema, mensagens:[{papel:'pessoa'|'ia', texto}], app, limite, web }
-// Responde { texto }. Segredo: GEMINI_KEY (Google AI Studio). Cota por pessoa: RPC ia_consumir (tabela ia_uso).
+// Responde { texto }. Chave GEMINI_API_KEY: cadastrada pelo app (cofre cifrado) ou nos Secrets (GEMINI_API_KEY ou GEMINI_KEY). Cota por pessoa: RPC ia_consumir (tabela ia_uso).
 // Só logado (verify_jwt). "web: true" liga a busca na web do Gemini (grounding com Google Search).
 // Nada da conversa é guardado; só a contagem de chamadas.
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
@@ -14,10 +14,29 @@ function json(body: unknown, status = 200) {
   return new Response(JSON.stringify(body), { status, headers: { ...CORS, "Content-Type": "application/json" } });
 }
 
+// ---- chaves do serviço: primeiro o cofre cifrado (Vault, cadastrado pelo app), depois os Secrets ----
+const cacheChaves = new Map<string, { v: string; ate: number }>();
+async function chave(nome: string, ...alternativas: string[]): Promise<string> {
+  const c = cacheChaves.get(nome); if (c && c.ate > Date.now()) return c.v;
+  let v = "";
+  const url = Deno.env.get("SUPABASE_URL"), srv = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+  if (url && srv) {
+    for (const cab of [{ apikey: srv }, { apikey: srv, Authorization: "Bearer " + srv }]) {
+      try {
+        const r = await fetch(url + "/rest/v1/rpc/chave_servico", { method: "POST", headers: { ...cab, "Content-Type": "application/json" }, body: JSON.stringify({ p_nome: nome }) });
+        if (r.ok) { const j = await r.json(); if (typeof j === "string") v = j; break; }
+      } catch (_) { /* tenta o próximo jeito */ }
+    }
+  }
+  if (!v) for (const n of [nome, ...alternativas]) { const e = Deno.env.get(n); if (e) { v = e; break; } }
+  cacheChaves.set(nome, { v, ate: Date.now() + (v ? 60_000 : 15_000) });
+  return v;
+}
+
 Deno.serve(async (req: Request) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: CORS });
   if (req.method !== "POST") return json({ erro: "metodo" }, 405);
-  const key = Deno.env.get("GEMINI_KEY");
+  const key = await chave("GEMINI_API_KEY", "GEMINI_KEY");
   if (!key) return json({ erro: "sem-chave" }, 503);
 
   let b: any; try { b = await req.json(); } catch { return json({ erro: "json" }, 400); }
@@ -36,7 +55,8 @@ Deno.serve(async (req: Request) => {
   const cota = await rc.json();
   if (!cota || !cota.ok) return json({ erro: cota?.motivo || "cota", restante_dia: cota?.restante_dia ?? 0, restante_mes: cota?.restante_mes ?? 0 }, 429);
 
-  const modelo = Deno.env.get("GEMINI_MODELO") || "gemini-2.0-flash";
+  // modelo: o configurado, senão o "mais recente" do Gemini Flash; se o Google aposentar um nome, tenta o próximo
+  const modelos = [Deno.env.get("GEMINI_MODELO") || "gemini-flash-latest", "gemini-2.5-flash", "gemini-2.0-flash"];
   const corpo: any = {
     contents: msgs.map((m: any) => ({ role: m.papel === "ia" ? "model" : "user", parts: [{ text: String(m.texto || "").slice(0, 12000) }] })),
     generationConfig: { maxOutputTokens: Math.min(Number(b.limite) || 900, 4000) },
@@ -44,10 +64,14 @@ Deno.serve(async (req: Request) => {
   if (b.sistema) corpo.system_instruction = { parts: [{ text: String(b.sistema).slice(0, 12000) }] };
   if (b.web) corpo.tools = [{ google_search: {} }];
 
-  const r = await fetch("https://generativelanguage.googleapis.com/v1beta/models/" + encodeURIComponent(modelo) + ":generateContent?key=" + encodeURIComponent(key), {
-    method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(corpo),
-  });
-  if (!r.ok) return json({ erro: "ia-" + r.status, detalhe: (await r.text()).slice(0, 300) }, 502);
+  let r: Response | null = null;
+  for (const modelo of modelos) {
+    r = await fetch("https://generativelanguage.googleapis.com/v1beta/models/" + encodeURIComponent(modelo) + ":generateContent", {
+      method: "POST", headers: { "Content-Type": "application/json", "x-goog-api-key": key }, body: JSON.stringify(corpo),
+    });
+    if (r.status !== 404) break;
+  }
+  if (!r || !r.ok) return json({ erro: "ia-" + (r ? r.status : 0), detalhe: r ? (await r.text()).slice(0, 300) : null }, 502);
   const j = await r.json();
   const c = j.candidates?.[0];
   const texto = ((c?.content?.parts) || []).map((p: any) => p.text || "").join("").trim();

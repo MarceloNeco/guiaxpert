@@ -1,65 +1,54 @@
-# Configurar as chaves do GuiaXpert
+# Chaves do serviço (Gemini, Tripadvisor, Foursquare, Google)
 
-Todas as chaves ficam **num lugar só**: os segredos das Edge Functions do Supabase. Nenhuma vai no código nem no
-celular de ninguém. O app já está pronto para cada uma: assim que o segredo é salvo, a função passa a usar, sem
-publicar nada de novo.
+As chaves são cadastradas **pelo próprio GuiaXpert**, por quem é dono ou admin da equipe. Valem em qualquer aparelho
+(celular, computador), porque ficam no servidor, não no aparelho.
 
-## Onde cadastrar
+## Jornada no app
 
-Supabase → projeto **solverone-app** → **Edge Functions** → aba **Secrets** → **Add new secret**.
-Endereço direto: https://supabase.com/dashboard/project/qvdvkqydhnadhewcidia/functions/secrets
+1. Entre no GuiaXpert com a sua conta (marceloneco@gmail.com já é admin).
+2. ☰ → **Configurações** → cartão **🔐 Chaves do serviço** (só aparece para a equipe).
+3. Em cada serviço: **Cadastrar**. A janela mostra:
+   1. o passo a passo do site do serviço, com o botão que abre a página certa;
+   2. o campo para colar a chave (escondido, com 👁 para conferir e 📋 para colar);
+   3. **Salvar cifrada**.
+4. Se o seu login tiver mais de 15 minutos, o app pede **"Confirme que é você"** (senha ou código por e-mail).
+5. O app salva e **testa sozinho**: "✓ Funcionou" ou o motivo da recusa.
+6. Depois, a linha mostra **"Ligada · termina em …4f2a · data"**. Botões: Trocar, Testar, Apagar.
+   "Ver quem mexeu e quando" mostra o histórico (sem a chave).
 
-Em cada uma: **Name** = o nome exato da tabela abaixo; **Value** = a chave colada; **Save**.
+Ordem sugerida: **Gemini** (faz o ✦ IA funcionar para todos), **Tripadvisor**, **Foursquare**, **Google** (opcional).
 
-## As quatro chaves, na ordem que eu faria
+## Por que é seguro
 
-| Ordem | Nome do segredo | O que liga | Onde criar | Custo |
-|---|---|---|---|---|
-| 1 | `GEMINI_KEY` | O botão ✦ IA funciona para quem não tem chave (sogra, idosos) | https://aistudio.google.com/apikey | Cota grátis diária; o AI Studio mostra o limite |
-| 2 | `FOURSQUARE_KEY` | Bares e restaurantes na lupa | https://foursquare.com/developers | 500 buscas/mês grátis |
-| 3 | `TRIPADVISOR_KEY` | Restaurantes, hotéis e atrações na lupa | https://www.tripadvisor.com/developers | 5.000 chamadas/mês grátis, pede cartão |
-| 4 | `GOOGLE_PLACES_KEY` | Botão "Procurar no Google" no "Vamos achar juntos?" | https://console.cloud.google.com | 10.000 buscas/mês grátis, pede conta de faturamento |
+| Camada | O que acontece |
+|---|---|
+| Quem pode | Só contas da tabela `equipe` com papel `dono` ou `admin`. O banco confere em cada chamada; esconder o botão não é a proteção. |
+| Prova de que é você | Salvar ou apagar exige login de verdade nos últimos 15 minutos (o horário fica dentro do token assinado). Celular desbloqueado na mão de outra pessoa não basta. |
+| No caminho | HTTPS até o Supabase. |
+| Guardada | **Supabase Vault**: cifrada no disco; a chave de cifra fica fora do banco. |
+| Leitura | Só o servidor (`service_role`) lê o valor, pela função `chave_servico`. O app, o navegador e a própria tela de admin nunca recebem a chave de volta: só os 4 últimos caracteres. |
+| No aparelho | Nada fica salvo. O campo é apagado ao salvar ou fechar. |
+| Rastro | Cada mudança vai para `acesso_log` (quem, quando, qual serviço, 4 últimos caracteres). Nunca o valor. |
+| Nomes | Só 4 nomes aceitos (`GEMINI_API_KEY`, `TRIPADVISOR_KEY`, `FOURSQUARE_KEY`, `GOOGLE_PLACES_KEY`). |
 
-### 1. Gemini (a mais importante)
-1. Entre em https://aistudio.google.com/apikey com a sua conta Google.
-2. **Create API key** → escolha ou crie um projeto → copie a chave (começa com `AIza`).
-3. Supabase → Secrets → `GEMINI_KEY`.
+Se uma chave vazar (colou em lugar errado, por exemplo): apague no site do serviço, crie outra e use **Trocar**.
 
-Observação: no plano grátis, o Google pode usar as perguntas para melhorar os produtos dele. O app nunca manda nome
-de ninguém. Se um dia quiser evitar isso, é só ativar o faturamento no projeto (plano pago).
+## Para o RootifyONE
 
-### 2. Foursquare
-1. https://foursquare.com/developers → entrar → aceitar os termos.
-2. **Create a new project** → dentro do projeto, **Generate Service API Key** → copie.
-3. Supabase → Secrets → `FOURSQUARE_KEY`.
+A mesma jornada pode ir para o RootifyONE chamando as mesmas funções do banco, logado com uma conta da equipe:
+`sou_admin_equipe()`, `admin_status_chaves()`, `admin_salvar_chave(p_nome, p_valor)`, `admin_apagar_chave(p_nome)`,
+`admin_historico_chaves()`. Erro `login-recente` (42501) = pedir a senha ou o código por e-mail e tentar de novo.
+SQL: `supabase/2026-11-01-chaves-do-servico.sql` (aplicado em 01/Nov/2026).
 
-### 3. Tripadvisor
-1. https://www.tripadvisor.com/developers → criar conta de desenvolvedor da **Content API** (pede cartão, não cobra
-   dentro da cota).
-2. Criar a chave. Em restrição, **não** limite por IP (a chamada sai do Supabase, cujo IP muda).
-3. Supabase → Secrets → `TRIPADVISOR_KEY`.
+## Alternativa antiga (ainda funciona)
 
-### 4. Google Places (opcional)
-1. https://console.cloud.google.com → criar projeto "GuiaXpert" → associar uma conta de faturamento.
-2. **APIs e serviços → Biblioteca** → ativar **Places API (New)**.
-3. **Credenciais → Criar credenciais → Chave de API** → em restrições de API, marque só **Places API (New)**.
-4. Supabase → Secrets → `GOOGLE_PLACES_KEY`.
+As funções também aceitam a chave nos Secrets do Supabase (Edge Functions → Secrets), com o mesmo nome.
+O cofre do app tem preferência. Para a função `ia`, os nomes `GEMINI_API_KEY` e `GEMINI_KEY` valem.
 
-## Ajustes opcionais (também em Secrets)
+## Ajustes opcionais (Secrets do Supabase)
 
 | Nome | Padrão | Para que serve |
 |---|---|---|
 | `IA_LIMITE_DIA` | 60 | Perguntas ao ✦ por pessoa por dia, usando a chave da SolverONE |
 | `IA_LIMITE_MES` | 900 | O mesmo, por mês |
-| `GEMINI_MODELO` | gemini-2.0-flash | Trocar o modelo do Gemini |
-| `FONTE_LUGARES` | automático | `api` força Foursquare; `aberta` força a base aberta FSQ OS Places |
-
-## Como conferir que ligou
-
-1. Abra https://solverone.com.br/guiaxpert/ logado, feche e abra de novo (para pegar a versão nova).
-2. **Gemini:** toque em ✦ IA e escreva "acha um lugar para almoçar perto daqui". Se responder, ligou. Se aparecer
-   "o assistente ainda não está ligado", a chave não foi salva com o nome certo.
-3. **Foursquare / Tripadvisor:** no mapa, busque "legítimo" e toque em "Buscar na internet". O
-   "Legítimo Bar & Choperia" deve vir em primeiro, com a etiqueta Foursquare ou Tripadvisor.
-4. **Google:** busque algo que não existe, toque em "Vamos achar juntos?" → "Procurar no Google". Deve aparecer a
-   lista com "powered by Google".
+| `GEMINI_MODELO` | gemini-flash-latest | Trocar o modelo do Gemini |

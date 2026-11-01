@@ -14,9 +14,28 @@ function json(body: unknown, status = 200) {
   return new Response(JSON.stringify(body), { status, headers: { ...CORS, "Content-Type": "application/json" } });
 }
 
+// ---- chaves do serviço: primeiro o cofre cifrado (Vault, cadastrado pelo app), depois os Secrets ----
+const cacheChaves = new Map<string, { v: string; ate: number }>();
+async function chave(nome: string, ...alternativas: string[]): Promise<string> {
+  const c = cacheChaves.get(nome); if (c && c.ate > Date.now()) return c.v;
+  let v = "";
+  const url = Deno.env.get("SUPABASE_URL"), srv = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+  if (url && srv) {
+    for (const cab of [{ apikey: srv }, { apikey: srv, Authorization: "Bearer " + srv }]) {
+      try {
+        const r = await fetch(url + "/rest/v1/rpc/chave_servico", { method: "POST", headers: { ...cab, "Content-Type": "application/json" }, body: JSON.stringify({ p_nome: nome }) });
+        if (r.ok) { const j = await r.json(); if (typeof j === "string") v = j; break; }
+      } catch (_) { /* tenta o próximo jeito */ }
+    }
+  }
+  if (!v) for (const n of [nome, ...alternativas]) { const e = Deno.env.get(n); if (e) { v = e; break; } }
+  cacheChaves.set(nome, { v, ate: Date.now() + (v ? 60_000 : 15_000) });
+  return v;
+}
+
 Deno.serve(async (req: Request) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: CORS });
-  const key = Deno.env.get("GOOGLE_PLACES_KEY");
+  const key = await chave("GOOGLE_PLACES_KEY");
   if (!key) return json({ erro: "sem-chave" }, 503);
 
   const u = new URL(req.url);

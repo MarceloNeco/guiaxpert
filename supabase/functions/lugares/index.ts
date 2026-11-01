@@ -1,7 +1,8 @@
 // GuiaXpert — busca de lugares comerciais (Foursquare Places) com a chave guardada no servidor.
 // O app chama GET /functions/v1/lugares?q=legitimo%20bar&lat=-23.6&lng=-46.63&lang=pt
 // Fontes: FOURSQUARE_KEY (API do Foursquare, só campos Pro) ou a base aberta FSQ OS Places carregada em lugares_abertos;
-// TRIPADVISOR_KEY (Content API) soma resultados em qualquer caso.
+// TRIPADVISOR_KEY (Content API) soma resultados em qualquer caso. As chaves vêm do cofre cifrado (cadastradas pelo app)
+// ou, se não houver, dos Secrets com o mesmo nome. ?teste=tripadvisor|foursquare responde se a chave foi aceita.
 // FONTE_LUGARES=api|aberta escolhe; sem a variável: API se houver chave, senão base aberta. Sem nenhuma: 503 { erro: 'sem-chave' }.
 // Só quem está logado chama (verify_jwt). Devolve lugares no formato do app (sem dado pessoal).
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
@@ -50,6 +51,25 @@ async function daBaseAberta(req: Request, q: string, lat: number, lng: number, t
   }));
 }
 
+// ---- chaves do serviço: primeiro o cofre cifrado (Vault, cadastrado pelo app), depois os Secrets ----
+const cacheChaves = new Map<string, { v: string; ate: number }>();
+async function chave(nome: string, ...alternativas: string[]): Promise<string> {
+  const c = cacheChaves.get(nome); if (c && c.ate > Date.now()) return c.v;
+  let v = "";
+  const url = Deno.env.get("SUPABASE_URL"), srv = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+  if (url && srv) {
+    for (const cab of [{ apikey: srv }, { apikey: srv, Authorization: "Bearer " + srv }]) {
+      try {
+        const r = await fetch(url + "/rest/v1/rpc/chave_servico", { method: "POST", headers: { ...cab, "Content-Type": "application/json" }, body: JSON.stringify({ p_nome: nome }) });
+        if (r.ok) { const j = await r.json(); if (typeof j === "string") v = j; break; }
+      } catch (_) { /* tenta o próximo jeito */ }
+    }
+  }
+  if (!v) for (const n of [nome, ...alternativas]) { const e = Deno.env.get(n); if (e) { v = e; break; } }
+  cacheChaves.set(nome, { v, ate: Date.now() + (v ? 60_000 : 15_000) });
+  return v;
+}
+
 Deno.serve(async (req: Request) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: CORS });
   const u = new URL(req.url);
@@ -59,8 +79,24 @@ Deno.serve(async (req: Request) => {
   if (q.length < 2) return json({ lugares: [] });
   const temCentro = Number.isFinite(lat) && Number.isFinite(lng);
 
-  const key = Deno.env.get("FOURSQUARE_KEY");
-  const taKey = Deno.env.get("TRIPADVISOR_KEY");
+  const key = await chave("FOURSQUARE_KEY");
+  const taKey = await chave("TRIPADVISOR_KEY");
+  // botão "Testar" da tela de chaves: responde se a fonte aceitou a chave, sem misturar com o resto
+  const teste = u.searchParams.get("teste");
+  if (teste === "tripadvisor") {
+    if (!taKey) return json({ ok: false, motivo: "sem-chave" });
+    const r = await fetch("https://api.content.tripadvisor.com/api/v1/location/search?key=" + encodeURIComponent(taKey) + "&searchQuery=" + encodeURIComponent(q) + "&language=pt", { headers: { accept: "application/json" } });
+    const corpo = await r.text();
+    let n = 0; try { n = (JSON.parse(corpo).data || []).length; } catch (_) { /* resposta sem JSON */ }
+    return json({ ok: r.ok, status: r.status, resultados: n, detalhe: r.ok ? null : corpo.slice(0, 200) });
+  }
+  if (teste === "foursquare") {
+    if (!key) return json({ ok: false, motivo: "sem-chave" });
+    const r = await fetch("https://places-api.foursquare.com/places/search?query=" + encodeURIComponent(q) + "&limit=3", { headers: { Authorization: "Bearer " + key, "X-Places-Api-Version": "2025-06-17" } });
+    const corpo = await r.text();
+    let n = 0; try { n = (JSON.parse(corpo).results || []).length; } catch (_) { /* resposta sem JSON */ }
+    return json({ ok: r.ok, status: r.status, resultados: n, detalhe: r.ok ? null : corpo.slice(0, 200) });
+  }
   const fonte = Deno.env.get("FONTE_LUGARES") || (key ? "api" : "aberta");
   // TripAdvisor em paralelo com o que vier abaixo (só ID pode ser guardado; o app mostra ao vivo e guarda o que a pessoa confirma)
   const ta = taKey ? doTripAdvisor(taKey, q, lat, lng, temCentro, lang).catch(() => []) : Promise.resolve([]);
