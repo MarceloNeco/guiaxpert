@@ -12,7 +12,7 @@
 (function () {
   'use strict';
   var d = document, $ = function (id) { return d.getElementById(id); };
-  var VERSAO_APP = '1.5.1';
+  var VERSAO_APP = '1.5.2';
 
   /* ------------------------------------------------------------------
      1. UTILIDADES
@@ -2346,8 +2346,8 @@
   var SERVICOS_CHAVE = [
     { nome: 'GEMINI_API_KEY', icone: '✦', titulo: 'chv_gemini', dica: 'chv_geminiDica', site: 'https://aistudio.google.com/apikey', siteNome: 'Google AI Studio',
       passos: 'chv_geminiPassos', formato: /^AIza[0-9A-Za-z_-]{30,}$/, teste: 'gemini' },
-    { nome: 'TRIPADVISOR_KEY', icone: '🦉', titulo: 'chv_tripadvisor', dica: 'chv_tripadvisorDica', site: 'https://www.tripadvisor.com/developers', siteNome: 'Tripadvisor Developers',
-      passos: 'chv_tripadvisorPassos', formato: /^[0-9A-Za-z]{16,}$/, teste: 'tripadvisor' },
+    { nome: 'TRIPADVISOR_KEY', icone: '🦉', titulo: 'chv_tripadvisor', dica: 'chv_tripadvisorDica', site: 'https://terra.tripadvisor.com/', siteNome: 'Tripadvisor Terra API',
+      passos: 'chv_tripadvisorPassos', formato: /^[0-9A-Za-z_.-]{16,}$/, teste: 'tripadvisor' },
     { nome: 'FOURSQUARE_KEY', icone: '📍', titulo: 'chv_foursquare', dica: 'chv_foursquareDica', site: 'https://foursquare.com/developers', siteNome: 'Foursquare Developers',
       passos: 'chv_foursquarePassos', formato: /^\S{20,}$/, teste: 'foursquare' },
     { nome: 'GOOGLE_PLACES_KEY', icone: 'G', titulo: 'chv_google', dica: 'chv_googleDica', site: 'https://console.cloud.google.com/apis/library/places.googleapis.com', siteNome: 'Google Cloud',

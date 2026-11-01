@@ -16,7 +16,11 @@ As chaves são cadastradas **pelo próprio GuiaXpert**, por quem é dono ou admi
 6. Depois, a linha mostra **"Ligada · termina em …4f2a · data"**. Botões: Trocar, Testar, Apagar.
    "Ver quem mexeu e quando" mostra o histórico (sem a chave).
 
-Ordem sugerida: **Gemini** (faz o ✦ IA funcionar para todos), **Tripadvisor**, **Foursquare**, **Google** (opcional).
+Ordem sugerida: **Gemini** (faz o ✦ IA funcionar para todos), **Foursquare**, **Google** (opcional), **Tripadvisor** (pago por resultado, ver abaixo).
+
+**Tripadvisor mudou (2026):** a Content API virou **Terra API** (terra.tripadvisor.com). No plano Discover, os primeiros
+1.000 resultados são grátis uma única vez por conta; depois, cerca de US$ 0,015 por lugar devolvido (cada busca do app
+pede até 5). Só o número do lugar pode ser guardado. A chave fica em Terra Dashboard → Overview → "My API Key".
 
 ## Quem usa as chaves
 

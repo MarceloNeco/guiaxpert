@@ -2,6 +2,18 @@
   "app": "guiaxpert",
   "versoes": [
     {
+      "versao": "1.5.2",
+      "data": "2026-11-01",
+      "itens": {
+        "pt": [
+          "Tripadvisor atualizado para a nova Terra API (terra.tripadvisor.com), com até 5 resultados por busca para controlar o custo. Passo a passo da chave corrigido no app."
+        ],
+        "en": [
+          "Tripadvisor updated to the new Terra API (terra.tripadvisor.com), with up to 5 results per search to control cost. In-app key steps corrected."
+        ]
+      }
+    },
+    {
       "versao": "1.5.1",
       "data": "2026-11-01",
       "itens": {

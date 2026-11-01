@@ -103,10 +103,9 @@ Deno.serve(async (req: Request) => {
   const teste = u.searchParams.get("teste");
   if (teste === "tripadvisor") {
     if (!taKey) return json({ ok: false, motivo: "sem-chave" });
-    const r = await fetch("https://api.content.tripadvisor.com/api/v1/location/search?key=" + encodeURIComponent(taKey) + "&searchQuery=" + encodeURIComponent(q) + "&language=pt", { headers: { accept: "application/json" } });
-    const corpo = await r.text();
-    let n = 0; try { n = (JSON.parse(corpo).data || []).length; } catch (_) { /* resposta sem JSON */ }
-    return json({ ok: r.ok, status: r.status, resultados: n, detalhe: r.ok ? null : corpo.slice(0, 200) });
+    const t = await taBuscar(taKey, q, "pt", false);
+    if (t.status === 401 || t.status === 403) return json({ ok: false, status: t.status, detalhe: t.detalhe });
+    return json({ ok: t.status === 200, status: t.status, resultados: t.lista.length, api: t.api, detalhe: t.status === 200 ? null : t.detalhe });
   }
   if (teste === "foursquare") {
     if (!key) return json({ ok: false, motivo: "sem-chave" });
@@ -156,26 +155,73 @@ Deno.serve(async (req: Request) => {
   return json({ lugares: juntar(lista, await ta), fonte: "api" });
 });
 
-// TripAdvisor Content API: busca por nome perto de um ponto. Devolve nome, endereço, categoria e o location_id.
-// Sem coordenada aqui (a busca não traz; o app acha o ponto pelo endereço na base aberta, como faz com o Google).
-async function doTripAdvisor(key: string, q: string, lat: number, lng: number, temCentro: boolean, lang: string) {
-  const u = new URL("https://api.content.tripadvisor.com/api/v1/location/search");
-  u.searchParams.set("key", key); u.searchParams.set("searchQuery", q); u.searchParams.set("language", lang === "en" ? "en" : "pt");
-  if (temCentro) { u.searchParams.set("latLong", lat + "," + lng); u.searchParams.set("radius", "50"); u.searchParams.set("radiusUnit", "km"); }
-  const r = await fetch(u.toString(), { headers: { accept: "application/json" } });
-  if (!r.ok) return [];
-  const j = await r.json();
-  return (j.data || []).slice(0, 6).map((x: any) => {
-    const a = x.address_obj || {};
-    const cat = x.category?.name || "";
-    const categoria = cat === "restaurant" ? "comer" : cat === "hotel" ? "logistica" : cat === "attraction" ? "atracao" : "atracao";
-    return {
-      id: "ta-" + x.location_id, nome: x.name, categoria, subcategoria: cat === "restaurant" ? "restaurante" : cat === "hotel" ? "hospedagem" : null,
-      descricao: null, endereco: a.address_string || [a.street1, a.city, a.state].filter(Boolean).join(", ") || null,
-      site: null, telefone: null, horario: null, reserva: null, preco: null, criancas: null,
-      confianca: "tripadvisor", gratis: false, lat: null, lng: null, fonte: "Tripadvisor", tripadvisor_id: String(x.location_id),
-    };
+// Tripadvisor: Terra API (terra.tripadvisor.com, chave no cabeçalho X-API-Key). A busca comum só devolve os lugares
+// liberados para a chave (allowlist); se vier vazia, usa a busca no catálogo inteiro, que traz nome, endereço,
+// coordenada e nota. Chave antiga (Content API, api.content.tripadvisor.com) continua funcionando como reserva.
+// Custo (plano Discover): cada lugar devolvido é cobrado (1.000 grátis uma vez por conta, depois ~US$ 0,015 cada),
+// por isso cada busca pede no máximo 5.
+function taNome(loc: any, lang: string): string {
+  const ns = loc.names || [];
+  const doIdioma = ns.find((n: any) => String(n.language || "").startsWith(lang));
+  return (doIdioma || ns.find((n: any) => n.primary) || ns[0] || {}).value || loc.name || "";
+}
+function taLugar(loc: any, lang: string) {
+  const a = (loc.addresses || [])[0] || {};
+  const cats = loc.categories || [];
+  const topo = String(cats[0]?.top_level_category || "");
+  const nomeCat = cats.map((c: any) => String(c.display_name || "")).join(" ").toLowerCase();
+  let categoria = "atracao", sub: string | null = null;
+  if (topo === "Eat & Drink") { if (/bar|pub|brew|cervej|chop|wine|vinho|night/.test(nomeCat)) { categoria = "bebidas"; sub = "bar"; } else if (/dessert|ice cream|sorvet|bakery|doce|chocolate|confeit/.test(nomeCat)) { categoria = "doces"; } else { categoria = "comer"; sub = "restaurante"; } }
+  else if (topo === "Accommodation") { categoria = "logistica"; sub = "hospedagem"; }
+  const la = Number(loc.coordinates?.latitude), lo = Number(loc.coordinates?.longitude);
+  return {
+    id: "ta-" + loc.id, nome: taNome(loc, lang), categoria, subcategoria: sub,
+    descricao: cats.map((c: any) => c.display_name).filter(Boolean).slice(0, 2).join(", ") || null,
+    endereco: a.formatted || [a.street_address, a.city, a.state].filter(Boolean).join(", ") || null,
+    site: null, telefone: null, horario: null, reserva: null, preco: null, criancas: null,
+    nota: typeof loc.traveler_ratings?.overall?.rating === "number" ? Math.round(loc.traveler_ratings.overall.rating * 10) / 10 : null,
+    confianca: "tripadvisor", gratis: false,
+    lat: Number.isFinite(la) ? +la.toFixed(5) : null, lng: Number.isFinite(lo) ? +lo.toFixed(5) : null,
+    fonte: "Tripadvisor", tripadvisor_id: String(loc.id),
+  };
+}
+async function taBuscar(key: string, q: string, lang: string, comCatalogo = true): Promise<{ status: number; lista: any[]; api: string; detalhe: string | null }> {
+  const loc = lang === "en" ? "&locale=en-US" : "&locale=pt-BR&locale=en-US";
+  const cab = { "X-API-Key": key, accept: "application/json" };
+  const r = await fetch("https://terra.tripadvisor.com/api/locations/search?version=1&size=5&query=" + encodeURIComponent(q) + loc, { headers: cab });
+  if (r.ok) {
+    const j = await r.json();
+    let lista = (j.data || []).map((d: any) => taLugar(d.location || d, lang)).filter((x: any) => x.nome);
+    if (!lista.length && comCatalogo) {
+      const c = await fetch("https://terra.tripadvisor.com/api/catalog/locations/search?version=1&size=5&query=" + encodeURIComponent(q) + loc, { headers: cab });
+      if (c.ok) { const jc = await c.json(); lista = (jc.data || []).map((d: any) => taLugar(d.location || d, lang)).filter((x: any) => x.nome); }
+    }
+    return { status: 200, lista, api: "terra", detalhe: null };
+  }
+  if (r.status !== 401 && r.status !== 403 && r.status !== 404) return { status: r.status, lista: [], api: "terra", detalhe: (await r.text()).slice(0, 200) };
+  // reserva: chave da Content API antiga
+  const u = "https://api.content.tripadvisor.com/api/v1/location/search?key=" + encodeURIComponent(key) + "&searchQuery=" + encodeURIComponent(q) + "&language=" + (lang === "en" ? "en" : "pt");
+  const v = await fetch(u, { headers: { accept: "application/json" } });
+  if (!v.ok) return { status: v.status, lista: [], api: "content", detalhe: (await v.text()).slice(0, 200) };
+  const jv = await v.json();
+  const lista = (jv.data || []).slice(0, 8).map((x: any) => {
+    const a = x.address_obj || {}; const cat = x.category?.name || "";
+    return { id: "ta-" + x.location_id, nome: x.name, categoria: cat === "restaurant" ? "comer" : cat === "hotel" ? "logistica" : "atracao",
+      subcategoria: cat === "restaurant" ? "restaurante" : cat === "hotel" ? "hospedagem" : null, descricao: null,
+      endereco: a.address_string || [a.street1, a.city, a.state].filter(Boolean).join(", ") || null, site: null, telefone: null, horario: null,
+      reserva: null, preco: null, criancas: null, confianca: "tripadvisor", gratis: false, lat: null, lng: null, fonte: "Tripadvisor", tripadvisor_id: String(x.location_id) };
   }).filter((x: any) => x.nome);
+  return { status: 200, lista, api: "content", detalhe: null };
+}
+async function doTripAdvisor(key: string, q: string, lat: number, lng: number, temCentro: boolean, lang: string) {
+  const t = await taBuscar(key, q, lang);
+  let lista = t.lista;
+  if (temCentro) {
+    const d = (x: any) => x.lat == null ? 1e9 : Math.pow((x.lng - lng) * Math.cos(lat * Math.PI / 180), 2) + Math.pow(x.lat - lat, 2);
+    const perto = lista.filter((x: any) => d(x) < 1.8 * 1.8);   // ~200 km
+    lista = (perto.length ? perto : lista).sort((a: any, b: any) => d(a) - d(b));
+  }
+  return lista.slice(0, 6);
 }
 // junta listas sem repetir nome igual
 function juntar(a: any[], b: any[]) {
