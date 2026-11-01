@@ -42,6 +42,8 @@ A pessoa abre o GuiaXpert, cria a conta (ou entra), digita o código e fica libe
 O "Receber código por e-mail" já funciona com o link do e-mail. Para o e-mail trazer também o código de 6 números:
 Supabase → Authentication → Emails → **Magic link** → acrescente no texto: `Seu código: {{ .Token }}`. Vale para todos os apps.
 
+> **Todas as chaves num lugar só:** veja `docs/CONFIGURAR-CHAVES.md` (onde criar, onde cadastrar, como conferir).
+
 ## 2b. Busca de restaurantes e bares (Foursquare, opcional)
 
 O OpenStreetMap não tem todo comércio. A função `supabase/functions/lugares` consulta o Foursquare Places com uma chave
