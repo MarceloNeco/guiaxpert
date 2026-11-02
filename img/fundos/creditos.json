@@ -1,6 +1,6 @@
 [
  {
-  "id": "cristo",
+  "id": "guanabara",
   "titulo": "Boca da Baía de Guanabara e orlas artificiais - Parque do Flamengo, Fortes Históricos de Niterói, Monumento Natural do Pão de Açúcar, orla marítima de Copacabana - Rio de Janeiro - 20240623064031.jpg",
   "autor": "Donatas Dabravolskas",
   "licenca": "CC BY-SA 4.0",
@@ -19,13 +19,6 @@
   "autor": "W. Bulach",
   "licenca": "CC BY-SA 4.0",
   "pagina": "https://commons.wikimedia.org/wiki/File:00_1854_Iguaz%C3%BA-Wasserf%C3%A4lle_-_S%C3%BCdamerika.jpg"
- },
- {
-  "id": "kyoto",
-  "titulo": "KyotoFushimiInariLarge.jpg",
-  "autor": "Paul Vlaar",
-  "licenca": "CC BY-SA 3.0",
-  "pagina": "https://commons.wikimedia.org/wiki/File:KyotoFushimiInariLarge.jpg"
  },
  {
   "id": "lencois",
@@ -89,5 +82,54 @@
   "autor": "STELLA SEGATTI",
   "licenca": "CC BY-SA 4.0",
   "pagina": "https://commons.wikimedia.org/wiki/File:HORTENSIA_-_PARQUE_DO_LAGO_NEGRO_EM_GRAMADO_-_RS.jpg"
+ },
+ {
+  "id": "cristo",
+  "titulo": "Redentor Over Clouds 1.jpg",
+  "autor": "Donatas Dabravolskas",
+  "licenca": "CC BY-SA 4.0",
+  "pagina": "https://commons.wikimedia.org/wiki/File:Redentor_Over_Clouds_1.jpg"
+ },
+ {
+  "id": "masp",
+  "titulo": "MASP Brazil.jpg",
+  "autor": "Wilfredor",
+  "licenca": "CC0 1.0",
+  "pagina": "https://commons.wikimedia.org/wiki/File:MASP_Brazil.jpg"
+ },
+ {
+  "id": "oia",
+  "titulo": "1000 Three domes of Oia in Santorini Photo by Giles Laurent.jpg",
+  "autor": "Giles Laurent",
+  "licenca": "CC BY-SA 4.0",
+  "pagina": "https://commons.wikimedia.org/wiki/File:1000_Three_domes_of_Oia_in_Santorini_Photo_by_Giles_Laurent.jpg"
+ },
+ {
+  "id": "coliseu",
+  "titulo": "Colosseo 2020.jpg",
+  "autor": "Paris Orlando",
+  "licenca": "CC BY-SA 4.0",
+  "pagina": "https://commons.wikimedia.org/wiki/File:Colosseo_2020.jpg"
+ },
+ {
+  "id": "comida-pizza",
+  "titulo": "Vegetarian Pizza.jpg",
+  "autor": "Petar Milošević",
+  "licenca": "CC BY-SA 4.0",
+  "pagina": "https://commons.wikimedia.org/wiki/File:Vegetarian_Pizza.jpg"
+ },
+ {
+  "id": "comida-doce",
+  "titulo": "Piece of chocolate cake on a white plate decorated with chocolate sauce.jpg",
+  "autor": "Daria Yakovleva",
+  "licenca": "CC0 1.0",
+  "pagina": "https://commons.wikimedia.org/wiki/File:Piece_of_chocolate_cake_on_a_white_plate_decorated_with_chocolate_sauce.jpg"
+ },
+ {
+  "id": "taj",
+  "titulo": "Taj Mahal, Agra, India edit3.jpg",
+  "autor": "Yann Forget (Wikimedia Commons)",
+  "licenca": "CC BY-SA 3.0",
+  "pagina": "https://commons.wikimedia.org/wiki/File:Taj_Mahal,_Agra,_India_edit3.jpg"
  }
 ]

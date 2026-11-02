@@ -12,7 +12,7 @@
 (function () {
   'use strict';
   var d = document, $ = function (id) { return d.getElementById(id); };
-  var VERSAO_APP = '1.5.10';
+  var VERSAO_APP = '1.5.11';
 
   /* ------------------------------------------------------------------
      1. UTILIDADES
@@ -440,7 +440,7 @@
      Fotos de lugares icônicos sem pessoas (Wikimedia Commons, licenças livres; créditos em img/fundos/creditos.json).
      640 px no celular, 1280 px em tela grande. Começa pela foto do dia e troca a cada 8 s; para com "reduzir
      movimento" do aparelho e com a aba escondida. Nunca nas telas de uso (roteiro, mapa, reservas). */
-  var FOTOS_MUNDO = ['cristo', 'iguacu', 'noronha', 'lencois', 'veadeiros', 'eiffel', 'kyoto', 'machu', 'muralha', 'sydney'];
+  var FOTOS_MUNDO = ['cristo', 'coliseu', 'comida-pizza', 'oia', 'eiffel', 'taj', 'comida-doce', 'masp', 'iguacu', 'machu', 'guanabara', 'sydney', 'muralha', 'noronha', 'lencois', 'veadeiros'];
   /* fotos do próprio destino entram primeiro na viagem para lá (as do mundo seguem no rodízio) */
   var FOTOS_DESTINO = { gramado: ['gramado-lago', 'canela-caracol', 'gramado-hortensia'] };
   FOTOS_DESTINO.canela = FOTOS_DESTINO.gramado;

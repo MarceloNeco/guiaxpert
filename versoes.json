@@ -2,6 +2,19 @@
   "app": "guiaxpert",
   "versoes": [
     {
+      "versao": "1.5.11",
+      "data": "2026-11-02",
+      "substitui": "1.5.10",
+      "itens": {
+        "pt": [
+          "Fotos novas na abertura e no início: Cristo Redentor, Coliseu, Santorini, Torre Eiffel, Taj Mahal, MASP, comida e mais. A abertura mostra uma foto diferente a cada vez."
+        ],
+        "en": [
+          "New photos on the opening screen and home: Christ the Redeemer, Colosseum, Santorini, Eiffel Tower, Taj Mahal, MASP, food and more. The opening screen shows a different photo each time."
+        ]
+      }
+    },
+    {
       "versao": "1.5.10",
       "data": "2026-11-02",
       "substitui": "1.5.9",
