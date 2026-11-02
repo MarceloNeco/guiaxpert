@@ -540,3 +540,11 @@ body { background: var(--fundo); }
 .chave-linha.ligada .chave-estado { color: var(--rodovia); }
 .chave-cadastro .grande { font-size: 1.1rem; font-weight: 800; margin-top: .3rem; }
 .chave-cadastro ol.passos { margin: 0; padding-left: 1.3rem; display: grid; gap: .3rem; }
+
+/* ---------- trava ao abrir ---------- */
+body.travado #app, body.travado .janela-fundo.na-trava, body.travado #fundo-foto { visibility: hidden; }
+#trava { position: fixed; inset: 0; z-index: 49; background: var(--fundo); display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: .8rem; padding: 1.5rem max(1rem, env(safe-area-inset-right, 0px)) 2rem max(1rem, env(safe-area-inset-left, 0px)); text-align: center; }
+#trava img { border-radius: 18px; }
+#trava h2 { font-size: 1.5rem; font-weight: 800; margin: .2rem 0 0; }
+#trava .bt { width: min(100%, 22rem); min-height: 3.4rem; font-size: 1.1rem; }

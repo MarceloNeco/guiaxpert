@@ -2,6 +2,21 @@
   "app": "guiaxpert",
   "versoes": [
     {
+      "versao": "1.5.8",
+      "data": "2026-11-02",
+      "substitui": "1.5.7",
+      "itens": {
+        "pt": [
+          "Viagem para Gramado e Canela abre com fotos de lá (Lago Negro, Cascata do Caracol, hortênsias).",
+          "Nova opção em Configurações → Digital ou rosto: pedir a digital ao abrir o GuiaXpert depois de alguns minutos parado. Quem pegar o celular desbloqueado não vê a viagem nem as reservas."
+        ],
+        "en": [
+          "Trips to Gramado and Canela open with photos from there (Lago Negro, Caracol Falls, hydrangeas).",
+          "New option in Settings → Fingerprint or face: ask for your fingerprint when opening GuiaXpert after a few idle minutes. Someone holding the unlocked phone can't see the trip or bookings."
+        ]
+      }
+    },
+    {
       "versao": "1.5.7",
       "data": "2026-11-02",
       "itens": {

@@ -12,7 +12,7 @@
 (function () {
   'use strict';
   var d = document, $ = function (id) { return d.getElementById(id); };
-  var VERSAO_APP = '1.5.7';
+  var VERSAO_APP = '1.5.8';
 
   /* ------------------------------------------------------------------
      1. UTILIDADES
@@ -397,11 +397,21 @@
      Fotos de lugares icônicos sem pessoas (Wikimedia Commons, licenças livres; créditos em img/fundos/creditos.json).
      640 px no celular, 1280 px em tela grande. Começa pela foto do dia e troca a cada 8 s; para com "reduzir
      movimento" do aparelho e com a aba escondida. Nunca nas telas de uso (roteiro, mapa, reservas). */
-  var FOTOS = ['cristo', 'iguacu', 'noronha', 'lencois', 'veadeiros', 'eiffel', 'kyoto', 'machu', 'muralha', 'sydney'];
+  var FOTOS_MUNDO = ['cristo', 'iguacu', 'noronha', 'lencois', 'veadeiros', 'eiffel', 'kyoto', 'machu', 'muralha', 'sydney'];
+  /* fotos do próprio destino entram primeiro na viagem para lá (as do mundo seguem no rodízio) */
+  var FOTOS_DESTINO = { gramado: ['gramado-lago', 'canela-caracol', 'gramado-hortensia'] };
+  FOTOS_DESTINO.canela = FOTOS_DESTINO.gramado;
+  function fotosDaViagem(v) {
+    var txt = normalizar([v && v.destino, v && v.destinoTexto, v && v.nome].join(' '));
+    for (var k in FOTOS_DESTINO) if (txt.indexOf(k) > -1) return FOTOS_DESTINO[k];
+    return null;
+  }
   var fotosTimer = null, creditosFotos = null;
   function faixaFotos(titulo, sub, op) {
     op = op || {};
-    var n = FOTOS.length, inicio = (op.indice != null ? op.indice : Math.floor((Date.now() - new Date(new Date().getFullYear(), 0, 0)) / 86400000)) % n;
+    var dia = Math.floor((Date.now() - new Date(new Date().getFullYear(), 0, 0)) / 86400000);
+    var FOTOS = op.destino ? op.destino.concat(FOTOS_MUNDO) : FOTOS_MUNDO;
+    var n = FOTOS.length, inicio = (op.indice != null ? op.indice : op.destino ? dia % op.destino.length : dia) % n;
     var img = function (id, ativa) { return h('img', { class: 'hero-foto' + (ativa ? ' ativa' : ''), alt: '', decoding: 'async', loading: 'eager', sizes: '100vw',
       src: 'img/fundos/' + id + '-640.webp', srcset: 'img/fundos/' + id + '-640.webp 640w, img/fundos/' + id + '-1280.webp 1280w' }); };
     var a = img(FOTOS[inicio], true), b = img(FOTOS[(inicio + 1) % n], false);
@@ -448,7 +458,7 @@
     }
     var dias = diasDaViagem(v), hj = hojeIso(), di = dias.indexOf(hj);
     var antes = di < 0 && dataDe(v.inicio) > dataDe(hj);
-    if (antes) tela.appendChild(faixaFotos(v.nome, fData(v.inicio) + ' – ' + fData(v.fim)));
+    if (antes) tela.appendChild(faixaFotos(v.nome, fData(v.inicio) + ' – ' + fData(v.fim), { destino: fotosDaViagem(v) }));
     else tela.appendChild(h('div', {}, [h('h1', { texto: v.nome }), h('p', { class: 'sub', texto: fData(v.inicio) + ' – ' + fData(v.fim) })]));
     if (estado.pacote && estado.pacote.offline) tela.appendChild(h('p', { class: 'pequeno', texto: T('usandoCopia') }));
 
@@ -2596,6 +2606,7 @@
         return;
       }
       cBio.appendChild(h('p', { class: 'sub', texto: T('bioLigadaTexto') }));
+      cBio.appendChild(opcaoTrava());
       Promise.all([Cofre.existe(), Cofre.temBio()]).then(function (r) {
         if (r[0] && !r[1]) cBio.appendChild(h('button', { class: 'bt sec', type: 'button', texto: T('bioNasReservas'), onclick: function () {
           var corpo = h('div', {}), j = janela(T('bioNasReservas'), corpo);
@@ -2707,10 +2718,89 @@
       return false;
     });
   }
+  /* "Pedir a digital ao abrir o GuiaXpert" + depois de quanto tempo parado */
+  function opcaoTrava() {
+    var marca = h('input', { type: 'checkbox', id: 'gx-trava' }); marca.checked = Trava.ligada();
+    var sel = h('select', { class: 'campo', id: 'gx-trava-min', 'aria-label': T('trv_depois') });
+    [1, 5, 15, 60].forEach(function (m) { var o = h('option', { value: String(m), texto: T(m === 60 ? 'trv_1h' : 'trv_min', { n: m }) }); if (m === Trava.minutos()) o.selected = true; sel.appendChild(o); });
+    var linhaMin = h('div', { class: 'linha', style: 'gap:.5rem;align-items:center' }, [h('label', { for: 'gx-trava-min', class: 'pequeno', texto: T('trv_depois') }), sel]);
+    linhaMin.hidden = !marca.checked;
+    marca.addEventListener('change', function () {
+      if (marca.checked) { Trava.ligar(+sel.value); avisar(T('trv_ligada', { n: sel.options[sel.selectedIndex].text })); } else { Trava.desligar(); avisar(T('trv_desligada')); }
+      linhaMin.hidden = !marca.checked;
+    });
+    sel.addEventListener('change', function () { if (marca.checked) Trava.ligar(+sel.value); });
+    return h('div', { class: 'linha', style: 'flex-direction:column;align-items:stretch;gap:.4rem;margin:.4rem 0' }, [
+      h('label', { class: 'linha', for: 'gx-trava', style: 'gap:.6rem;align-items:center;font-weight:700' }, [marca, h('span', { texto: T('trv_opcao') })]),
+      h('p', { class: 'pequeno', texto: T('trv_explica') }), linhaMin]);
+  }
   function desligarBio() {
+    Trava.desligar();
     Bio.desligar(); Conta.esquecerVolta();
     return Cofre.desligarBio().then(function () { avisar(T('bioDesligada')); });
   }
+
+  /* ------------------------------------------------------------------
+     Trava ao abrir (opcional, por aparelho): depois de alguns minutos sem
+     usar, o GuiaXpert pede a digital ou o rosto antes de mostrar qualquer
+     coisa. Usa a mesma chave de acesso de "Digital ou rosto" (WebAuthn,
+     leitura de verdade no aparelho). Alternativa: senha ou código por e-mail.
+     As reservas continuam com o cofre próprio (fecha sozinho em 5 min).
+     ------------------------------------------------------------------ */
+  var Trava = (function () {
+    var CFG = 'guiaxpert.trava', USO = 'guiaxpert.trava-uso', travada = false, relogio = null;
+    function cfg() { try { return JSON.parse(localStorage.getItem(CFG) || 'null'); } catch (e) { return null; } }
+    function marcarUso() { if (travada) return; try { localStorage.setItem(USO, String(Date.now())); } catch (e) {} }
+    function ultimoUso() {
+      var u = 0; try { u = +localStorage.getItem(USO) || 0; } catch (e) {}
+      var s = Conta.sessao(), desde = s && s.desde ? Date.parse(s.desde) : 0;   /* acabou de entrar com a senha = acabou de usar */
+      return Math.max(u, desde || 0);
+    }
+    function ligada() { var c = cfg(); return !!(c && c.ativa && Bio.ligada()); }
+    function minutos() { var c = cfg(); return c && c.minutos > 0 ? c.minutos : 5; }
+    function precisa() { return ligada() && !!Conta.sessao() && Date.now() - ultimoUso() > minutos() * 60000; }
+    function destravar() {
+      travada = false; marcarUso();
+      var t = $('trava'); if (t) t.remove();
+      d.body.classList.remove('travado');
+      [].forEach.call(d.querySelectorAll('.janela-fundo.na-trava'), function (j) { j.classList.remove('na-trava'); });
+    }
+    function travar() {
+      if (travada) return; travada = true;
+      [].forEach.call(d.querySelectorAll('.janela-fundo'), function (j) { j.classList.add('na-trava'); });
+      d.body.classList.add('travado');
+      var msg = h('p', { class: 'sub', role: 'status' });
+      var bDig = h('button', { class: 'bt', type: 'button', texto: '👆 ' + T('trv_abrir') });
+      var bSenha = h('button', { class: 'lk', type: 'button', texto: T('trv_senha') });
+      var caixa = h('div', { id: 'trava', role: 'dialog', 'aria-modal': 'true', 'aria-labelledby': 'trava-titulo' }, [
+        h('img', { src: 'icone-192.png', alt: '', width: '72', height: '72' }),
+        h('h2', { id: 'trava-titulo', texto: T('trv_titulo') }), h('p', { class: 'sub', texto: T('trv_texto') }), bDig, msg, bSenha]);
+      d.body.appendChild(caixa);
+      bDig.addEventListener('click', function () {
+        bDig.disabled = true; msg.textContent = '';
+        Bio.chaves().then(destravar).catch(function (e) {
+          bDig.disabled = false;
+          msg.textContent = e && e.message === 'cancelado' ? '' : T('trv_falhou');
+        });
+      });
+      bSenha.addEventListener('click', function () { confirmarIdentidade().then(destravar).catch(function () {}); });
+      setTimeout(function () { bDig.focus(); }, 30);
+    }
+    function conferir() { if (!travada && precisa()) travar(); }
+    return {
+      ligada: ligada, minutos: minutos, travada: function () { return travada; }, marcarUso: marcarUso,
+      ligar: function (min) { try { localStorage.setItem(CFG, JSON.stringify({ ativa: true, minutos: min || 5 })); } catch (e) {} marcarUso(); },
+      desligar: function () { try { localStorage.removeItem(CFG); } catch (e) {} if (travada) destravar(); },
+      iniciar: function () {
+        conferir();
+        /* enquanto a tela está na frente, conta como uso; ao sair, guarda a hora; ao voltar, confere o prazo */
+        clearInterval(relogio); relogio = setInterval(function () { if (!d.hidden) marcarUso(); }, 30000);
+        d.addEventListener('visibilitychange', function () { if (d.hidden) marcarUso(); else conferir(); });
+        window.addEventListener('pageshow', conferir);
+        ['pointerdown', 'keydown'].forEach(function (ev) { d.addEventListener(ev, function () { if (!travada && Date.now() - ultimoUso() > 20000) marcarUso(); }, { passive: true }); });
+      }
+    };
+  })();
 
   function iniciar() {
     /* guarda o endereço como chegou: o link do e-mail traz o login no #access_token, e a navegação abaixo troca o # */
@@ -2746,6 +2836,7 @@
     });
     d.addEventListener('gx:cofre', function () { cacheRestr = []; if (estado.rota === 'reservas') mostrar('reservas'); });
     window.addEventListener('online', function () { if (!estado.acesso || !estado.acesso.liberado || estado.acesso.offline) iniciarAcesso(); });
+    Trava.iniciar();
     estado.pronto = true;
     var ab = $('abertura'); if (ab) { ab.classList.add('sai'); setTimeout(function () { ab.remove(); }, 600); }
     mostrar('entrar');
