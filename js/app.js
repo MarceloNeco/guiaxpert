@@ -12,7 +12,7 @@
 (function () {
   'use strict';
   var d = document, $ = function (id) { return d.getElementById(id); };
-  var VERSAO_APP = '1.5.4';
+  var VERSAO_APP = '1.5.5';
 
   /* ------------------------------------------------------------------
      1. UTILIDADES
@@ -2345,13 +2345,13 @@
      As funções do servidor (ia, lugares, google-lugares) leem do cofre; o celular nunca vê a chave. */
   var SERVICOS_CHAVE = [
     { nome: 'GEMINI_API_KEY', icone: '✦', titulo: 'chv_gemini', dica: 'chv_geminiDica', site: 'https://aistudio.google.com/apikey', siteNome: 'Google AI Studio',
-      passos: 'chv_geminiPassos', formato: /^AIza[0-9A-Za-z_-]{30,}$/, teste: 'gemini' },
+      passos: 'chv_geminiPassos', formato: /^\S{20,300}$/, teste: 'gemini' },
     { nome: 'TRIPADVISOR_KEY', icone: '🦉', titulo: 'chv_tripadvisor', dica: 'chv_tripadvisorDica', site: 'https://terra.tripadvisor.com/', siteNome: 'Tripadvisor Terra API',
       passos: 'chv_tripadvisorPassos', formato: /^[0-9A-Za-z_.-]{16,}$/, teste: 'tripadvisor' },
     { nome: 'FOURSQUARE_KEY', icone: '📍', titulo: 'chv_foursquare', dica: 'chv_foursquareDica', site: 'https://foursquare.com/developers', siteNome: 'Foursquare Developers',
       passos: 'chv_foursquarePassos', formato: /^\S{20,}$/, teste: 'foursquare' },
     { nome: 'GOOGLE_PLACES_KEY', icone: 'G', titulo: 'chv_google', dica: 'chv_googleDica', site: 'https://console.cloud.google.com/apis/library/places.googleapis.com', siteNome: 'Google Cloud',
-      passos: 'chv_googlePassos', formato: /^AIza[0-9A-Za-z_-]{30,}$/, teste: 'google' }
+      passos: 'chv_googlePassos', formato: /^\S{20,300}$/, teste: 'google' }
   ];
   function chamarFuncao(nome, op) {
     var cfg = window.GUIAXPERT_CONFIG || {};

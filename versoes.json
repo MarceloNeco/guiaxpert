@@ -2,6 +2,18 @@
   "app": "guiaxpert",
   "versoes": [
     {
+      "versao": "1.5.5",
+      "data": "2026-11-02",
+      "itens": {
+        "pt": [
+          "Chaves do Google (Gemini e Places) aceitas em qualquer formato atual; o teste automático depois de salvar confirma se funciona."
+        ],
+        "en": [
+          "Google keys (Gemini and Places) accepted in any current format; the automatic test after saving confirms they work."
+        ]
+      }
+    },
+    {
       "versao": "1.5.4",
       "data": "2026-11-02",
       "itens": {
