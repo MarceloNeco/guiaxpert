@@ -12,12 +12,14 @@
 (function () {
   'use strict';
   var d = document, $ = function (id) { return d.getElementById(id); };
-  var VERSAO_APP = '1.5.9';
+  var VERSAO_APP = '1.5.10';
 
   /* ------------------------------------------------------------------
      1. UTILIDADES
      ------------------------------------------------------------------ */
   function idioma() { return (window.DGO && DGO.idioma && DGO.idioma()) || estado.idioma || 'pt'; }
+  /* subcategoria: nome traduzido do guia, ou o nome que veio da fonte (ex.: "Bar" do Foursquare) */
+  function nomeSub(sub) { return window.TEXTOS['sub_' + sub] ? T('sub_' + sub) : String(sub); }
   function T(k, vars, lg) {
     var e = window.TEXTOS[k], s = e ? (e[lg || idioma()] || e.pt) : k;
     if (vars) Object.keys(vars).forEach(function (v) { s = s.split('{' + v + '}').join(vars[v]); });
@@ -352,9 +354,50 @@
           estado.busca = ''; estado.filtro = 'todos'; estado.abrirLugar = l.id; j.fechar(); setTimeout(function () { Nav.ir(emViagem() ? 'mapa' : 'explorar'); }, 0);
         } }, [placa(l.categoria), ' ', l.nome]));
       });
-      if (!lista.childNodes.length) lista.appendChild(h('p', { class: 'sub', texto: T('nadaAchado') }));
+      /* lugares fora do app (OpenStreetMap, Foursquare, Tripadvisor): procura sozinho quando a pessoa para de digitar */
+      var naNet = h('div', { class: 'linha', style: 'flex-direction:column;align-items:stretch;gap:.4rem' });
+      lista.appendChild(naNet);
+      clearTimeout(espera);
+      if (q.length < 3) { if (lista.childNodes.length === 1) naNet.appendChild(h('p', { class: 'sub', texto: T('nadaAchado') })); return; }
+      if (!navigator.onLine) { naNet.appendChild(h('p', { class: 'pequeno', texto: T('semInternet') })); return; }
+      naNet.appendChild(h('p', { class: 'sub', texto: '🔎 ' + T('bscProcurandoFora', { q: campo.value.trim() }) }));
+      var pedido = ++vez, texto = campo.value.trim();
+      espera = setTimeout(function () {
+        Descobrir.buscarNome(texto, estado.pos || centroViagem(), idioma()).catch(function () { return []; }).then(function (ls) {
+          if (pedido !== vez) return;
+          naNet.textContent = '';
+          var ids = {}; todosLugares().forEach(function (l) { ids[normalizar(l.nome)] = 1; });
+          ls = ls.filter(function (l) { return !ids[normalizar(l.nome)]; }).slice(0, 6);
+          if (!ls.length) {
+            naNet.appendChild(h('p', { class: 'sub', texto: T('bscNadaFora', { q: texto }) }));
+            naNet.appendChild(h('button', { class: 'bt leve', type: 'button', texto: '🤝 ' + T('acharJuntos'), onclick: function () {
+              j.fechar(function () { janelaAcharJuntos(texto, function (n) { if (estado.viagem && estado.opcao && podeEditar()) janelaAddAoRoteiro(n); }); });
+            } }));
+            return;
+          }
+          naNet.appendChild(h('p', { class: 'sub', texto: T('bscNaInternet') }));
+          ls.forEach(function (l) {
+            naNet.appendChild(h('button', { class: 'bt-grande', type: 'button', onclick: function () { j.fechar(function () { mostrarNoMapa(l); }); } }, [
+              h('span', { class: 'ic-grande', 'aria-hidden': 'true', texto: '📍' }),
+              h('span', { class: 'tx' }, [h('b', { texto: l.nome }), h('small', { texto: [[l.endereco, l.cidade].filter(Boolean).join(', '), l.fonte].filter(Boolean).join(' · ') })])]));
+          });
+        });
+      }, 650);
     }
+    var espera = null, vez = 0;
     campo.addEventListener('input', atualizar);
+    campo.addEventListener('keydown', function (e) { if (e.key === 'Enter') { clearTimeout(espera); atualizar(); } });
+  }
+  /* abre um lugar achado na internet no mapa (sem salvar ainda: no cartão dá para salvar e pôr no roteiro) */
+  function mostrarNoMapa(l) {
+    if (emViagem()) {
+      if (!estado.descobertas.some(function (x) { return x.id === l.id; })) estado.descobertas.push(l);
+      estado.busca = ''; estado.filtro = 'todos'; estado.abrirLugar = l.id; Nav.ir('mapa');
+    } else {
+      var ex = window.Explorar && Explorar.estado;
+      if (ex && !ex.descobertas.some(function (x) { return x.id === l.id; })) ex.descobertas.push(l);
+      estado.busca = ''; estado.abrirLugar = l.id; Nav.ir('explorar');
+    }
   }
 
   /* ------------------------------------------------------------------
@@ -1238,7 +1281,7 @@
   function cartaoLugar(l, restr) {
     var fav = !!estado.favoritos['lugar:' + l.id];
     var det = h('details', { class: 'lugar', 'data-id': l.id });
-    var meta = h('span', { class: 'meta' }, [placa(l.categoria), l.subcategoria ? T('sub_' + l.subcategoria) : null,
+    var meta = h('span', { class: 'meta' }, [placa(l.categoria), l.subcategoria ? nomeSub(l.subcategoria) : null,
       l._km != null ? Geo.formatarKm(l._km) : null, l.gratis ? h('span', { class: 'etq gratis', texto: T('gratis') }) : null,
       Gostos.combina(l, somaGostos) > 0 ? h('span', { class: 'etq combina', texto: '♥ ' + T('combina') }) : null,
       l.confianca === 'baixa' ? h('span', { class: 'conferir', texto: T('conferir') }) : null,
@@ -2920,7 +2963,7 @@
   window.GuiaXpert = { versao: VERSAO_APP, estado: estado, ir: function (r) { Nav.ir(r); } };
   /* ajudantes para os módulos de tela (mapa.js, explorar.js): uma porta só */
   window.GX = { h: h, T: T, idioma: idioma, estado: estado, Nav: Nav, janela: janela, mostrar: mostrar, avisar: avisar, fData: fData, semana: semana, hojeIso: hojeIso,
-    normalizar: normalizar, ICONES: ICONES, placa: placa, cartaoLugar: cartaoLugar, pegarPosicao: pegarPosicao, restricoesDoGrupo: restricoesDoGrupo,
+    normalizar: normalizar, ICONES: ICONES, placa: placa, nomeSub: nomeSub, cartaoLugar: cartaoLugar, pegarPosicao: pegarPosicao, restricoesDoGrupo: restricoesDoGrupo,
     somaGostos: function () { return somaGostos; }, recarregarContexto: recarregarContexto, recarregar: recarregar, lugarPorId: lugarPorId, todosLugares: todosLugares, acharJuntos: janelaAcharJuntos };
 })();
 /* erro em promessa sem tratamento aparece no console (ajuda o suporte), sem derrubar a tela */

@@ -16,7 +16,10 @@ window.TEXTOS = (function () {
     portal: ['Portal SolverONE', 'SolverONE Portal'], umaSolucao: ['uma solução SolverONE', 'a SolverONE solution'],
     voltarSair: ['Toque em Voltar de novo para sair do GuiaXpert', 'Tap Back again to leave GuiaXpert'],
     erroTela: ['Esta tela falhou ao abrir. Volte e tente de novo.', 'This screen failed to open. Go back and try again.'],
-    buscarDica: ['Ex.: fondue, roteiro, Canela', 'E.g.: fondue, itinerary, Canela'],
+    buscarDica: ['Nome de um lugar (ex.: Legítimo) ou de uma tela', 'A place name (e.g.: Legítimo) or a screen'],
+    bscProcurandoFora: ['Procurando "{q}" na internet…', 'Searching "{q}" online…'],
+    bscNaInternet: ['Achei na internet (toque para ver no mapa):', 'Found online (tap to see it on the map):'],
+    bscNadaFora: ['Não achei "{q}" na internet.', 'Couldn’t find "{q}" online.'],
     nadaAchado: ['Nada encontrado. Tente outra palavra ou limpe o filtro.', 'Nothing found. Try another word or clear the filter.'],
     carregando: ['Carregando…', 'Loading…'],
 

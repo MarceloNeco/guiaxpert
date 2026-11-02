@@ -109,7 +109,7 @@
         itens.slice(0, 200).forEach(function (l) {
           var lin = h('button', { class: 'linha-lugar', type: 'button', onclick: function () { abrirLugar(l); } }, [
             h('span', { class: 'bolinha', style: 'background:' + corDe(l) }),
-            h('span', { class: 'txt' }, [h('b', { texto: l.nome }), h('span', { class: 'pequeno', texto: [l.subcategoria ? T('sub_' + l.subcategoria) : T('cat_' + l.categoria), l._km != null ? Geo.formatarKm(l._km) : null, l.gratis ? T('gratis') : null].filter(Boolean).join(' · ') })]),
+            h('span', { class: 'txt' }, [h('b', { texto: l.nome }), h('span', { class: 'pequeno', texto: [l.subcategoria ? GX.nomeSub(l.subcategoria) : T('cat_' + l.categoria), l._km != null ? Geo.formatarKm(l._km) : null, l.gratis ? T('gratis') : null].filter(Boolean).join(' · ') })]),
             estado.favoritos['lugar:' + l.id] ? h('span', { class: 'estrela', texto: '★' }) : null
           ]);
           lista.appendChild(lin);

@@ -2,6 +2,21 @@
   "app": "guiaxpert",
   "versoes": [
     {
+      "versao": "1.5.10",
+      "data": "2026-11-02",
+      "substitui": "1.5.9",
+      "itens": {
+        "pt": [
+          "A lupa 🔍 do topo agora procura lugares na internet também: digite o nome (ex.: Legítimo), toque no resultado e ele aparece no mapa, pronto para guardar ou pôr no roteiro.",
+          "Cartão do lugar mostra o tipo certo (ex.: \"Bar\") para lugares vindos do Foursquare."
+        ],
+        "en": [
+          "The 🔍 at the top now also searches places online: type the name (e.g.: Legítimo), tap the result and it shows on the map, ready to save or add to the itinerary.",
+          "Place card shows the right type (e.g.: \"Bar\") for places from Foursquare."
+        ]
+      }
+    },
+    {
       "versao": "1.5.9",
       "data": "2026-11-02",
       "substitui": "1.5.8",
