@@ -2,6 +2,18 @@
   "app": "guiaxpert",
   "versoes": [
     {
+      "versao": "1.5.4",
+      "data": "2026-11-02",
+      "itens": {
+        "pt": [
+          "Corrigido: entrar pelo link do e-mail agora troca de verdade para o login novo (antes o app apagava o login do link ao abrir e voltava para o antigo, criando um ciclo de 'confirme que é você'). Se a chave estava colada em outra janela, ela é salva sozinha."
+        ],
+        "en": [
+          "Fixed: signing in via the email link now really switches to the new login (the app used to drop it on open and keep the old one, causing a 'confirm it is you' loop). If the key was pasted in another window, it saves by itself."
+        ]
+      }
+    },
+    {
       "versao": "1.5.3",
       "data": "2026-11-02",
       "itens": {

@@ -12,7 +12,7 @@
 (function () {
   'use strict';
   var d = document, $ = function (id) { return d.getElementById(id); };
-  var VERSAO_APP = '1.5.3';
+  var VERSAO_APP = '1.5.4';
 
   /* ------------------------------------------------------------------
      1. UTILIDADES
@@ -2390,11 +2390,18 @@
       var bCodOk = h('button', { class: 'bt', type: 'button', texto: T('confirmar'), hidden: true });
       var msg = h('p', { class: 'sub', role: 'status' });
       var feito = false;
+      /* se a pessoa confirmar pelo link do e-mail, outra janela do app grava uma sessão nova; esta janela percebe e segue sozinha */
+      var tokAntes = (Conta.sessao() || {}).access_token;
+      function aoMudarSessao(e) {
+        if (e.key !== 'solverone.sessao.v1' || !e.newValue || feito) return;
+        try { var n = JSON.parse(e.newValue); if (n && n.access_token && n.access_token !== tokAntes) { msg.textContent = T('chv_confirmadoOutraJanela'); pronto(); } } catch (x) {}
+      }
+      window.addEventListener('storage', aoMudarSessao);
       var j = janela(T('chv_confirmeTitulo'), h('div', { class: 'linha', style: 'flex-direction:column;align-items:stretch' }, [
         h('p', { texto: T('chv_confirmeTexto', { email: email }) }),
         h('label', { class: 'rot', for: 'gx-ri-senha', texto: T('senha') }), senha, bSenha,
-        h('p', { class: 'pequeno', texto: T('chv_ouCodigo') }), bCod, cod, bCodOk, msg]), function () { if (!feito) falha(new Error('cancelado')); });
-      function pronto() { feito = true; j.fechar(function () { ok(); }); }
+        h('p', { class: 'pequeno', texto: T('chv_ouCodigo') }), bCod, cod, bCodOk, msg]), function () { window.removeEventListener('storage', aoMudarSessao); if (!feito) falha(new Error('cancelado')); });
+      function pronto() { feito = true; window.removeEventListener('storage', aoMudarSessao); j.fechar(function () { ok(); }); }
       bSenha.addEventListener('click', function () {
         if (!senha.value) { senha.focus(); return; }
         bSenha.disabled = true; msg.textContent = T('carregando');
@@ -2482,6 +2489,7 @@
       salvar.disabled = true; msg.textContent = T('chv_salvando');
       rpcAdmin('admin_salvar_chave', { p_nome: sv.nome, p_valor: v }, { acao: 'chave', nome: sv.nome }).then(function () {
         campo.value = ''; v = '';
+        try { if (localStorage.getItem('guiaxpert.retomar')) localStorage.setItem('guiaxpert.retomar', JSON.stringify({ acao: 'salva', nome: sv.nome, ate: Date.now() + 5 * 60000 })); } catch (e) {}
         try { if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText('').catch(function () {}); } catch (e) {}
         msg.textContent = T('chv_salvaTestando');
         /* as funções guardam a chave por até 1 minuto: testa já e, se precisar, de novo */
@@ -2504,8 +2512,18 @@
   }
   /* volta do link do e-mail de confirmação: reabre a tela onde a pessoa estava (a chave nunca fica guardada; ela cola de novo) */
   function retomarPendente() {
-    var r = null; try { r = JSON.parse(localStorage.getItem('guiaxpert.retomar') || 'null'); localStorage.removeItem('guiaxpert.retomar'); } catch (e) {}
-    if (!r || !r.ate || r.ate < Date.now()) return;
+    function ler() { try { return JSON.parse(localStorage.getItem('guiaxpert.retomar') || 'null'); } catch (e) { return null; } }
+    var r0 = ler();
+    if (!r0 || !r0.ate || r0.ate < Date.now()) return;
+    /* dá tempo da janela antiga (onde a chave já estava colada) salvar sozinha */
+    setTimeout(function () {
+      var r = ler(); try { localStorage.removeItem('guiaxpert.retomar'); } catch (e) {}
+      if (!r || !r.ate || r.ate < Date.now()) return;
+      if (r.acao === 'salva') { Nav.ir('config'); avisar(T('chv_salvaOutraJanela')); return; }
+      retomarChave(r);
+    }, 3000);
+  }
+  function retomarChave(r) {
     if (r.acao === 'chave') {
       var sv = SERVICOS_CHAVE.filter(function (x) { return x.nome === r.nome; })[0];
       if (!sv) return;
@@ -2686,6 +2704,8 @@
   }
 
   function iniciar() {
+    /* guarda o endereço como chegou: o link do e-mail traz o login no #access_token, e a navegação abaixo troca o # */
+    var hashChegada = location.hash || '';
     try { estado.idioma = localStorage.getItem('dgo:guiaxpert:idioma') || ((navigator.language || 'pt').indexOf('pt') === 0 ? 'pt' : 'en'); } catch (e) {}
     try { aplicarTema(localStorage.getItem('dgo:guiaxpert:tema') || 'auto'); } catch (e) {}
     traduzirMoldura();
@@ -2720,7 +2740,7 @@
     estado.pronto = true;
     var ab = $('abertura'); if (ab) { ab.classList.add('sai'); setTimeout(function () { ab.remove(); }, 600); }
     mostrar('entrar');
-    Conta.lerVolta().then(function (volta) {
+    Conta.lerVolta(hashChegada.indexOf('access_token=') > -1 ? hashChegada : '').then(function (volta) {
       if (!volta) return;
       if (volta.recente) { volta.confirmar(); return; }
       return new Promise(function (ok) {

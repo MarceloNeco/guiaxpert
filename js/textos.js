@@ -221,6 +221,8 @@ window.TEXTOS = (function () {
     chv_codigoEnviado: ['Mandamos um e-mail para {email}. Se tiver um código de 6 números, digite abaixo. Se tiver só o botão "Sign in", toque nele: o app abre já confirmado e reabre esta tela para você colar a chave de novo.', 'We emailed {email}. If it has a 6-digit code, type it below. If it only has a "Sign in" button, tap it: the app opens already confirmed and reopens this screen so you can paste the key again.'],
     chv_senhaErrada: ['Senha não confere. Tente de novo ou use o código por e-mail.', 'Wrong password. Try again or use the email code.'], chv_codigoErrado: ['Código não confere ou venceu.', 'Code is wrong or expired.'],
     chv_retomando: ['Identidade confirmada. Cole a chave de novo e toque em Salvar cifrada.', 'Identity confirmed. Paste the key again and tap Save encrypted.'],
+    chv_confirmadoOutraJanela: ['Confirmado pelo e-mail. Salvando…', 'Confirmed by email. Saving…'],
+    chv_salvaOutraJanela: ['Pronto: a chave foi salva na outra janela do app. Pode fechar uma delas.', 'Done: the key was saved in the other app window. You can close one of them.'],
     chv_cancelado: ['Nada foi salvo.', 'Nothing was saved.'], chv_apagarConfirma: ['Apagar a chave do {servico}? O serviço para de funcionar até você cadastrar outra.', 'Delete the {servico} key? It stops working until you add another.'],
     chv_apagada: ['Chave apagada.', 'Key deleted.'], chv_historico: ['Ver quem mexeu e quando', 'See who changed what and when'], chv_semHistorico: ['Nenhuma mudança ainda.', 'No changes yet.'],
     chv_hSalva: ['salva (…{final})', 'saved (…{final})'], chv_hApagada: ['apagada', 'deleted'],

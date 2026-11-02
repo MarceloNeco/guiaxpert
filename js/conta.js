@@ -72,8 +72,9 @@
     },
 
     /* volta do Google / confirmação: o token chega no endereço depois do # */
-    lerVolta: function () {
-      var h = location.hash || '';
+    lerVolta: function (hashInicial) {
+      /* o endereço pode já ter sido trocado pela navegação do app: use o que chegou no carregamento */
+      var h = hashInicial || location.hash || '';
       if (h.indexOf('access_token=') < 0) return Promise.resolve(null);
       var p = {}; h.replace(/^#/, '').split('&').forEach(function (x) { var kv = x.split('='); p[kv[0]] = decodeURIComponent(kv[1] || ''); });
       history.replaceState(null, '', location.pathname);
