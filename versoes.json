@@ -2,18 +2,21 @@
   "app": "guiaxpert",
   "versoes": [
     {
-      "versao": "1.5.6",
+      "versao": "1.5.7",
       "data": "2026-11-02",
       "itens": {
         "pt": [
           "✦ IA mais firme: quando o Gemini está sobrecarregado, o servidor tenta outro modelo e mais uma vez antes de desistir; modelos aposentados pelo Google trocados.",
-          "Teste da chave diz o motivo real (demorou, sem cota no Google, recusou com o código do serviço)."
+          "Teste da chave diz o motivo real (demorou, sem cota no Google, recusou com o código do serviço).",
+          "Cabeçalho no celular com letra grande: o ícone do app não é mais espremido e o botão da conta não fica cortado; quem encolhe é o nome da viagem."
         ],
         "en": [
           "✦ AI more reliable: when Gemini is overloaded, the server tries another model and once more before giving up; models retired by Google replaced.",
-          "Key test shows the real reason (too slow, no Google quota, rejected with the service's code)."
+          "Key test shows the real reason (too slow, no Google quota, rejected with the service's code).",
+          "Phone header with large text: the app icon is no longer squeezed and the account button is not cut off; the trip name shrinks instead."
         ]
-      }
+      },
+      "substitui": "1.5.6"
     },
     {
       "versao": "1.5.5",

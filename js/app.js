@@ -12,7 +12,7 @@
 (function () {
   'use strict';
   var d = document, $ = function (id) { return d.getElementById(id); };
-  var VERSAO_APP = '1.5.6';
+  var VERSAO_APP = '1.5.7';
 
   /* ------------------------------------------------------------------
      1. UTILIDADES
@@ -295,7 +295,12 @@
   /* chip "🧳 Gramado, nov ▾" / "🌍 Explorar ▾": toca e troca de contexto */
   function desenharChip() {
     var c = $('chip'); if (!c) return;
-    c.textContent = ''; c.appendChild(h('span', { texto: Contexto.rotulo(estado.viagem, T, idioma()) })); c.appendChild(h('span', { class: 'seta', 'aria-hidden': 'true', texto: '▾' }));
+    /* o emoji (🧳/🧭) fica num pedaço separado: em celular estreito ou com letra grande ele sai e sobra lugar para o nome */
+    var rot = Contexto.rotulo(estado.viagem, T, idioma()), m = /^([^\p{L}\p{N}\s]+)\s+(.+)$/u.exec(rot);
+    c.textContent = '';
+    if (m) c.appendChild(h('span', { class: 'chip-ico', 'aria-hidden': 'true', texto: m[1] }));
+    c.appendChild(h('span', { class: 'chip-nome', texto: m ? m[2] : rot })); c.appendChild(h('span', { class: 'seta', 'aria-hidden': 'true', texto: '▾' }));
+    c.setAttribute('aria-label', (m ? m[2] : rot) + ' — ' + T('ondeVoceEsta'));
     c.hidden = !(estado.acesso && estado.acesso.liberado);
   }
   function janelaContexto() {
