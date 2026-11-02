@@ -12,7 +12,7 @@
 (function () {
   'use strict';
   var d = document, $ = function (id) { return d.getElementById(id); };
-  var VERSAO_APP = '1.5.2';
+  var VERSAO_APP = '1.5.3';
 
   /* ------------------------------------------------------------------
      1. UTILIDADES
@@ -2380,7 +2380,7 @@
     }).catch(function () { return { ok: false, msg: navigator.onLine ? T('erroRede') : T('semInternet') }; });
   }
   /* "confirme que é você": senha ou código por e-mail; resolve quando há um login novo */
-  function confirmarIdentidade() {
+  function confirmarIdentidade(retomar) {
     return new Promise(function (ok, falha) {
       var s = Conta.sessao() || {}, email = s.email || '';
       var senha = h('input', { class: 'campo', type: 'password', id: 'gx-ri-senha', autocomplete: 'current-password', placeholder: T('senha') });
@@ -2403,6 +2403,8 @@
       senha.addEventListener('keydown', function (e) { if (e.key === 'Enter') bSenha.click(); });
       bCod.addEventListener('click', function () {
         bCod.disabled = true;
+        /* se a pessoa tocar no link do e-mail, o app abre de novo já confirmado e volta para esta tela */
+        if (retomar) { try { localStorage.setItem('guiaxpert.retomar', JSON.stringify(Object.assign({ ate: Date.now() + 15 * 60000 }, retomar))); } catch (e) {} }
         Conta.enviarCodigo(email).then(function () { cod.hidden = false; bCodOk.hidden = false; msg.textContent = T('chv_codigoEnviado', { email: email }); cod.focus(); })
           .catch(function () { bCod.disabled = false; msg.textContent = T('erroRede'); });
       });
@@ -2413,10 +2415,10 @@
     });
   }
   /* chama uma função admin; se o banco pedir login recente, confirma a identidade e tenta de novo uma vez */
-  function rpcAdmin(nome, args) {
+  function rpcAdmin(nome, args, retomar) {
     return Conta.rpc(nome, args).catch(function (e) {
       if (!/login-recente/.test(e.message)) throw e;
-      return confirmarIdentidade().then(function () { return Conta.rpc(nome, args); });
+      return confirmarIdentidade(retomar).then(function () { return Conta.rpc(nome, args); });
     });
   }
   function cartaoChaves(caixa) {
@@ -2478,7 +2480,7 @@
       if (!v) { campo.focus(); msg.textContent = T('chv_vazia'); return; }
       if (!sv.formato.test(v)) { msg.textContent = T('chv_formato', { servico: T(sv.titulo) }); return; }
       salvar.disabled = true; msg.textContent = T('chv_salvando');
-      rpcAdmin('admin_salvar_chave', { p_nome: sv.nome, p_valor: v }).then(function () {
+      rpcAdmin('admin_salvar_chave', { p_nome: sv.nome, p_valor: v }, { acao: 'chave', nome: sv.nome }).then(function () {
         campo.value = ''; v = '';
         try { if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText('').catch(function () {}); } catch (e) {}
         msg.textContent = T('chv_salvaTestando');
@@ -2499,6 +2501,17 @@
         msg.textContent = e.message === 'cancelado' ? T('chv_cancelado') : (/formato/i.test(e.message) ? T('chv_formato', { servico: T(sv.titulo) }) : T('erroRede'));
       });
     });
+  }
+  /* volta do link do e-mail de confirmação: reabre a tela onde a pessoa estava (a chave nunca fica guardada; ela cola de novo) */
+  function retomarPendente() {
+    var r = null; try { r = JSON.parse(localStorage.getItem('guiaxpert.retomar') || 'null'); localStorage.removeItem('guiaxpert.retomar'); } catch (e) {}
+    if (!r || !r.ate || r.ate < Date.now()) return;
+    if (r.acao === 'chave') {
+      var sv = SERVICOS_CHAVE.filter(function (x) { return x.nome === r.nome; })[0];
+      if (!sv) return;
+      Nav.ir('config');
+      setTimeout(function () { avisar(T('chv_retomando')); janelaCadastrarChave(sv, function () { mostrar('config'); }); }, 700);
+    }
   }
   function janelaHistoricoChaves() {
     var corpo = h('div', { class: 'linha', style: 'flex-direction:column;align-items:stretch;gap:.4rem' }, [h('p', { class: 'sub', texto: T('carregando') })]);
@@ -2590,6 +2603,7 @@
         oferecerBio();
         setTimeout(oferecerInstalar, 2500);
         aceitarConvitePendente().then(function (aceito) { if (!aceito) sincronizarNuvem(); });
+        retomarPendente();
         var compartilhado = window.Importar && Importar.doEndereco();
         if (compartilhado) setTimeout(function () { if (estado.viagem) { Nav.ir('reservas'); setTimeout(function () { janelaImportar(compartilhado); }, 200); } else avisar(T('semViagemTexto')); }, 400);
       });

@@ -2,6 +2,18 @@
   "app": "guiaxpert",
   "versoes": [
     {
+      "versao": "1.5.3",
+      "data": "2026-11-02",
+      "itens": {
+        "pt": [
+          "Confirmar identidade ficou claro: o e-mail de confirmação pode trazer só um link; ao tocar nele, o app abre já confirmado e reabre a tela da chave para colar de novo."
+        ],
+        "en": [
+          "Identity confirmation is clearer: the email may only have a link; tapping it opens the app already confirmed and reopens the key screen to paste again."
+        ]
+      }
+    },
+    {
       "versao": "1.5.2",
       "data": "2026-11-01",
       "itens": {
