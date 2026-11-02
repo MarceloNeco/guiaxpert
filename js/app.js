@@ -12,7 +12,7 @@
 (function () {
   'use strict';
   var d = document, $ = function (id) { return d.getElementById(id); };
-  var VERSAO_APP = '1.5.5';
+  var VERSAO_APP = '1.5.6';
 
   /* ------------------------------------------------------------------
      1. UTILIDADES
@@ -2365,8 +2365,8 @@
   /* testa se o serviço aceitou a chave: { ok, msg } */
   function testarChave(sv) {
     var p;
-    if (sv.teste === 'gemini') p = chamarFuncao('ia', { corpo: { app: 'guiaxpert', limite: 20, mensagens: [{ papel: 'pessoa', texto: 'Responda apenas: ok' }] } })
-      .then(function (r) { return r.status === 200 && r.j.texto ? { ok: true } : { ok: false, status: r.status, erro: r.j.erro, detalhe: r.j.detalhe }; });
+    if (sv.teste === 'gemini') p = chamarFuncao('ia', { corpo: { app: 'guiaxpert', limite: 300, mensagens: [{ papel: 'pessoa', texto: 'Responda apenas: ok' }] } })
+      .then(function (r) { return r.status === 200 ? { ok: true } : { ok: false, status: r.status, erro: r.j.erro, motivo: r.j.motivo, detalhe: r.j.detalhe }; });
     else if (sv.teste === 'google') p = chamarFuncao('google-lugares', { query: 'q=Gramado' })
       .then(function (r) { return r.status === 200 ? { ok: true } : { ok: false, status: r.status, erro: r.j.erro, detalhe: r.j.detalhe }; });
     else p = chamarFuncao('lugares', { query: 'q=Gramado&teste=' + sv.teste })
@@ -2375,8 +2375,12 @@
       if (x.ok) return { ok: true, msg: T('chv_testeOk') };
       if (x.erro === 'sem-chave') return { ok: false, semChave: true, msg: T('chv_testeSemChave') };
       if (x.erro === 'cota' || x.erro === 'cota-dia' || x.erro === 'cota-mes') return { ok: true, msg: T('chv_testeCota') };
-      var cod = x.status || (x.erro || '').replace(/\D/g, '');
-      return { ok: false, msg: T('chv_testeRecusou', { servico: T(sv.titulo), cod: cod || '?' }) };
+      if (x.erro === 'ia-tempo' || x.status === 546 || x.status === 504) return { ok: false, msg: T('chv_testeDemorou', { servico: T(sv.titulo) }) };
+      if (x.erro === 'ia-429' || x.motivo === 'RESOURCE_EXHAUSTED') return { ok: false, msg: T('chv_testeSemCotaGoogle') };
+      /* o código do serviço (ex.: ia-401 → 401) diz mais que o 502 do nosso servidor */
+      var cod = (x.erro || '').replace(/\D/g, '') || x.status;
+      var extra = x.detalhe ? ' — ' + String(x.detalhe).slice(0, 160) : '';
+      return { ok: false, msg: T('chv_testeRecusou', { servico: T(sv.titulo), cod: cod || '?' }) + extra };
     }).catch(function () { return { ok: false, msg: navigator.onLine ? T('erroRede') : T('semInternet') }; });
   }
   /* "confirme que é você": senha ou código por e-mail; resolve quando há um login novo */

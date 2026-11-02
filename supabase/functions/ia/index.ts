@@ -74,7 +74,10 @@ Deno.serve(async (req: Request) => {
   if (!cota || !cota.ok) return json({ erro: cota?.motivo || "cota", restante_dia: cota?.restante_dia ?? 0, restante_mes: cota?.restante_mes ?? 0 }, 429);
 
   // modelo: o configurado, senão o "mais recente" do Gemini Flash; se o Google aposentar um nome, tenta o próximo
-  const modelos = [Deno.env.get("GEMINI_MODELO") || "gemini-flash-latest", "gemini-2.5-flash", "gemini-2.0-flash"];
+  // (o Google aposentou 2.0 e 2.5 Flash em 2026; o "-latest" acompanha o mais novo, o lite é o reserva mais leve)
+  // por último, mais uma tentativa no principal (o "high demand" do Google costuma passar em segundos)
+  const base = [...new Set([Deno.env.get("GEMINI_MODELO") || "gemini-flash-latest", "gemini-3.8-flash", "gemini-flash-lite-latest"])];
+  const modelos = [...base, base[0]];
   const corpo: any = {
     contents: msgs.map((m: any) => ({ role: m.papel === "ia" ? "model" : "user", parts: [{ text: String(m.texto || "").slice(0, 12000) }] })),
     generationConfig: { maxOutputTokens: Math.min(Number(b.limite) || 900, 4000) },
@@ -82,14 +85,26 @@ Deno.serve(async (req: Request) => {
   if (b.sistema) corpo.system_instruction = { parts: [{ text: String(b.sistema).slice(0, 12000) }] };
   if (b.web) corpo.tools = [{ google_search: {} }];
 
-  let r: Response | null = null;
-  for (const modelo of modelos) {
-    r = await fetch("https://generativelanguage.googleapis.com/v1beta/models/" + encodeURIComponent(modelo) + ":generateContent", {
-      method: "POST", headers: { "Content-Type": "application/json", "x-goog-api-key": key }, body: JSON.stringify(corpo),
-    });
-    if (r.status !== 404) break;
+  // cada tentativa tem prazo (o Google às vezes demora); 404 = nome de modelo aposentado, 429/500/503 = tenta o próximo
+  let r: Response | null = null, falha = "", motivo = "", msgGoogle = "";
+  for (const [i, modelo] of modelos.entries()) {
+    if (i === modelos.length - 1 && falha === "ia-503") await new Promise((ok) => setTimeout(ok, 1500));
+    try {
+      r = await fetch("https://generativelanguage.googleapis.com/v1beta/models/" + encodeURIComponent(modelo) + ":generateContent", {
+        method: "POST", headers: { "Content-Type": "application/json", "x-goog-api-key": key }, body: JSON.stringify(corpo),
+        signal: AbortSignal.timeout(25_000),
+      });
+    } catch (_) { r = null; falha = "ia-tempo"; console.log("ia: google sem resposta em 25s", modelo); continue; }
+    if (r.ok) break;
+    const t = (await r.text()).slice(0, 600);
+    try { const e = JSON.parse(t).error || {}; motivo = String(e.status || ""); msgGoogle = String(e.message || "").slice(0, 200); } catch (_) { msgGoogle = t.slice(0, 200); }
+    falha = "ia-" + r.status;
+    // só o código e a mensagem do Google; nunca a chave nem a conversa
+    console.log("ia: google recusou", modelo, r.status, motivo, msgGoogle);
+    if (![404, 429, 500, 503].includes(r.status)) break;
+    r = null;
   }
-  if (!r || !r.ok) return json({ erro: "ia-" + (r ? r.status : 0), detalhe: r ? (await r.text()).slice(0, 300) : null }, 502);
+  if (!r || !r.ok) return json({ erro: falha || "ia-0", motivo, detalhe: msgGoogle }, 502);
   const j = await r.json();
   const c = j.candidates?.[0];
   const texto = ((c?.content?.parts) || []).map((p: any) => p.text || "").join("").trim();

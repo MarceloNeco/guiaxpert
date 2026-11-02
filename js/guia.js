@@ -53,7 +53,7 @@
   /* chamadas com busca na web, por provedor (o módulo comum não tem ferramentas) */
   var COM_WEB = {
     gemini: function (chave, modelo, pergunta, sistema) {
-      return fetch('https://generativelanguage.googleapis.com/v1beta/models/' + encodeURIComponent(modelo || 'gemini-2.0-flash') + ':generateContent?key=' + encodeURIComponent(chave), {
+      return fetch('https://generativelanguage.googleapis.com/v1beta/models/' + encodeURIComponent(modelo || 'gemini-flash-latest') + ':generateContent?key=' + encodeURIComponent(chave), {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ system_instruction: { parts: [{ text: sistema }] }, contents: [{ role: 'user', parts: [{ text: pergunta }] }], tools: [{ google_search: {} }] })
       }).then(lerJson).then(function (j) {

@@ -4120,7 +4120,7 @@
     gemini: {
       nome: 'Google Gemini', gratis: true, ordem: 1,
       onde: 'https://aistudio.google.com/apikey',
-      modelo: 'gemini-2.0-flash',
+      modelo: 'gemini-flash-latest',
       nota: { pt: 'Plano grátis com limites que o Google mostra no AI Studio. Confira o aviso de privacidade ao criar a chave.',
               en: 'Free plan with limits shown by Google in AI Studio. Check the privacy notice when creating the key.' },
       chamar: function (chave, modelo, sistema, mensagens, limite) {
