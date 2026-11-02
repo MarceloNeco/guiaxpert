@@ -12,7 +12,7 @@
 (function () {
   'use strict';
   var d = document, $ = function (id) { return d.getElementById(id); };
-  var VERSAO_APP = '1.5.8';
+  var VERSAO_APP = '1.5.9';
 
   /* ------------------------------------------------------------------
      1. UTILIDADES
@@ -2416,8 +2416,19 @@
         try { var n = JSON.parse(e.newValue); if (n && n.access_token && n.access_token !== tokAntes) { msg.textContent = T('chv_confirmadoOutraJanela'); pronto(); } } catch (x) {}
       }
       window.addEventListener('storage', aoMudarSessao);
+      /* digital conferida no servidor (se este celular já tem uma cadastrada): um toque e pronto */
+      var bDig = Digital.temNeste() ? h('button', { class: 'bt', type: 'button', texto: '👆 ' + T('dig_confirmar') }) : null;
+      if (bDig) bDig.addEventListener('click', function () {
+        bDig.disabled = true; msg.textContent = T('carregando');
+        Digital.confirmar(chamarDigital).then(function () { msg.textContent = ''; pronto(); }).catch(function (e) {
+          bDig.disabled = false;
+          msg.textContent = e.message === 'cancelado' ? '' : e.message === 'sem-digital' ? T('dig_semCadastro') : T('dig_falhou');
+          if (e.message === 'sem-digital') bDig.remove();
+        });
+      });
       var j = janela(T('chv_confirmeTitulo'), h('div', { class: 'linha', style: 'flex-direction:column;align-items:stretch' }, [
         h('p', { texto: T('chv_confirmeTexto', { email: email }) }),
+        bDig, bDig ? h('p', { class: 'pequeno', texto: T('dig_ouSenha') }) : null,
         h('label', { class: 'rot', for: 'gx-ri-senha', texto: T('senha') }), senha, bSenha,
         h('p', { class: 'pequeno', texto: T('chv_ouCodigo') }), bCod, cod, bCodOk, msg]), function () { window.removeEventListener('storage', aoMudarSessao); if (!feito) falha(new Error('cancelado')); });
       function pronto() { feito = true; window.removeEventListener('storage', aoMudarSessao); j.fechar(function () { ok(); }); }
@@ -2444,7 +2455,41 @@
   function rpcAdmin(nome, args, retomar) {
     return Conta.rpc(nome, args).catch(function (e) {
       if (!/login-recente/.test(e.message)) throw e;
-      return confirmarIdentidade(retomar).then(function () { return Conta.rpc(nome, args); });
+      var tinhaDigital = Digital.temNeste();
+      return confirmarIdentidade(retomar).then(function () {
+        var r = Conta.rpc(nome, args);
+        if (!tinhaDigital) r.then(function () { setTimeout(oferecerDigitalChaves, 1800); }, function () {});
+        return r;
+      });
+    });
+  }
+  /* fala com a função "digital" do servidor */
+  function chamarDigital(acao, extra) {
+    return chamarFuncao('digital', { corpo: Object.assign({ acao: acao }, extra || {}) });
+  }
+  /* cadastra a digital deste celular para as próximas confirmações; se o login não é recente, confirma antes */
+  function cadastrarDigitalChaves() {
+    return Digital.cadastrar(chamarDigital, T('dig_nomeAparelho')).catch(function (e) {
+      if (e.message !== 'login-recente') throw e;
+      return confirmarIdentidade().then(function () { return Digital.cadastrar(chamarDigital, T('dig_nomeAparelho')); });
+    }).then(function () { avisar(T('dig_ligada')); return true; }).catch(function (e) {
+      if (e.message !== 'cancelado') avisar(e.message === 'ja-existe' ? T('dig_jaExiste') : T('dig_falhou'));
+      return false;
+    });
+  }
+  /* convite, uma vez por aparelho, logo depois de confirmar com senha ou código */
+  function oferecerDigitalChaves() {
+    if (Digital.temNeste()) return;
+    try { if (localStorage.getItem('guiaxpert.digital-oferta')) return; } catch (e) { return; }
+    Digital.suportada().then(function (ok) {
+      if (!ok) return;
+      try { localStorage.setItem('guiaxpert.digital-oferta', '1'); } catch (e) {}
+      var sim = h('button', { class: 'bt', type: 'button', texto: '👆 ' + T('dig_ligar') });
+      var nao = h('button', { class: 'bt leve', type: 'button', texto: T('agoraNao') });
+      var j = janela(T('dig_titulo'), h('div', { class: 'linha', style: 'flex-direction:column;align-items:stretch' }, [
+        h('p', { class: 'sub', texto: T('dig_texto') }), h('div', { class: 'acoes' }, [nao, sim])]));
+      nao.addEventListener('click', function () { j.fechar(); });
+      sim.addEventListener('click', function () { sim.disabled = true; cadastrarDigitalChaves().then(function (ok2) { sim.disabled = false; if (ok2) j.fechar(); }); });
     });
   }
   function cartaoChaves(caixa) {
@@ -2454,6 +2499,24 @@
       var lista = h('div', { class: 'linha', style: 'flex-direction:column;align-items:stretch;gap:.6rem' });
       cartao.appendChild(lista);
       cartao.appendChild(h('button', { class: 'lk', type: 'button', style: 'align-self:flex-start', texto: T('chv_historico'), onclick: janelaHistoricoChaves }));
+      var linhaDig = h('div', { class: 'linha', style: 'flex-direction:column;align-items:stretch;gap:.4rem;border-top:1px solid var(--linha);padding-top:.7rem;margin-top:.3rem' });
+      cartao.appendChild(linhaDig);
+      Digital.suportada().then(function (ok) {
+        if (!ok) return;
+        linhaDig.appendChild(h('strong', { texto: '👆 ' + T('dig_titulo') }));
+        if (Digital.temNeste()) {
+          linhaDig.appendChild(h('p', { class: 'sub', texto: T('dig_ligadaTexto') }));
+          linhaDig.appendChild(h('button', { class: 'lk', type: 'button', style: 'align-self:flex-start', texto: T('dig_desligar'), onclick: function () {
+            Digital.esquecer(); avisar(T('dig_desligada')); linhaDig.textContent = ''; mostrar('config');
+          } }));
+        } else {
+          linhaDig.appendChild(h('p', { class: 'sub', texto: T('dig_texto') }));
+          linhaDig.appendChild(h('button', { class: 'bt sec', type: 'button', texto: '👆 ' + T('dig_ligar'), onclick: function (ev) {
+            var b = ev.currentTarget; b.disabled = true;
+            cadastrarDigitalChaves().then(function (ok2) { b.disabled = false; if (ok2) mostrar('config'); });
+          } }));
+        }
+      });
       caixa.appendChild(cartao);
       desenhar();
       function desenhar() {

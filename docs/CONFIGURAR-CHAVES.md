@@ -11,7 +11,9 @@ As chaves são cadastradas **pelo próprio GuiaXpert**, por quem é dono ou admi
    1. o passo a passo do site do serviço, com o botão que abre a página certa;
    2. o campo para colar a chave (escondido, com 👁 para conferir e 📋 para colar);
    3. **Salvar cifrada**.
-4. Se o seu login tiver mais de 15 minutos, o app pede **"Confirme que é você"** (senha ou código por e-mail).
+4. Se o seu login tiver mais de 15 minutos, o app pede **"Confirme que é você"**: digital (se ligada neste celular),
+   senha ou código por e-mail. Depois da primeira confirmação com senha ou código, o app oferece "Usar a digital deste
+   celular"; também dá para ligar no próprio cartão 🔐 Chaves do serviço.
 5. O app salva e **testa sozinho**: "✓ Funcionou" ou o motivo da recusa.
 6. Depois, a linha mostra **"Ligada · termina em …4f2a · data"**. Botões: Trocar, Testar, Apagar.
    "Ver quem mexeu e quando" mostra o histórico (sem a chave).
@@ -40,7 +42,8 @@ Para abrir para um cliente pagante no futuro, basta acrescentar o plano dele nes
 | Camada | O que acontece |
 |---|---|
 | Quem pode | Só contas da tabela `equipe` com papel `dono` ou `admin`. O banco confere em cada chamada; esconder o botão não é a proteção. |
-| Prova de que é você | Salvar ou apagar exige login de verdade nos últimos 15 minutos (o horário fica dentro do token assinado). Celular desbloqueado na mão de outra pessoa não basta. |
+| Prova de que é você | Salvar ou apagar exige login de verdade nos últimos 15 minutos (o horário fica dentro do token assinado) **ou** a digital conferida no servidor nos últimos 15 minutos. Celular desbloqueado na mão de outra pessoa não basta. |
+| Digital | WebAuthn (passkey) presa a solverone.com.br. O servidor guarda só a parte pública (`digital_credenciais`), manda um desafio de uso único de 5 min e confere a assinatura (função `digital`, biblioteca SimpleWebAuthn). Cadastrar uma digital exige ser da equipe e ter confirmado com senha ou código. Tabelas só do servidor (RLS sem política). SQL: `supabase/2026-11-02-digital-no-servidor.sql`. |
 | No caminho | HTTPS até o Supabase. |
 | Guardada | **Supabase Vault**: cifrada no disco; a chave de cifra fica fora do banco. |
 | Leitura | Só o servidor (`service_role`) lê o valor, pela função `chave_servico`. O app, o navegador e a própria tela de admin nunca recebem a chave de volta: só os 4 últimos caracteres. |

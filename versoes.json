@@ -2,6 +2,19 @@
   "app": "guiaxpert",
   "versoes": [
     {
+      "versao": "1.5.9",
+      "data": "2026-11-02",
+      "substitui": "1.5.8",
+      "itens": {
+        "pt": [
+          "Chaves do serviço: confirme que é você com a digital deste celular, em vez da senha ou do código por e-mail. Quem confere é o servidor; a digital não sai do celular."
+        ],
+        "en": [
+          "Service keys: confirm it's you with this phone's fingerprint instead of a password or email code. The server checks it; your fingerprint never leaves the phone."
+        ]
+      }
+    },
+    {
       "versao": "1.5.8",
       "data": "2026-11-02",
       "substitui": "1.5.7",
