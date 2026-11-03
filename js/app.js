@@ -12,7 +12,7 @@
 (function () {
   'use strict';
   var d = document, $ = function (id) { return d.getElementById(id); };
-  var VERSAO_APP = '1.5.29';
+  var VERSAO_APP = '1.5.30';
 
   /* ------------------------------------------------------------------
      1. UTILIDADES
@@ -1482,9 +1482,9 @@
     /* de qual viagem são estas reservas (com nomes parecidos, "Gram…" não basta) */
     var v = estado.viagem;
     tela.appendChild(h('button', { class: 'cartao viagem-atual', type: 'button', onclick: janelaContexto }, [
-      h('span', { class: 'pequeno', texto: T('res_daViagem') }),
-      h('b', { texto: '🧳 ' + v.nome }),
-      h('span', { class: 'sub', texto: fData(v.inicio) + ' – ' + fData(v.fim) + ' · ' + T('res_trocarViagem') })]));
+      h('span', { class: 'pequeno', texto: T(v.tipo === 'passeio' ? 'res_doPasseio' : 'res_daViagem') }),
+      h('b', { texto: (v.tipo === 'passeio' ? '🚶 ' : '🧳 ') + v.nome }),
+      h('span', { class: 'sub', texto: (v.inicio === v.fim ? semana(v.inicio) + ', ' + fData(v.inicio) : fData(v.inicio) + ' – ' + fData(v.fim)) + ' · ' + T('res_trocarViagem') })]));
     var trancadas = 0;
     abrirReservas(v).then(function () {
       return Banco.listar('reservas', function (r) { return r.viagem_id === v.id; });
@@ -1507,10 +1507,11 @@
             if (aqui) { var cx = h('div', {}); av.appendChild(cx); pedirCofreAntigo(cx, function () { migrarReservas(v).then(function () { avisar(T('res_liberadas')); mostrar('reservas'); }); }); }
           });
         }
-        tela.appendChild(h('div', { class: 'linha' }, [
-          h('button', { class: 'bt', type: 'button', onclick: function () { janelaReserva(null); } }, '＋ ' + T('novaReserva')),
-          h('button', { class: 'bt sec', type: 'button', onclick: function () { escanearIngresso(); } }, '📷 ' + T('res_escanear')),
-          h('button', { class: 'bt leve', type: 'button', onclick: function () { janelaImportar(''); } }, '✉ ' + T('colarEmail'))]));
+        /* uma linha só, discreta: adicionar, escanear, colar e-mail */
+        tela.appendChild(h('div', { class: 'acoes-res' }, [
+          h('button', { class: 'bt', type: 'button', 'aria-label': T('novaReserva'), onclick: function () { janelaReserva(null); } }, '＋ ' + T('res_nova')),
+          h('button', { class: 'bt sec', type: 'button', 'aria-label': T('res_escanear'), onclick: function () { escanearIngresso(); } }, '📷 ' + T('res_escanearCurto')),
+          h('button', { class: 'bt leve', type: 'button', 'aria-label': T('colarEmail'), onclick: function () { janelaImportar(''); } }, '✉ ' + T('res_emailCurto'))]));
         if (!itens.length) { tela.appendChild(h('p', { class: 'sub', texto: T('semReservas') })); return; }
         /* grupos: ingressos do mesmo evento (mesmo grupo, ou mesmo título e horário) viram um cartão só */
         var grupos = {}, ordem = [];
@@ -1541,6 +1542,8 @@
         /* qual dia já vem aberto: hoje, ou o próximo dia com reserva (os outros ficam recolhidos) */
         var hjIso = hojeIso(), diaFoco = null;
         cartoes.forEach(function (g) { var d = (g[0].c.quando || '').slice(0, 10); if (d && d >= hjIso && (!diaFoco || d < diaFoco)) diaFoco = d; });
+        var diasDistintos = {}; cartoes.forEach(function (g) { diasDistintos[(g[0].c.quando || '').slice(0, 10) || 'sem'] = 1; });
+        var umDiaSo = Object.keys(diasDistintos).length <= 1;
         function desenhar() {
           caixa.textContent = '';
           var diaAnt = null, n = 0, bloco = null, sec = null;
@@ -1557,14 +1560,20 @@
           function fecharDia() { fecharBloco(); if (sec) { sec.resumo.textContent = sec.icones.filter(function (x, i, a) { return a.indexOf(x) === i; }).join(' ') + ' · ' + sec.icones.length; } sec = null; }
           function abrirDia(dia) {
             fecharDia();
-            var chave = v.id + '|' + dia, aberto = abrirTudo || (diasAbertos[chave] != null ? diasAbertos[chave] : dia === diaFoco || dia === 'sem');
+            var chave = v.id + '|' + dia, aberto = abrirTudo || umDiaSo || (diasAbertos[chave] != null ? diasAbertos[chave] : dia === diaFoco || dia === 'sem');
             var corpo = h('div', { class: 'dia-corpo', hidden: !aberto });
             var resumo = h('span', { class: 'dia-resumo' });
+            var mais = dia === 'sem' ? null : h('button', { class: 'dia-mais', type: 'button', 'aria-label': T('addNesteDia'), title: T('addNesteDia'), texto: '＋', onclick: function () { janelaAddNoDia(v, dia); } });
+            if (umDiaSo) {   /* um dia só (ex.: passeio): título simples, sempre aberto, sem chevron */
+              caixa.appendChild(h('section', { class: 'dia-sec' }, [h('div', { class: 'dia-linha' }, [
+                h('h3', { class: 'dia-titulo dia-fixo', texto: dia === 'sem' ? T('res_semData') : semana(dia) + ', ' + fData(dia) }), mais]), corpo]));
+              sec = { corpo: corpo, resumo: resumo, icones: [] };
+              return;
+            }
             var bt = h('button', { class: 'dia-cab', type: 'button', 'aria-expanded': aberto ? 'true' : 'false' }, [
               h('span', { class: 'chev', 'aria-hidden': 'true', texto: '›' }),
               h('span', { class: 'dia-titulo', texto: dia === 'sem' ? T('res_semData') : semana(dia) + ', ' + fData(dia) }), resumo]);
             bt.addEventListener('click', function () { aberto = !aberto; diasAbertos[chave] = aberto; bt.setAttribute('aria-expanded', aberto ? 'true' : 'false'); corpo.hidden = !aberto; });
-            var mais = dia === 'sem' ? null : h('button', { class: 'dia-mais', type: 'button', 'aria-label': T('addNesteDia'), title: T('addNesteDia'), texto: '＋', onclick: function () { janelaAddNoDia(v, dia); } });
             caixa.appendChild(h('section', { class: 'dia-sec' }, [h('div', { class: 'dia-linha' }, [bt, mais]), corpo]));
             sec = { corpo: corpo, resumo: resumo, icones: [] };
           }
