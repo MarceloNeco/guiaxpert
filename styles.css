@@ -561,3 +561,19 @@ body.travado #app, body.travado .janela-fundo.na-trava, body.travado #fundo-foto
 
 .cartao.viagem-atual { display: flex; flex-direction: column; align-items: flex-start; gap: .1rem; width: 100%; text-align: left; border: 0; cursor: pointer; }
 .dia-titulo { font-size: 1rem; font-weight: 800; margin: 1rem .2rem .3rem; color: var(--suave); }
+
+/* reservas: etapas da logística (voo, carro, hotel) recolhidas numa linha, abrem com o chevron */
+.etapa-bloco { display: flex; flex-direction: column; gap: .5rem; margin: .35rem 0; }
+.etapa { display: flex; flex-direction: column; align-items: stretch; gap: .15rem; width: 100%; text-align: left; font: inherit; color: inherit;
+  background: var(--sup); border: 0; border-radius: var(--r-bt); padding: .75rem .95rem; cursor: pointer; min-height: 3rem; }
+.etapa:focus-visible { outline: 3px solid var(--faixa); outline-offset: 2px; }
+.etapa-l1, .etapa-l2 { display: flex; align-items: center; gap: .5rem; min-width: 0; }
+.etapa-l1 b { flex: 1; min-width: 0; }
+.etapa-hora { color: var(--suave); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.etapa-l2 { padding-left: 1.35rem; color: var(--suave); font-size: .9em; }
+.etapa-tit { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.chev { display: inline-block; width: .85rem; font-size: 1.3em; line-height: 1; color: var(--rodovia); transition: transform .2s ease; }
+.etapa[aria-expanded="true"] .chev { transform: rotate(90deg); }
+.etapa-corpo { display: flex; flex-direction: column; gap: .5rem; padding-left: .6rem; border-left: 3px solid var(--rodovia-claro); margin-left: .5rem; }
+@media (prefers-reduced-motion: reduce) { .chev { transition: none; } }
+.etapa-corpo[hidden] { display: none; }

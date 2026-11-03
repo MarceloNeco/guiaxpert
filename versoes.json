@@ -2,6 +2,21 @@
   "app": "guiaxpert",
   "versoes": [
     {
+      "versao": "1.5.28",
+      "data": "2026-11-03",
+      "substitui": "1.5.27",
+      "itens": {
+        "pt": [
+          "Reservas: a logística vira etapas recolhidas, uma linha cada (Voo de ida, Retirada do carro, Check-in no hotel… Check-out, Devolução do carro, Voo de volta). Toque no › para abrir os cartões de cada pessoa.",
+          "Novos tipos de reserva: 🚐 Traslado, 🚌 Ônibus/trem e 🗺 Passeio (além de 🍽 Restaurante)."
+        ],
+        "en": [
+          "Bookings: logistics become collapsed steps, one line each (Outbound flight, Car pick-up, Hotel check-in… Check-out, Car drop-off, Return flight). Tap › to open each person's cards.",
+          "New booking types: 🚐 Transfer, 🚌 Bus/train and 🗺 Tour (besides 🍽 Restaurant)."
+        ]
+      }
+    },
+    {
       "versao": "1.5.27",
       "data": "2026-11-03",
       "substitui": "1.5.26",

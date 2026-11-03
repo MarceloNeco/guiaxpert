@@ -12,7 +12,7 @@
 (function () {
   'use strict';
   var d = document, $ = function (id) { return d.getElementById(id); };
-  var VERSAO_APP = '1.5.27';
+  var VERSAO_APP = '1.5.28';
 
   /* ------------------------------------------------------------------
      1. UTILIDADES
@@ -1430,7 +1430,37 @@
   }
 
   /* ---------- Reservas (no cofre) ---------- */
-  var TIPOS_RES = ['voo', 'hotel', 'carro', 'ingresso', 'restaurante', 'outro'];
+  var TIPOS_RES = ['voo', 'hotel', 'carro', 'transfer', 'onibus', 'ingresso', 'passeio', 'restaurante', 'outro'];
+  /* logística (chegar, dormir, ir embora): vira "etapa" recolhida, uma linha só, que abre com o chevron */
+  var LOGISTICA = { voo: 1, hotel: 1, carro: 1, transfer: 1, onibus: 1 };
+  var etapasAbertas = {};
+  function etapaDe(c, v) {
+    var p = papelReserva(c), d = (c.quando || '').slice(0, 10);
+    if (c.tipo === 'voo') return v && d && d === v.inicio ? 'vooIda' : v && d && d === v.fim ? 'vooVolta' : 'voo';
+    if (c.tipo === 'hotel') return p === 'sai' ? 'checkout' : 'checkin';
+    if (c.tipo === 'carro') return p === 'sai' ? 'devolucao' : p === 'entra' ? 'retirada' : 'carro';
+    return c.tipo;
+  }
+  var ICONE_ETAPA = { vooIda: '✈️', vooVolta: '✈️', voo: '✈️', checkin: '🏨', checkout: '🏨', retirada: '🚗', devolucao: '🚗', carro: '🚗', transfer: '🚐', onibus: '🚌' };
+  function blocoEtapa(chave, etapa, grupos) {
+    var c0 = grupos[0][0].c, hh = c0.quando && c0.quando.length > 10 ? c0.quando.slice(11, 16) : '';
+    var n = grupos.reduce(function (s, g) { return s + g.length; }, 0);
+    var hora = !hh ? '' : etapa === 'checkin' ? T('aPartirDe', { h: hh }) : (etapa === 'checkout' || etapa === 'devolucao') ? T('ateAs', { h: hh }) : hh;
+    var aberto = !!etapasAbertas[chave];
+    var corpo = h('div', { class: 'etapa-corpo', hidden: !aberto });
+    var bt = h('button', { class: 'etapa', type: 'button', 'aria-expanded': aberto ? 'true' : 'false' }, [
+      h('span', { class: 'etapa-l1' }, [h('span', { class: 'chev', 'aria-hidden': 'true', texto: '›' }),
+        h('b', { texto: ICONE_ETAPA[etapa] + ' ' + T('et_' + etapa) }), h('span', { class: 'etapa-hora', texto: hora })]),
+      h('span', { class: 'etapa-l2' }, [h('span', { class: 'etapa-tit', texto: c0.titulo.replace(/\s*·\s*(entrada|saída|retirada|devolução)\b.*$/i, '') }),
+        n > 1 ? h('span', { class: 'etq', texto: T('nReservas', { n: n }) }) : null])]);
+    function encher() { if (!corpo.childNodes.length) grupos.forEach(function (g) { corpo.appendChild(g.length > 1 ? cartaoGrupo(g) : cartaoReserva(g[0])); }); }
+    if (aberto) encher();
+    bt.addEventListener('click', function () {
+      aberto = !aberto; etapasAbertas[chave] = aberto;
+      bt.setAttribute('aria-expanded', aberto ? 'true' : 'false'); if (aberto) encher(); corpo.hidden = !aberto;
+    });
+    return h('div', { class: 'etapa-bloco' }, [bt, corpo]);
+  }
   TELAS.reservas = function (tela) {
     tela.appendChild(h('h1', { texto: T('rota_reservas') }));
     if (!estado.viagem) return semViagem(tela);
@@ -1495,16 +1525,31 @@
         campo.addEventListener('input', function () { busca = normalizar(campo.value).trim(); desenhar(); });
         function desenhar() {
           caixa.textContent = '';
-          var diaAnt = null, n = 0;
+          var diaAnt = null, n = 0, bloco = null;
+          /* com filtro ou busca, as etapas já vêm abertas (a pessoa está procurando algo) */
+          var abrirTudo = filtro !== 'todos' || !!busca;
+          function fecharBloco() {
+            if (!bloco) return;
+            if (abrirTudo) bloco.grupos.forEach(function (g) { caixa.appendChild(g.length > 1 ? cartaoGrupo(g) : cartaoReserva(g[0])); });
+            else caixa.appendChild(blocoEtapa(bloco.chave, bloco.etapa, bloco.grupos));
+            bloco = null;
+          }
           cartoes.forEach(function (g) {
             var c0 = g[0].c;
             if (filtro !== 'todos' && c0.tipo !== filtro) return;
             if (busca && !g.some(function (x) { return normalizar([x.c.titulo, x.c.pessoa, x.c.codigo, x.c.local, x.c.nota, T('res_' + x.c.tipo)].join(' ')).indexOf(busca) > -1; })) return;
             n++;
             var dia = (c0.quando || '').slice(0, 10) || 'sem';
-            if (dia !== diaAnt) { caixa.appendChild(h('h3', { class: 'dia-titulo', texto: dia === 'sem' ? T('res_semData') : semana(dia) + ', ' + fData(dia) })); diaAnt = dia; }
+            if (dia !== diaAnt) { fecharBloco(); caixa.appendChild(h('h3', { class: 'dia-titulo', texto: dia === 'sem' ? T('res_semData') : semana(dia) + ', ' + fData(dia) })); diaAnt = dia; }
+            if (LOGISTICA[c0.tipo] && dia !== 'sem') {
+              var et = etapaDe(c0, v), chave = v.id + '|' + dia + '|' + et + '|' + (c0.quando || '').slice(11, 16);
+              if (bloco && bloco.chave === chave) { bloco.grupos.push(g); return; }
+              fecharBloco(); bloco = { chave: chave, etapa: et, grupos: [g] }; return;
+            }
+            fecharBloco();
             caixa.appendChild(g.length > 1 ? cartaoGrupo(g) : cartaoReserva(g[0]));
           });
+          fecharBloco();
           if (!n) caixa.appendChild(h('p', { class: 'sub', texto: T('nadaAchado') }));
         }
         desenhar();
