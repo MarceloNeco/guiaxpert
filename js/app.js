@@ -12,7 +12,7 @@
 (function () {
   'use strict';
   var d = document, $ = function (id) { return d.getElementById(id); };
-  var VERSAO_APP = '1.5.24';
+  var VERSAO_APP = '1.5.25';
 
   /* ------------------------------------------------------------------
      1. UTILIDADES
@@ -1695,20 +1695,22 @@
      código, QR, pessoa, assento e nota ficam embaralhados no cofre */
   function guardarReservasProntas(itens) {
     return Banco.listar('reservas', function (r) { return r.viagem_id === estado.viagem.id; }).then(function (ja) {
-      var marcas = {}; ja.forEach(function (r) { if (r.marca) marcas[r.marca] = 1; });
+      var marcas = {}; ja.forEach(function (r) { if (r.marca && !r.apagado) marcas[r.marca] = r; });
       var n = 0;
       return itens.reduce(function (p, it) {
         return p.then(function () {
           /* abrir o mesmo link duas vezes não duplica: pelo código, ou por título + horário */
           var marca = it.codigo ? 'cod:' + it.codigo : (it.titulo && it.quando ? 'ag:' + it.titulo + '|' + it.quando : null);
-          if (marca && marcas[marca]) return;
+          /* mesmo código já guardado: pula; só completa se o guardado não tinha data e agora veio com data */
+          var antiga = marca && marcas[marca];
+          if (antiga && (antiga.agenda && antiga.agenda.quando || !it.quando)) return;
           var dados = { tipo: it.tipo || 'outro', titulo: it.titulo || '', quando: it.quando || '', codigo: it.codigo || '', local: it.local || '', nota: it.nota || '',
             pessoa: it.pessoa || '', assento: it.assento || '', barra: it.barra || '', barraFormato: it.barraFormato || '',
             qr: it.barra ? '' : (it.qr || (it.tipo === 'ingresso' ? it.codigo || '' : '')) };   /* QR só de ingresso (voo e hotel não entram por QR) */
           return cifrarReserva(estado.viagem.id, dados).then(function (blob) {
             n++;
-            return Banco.gravar('reservas', { viagem_id: estado.viagem.id, conteudo: blob, tipo: dados.tipo, marca: marca,
-              agenda: dados.quando ? { titulo: dados.titulo, quando: dados.quando, local: dados.local || null, lat: it.lat != null ? it.lat : null, lng: it.lng != null ? it.lng : null, grupo: it.grupo || null } : null });
+            return Banco.gravar('reservas', Object.assign(antiga ? { id: antiga.id, criado_em: antiga.criado_em, versao: antiga.versao } : {}, { viagem_id: estado.viagem.id, conteudo: blob, tipo: dados.tipo, marca: marca,
+              agenda: dados.quando ? { titulo: dados.titulo, quando: dados.quando, local: dados.local || null, lat: it.lat != null ? it.lat : null, lng: it.lng != null ? it.lng : null, grupo: it.grupo || null } : null }));
           });
         });
       }, Promise.resolve()).then(function () { return n; });
