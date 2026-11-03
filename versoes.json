@@ -2,6 +2,19 @@
   "app": "guiaxpert",
   "versoes": [
     {
+      "versao": "1.5.19",
+      "data": "2026-11-03",
+      "substitui": "1.5.18",
+      "itens": {
+        "pt": [
+          "Fotos do início: cada uma fica uns 8 segundos se mexendo devagar (zoom e passeio leves) e a troca esmaece suave, sem linha entre as fotos. Arrastar com o dedo continua trocando."
+        ],
+        "en": [
+          "Home photos: each one stays about 8 seconds slowly moving (gentle zoom and pan) and fades smoothly into the next, with no line between photos. Swiping still works."
+        ]
+      }
+    },
+    {
       "versao": "1.5.18",
       "data": "2026-11-03",
       "substitui": "1.5.17",

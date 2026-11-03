@@ -499,12 +499,13 @@ body.sem-rolagem .bt-assistente { bottom: calc(var(--barra) + env(safe-area-inse
 .hero { position: relative; overflow: hidden; height: 42vh; min-height: 13rem; max-height: 22rem; border-radius: 0 0 28px 28px;
   margin: -.5rem calc(-1 * max(1rem, env(safe-area-inset-right, 0px))) .2rem calc(-1 * max(1rem, env(safe-area-inset-left, 0px))); background: var(--sup2); }
 .hero.compacta { height: 26vh; min-height: 9rem; max-height: 14rem; }
-/* carrossel que desliza para o lado: a próxima entra pela direita, a atual sai pela esquerda */
-.hero-foto { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; transform: translateX(100%); transition: transform .9s cubic-bezier(.22, .8, .2, 1); will-change: transform; }
-.hero-foto.ativa { transform: translateX(0); }
-.hero-foto.saiu { transform: translateX(-100%); }
-.hero-foto.volta { transform: translateX(-100%); }
-.hero-foto.sem-anim { transition: none; }
+/* carrossel no padrão "Ken Burns": cada foto fica na tela uns 8 s se mexendo devagar (zoom e passeio leves),
+   e a troca é um esmaecer suave, sem linha dividindo duas fotos. Arrastar com o dedo também troca. */
+.hero-foto { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; opacity: 0; transition: opacity 1.6s ease; will-change: opacity, transform; }
+.hero-foto.ativa { opacity: 1; animation: kenburns 9.5s ease-out both; }
+.hero-foto.ativa.par { animation-name: kenburns2; }
+@keyframes kenburns { from { transform: scale(1.02) translate(0, 0); } to { transform: scale(1.12) translate(-2%, -1.5%); } }
+@keyframes kenburns2 { from { transform: scale(1.12) translate(2%, 1%); } to { transform: scale(1.02) translate(0, 0); } }
 .hero { touch-action: pan-y; }
 .hero-veu { position: absolute; inset: 0; background: linear-gradient(180deg, rgba(0, 0, 0, .18) 0%, rgba(0, 0, 0, 0) 35%, rgba(0, 0, 0, .55) 100%); }
 .hero-texto { position: absolute; left: 1.15rem; right: 3.4rem; bottom: 1rem; color: #fff; text-shadow: 0 1px 2px rgba(0, 0, 0, .55), 0 0 18px rgba(0, 0, 0, .35); }
@@ -516,7 +517,7 @@ body.sem-rolagem .bt-assistente { bottom: calc(var(--barra) + env(safe-area-inse
   .hero { height: 46vh; max-height: 26rem; border-radius: 28px; margin: .2rem 0 .2rem; }
   .hero-texto { left: 1.6rem; bottom: 1.4rem; }
 }
-@media (prefers-reduced-motion: reduce) { .hero-foto { transition: none; } }
+@media (prefers-reduced-motion: reduce) { .hero-foto { transition: none; } .hero-foto.ativa { animation: none; } }
 
 /* ---------- abertura ---------- */
 #abertura { position: fixed; inset: 0; z-index: 200; background: var(--fundo); display: grid; place-items: center; transition: opacity .45s ease; }

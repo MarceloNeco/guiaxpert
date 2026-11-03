@@ -12,7 +12,7 @@
 (function () {
   'use strict';
   var d = document, $ = function (id) { return d.getElementById(id); };
-  var VERSAO_APP = '1.5.18';
+  var VERSAO_APP = '1.5.19';
 
   /* ------------------------------------------------------------------
      1. UTILIDADES
@@ -465,18 +465,19 @@
     var i = inicio, atual = a, prox = b, ocupado = false;
     var reduz = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
     function fonte(el, id) { el.src = 'img/fundos/' + id + '-640.webp'; el.srcset = 'img/fundos/' + id + '-640.webp 640w, img/fundos/' + id + '-1280.webp 1280w'; }
-    /* passa para a próxima (dir = 1) ou volta uma (dir = -1), deslizando */
+    /* troca para a próxima (dir = 1) ou a anterior (dir = -1): esmaece; a nova começa a se mexer devagar */
+    var vezes = 0;
     function passar(dir) {
       if (ocupado || n < 2) return; ocupado = true;
       i = (i + dir + n) % n;
       fonte(prox, FOTOS[i]);
-      prox.classList.add('sem-anim'); prox.classList.remove('saiu', 'volta'); if (dir < 0) prox.classList.add('volta');
-      void prox.offsetWidth;                                   /* posiciona fora da tela sem animar */
-      prox.classList.remove('sem-anim', 'volta'); prox.classList.add('ativa');
-      atual.classList.remove('ativa'); atual.classList.add(dir < 0 ? 'saiu-dir' : 'saiu');
-      if (dir < 0) atual.style.transform = 'translateX(100%)';
-      var velho = atual; atual = prox; prox = velho;
-      setTimeout(function () { velho.classList.add('sem-anim'); velho.classList.remove('saiu', 'saiu-dir'); velho.style.transform = ''; ocupado = false; }, reduz ? 0 : 950);
+      var mostrar = function () {
+        vezes++; prox.classList.toggle('par', vezes % 2 === 1);
+        prox.classList.add('ativa'); atual.classList.remove('ativa');
+        var velho = atual; atual = prox; prox = velho;
+        setTimeout(function () { velho.classList.remove('par'); ocupado = false; }, reduz ? 0 : 1700);
+      };
+      if (prox.complete && prox.naturalWidth) mostrar(); else { prox.onload = function () { prox.onload = null; mostrar(); }; setTimeout(function () { if (prox.onload) { prox.onload = null; mostrar(); } }, 2500); }
     }
     clearInterval(fotosTimer); fotosTimer = null;
     if (!reduz && n > 1) {
@@ -484,7 +485,7 @@
         if (!caixa.isConnected) { clearInterval(fotosTimer); fotosTimer = null; return; }
         if (d.hidden) return;
         passar(1);
-      }, 7000);
+      }, 8000);
     }
     /* arrastar com o dedo também passa as fotos */
     var x0 = null;

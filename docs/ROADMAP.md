@@ -66,6 +66,7 @@ O app é para **montar** o roteiro (pesquisar, sugerir, decidir), não só para 
 | E12 | **Papéis por viagem**: dono (tudo, chaves, convites), editor (só aquela viagem), só leitura (sogra, pais, contato de segurança), **cópia do roteiro** para quem vai fazer a mesma viagem (sem reservas). |
 | E13 | **Contatos de emergência** no wizard; **🆘 Preciso de ajuda** manda a localização; opcional "Estou bem?" (sem sinal do app por X horas → aviso). Canais grátis: e-mail (Resend) e Telegram; WhatsApp e SMS depois. |
 | E14 | **Assistente "Estender a viagem"**: lista o que muda (voos, hotéis, carro, de cada reserva separada), com link, telefone e texto pronto. Não compete com companhias aéreas. |
+| E16 | **✦ IA também responde sobre o próprio app** ("onde fica a opção X?", "para que serve Y?"): base de ajuda do app (telas, botões, passos) consultada por palavra-chave e entregue à IA junto da pergunta (RAG leve, sem banco de vetores); sem internet, mostra o trecho da ajuda direto. Pedido do dono em 03/Nov/2026, para depois da viagem. |
 | E15 | Seletor de roteiro no topo: trocar só quando a pessoa quiser; o padrão é a próxima viagem. |
 
 ## APK Android (fora da loja) e lojas
