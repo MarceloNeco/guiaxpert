@@ -499,8 +499,13 @@ body.sem-rolagem .bt-assistente { bottom: calc(var(--barra) + env(safe-area-inse
 .hero { position: relative; overflow: hidden; height: 42vh; min-height: 13rem; max-height: 22rem; border-radius: 0 0 28px 28px;
   margin: -.5rem calc(-1 * max(1rem, env(safe-area-inset-right, 0px))) .2rem calc(-1 * max(1rem, env(safe-area-inset-left, 0px))); background: var(--sup2); }
 .hero.compacta { height: 26vh; min-height: 9rem; max-height: 14rem; }
-.hero-foto { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; opacity: 0; transition: opacity 1.4s ease; will-change: opacity; }
-.hero-foto.ativa { opacity: 1; }
+/* carrossel que desliza para o lado: a próxima entra pela direita, a atual sai pela esquerda */
+.hero-foto { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; transform: translateX(100%); transition: transform .9s cubic-bezier(.22, .8, .2, 1); will-change: transform; }
+.hero-foto.ativa { transform: translateX(0); }
+.hero-foto.saiu { transform: translateX(-100%); }
+.hero-foto.volta { transform: translateX(-100%); }
+.hero-foto.sem-anim { transition: none; }
+.hero { touch-action: pan-y; }
 .hero-veu { position: absolute; inset: 0; background: linear-gradient(180deg, rgba(0, 0, 0, .18) 0%, rgba(0, 0, 0, 0) 35%, rgba(0, 0, 0, .55) 100%); }
 .hero-texto { position: absolute; left: 1.15rem; right: 3.4rem; bottom: 1rem; color: #fff; text-shadow: 0 1px 2px rgba(0, 0, 0, .55), 0 0 18px rgba(0, 0, 0, .35); }
 .hero-titulo { font-size: clamp(1.6rem, 6vw, 2.2rem); font-weight: 800; line-height: 1.08; letter-spacing: -.02em; text-wrap: balance; }

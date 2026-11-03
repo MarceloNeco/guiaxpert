@@ -12,7 +12,7 @@
 (function () {
   'use strict';
   var d = document, $ = function (id) { return d.getElementById(id); };
-  var VERSAO_APP = '1.5.16';
+  var VERSAO_APP = '1.5.17';
 
   /* ------------------------------------------------------------------
      1. UTILIDADES
@@ -462,20 +462,34 @@
     var caixa = h('div', { class: 'hero' + (op.compacta ? ' compacta' : ''), 'aria-hidden': 'true' }, [a, b, h('div', { class: 'hero-veu' }),
       h('div', { class: 'hero-texto' }, [titulo ? h('p', { class: 'hero-titulo', texto: titulo }) : null, sub ? h('p', { class: 'hero-sub', texto: sub }) : null]), cred]);
     cred.removeAttribute('aria-hidden');
-    var i = inicio, atual = a, prox = b;
+    var i = inicio, atual = a, prox = b, ocupado = false;
     var reduz = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+    function fonte(el, id) { el.src = 'img/fundos/' + id + '-640.webp'; el.srcset = 'img/fundos/' + id + '-640.webp 640w, img/fundos/' + id + '-1280.webp 1280w'; }
+    /* passa para a próxima (dir = 1) ou volta uma (dir = -1), deslizando */
+    function passar(dir) {
+      if (ocupado || n < 2) return; ocupado = true;
+      i = (i + dir + n) % n;
+      fonte(prox, FOTOS[i]);
+      prox.classList.add('sem-anim'); prox.classList.remove('saiu', 'volta'); if (dir < 0) prox.classList.add('volta');
+      void prox.offsetWidth;                                   /* posiciona fora da tela sem animar */
+      prox.classList.remove('sem-anim', 'volta'); prox.classList.add('ativa');
+      atual.classList.remove('ativa'); atual.classList.add(dir < 0 ? 'saiu-dir' : 'saiu');
+      if (dir < 0) atual.style.transform = 'translateX(100%)';
+      var velho = atual; atual = prox; prox = velho;
+      setTimeout(function () { velho.classList.add('sem-anim'); velho.classList.remove('saiu', 'saiu-dir'); velho.style.transform = ''; ocupado = false; }, reduz ? 0 : 950);
+    }
     clearInterval(fotosTimer); fotosTimer = null;
     if (!reduz && n > 1) {
       fotosTimer = setInterval(function () {
         if (!caixa.isConnected) { clearInterval(fotosTimer); fotosTimer = null; return; }
         if (d.hidden) return;
-        i = (i + 1) % n;
-        prox.classList.add('ativa'); atual.classList.remove('ativa');
-        var t = atual; atual = prox; prox = t;
-        var seguinte = FOTOS[(i + 1) % n];
-        setTimeout(function () { prox.src = 'img/fundos/' + seguinte + '-640.webp'; prox.srcset = 'img/fundos/' + seguinte + '-640.webp 640w, img/fundos/' + seguinte + '-1280.webp 1280w'; }, 1200);
-      }, 8000);
+        passar(1);
+      }, 7000);
     }
+    /* arrastar com o dedo também passa as fotos */
+    var x0 = null;
+    caixa.addEventListener('pointerdown', function (e) { x0 = e.clientX; });
+    caixa.addEventListener('pointerup', function (e) { if (x0 == null) return; var dx = e.clientX - x0; x0 = null; if (Math.abs(dx) > 40) passar(dx < 0 ? 1 : -1); });
     return caixa;
   }
   function janelaCreditosFotos() {

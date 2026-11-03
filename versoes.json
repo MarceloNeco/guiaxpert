@@ -2,6 +2,19 @@
   "app": "guiaxpert",
   "versoes": [
     {
+      "versao": "1.5.17",
+      "data": "2026-11-03",
+      "substitui": "1.5.16",
+      "itens": {
+        "pt": [
+          "Fotos do início deslizam para o lado, e dá para passar com o dedo."
+        ],
+        "en": [
+          "Home photos slide sideways, and you can swipe through them."
+        ]
+      }
+    },
+    {
       "versao": "1.5.16",
       "data": "2026-11-03",
       "substitui": "1.5.15",
