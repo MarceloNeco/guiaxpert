@@ -12,7 +12,7 @@
 (function () {
   'use strict';
   var d = document, $ = function (id) { return d.getElementById(id); };
-  var VERSAO_APP = '1.5.23';
+  var VERSAO_APP = '1.5.24';
 
   /* ------------------------------------------------------------------
      1. UTILIDADES
@@ -1650,10 +1650,24 @@
     } catch (e) { return null; }
   }
   function esquecerLinkReservas() { try { sessionStorage.removeItem('guiaxpert.reservas-link'); } catch (e) {} }
+  /* o link escolhe a viagem pela data: a atual, se cobre o dia; senão outra que cubra; senão cria um passeio de um dia */
   function oferecerReservasDoLink() {
     var pac = lerLinkReservas();
     if (!pac) return;
-    if (!estado.viagem) { avisar(T('semViagemTexto')); return; }
+    var d = (pac.itens.filter(function (it) { return it.quando; })[0] || {}).quando;
+    d = d ? d.slice(0, 10) : null;
+    if (!d) { if (!estado.viagem) { avisar(T('semViagemTexto')); return; } oferecerNaViagem(pac); return; }
+    var cobre = function (v) { return v && v.inicio && v.fim && v.inicio <= d && d <= v.fim; };
+    if (cobre(estado.viagem)) { oferecerNaViagem(pac); return; }
+    Banco.listar('viagens', function (v) { return !v.apagado && cobre(v); }).then(function (vs) {
+      if (vs.length) return Contexto.definir('viagem', vs[0].id).then(recarregarContexto);
+      var ps = pac.passeio || {}, base = estado.viagem;
+      return criarViagem({ tipo: 'passeio', nome: ps.nome || pac.itens[0].titulo || T('tipoPasseio'), destino: null, destinoTexto: ps.cidade || '',
+        centro: ps.lat != null ? { lat: ps.lat, lng: ps.lng } : null, inicio: d, fim: d,
+        pessoas: base && base.pessoas ? base.pessoas : [], preferencias: {}, estadias: [] }).then(function () { avisar(T('lnk_passeioCriado', { nome: estado.viagem.nome })); });
+    }).then(function () { oferecerNaViagem(pac); }).catch(function () { avisar(T('cofreErro')); });
+  }
+  function oferecerNaViagem(pac) {
     var itens = pac.itens.slice(0, 30);
     var lista = h('div', { class: 'linha', style: 'flex-direction:column;align-items:stretch;gap:.5rem' });
     itens.forEach(function (it) {

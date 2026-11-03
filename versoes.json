@@ -2,6 +2,19 @@
   "app": "guiaxpert",
   "versoes": [
     {
+      "versao": "1.5.24",
+      "data": "2026-11-03",
+      "substitui": "1.5.23",
+      "itens": {
+        "pt": [
+          "Link de reservas escolhe a viagem pela data. Se não houver viagem naquele dia, cria um passeio de um dia sozinho."
+        ],
+        "en": [
+          "Booking links pick the trip by date. If there's no trip that day, a one-day outing is created automatically."
+        ]
+      }
+    },
+    {
       "versao": "1.5.23",
       "data": "2026-11-03",
       "substitui": "1.5.22",

@@ -56,6 +56,19 @@ por regras (sem IA na maioria das vezes). Recebidos em 02–03/Nov/2026. Os arqu
 - Tela "Itens do pedido" de natalluz.ingressos.com.br: mesmos itens do caso 1, com data, categoria e hora,
   subtotal, total, "Pago", operadora, parcelas. Lido por OCR; serve para conferir.
 
+## 7. Fazendinha Estação Natureza (São Paulo, Ipiranga) — "Seu ingresso para a Estação Natureza"
+
+- Recebido em 03/Nov/2026 (print do Gmail). Remetente: `ingressos@estacaonatureza.com.br`.
+- Corpo em HTML com **um QR Code em imagem** dentro do e-mail (não é anexo). O QR contém **exatamente o "Número do
+  ingresso"** (11 dígitos), que também aparece em texto, como link.
+- Campos em texto: "Número do ingresso", "Titular do Bilhete" (nome: descartar), "Tipo De Ingresso" ("Combo 4
+  Ingressos" = **um QR para 4 pessoas**), "Localização" (nome do lugar), "Instruções" (endereço, como link de mapa),
+  telefones de contato.
+- **Sem data**: o horário vem "00:00 -03" e não há dia (ingresso aberto; neste caso, remarcado por chuva, vale 1 mês).
+  O robô não inventa data: pergunta "Para qual dia?" ou usa a data que a pessoa escrever ao encaminhar
+  ("sábado 7/11"). Com a data, o app escolhe a viagem que cobre o dia ou **cria um passeio de um dia** (1.5.24).
+- Regra: QR do corpo lido por imagem (zxing) **ou**, mais barato, o número em texto vira o QR (validado: igual).
+
 ## Regras que saem daqui
 
 1. Classificar pelo **remetente original** (ingressos.com.br, planne.com.br, companhias aéreas, hotéis, locadoras).
@@ -63,4 +76,5 @@ por regras (sem IA na maioria das vezes). Recebidos em 02–03/Nov/2026. Os arqu
 3. Um ingresso por pessoa: código, categoria, setor/número; **QR ou código de barras** a partir do código.
 4. Descartar dado pessoal do comprador; guardar só o necessário, embaralhado no cofre.
 5. Ignorar e-mails sem reserva ("Acesse seus pedidos", marketing).
-6. Data dentro de uma viagem → compromisso fixo 🔒 dessa viagem; senão, perguntar "Para qual viagem?".
+6. Data dentro de uma viagem → compromisso fixo 🔒 dessa viagem; sem viagem nessa data → cria um passeio de um dia.
+7. Sem data (ingresso aberto) → pergunta o dia; aceita a data escrita por quem encaminhou o e-mail.
