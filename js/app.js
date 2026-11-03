@@ -12,7 +12,7 @@
 (function () {
   'use strict';
   var d = document, $ = function (id) { return d.getElementById(id); };
-  var VERSAO_APP = '1.5.26';
+  var VERSAO_APP = '1.5.27';
 
   /* ------------------------------------------------------------------
      1. UTILIDADES
@@ -686,8 +686,9 @@
       var grupos = {};
       rs.forEach(function (r) { var k = r.agenda.grupo || (r.agenda.titulo + '|' + r.agenda.quando); (grupos[k] = grupos[k] || []).push(r); });
       var gs = Object.keys(grupos).map(function (k) { return grupos[k]; });
-      var chv = chavesComoNaVida(gs.map(function (g) { return { tipo: g[0].tipo, titulo: g[0].agenda.titulo, quando: g[0].agenda.quando }; }));
-      gs.forEach(function (g, i) { g._k = chv[i]; });
+      var objs = gs.map(function (g) { return { tipo: g[0].tipo, titulo: g[0].agenda.titulo, quando: g[0].agenda.quando }; });
+      var chv = chavesComoNaVida(objs);
+      gs.forEach(function (g, i) { g._k = chv[i]; g._cedo = objs[i]._chegaCedo; });
       gs.sort(function (a, b) { return a._k < b._k ? -1 : a._k > b._k ? 1 : 0; }).forEach(function (g) {
         var a = g[0].agenda, hora = a.quando.slice(11, 16), pos = g._k.slice(11, 16), pr = papelReserva({ tipo: g[0].tipo, titulo: a.titulo });
         var horaTxt = hora || '—';
@@ -696,6 +697,7 @@
           h('div', { class: 'x' }, [h('div', { class: 'linha' }, [h('span', { 'aria-hidden': 'true', texto: '🔒' }), h('b', { texto: a.titulo }),
             g.length > 1 ? h('span', { class: 'etq', texto: T('nIngressos', { n: g.length }) }) : h('span', { class: 'etq', texto: T('res_' + (g[0].tipo || 'outro')) })]),
             dica ? h('span', { class: 'nota', texto: dica.charAt(0).toUpperCase() + dica.slice(1) }) : null,
+            g._cedo ? h('span', { class: 'nota', texto: 'ℹ️ ' + T('chegaCedo', { h: g._cedo }) }) : null,
             a.local ? h('span', { class: 'nota', texto: a.local }) : null,
             h('span', { class: 'nota', texto: T('fixoNaoMuda') }),
             h('button', { class: 'bt leve', type: 'button', style: 'align-self:flex-start;margin-top:.3rem', onclick: function () { Nav.ir('reservas'); } }, '▦ ' + T('verIngressos'))])]);
@@ -1543,7 +1545,11 @@
       if (p === 'sai' && c.tipo === 'carro' && x.vooMin != null) { nv = menor(hh, x.vooMin); if (nv !== hh || hh === x.vooMin) { hh = nv; n = 2; } }
       else if (p === 'sai' && c.tipo === 'hotel') { nv = menor(menor(hh, x.vooMin), x.devolve); if (nv !== hh || hh === x.vooMin || hh === x.devolve) { hh = nv; n = 1; } }
       else if (p === 'entra' && c.tipo === 'carro' && x.vooMax != null) { nv = maior(hh, x.vooMax); if (nv !== hh || hh === x.vooMax) { hh = nv; n = 7; } }
-      else if (p === 'entra' && c.tipo === 'hotel') { nv = maior(maior(hh, x.vooMax), x.pegaCarro); if (nv !== hh || hh === x.vooMax || hh === x.pegaCarro) { hh = nv; n = 8; } }
+      else if (p === 'entra' && c.tipo === 'hotel') {
+        var chega = maior(x.vooMax || '', x.pegaCarro);   /* último passo antes do hotel naquele dia */
+        c._chegaCedo = chega && chega < hh ? hh : null;     /* chegam antes do horário de check-in: avisar */
+        nv = maior(maior(hh, x.vooMax), x.pegaCarro); if (nv !== hh || hh === x.vooMax || hh === x.pegaCarro) { hh = nv; n = 8; }
+      }
       return d + 'T' + hh + '|' + n + '|' + normalizar(c.titulo || '');
     });
   }
@@ -1553,6 +1559,7 @@
       h('span', { class: 'pequeno', texto: T('res_' + c.tipo) }),
       h('b', { texto: c.titulo }),
       linhaQuando(c) ? h('span', { texto: linhaQuando(c) }) : null,
+      c._chegaCedo ? h('span', { class: 'sub', texto: 'ℹ️ ' + T('chegaCedo', { h: c._chegaCedo }) }) : null,
       c.pessoa || c.assento ? h('span', { texto: [c.pessoa, c.assento].filter(Boolean).join(' · ') }) : null,
       c.codigo ? h('span', { class: 'linha' }, [T('codigo') + ': ', h('code', { texto: c.codigo, style: 'user-select:all' })]) : null,
       c.local ? h('span', { class: 'sub', texto: c.local }) : null,

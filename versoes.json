@@ -2,6 +2,19 @@
   "app": "guiaxpert",
   "versoes": [
     {
+      "versao": "1.5.27",
+      "data": "2026-11-03",
+      "substitui": "1.5.26",
+      "itens": {
+        "pt": [
+          "Aviso quando a chegada (voo ou carro) acontece antes do horário de check-in: dá para deixar as malas na recepção."
+        ],
+        "en": [
+          "Notice when you arrive (flight or car) before check-in time: you can leave your bags at the front desk."
+        ]
+      }
+    },
+    {
       "versao": "1.5.26",
       "data": "2026-11-03",
       "substitui": "1.5.25",

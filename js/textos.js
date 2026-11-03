@@ -159,6 +159,7 @@ window.TEXTOS = (function () {
     guardarSemInternet: ['Guardar ({mb} MB)', 'Save ({mb} MB)'], guardadoSemInternet: ['Pronto: mapa e guia guardados.', 'Done: map and guide saved.'],
     prontoSemInternet: ['Funciona sem internet', 'Works offline'], prontoSemInternetTexto: ['Mapa, lugares e roteiro deste destino estão no celular.', 'Map, places and itinerary for this destination are on your phone.'],
     lnk_passeioCriado: ['Criei o passeio “{nome}” para esse dia.', 'Created the outing “{nome}” for that day.'],
+    chegaCedo: ['Vocês podem chegar antes do check-in (a partir das {h}): dá para deixar as malas na recepção e sair para passear.', 'You may arrive before check-in (from {h}): you can leave your bags at the front desk and go out.'],
     aPartirDe: ['a partir das {h}', 'from {h}'], ateAs: ['até as {h}', 'by {h}'],
     res_trancada: ['Os códigos aparecem aqui assim que o celular onde ela foi guardada abrir as Reservas.', 'Codes show up here once the phone that saved it opens Bookings.'],
     res_liberarTitulo: ['Último passo: liberar para a família', 'Last step: unlock for the family'],
