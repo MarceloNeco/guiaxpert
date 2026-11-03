@@ -164,6 +164,8 @@ window.TEXTOS = (function () {
     et_checkin: ['Check-in no hotel', 'Hotel check-in'], et_checkout: ['Check-out do hotel', 'Hotel check-out'],
     et_retirada: ['Retirada do carro', 'Car pick-up'], et_devolucao: ['Devolução do carro', 'Car drop-off'], et_carro: ['Carro alugado', 'Rental car'],
     et_transfer: ['Traslado', 'Transfer'], et_onibus: ['Ônibus ou trem', 'Bus or train'],
+    addNesteDia: ['Adicionar neste dia', 'Add on this day'], addReservaDia: ['Reserva neste dia', 'Booking on this day'], addAtividadeDia: ['Atividade no roteiro deste dia', 'Activity in this day\'s itinerary'],
+    addNoDiaDica: ['Reserva: algo comprado, com código ou ingresso. Atividade: um programa do dia (passeio, almoço, visita), montado no Roteiro.', 'Booking: something bought, with a code or ticket. Activity: a plan for the day (outing, lunch, visit), set up in the Itinerary.'],
     nReservas: ['{n} reservas', '{n} bookings'],
     res_transfer: ['🚐 Traslado', '🚐 Transfer'], res_onibus: ['🚌 Ônibus/trem', '🚌 Bus/train'], res_passeio: ['🗺 Passeio', '🗺 Tour'],
     aPartirDe: ['a partir das {h}', 'from {h}'], ateAs: ['até as {h}', 'by {h}'],

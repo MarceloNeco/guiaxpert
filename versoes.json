@@ -2,6 +2,21 @@
   "app": "guiaxpert",
   "versoes": [
     {
+      "versao": "1.5.29",
+      "data": "2026-11-03",
+      "substitui": "1.5.28",
+      "itens": {
+        "pt": [
+          "Reservas agrupadas por dia: cada dia recolhe com o chevron e mostra um resumo (✈️ 🚗 🏨 · 3). O próximo dia já vem aberto.",
+          "＋ ao lado do dia: \"Reserva neste dia\" (já com a data) ou \"Atividade no roteiro deste dia\" (abre o Roteiro nesse dia)."
+        ],
+        "en": [
+          "Bookings grouped by day: each day collapses with the chevron and shows a summary (✈️ 🚗 🏨 · 3). The next day comes open.",
+          "＋ next to the day: \"Booking on this day\" (date filled in) or \"Activity in this day's itinerary\" (opens the Itinerary on that day)."
+        ]
+      }
+    },
+    {
       "versao": "1.5.28",
       "data": "2026-11-03",
       "substitui": "1.5.27",

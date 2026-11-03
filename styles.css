@@ -577,3 +577,16 @@ body.travado #app, body.travado .janela-fundo.na-trava, body.travado #fundo-foto
 .etapa-corpo { display: flex; flex-direction: column; gap: .5rem; padding-left: .6rem; border-left: 3px solid var(--rodovia-claro); margin-left: .5rem; }
 @media (prefers-reduced-motion: reduce) { .chev { transition: none; } }
 .etapa-corpo[hidden] { display: none; }
+
+/* reservas: cada dia é uma seção que recolhe; ＋ ao lado adiciona reserva ou atividade nesse dia */
+.dia-sec { margin: .2rem 0 .4rem; }
+.dia-linha { display: flex; align-items: center; gap: .4rem; }
+.dia-cab { flex: 1; min-width: 0; display: flex; align-items: center; gap: .5rem; background: none; border: 0; font: inherit; color: inherit;
+  text-align: left; padding: .65rem .2rem; cursor: pointer; min-height: 2.75rem; }
+.dia-cab .dia-titulo { margin: 0; font-weight: 700; }
+.dia-cab:focus-visible, .dia-mais:focus-visible { outline: 3px solid var(--faixa); outline-offset: 2px; border-radius: 10px; }
+.dia-resumo { margin-left: auto; color: var(--suave); font-size: .9em; white-space: nowrap; }
+.dia-cab[aria-expanded="true"] .chev { transform: rotate(90deg); }
+.dia-mais { flex: none; width: 2.5rem; height: 2.5rem; border-radius: 50%; border: 0; background: var(--sup); color: var(--rodovia); font-size: 1.2rem; cursor: pointer; }
+.dia-corpo { display: flex; flex-direction: column; gap: .5rem; }
+.dia-corpo[hidden] { display: none; }

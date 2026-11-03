@@ -12,7 +12,7 @@
 (function () {
   'use strict';
   var d = document, $ = function (id) { return d.getElementById(id); };
-  var VERSAO_APP = '1.5.28';
+  var VERSAO_APP = '1.5.29';
 
   /* ------------------------------------------------------------------
      1. UTILIDADES
@@ -1433,7 +1433,22 @@
   var TIPOS_RES = ['voo', 'hotel', 'carro', 'transfer', 'onibus', 'ingresso', 'passeio', 'restaurante', 'outro'];
   /* logística (chegar, dormir, ir embora): vira "etapa" recolhida, uma linha só, que abre com o chevron */
   var LOGISTICA = { voo: 1, hotel: 1, carro: 1, transfer: 1, onibus: 1 };
-  var etapasAbertas = {};
+  var etapasAbertas = {}, diasAbertos = {};
+  /* ＋ ao lado do dia: reserva nova nesse dia, ou atividade no roteiro desse dia (onde se edita o dia) */
+  function janelaAddNoDia(v, dia) {
+    var corpo = h('div', { class: 'linha', style: 'flex-direction:column;align-items:stretch' });
+    var j = janela(T('addNesteDia') + ' · ' + semana(dia) + ' ' + fData(dia, true), corpo);
+    corpo.appendChild(h('button', { class: 'bt', type: 'button', onclick: function () { j.fechar(function () { janelaReserva({ c: { quando: dia + 'T12:00' } }); }); } }, '🎟 ' + T('addReservaDia')));
+    corpo.appendChild(h('button', { class: 'bt sec', type: 'button', onclick: function () {
+      j.fechar(function () {
+        var dias = diasDaViagem(v), i = dias.indexOf(dia); if (i >= 0) estado.dia = i;
+        Nav.ir('roteiro');
+        var o = estado.opcao;
+        if (o && podeEditar() && i >= 0) setTimeout(function () { janelaItem(o, o.dias[mapearDia(i, dias.length, o.dias.length)]); }, 350);
+      });
+    } }, '📅 ' + T('addAtividadeDia')));
+    corpo.appendChild(h('p', { class: 'pequeno', texto: T('addNoDiaDica') }));
+  }
   function etapaDe(c, v) {
     var p = papelReserva(c), d = (c.quando || '').slice(0, 10);
     if (c.tipo === 'voo') return v && d && d === v.inicio ? 'vooIda' : v && d && d === v.fim ? 'vooVolta' : 'voo';
@@ -1523,16 +1538,35 @@
         if (cartoes.length > 3) tela.appendChild(campo);
         tela.appendChild(caixa);
         campo.addEventListener('input', function () { busca = normalizar(campo.value).trim(); desenhar(); });
+        /* qual dia já vem aberto: hoje, ou o próximo dia com reserva (os outros ficam recolhidos) */
+        var hjIso = hojeIso(), diaFoco = null;
+        cartoes.forEach(function (g) { var d = (g[0].c.quando || '').slice(0, 10); if (d && d >= hjIso && (!diaFoco || d < diaFoco)) diaFoco = d; });
         function desenhar() {
           caixa.textContent = '';
-          var diaAnt = null, n = 0, bloco = null;
-          /* com filtro ou busca, as etapas já vêm abertas (a pessoa está procurando algo) */
+          var diaAnt = null, n = 0, bloco = null, sec = null;
+          /* com filtro ou busca, dias e etapas já vêm abertos (a pessoa está procurando algo) */
           var abrirTudo = filtro !== 'todos' || !!busca;
+          function alvo() { return sec ? sec.corpo : caixa; }
           function fecharBloco() {
             if (!bloco) return;
-            if (abrirTudo) bloco.grupos.forEach(function (g) { caixa.appendChild(g.length > 1 ? cartaoGrupo(g) : cartaoReserva(g[0])); });
-            else caixa.appendChild(blocoEtapa(bloco.chave, bloco.etapa, bloco.grupos));
+            if (abrirTudo) bloco.grupos.forEach(function (g) { alvo().appendChild(g.length > 1 ? cartaoGrupo(g) : cartaoReserva(g[0])); });
+            else alvo().appendChild(blocoEtapa(bloco.chave, bloco.etapa, bloco.grupos));
+            sec && sec.icones.push(ICONE_ETAPA[bloco.etapa]);
             bloco = null;
+          }
+          function fecharDia() { fecharBloco(); if (sec) { sec.resumo.textContent = sec.icones.filter(function (x, i, a) { return a.indexOf(x) === i; }).join(' ') + ' · ' + sec.icones.length; } sec = null; }
+          function abrirDia(dia) {
+            fecharDia();
+            var chave = v.id + '|' + dia, aberto = abrirTudo || (diasAbertos[chave] != null ? diasAbertos[chave] : dia === diaFoco || dia === 'sem');
+            var corpo = h('div', { class: 'dia-corpo', hidden: !aberto });
+            var resumo = h('span', { class: 'dia-resumo' });
+            var bt = h('button', { class: 'dia-cab', type: 'button', 'aria-expanded': aberto ? 'true' : 'false' }, [
+              h('span', { class: 'chev', 'aria-hidden': 'true', texto: '›' }),
+              h('span', { class: 'dia-titulo', texto: dia === 'sem' ? T('res_semData') : semana(dia) + ', ' + fData(dia) }), resumo]);
+            bt.addEventListener('click', function () { aberto = !aberto; diasAbertos[chave] = aberto; bt.setAttribute('aria-expanded', aberto ? 'true' : 'false'); corpo.hidden = !aberto; });
+            var mais = dia === 'sem' ? null : h('button', { class: 'dia-mais', type: 'button', 'aria-label': T('addNesteDia'), title: T('addNesteDia'), texto: '＋', onclick: function () { janelaAddNoDia(v, dia); } });
+            caixa.appendChild(h('section', { class: 'dia-sec' }, [h('div', { class: 'dia-linha' }, [bt, mais]), corpo]));
+            sec = { corpo: corpo, resumo: resumo, icones: [] };
           }
           cartoes.forEach(function (g) {
             var c0 = g[0].c;
@@ -1540,16 +1574,17 @@
             if (busca && !g.some(function (x) { return normalizar([x.c.titulo, x.c.pessoa, x.c.codigo, x.c.local, x.c.nota, T('res_' + x.c.tipo)].join(' ')).indexOf(busca) > -1; })) return;
             n++;
             var dia = (c0.quando || '').slice(0, 10) || 'sem';
-            if (dia !== diaAnt) { fecharBloco(); caixa.appendChild(h('h3', { class: 'dia-titulo', texto: dia === 'sem' ? T('res_semData') : semana(dia) + ', ' + fData(dia) })); diaAnt = dia; }
+            if (dia !== diaAnt) { abrirDia(dia); diaAnt = dia; }
             if (LOGISTICA[c0.tipo] && dia !== 'sem') {
               var et = etapaDe(c0, v), chave = v.id + '|' + dia + '|' + et + '|' + (c0.quando || '').slice(11, 16);
               if (bloco && bloco.chave === chave) { bloco.grupos.push(g); return; }
               fecharBloco(); bloco = { chave: chave, etapa: et, grupos: [g] }; return;
             }
             fecharBloco();
-            caixa.appendChild(g.length > 1 ? cartaoGrupo(g) : cartaoReserva(g[0]));
+            alvo().appendChild(g.length > 1 ? cartaoGrupo(g) : cartaoReserva(g[0]));
+            sec.icones.push(String(T('res_' + (c0.tipo || 'outro'))).split(' ')[0]);
           });
-          fecharBloco();
+          fecharDia();
           if (!n) caixa.appendChild(h('p', { class: 'sub', texto: T('nadaAchado') }));
         }
         desenhar();
