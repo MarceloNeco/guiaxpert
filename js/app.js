@@ -12,7 +12,7 @@
 (function () {
   'use strict';
   var d = document, $ = function (id) { return d.getElementById(id); };
-  var VERSAO_APP = '1.5.25';
+  var VERSAO_APP = '1.5.26';
 
   /* ------------------------------------------------------------------
      1. UTILIDADES
@@ -685,16 +685,22 @@
     Banco.listar('reservas', function (r) { return r.viagem_id === v.id && r.agenda && r.agenda.quando && r.agenda.quando.slice(0, 10) === data; }).then(function (rs) {
       var grupos = {};
       rs.forEach(function (r) { var k = r.agenda.grupo || (r.agenda.titulo + '|' + r.agenda.quando); (grupos[k] = grupos[k] || []).push(r); });
-      Object.keys(grupos).map(function (k) { return grupos[k]; }).sort(function (a, b) { return a[0].agenda.quando < b[0].agenda.quando ? -1 : 1; }).forEach(function (g) {
-        var a = g[0].agenda, hora = a.quando.slice(11, 16);
-        var el = h('div', { class: 'item fixo' }, [h('span', { class: 'h', texto: hora || '—' }),
+      var gs = Object.keys(grupos).map(function (k) { return grupos[k]; });
+      var chv = chavesComoNaVida(gs.map(function (g) { return { tipo: g[0].tipo, titulo: g[0].agenda.titulo, quando: g[0].agenda.quando }; }));
+      gs.forEach(function (g, i) { g._k = chv[i]; });
+      gs.sort(function (a, b) { return a._k < b._k ? -1 : a._k > b._k ? 1 : 0; }).forEach(function (g) {
+        var a = g[0].agenda, hora = a.quando.slice(11, 16), pos = g._k.slice(11, 16), pr = papelReserva({ tipo: g[0].tipo, titulo: a.titulo });
+        var horaTxt = hora || '—';
+        var dica = hora && (pr === 'entra' && g[0].tipo === 'hotel' || pr === 'sai') ? T(pr === 'sai' ? 'ateAs' : 'aPartirDe', { h: hora }) : '';
+        var el = h('div', { class: 'item fixo' }, [h('span', { class: 'h', texto: horaTxt }),
           h('div', { class: 'x' }, [h('div', { class: 'linha' }, [h('span', { 'aria-hidden': 'true', texto: '🔒' }), h('b', { texto: a.titulo }),
             g.length > 1 ? h('span', { class: 'etq', texto: T('nIngressos', { n: g.length }) }) : h('span', { class: 'etq', texto: T('res_' + (g[0].tipo || 'outro')) })]),
+            dica ? h('span', { class: 'nota', texto: dica.charAt(0).toUpperCase() + dica.slice(1) }) : null,
             a.local ? h('span', { class: 'nota', texto: a.local }) : null,
             h('span', { class: 'nota', texto: T('fixoNaoMuda') }),
             h('button', { class: 'bt leve', type: 'button', style: 'align-self:flex-start;margin-top:.3rem', onclick: function () { Nav.ir('reservas'); } }, '▦ ' + T('verIngressos'))])]);
         /* entra na ordem do horário, no meio dos outros itens do dia */
-        var depois = [].filter.call(bloco.querySelectorAll('.item:not(.fixo)'), function (it) { var t = (it.querySelector('.h') || {}).textContent || ''; return /^\d\d:\d\d$/.test(t) && t > hora; })[0];
+        var depois = [].filter.call(bloco.querySelectorAll('.item:not(.fixo)'), function (it) { var t = (it.querySelector('.h') || {}).textContent || ''; return /^\d\d:\d\d$/.test(t) && t > (pos || hora); })[0];
         if (depois) depois.parentNode.insertBefore(el, depois); else fixos.appendChild(el);
       });
     }).catch(function () {});
@@ -1466,7 +1472,10 @@
           if (!grupos[k]) { grupos[k] = []; ordem.push(k); }
           grupos[k].push(x);
         });
-        var cartoes = ordem.map(function (k) { return grupos[k].sort(function (a, b) { return String(a.c.assento || a.c.pessoa || '').localeCompare(String(b.c.assento || b.c.pessoa || ''), 'pt', { numeric: true }); }); }).sort(function (a, b) { return (a[0].c.quando || '9') < (b[0].c.quando || '9') ? -1 : 1; });
+        var cartoes = ordem.map(function (k) { return grupos[k].sort(function (a, b) { return String(a.c.assento || a.c.pessoa || '').localeCompare(String(b.c.assento || b.c.pessoa || ''), 'pt', { numeric: true }); }); });
+        var chv = chavesComoNaVida(cartoes.map(function (g) { return g[0].c; }));
+        cartoes.forEach(function (g, i) { g._k = chv[i]; });
+        cartoes.sort(function (a, b) { return a._k < b._k ? -1 : a._k > b._k ? 1 : 0; });
         /* filtro por tipo (só os que existem) e busca */
         var tipos = TIPOS_RES.filter(function (t) { return itens.some(function (x) { return x.c.tipo === t; }); });
         var filtro = 'todos', busca = '';
@@ -1499,7 +1508,45 @@
         desenhar();
       }).catch(function () { tela.appendChild(h('div', { class: 'alerta', texto: T('cofreErro') })); });
   };
-  function linhaQuando(c) { return c.quando ? fData(c.quando.slice(0, 10)) + (c.quando.length > 10 ? ' · ' + c.quando.slice(11, 16) : '') : null; }
+  function linhaQuando(c) {
+    if (!c.quando) return null;
+    var hh = c.quando.length > 10 ? c.quando.slice(11, 16) : '', p = papelReserva(c);
+    return fData(c.quando.slice(0, 10)) + (hh ? ' · ' + (p === 'entra' && c.tipo === 'hotel' ? T('aPartirDe', { h: hh }) : p === 'sai' ? T('ateAs', { h: hh }) : hh) : '');
+  }
+  /* a ordem da vida real: o horário do hotel é "a partir de" e o da devolução é "até".
+     Num dia com voo: sair do hotel e devolver o carro vêm ANTES do voo; pegar o carro e entrar no hotel vêm DEPOIS. */
+  function papelReserva(c) {
+    var t = normalizar(c.titulo || '');
+    if (c.tipo === 'hotel') return /saida|check.?out/.test(t) ? 'sai' : 'entra';
+    if (c.tipo === 'carro') return /devolu|entrega/.test(t) ? 'sai' : (/retirada|retirar|pegar/.test(t) ? 'entra' : null);
+    return null;
+  }
+  /* chave de ordem "como na vida": AAAA-MM-DDTHH:MM|n (n desempata: sair do hotel 1, devolver carro 2, voo e outros 5, pegar carro 7, entrar no hotel 8) */
+  function chavesComoNaVida(lista) {
+    /* por dia: voo mais cedo/mais tarde; carro pego mais tarde; carro devolvido mais cedo */
+    var dia = {};
+    function marcar(d, campo, hh, maior) { var x = dia[d] = dia[d] || {}; if (x[campo] == null || (maior ? hh > x[campo] : hh < x[campo])) x[campo] = hh; }
+    lista.forEach(function (c) {
+      if (!c.quando || c.quando.length <= 10) return;
+      var d = c.quando.slice(0, 10), hh = c.quando.slice(11, 16), p = papelReserva(c);
+      if (c.tipo === 'voo') { marcar(d, 'vooMin', hh, false); marcar(d, 'vooMax', hh, true); }
+      if (c.tipo === 'carro' && p === 'entra') marcar(d, 'pegaCarro', hh, true);
+      if (c.tipo === 'carro' && p === 'sai') marcar(d, 'devolve', hh, false);
+    });
+    function menor(a, b) { return b != null && b < a ? b : a; }
+    function maior(a, b) { return b != null && b > a ? b : a; }
+    return lista.map(function (c) {
+      var q = c.quando || '';
+      if (!q) return '9999';
+      if (q.length <= 10) return q + 'T99:99|5';
+      var d = q.slice(0, 10), hh = q.slice(11, 16), x = dia[d] || {}, p = papelReserva(c), n = 5, nv;
+      if (p === 'sai' && c.tipo === 'carro' && x.vooMin != null) { nv = menor(hh, x.vooMin); if (nv !== hh || hh === x.vooMin) { hh = nv; n = 2; } }
+      else if (p === 'sai' && c.tipo === 'hotel') { nv = menor(menor(hh, x.vooMin), x.devolve); if (nv !== hh || hh === x.vooMin || hh === x.devolve) { hh = nv; n = 1; } }
+      else if (p === 'entra' && c.tipo === 'carro' && x.vooMax != null) { nv = maior(hh, x.vooMax); if (nv !== hh || hh === x.vooMax) { hh = nv; n = 7; } }
+      else if (p === 'entra' && c.tipo === 'hotel') { nv = maior(maior(hh, x.vooMax), x.pegaCarro); if (nv !== hh || hh === x.vooMax || hh === x.pegaCarro) { hh = nv; n = 8; } }
+      return d + 'T' + hh + '|' + n + '|' + normalizar(c.titulo || '');
+    });
+  }
   function cartaoReserva(x) {
     var c = x.c;
     return h('div', { class: 'cartao' }, [

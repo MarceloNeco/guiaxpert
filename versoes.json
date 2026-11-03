@@ -2,6 +2,21 @@
   "app": "guiaxpert",
   "versoes": [
     {
+      "versao": "1.5.26",
+      "data": "2026-11-03",
+      "substitui": "1.5.25",
+      "itens": {
+        "pt": [
+          "Reservas e Roteiro na ordem da vida real: no dia do voo de ida, voo → pegar o carro → entrar no hotel; no de volta, sair do hotel → devolver o carro → voo.",
+          "Hotel mostra \"a partir das 14:00\" na entrada e \"até as 11:00\" na saída; devolução do carro mostra \"até as\"."
+        ],
+        "en": [
+          "Bookings and Itinerary in real-life order: on the outbound day, flight → pick up car → hotel check-in; on the return day, hotel check-out → return car → flight.",
+          "Hotel shows \"from 14:00\" at check-in and \"by 11:00\" at check-out; car return shows \"by\"."
+        ]
+      }
+    },
+    {
       "versao": "1.5.25",
       "data": "2026-11-03",
       "substitui": "1.5.24",
