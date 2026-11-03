@@ -42,6 +42,23 @@
     });
   }
   /* código de recuperação: 20 caracteres sem letras confusas (~100 bits) */
+  /* segredo da conta: do servidor (só logado), guardado neste aparelho para abrir sem internet */
+  function uidAgora() { try { var t = window.Conta && Conta.sessao && Conta.sessao(); var tok = t && (t.access_token || t); return JSON.parse(atob(String(tok).split('.')[1].replace(/-/g, '+').replace(/_/g, '/'))).sub || null; } catch (e) { return null; } }
+  function segredoConta() {
+    var uid = uidAgora();
+    return Banco.meta('cofre-conta', null).then(function (m) {
+      if (m && m.seg && (!uid || m.uid === uid)) return m.seg;
+      if (!uid || !navigator.onLine) throw new Error('sem-conta');
+      return Conta.rpc('meu_segredo_cofre', {}).then(function (seg) {
+        if (typeof seg !== 'string' || seg.length < 20) throw new Error('sem-segredo');
+        return Banco.definirMeta('cofre-conta', { uid: uid, seg: seg }).then(function () { return seg; });
+      });
+    });
+  }
+  /* depois de abrir de qualquer jeito: se a conta ainda não tem o embrulho, cria (em segundo plano) */
+  function garantirConta() {
+    Banco.ler('cofre', 'conta').then(function (r) { if (!r || !r.conta) return Cofre.ligarConta(); }).catch(function () {});
+  }
   function novoCodigo() {
     var abc = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789', b = aleatorio(20), s = '';
     for (var i = 0; i < 20; i++) { s += abc[b[i] % abc.length]; if (i % 5 === 4 && i < 19) s += '-'; }
@@ -69,7 +86,7 @@
         return Banco.definirMeta('cofre', { formato: 1, pin: p[0], recuperacao: p[1], iter: ITER, criado_em: new Date().toISOString() })
           .then(function () { return Banco.gravar('cofre', { id: 'recuperacao', formato: 1, recuperacao: p[1], iter: ITER }); });
       }).then(function () {
-        chave = dados; armar();
+        chave = dados; armar(); garantirConta();
         return Banco.definirMeta('cofre-erros', { n: 0, ate: 0 });
       }).then(function () { return codigo; });
     },
@@ -84,7 +101,7 @@
           if (!c) throw new Error('sem-cofre');
           return desembrulhar(porCodigo ? c.recuperacao : c.pin, porCodigo ? normalizarCodigo(segredo) : segredo);
         }).then(function (k) {
-          chave = k; armar();
+          chave = k; armar(); garantirConta();
           return Banco.definirMeta('cofre-erros', { n: 0, ate: 0 }).then(function () { return true; });
         }, function (falha) {
           if (falha && falha.message === 'sem-cofre') throw falha;
@@ -120,7 +137,7 @@
         if (!c || !c.bio) throw new Error('sem-bio');
         return crypto.subtle.unwrapKey('raw', deB64(c.bio.chave), chaveBio, { name: 'AES-GCM', iv: deB64(c.bio.iv) },
           { name: 'AES-GCM', length: 256 }, true, ['encrypt', 'decrypt']);
-      }).then(function (k) { chave = k; armar(); return true; });
+      }).then(function (k) { chave = k; armar(); garantirConta(); return true; });
     },
     desligarBio: function () {
       return Banco.meta('cofre', null).then(function (c) { if (c && c.bio) { delete c.bio; return Banco.definirMeta('cofre', c); } });
@@ -145,7 +162,7 @@
         var pr = rec ? Promise.resolve(rec) : (function () { codigo = novoCodigo(); return embrulhar(dados, normalizarCodigo(codigo)).then(function (w) { return Banco.gravar('cofre', { id: 'recuperacao', formato: 1, recuperacao: w, iter: ITER }).then(function () { return w; }); }); })();
         return pr.then(function (recW) {
           return Banco.definirMeta('cofre', { formato: 1, pin: r[0], recuperacao: recW, iter: ITER, criado_em: new Date().toISOString() });
-        }).then(function () { chave = dados; armar(); return Banco.definirMeta('cofre-erros', { n: 0, ate: 0 }); }).then(function () { return codigo; });
+        }).then(function () { chave = dados; armar(); garantirConta(); return Banco.definirMeta('cofre-erros', { n: 0, ate: 0 }); }).then(function () { return codigo; });
       });
     },
     /* no celular novo: código de recuperação (o embrulho veio da conta) + PIN novo */
@@ -158,6 +175,24 @@
         });
       });
     },
+    /* ---- abre sozinho em qualquer aparelho onde a conta está logada: sem PIN, sem QR ----
+       A chave do cofre vai embrulhada com um segredo da conta que o servidor só entrega a quem está logado.
+       O aparelho guarda esse segredo só para si (não sobe), para abrir também sem internet; a trava do app protege o aparelho. */
+    temConta: function () { return Banco.ler('cofre', 'conta').then(function (r) { return !!(r && r.conta); }); },
+    ligarConta: function () {
+      if (!chave) return Promise.resolve(false);
+      return segredoConta().then(function (seg) { return embrulhar(chave, 'conta|' + seg); })
+        .then(function (w) { return Banco.gravar('cofre', { id: 'conta', formato: 2, conta: w, iter: ITER }); }).then(function () { return true; });
+    },
+    abrirSozinho: function () {
+      if (chave) return Promise.resolve(true);
+      return Banco.ler('cofre', 'conta').then(function (r) {
+        if (!r || !r.conta) return false;
+        return segredoConta().then(function (seg) { return desembrulhar(r.conta, 'conta|' + seg); })
+          .then(function (k) { chave = k; armar(); document.dispatchEvent(new CustomEvent('gx:cofre', { detail: { aberto: true } })); return true; });
+      }).catch(function () { return false; });
+    },
+
     /* a conta tem um cofre (de outro celular) e este aparelho ainda não? */
     temNaConta: function () { return Banco.ler('cofre', 'recuperacao').then(function (r) { return !!(r && r.recuperacao); }); },
 

@@ -12,7 +12,7 @@
 (function () {
   'use strict';
   var d = document, $ = function (id) { return d.getElementById(id); };
-  var VERSAO_APP = '1.5.21';
+  var VERSAO_APP = '1.5.22';
 
   /* ------------------------------------------------------------------
      1. UTILIDADES
@@ -1434,8 +1434,14 @@
       h('span', { class: 'sub', texto: fData(v.inicio) + ' – ' + fData(v.fim) + ' · ' + T('res_trocarViagem') })]));
     pedirCofre(tela, function () {
       Banco.listar('reservas', function (r) { return r.viagem_id === v.id; }).then(function (lista) {
-        return Promise.all(lista.map(function (r) { return Cofre.decifrar(r.conteudo).then(function (c) { return { reg: r, c: c }; }); }));
+        return Promise.all(lista.map(function (r) {
+          return Cofre.decifrar(r.conteudo).then(function (c) { return { reg: r, c: c }; }, function () {
+            /* reserva de outra pessoa da viagem (outro cofre): mostra só o compromisso, sem códigos */
+            var a = r.agenda; return a && a.titulo ? { reg: r, c: { tipo: 'outro', titulo: a.titulo, quando: a.quando, local: a.local, lat: a.lat, lng: a.lng, nota: T('res_deOutro') } } : null;
+          });
+        }));
       }).then(function (itens) {
+        itens = itens.filter(Boolean);
         tela.appendChild(h('div', { class: 'linha' }, [
           h('button', { class: 'bt', type: 'button', onclick: function () { janelaReserva(null); } }, '＋ ' + T('novaReserva')),
           h('button', { class: 'bt sec', type: 'button', onclick: function () { escanearIngresso(); } }, '📷 ' + T('res_escanear')),
@@ -1690,6 +1696,10 @@
   /* pede o PIN (ou cria o cofre) e depois chama "pronto" */
   function pedirCofre(tela, pronto) {
     if (Cofre.aberto()) { pronto(); return; }
+    /* logado: o cofre abre sozinho (sem PIN, sem QR). Só cai no PIN se a conta ainda não tem o embrulho. */
+    Cofre.abrirSozinho().then(function (ok) { if (ok) pronto(); else pedirCofreAntigo(tela, pronto); });
+  }
+  function pedirCofreAntigo(tela, pronto) {
     Cofre.existe().then(function (existe) {
       if (!existe) return Cofre.temNaConta().then(function (naConta) {
         if (naConta) { caixaTrazerCofre(tela, pronto); return null; }

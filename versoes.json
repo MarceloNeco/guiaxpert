@@ -2,6 +2,21 @@
   "app": "guiaxpert",
   "versoes": [
     {
+      "versao": "1.5.22",
+      "data": "2026-11-03",
+      "substitui": "1.5.21",
+      "itens": {
+        "pt": [
+          "Reservas abrem sozinhas em qualquer aparelho onde você entrou na conta: sem PIN e sem QR. (No celular antigo, abra as Reservas uma última vez com o PIN para ligar isso.)",
+          "Reservas guardadas por outra pessoa da viagem aparecem como compromisso, sem os códigos, em vez de dar erro."
+        ],
+        "en": [
+          "Bookings open by themselves on any device where you are signed in: no PIN and no QR. (On your old phone, open Bookings one last time with the PIN to turn this on.)",
+          "Bookings saved by someone else on the trip show as a commitment, without the codes, instead of an error."
+        ]
+      }
+    },
+    {
       "versao": "1.5.21",
       "data": "2026-11-03",
       "substitui": "1.5.20",
