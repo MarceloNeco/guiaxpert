@@ -12,7 +12,7 @@
 (function () {
   'use strict';
   var d = document, $ = function (id) { return d.getElementById(id); };
-  var VERSAO_APP = '1.5.19';
+  var VERSAO_APP = '1.5.20';
 
   /* ------------------------------------------------------------------
      1. UTILIDADES
@@ -1691,7 +1691,14 @@
   function pedirCofre(tela, pronto) {
     if (Cofre.aberto()) { pronto(); return; }
     Cofre.existe().then(function (existe) {
-      if (!existe) return Cofre.temNaConta().then(function (naConta) { if (naConta) { caixaTrazerCofre(tela, pronto); return null; } return false; });
+      if (!existe) return Cofre.temNaConta().then(function (naConta) {
+        if (naConta) { caixaTrazerCofre(tela, pronto); return null; }
+        /* a conta já tem reservas guardadas em outro aparelho: criar um cofre novo aqui não abriria nenhuma delas */
+        return Banco.listar('reservas', function (r) { return !!r.conteudo; }).then(function (rs) {
+          if (rs.length) { caixaTrazerCofre(tela, pronto, true); return null; }
+          return false;
+        });
+      });
       return true;
     }).then(function (existe) {
       if (existe === null) return;
@@ -1730,8 +1737,8 @@
     });
   }
   /* este celular não tem o cofre, mas a conta tem (reservas de outro celular) */
-  function caixaTrazerCofre(tela, pronto) {
-    var caixa = h('div', { class: 'cartao' }, [h('h3', { texto: T('trazerCofre') }), h('p', { class: 'sub', texto: T('trazerCofreTexto') })]);
+  function caixaTrazerCofre(tela, pronto, soQR) {
+    var caixa = h('div', { class: 'cartao' }, [h('h3', { texto: T('trazerCofre') }), h('p', { class: 'sub', texto: T(soQR ? 'trazerCofreTextoQR' : 'trazerCofreTexto') })]);
     var pin = h('input', { class: 'campo', id: 'gx-tc-pin', type: 'password', inputmode: 'numeric', autocomplete: 'new-password', maxlength: '6', placeholder: '••••••' });
     var msg = h('p', { class: 'pequeno', role: 'status', 'aria-live': 'polite' });
     var fim = function (p) { return p.then(function (codigo) { return codigo ? mostrarCodigo(codigo) : null; }).then(function () { caixa.remove(); avisar(T('cofreTrazido')); pronto(); }); };
@@ -1747,6 +1754,7 @@
       fim(Cofre.importarPorCodigo(cod.value, pin.value)).catch(erro);
     } });
     cod.hidden = true;
+    if (soQR) bCod.hidden = true;   /* o código de recuperação ainda não subiu para a conta: só o QR do outro aparelho */
     var bNovo = h('button', { class: 'lk', type: 'button', texto: T('criarCofreNovo'), onclick: function () {
       if (!confirm(T('criarCofreNovoAviso'))) return;
       Banco.apagar('cofre', 'recuperacao').then(function () { caixa.remove(); pedirCofre(tela, pronto); });

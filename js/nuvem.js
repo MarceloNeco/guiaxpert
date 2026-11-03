@@ -19,6 +19,9 @@
 
   function base() { return String(cfg.SUPABASE_URL || '').replace(/\/+$/, '') + '/rest/v1/guiaxpert_dados'; }
   function cab(t, extra) { return Object.assign({ apikey: cfg.SUPABASE_PUBLISHABLE_KEY, Authorization: 'Bearer ' + t, 'Content-Type': 'application/json' }, extra || {}); }
+  function uidDo(t) { try { return JSON.parse(atob(String(t).split('.')[1].replace(/-/g, '+').replace(/_/g, '/'))).sub || ''; } catch (e) { return ''; } }
+  function idNuvem(loja, id, uid) { return loja === 'cofre' && uid ? id + ':' + uid : id; }
+  function idLocal(loja, id) { return loja === 'cofre' ? String(id).split(':')[0] : id; }
   function ok(r) { if (!r.ok) { var e = new Error('nuvem-' + r.status); e.status = r.status; throw e; } return r.status === 204 ? null : r.text().then(function (t) { return t ? JSON.parse(t) : null; }); }
 
   /* o que vai para a nuvem: sem dado sensível */
@@ -44,9 +47,10 @@
           return p.then(function () {
             if (l.recebido_em > maior) maior = l.recebido_em;
             if (LOJAS.indexOf(l.loja) < 0) return;
-            return Banco.lerBruto(l.loja, l.id).then(function (local) {
+            var lid = idLocal(l.loja, l.id);
+            return Banco.lerBruto(l.loja, lid).then(function (local) {
               if (local && local.atualizado_em >= l.atualizado_em) return;
-              var novo = Object.assign({}, l.dados, { id: l.id, atualizado_em: l.atualizado_em, versao: l.versao, apagado: l.apagado });
+              var novo = Object.assign({}, l.dados, { id: lid, atualizado_em: l.atualizado_em, versao: l.versao, apagado: l.apagado });
               if (local && l.loja === 'pessoas' && local.restricoes) novo.restricoes = local.restricoes;
               mudou++;
               return Banco.gravarDeFora(l.loja, novo);
@@ -61,7 +65,6 @@
 
   function subir(t) {
     return Banco.filaToda().then(function (filaToda) {
-      /* reservas também entram na fila do aparelho, mas nunca sobem: saem da fila junto */
       var todos = (filaToda || []).map(function (f) { return f.seq; });
       var fila = (filaToda || []).filter(function (f) { return LOJAS.indexOf(f.loja) > -1; });
       if (!fila.length) return Banco.limparFila(todos).then(function () { return 0; });
@@ -72,7 +75,7 @@
           var linhas = regs.filter(Boolean).map(function (x) {
             var vid = x.loja === 'viagens' ? x.r.id : (x.r.viagem_id || null);
             if (x.loja === 'pessoas' || x.loja === 'cofre') vid = null;
-            return { loja: x.loja, id: x.r.id, viagem_id: vid, dados: limpar(x.loja, x.r), atualizado_em: x.r.atualizado_em || new Date().toISOString(), versao: x.r.versao || 1, apagado: !!x.r.apagado };
+            return { loja: x.loja, id: idNuvem(x.loja, x.r.id, uidDo(t)), viagem_id: vid, dados: limpar(x.loja, x.r), atualizado_em: x.r.atualizado_em || new Date().toISOString(), versao: x.r.versao || 1, apagado: !!x.r.apagado };
           });
           if (!linhas.length) return Banco.limparFila(todos).then(function () { return 0; });
           var enviar = function (ls) {
@@ -98,6 +101,13 @@
         return Conta.token().then(function (t) {
           if (!t) return null;
           return papeis(t).then(function () { return baixar(t); }).then(function (b) {
+            return Banco.meta('cofre-subiu', 0).then(function (v) {
+              if (v >= 2) return b;
+              return Banco.ler('cofre', 'recuperacao').then(function (r) {
+                return (r && r.recuperacao ? Banco.gravar('cofre', r) : Promise.resolve()).then(function () { return Banco.definirMeta('cofre-subiu', 2); });
+              }).then(function () { return b; });
+            });
+          }).then(function (b) {
             return subir(t).then(function (u) {
               return (dono ? Promise.resolve() : Banco.definirMeta('nuvem-dono', s.email)).then(function () {
                 return Banco.definirMeta('nuvem-ultima', new Date().toISOString());

@@ -2,6 +2,23 @@
   "app": "guiaxpert",
   "versoes": [
     {
+      "versao": "1.5.20",
+      "data": "2026-11-03",
+      "substitui": "1.5.19",
+      "itens": {
+        "pt": [
+          "Cofre das reservas: num aparelho novo, se a conta já tem reservas de outro aparelho, o app pede para trazer a chave pelo QR em vez de criar um cofre novo (que não abriria nada).",
+          "A chave de recuperação do cofre agora sobe para a conta (antes podia ficar só no aparelho).",
+          "Quem foi convidado para a viagem recebe as reservas dela (continuam embaralhadas; abre com a chave trazida pelo QR)."
+        ],
+        "en": [
+          "Bookings safe: on a new device, if the account already has bookings from another device, the app asks you to bring the key by QR instead of creating a new safe (which would open nothing).",
+          "The safe's recovery key now goes up to the account (before it could stay only on the device).",
+          "People invited to the trip receive its bookings (still scrambled; they open with the key brought by QR)."
+        ]
+      }
+    },
+    {
       "versao": "1.5.19",
       "data": "2026-11-03",
       "substitui": "1.5.18",
