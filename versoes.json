@@ -2,6 +2,18 @@
   "app": "guiaxpert",
   "versoes": [
     {
+      "versao": "1.5.12",
+      "data": "2026-11-03",
+      "itens": {
+        "pt": [
+          "Busca de lugar: o nome procurado sempre aparece, mesmo longe da viagem (ex.: um bar de São Paulo procurado de dentro da viagem a Gramado), marcado \"longe da viagem\". Acento não atrapalha mais (Legitimo = Legítimo)."
+        ],
+        "en": [
+          "Place search: the name you search always shows up, even far from the trip (e.g. a São Paulo bar searched from the Gramado trip), marked \"far from the trip\". Accents no longer matter (Legitimo = Legítimo)."
+        ]
+      }
+    },
+    {
       "versao": "1.5.11",
       "data": "2026-11-02",
       "substitui": "1.5.10",

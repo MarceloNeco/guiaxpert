@@ -27,10 +27,46 @@ QR/código para outro celular, e-mail → reserva, família (membros, convites, 
 2. **Tela de códigos no RootifyONE** (criar, listar com uso, desativar) usando `admin_criar_codigo`,
    `admin_listar_codigos`, `admin_desativar_codigo`.
 3. **Push** (próximo item, clima da véspera, 'a família mudou o roteiro'): exige Edge Function + VAPID.
-4. **Encaminhar e-mail** para `reservas@` (Edge Function de entrada) e OCR de print/PDF de reserva.
+4. **Encaminhar e-mail**: virou o item E1 (roteiro@solverone.com.br), prioridade crítica.
 5. **Localização da família ao vivo** (só no app nativo).
 7. Barra de baixo configurável (favoritos, diretriz) e AssistONE com ajuda por tela.
 8. Mais pacotes (Bonito, Foz, Serra Gaúcha vinícolas…), cada um com data de verificação.
+
+## Entrevista com o dono — 03/Nov/2026 (fonte desta lista)
+
+Contexto: Gramado e Canela, 18–22/Nov/2026 (quarta a domingo), com a esposa, a sogra e as filhas de 4 e 7 anos.
+O app é para **montar** o roteiro (pesquisar, sugerir, decidir), não só para cadastrar.
+
+**Diretrizes que saíram da entrevista**
+- **Independência da IA:** a automação principal funciona por regras (datas, códigos, empresas conhecidas, lugar no mapa
+  aberto). A IA é reforço para o caso difícil, nunca a base. Se ficar cara ou sair do ar, o app continua funcionando.
+- **Toda informação detectada passa pela conferência da pessoa** ("Detectei isto: confere?"), com ou sem IA.
+- Visual do wizard e das escolhas: cartões grandes, arredondados, movimento suave, pensado para o celular.
+
+**Antes da viagem (aprovado, nesta ordem)**
+
+| # | Item | Prioridade |
+|---|---|---|
+| E1 | **roteiro@solverone.com.br**: encaminhar e-mail de reserva, ingresso ou ideia. ImprovMX (alias) → Resend Inbound (`@entrada.solverone.com.br`) → Edge Function lê texto e anexo (PDF, print, QR) por regras; IA só se o texto for solto. Aparece "📥 Chegou" no app para conferir. Reserva → compromisso fixo; ideia → quadro de ideias. Para qual viagem: 1) data dentro da viagem, 2) lugar perto do destino, 3) se der mais de uma ou nenhuma, cartão "Para qual viagem?" (uma, várias, guardar para depois). E-mail apagado depois de lido. | **Crítica** |
+| E2 | **Compromissos fixos 🔒**: reserva com dia e hora aparece travada no dia certo do roteiro; o resto do dia é montado em volta. Cada reserva diz **quem ela cobre** (ex.: sogra com voo e hotel próprios). | Crítica |
+| E3 | **Documentos da viagem** (o que hoje vai para o WhatsApp da família): fotos, prints, PDFs de ingresso, cartão de embarque e QR, por dia e por pessoa, protegidos, vistos pelos participantes; QR em tela cheia com brilho no máximo. | Alta |
+| E4 | **Tela "Hoje" clara**: abre sozinha na viagem em andamento (sem depender do seletor lá em cima); próxima atividade, endereço, número do ingresso, onde almoçar perto, como ir (carro, transporte, a pé) e se é perto do hotel. | Alta |
+| E5 | **Busca de lugar confiável**: o nome procurado sempre aparece, mesmo longe da viagem (feito 1.5.12: "Legítimo"). | Alta |
+| E6 | **Botão "Imprevisto"** (correção de rota): passar o perdido para outro dia, achar algo parecido perto, puxar trecho de um roteiro alternativo. | Alta |
+| E7 | **Aviso de chuva com antecedência** (véspera ou dois dias antes), chegando sozinho. | Alta |
+| E8 | **"Desconectar o celular perdido"** de outro aparelho; acesso de qualquer aparelho com a conta (já existe), trava com digital (já existe). | Alta |
+
+**Depois da viagem**
+
+| # | Item |
+|---|---|
+| E9 | **Wizard de nova viagem**: quando (início e fim), quem vai, para onde (chegada e partida). Com isso as buscas já ficam limitadas. A IA é uma das ferramentas do wizard; modo manual sempre disponível. |
+| E10 | **Roteiros alternativos guardados** (não apagados, em cinza), comparação de horários e preços, **escolha em grupo** (cada um marca a preferida). |
+| E11 | **Banco de desejos** ("salvos do Instagram" com busca): guarda o lugar em si (nome, cidade, site, preço, foto); filtros por tipo (hotel, fazenda, praia, montanha, gastronomia), nacional/internacional, bate-volta de São Paulo, preço e quem combina; ao criar viagem, "você tem 3 desejos perto daqui"; roteiro@ também alimenta. |
+| E12 | **Papéis por viagem**: dono (tudo, chaves, convites), editor (só aquela viagem), só leitura (sogra, pais, contato de segurança), **cópia do roteiro** para quem vai fazer a mesma viagem (sem reservas). |
+| E13 | **Contatos de emergência** no wizard; **🆘 Preciso de ajuda** manda a localização; opcional "Estou bem?" (sem sinal do app por X horas → aviso). Canais grátis: e-mail (Resend) e Telegram; WhatsApp e SMS depois. |
+| E14 | **Assistente "Estender a viagem"**: lista o que muda (voos, hotéis, carro, de cada reserva separada), com link, telefone e texto pronto. Não compete com companhias aéreas. |
+| E15 | Seletor de roteiro no topo: trocar só quando a pessoa quiser; o padrão é a próxima viagem. |
 
 ## APK Android (fora da loja) e lojas
 

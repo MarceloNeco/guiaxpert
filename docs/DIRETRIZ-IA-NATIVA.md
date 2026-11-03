@@ -44,3 +44,10 @@ fica de fora.
 
 GuiaXpert 1.2.x: botão ✦ em toda tela; "acha o bar do zé perto daqui" → a IA procura na internet com GPS e cidade
 da viagem, mostra opções, a pessoa confirma e o lugar entra na viagem. Sem chave de ninguém.
+
+## Independência da IA (decidido pelo dono em 03/Nov/2026)
+
+A IA está em todo lugar como ajuda, mas **nenhuma automação essencial depende dela**. Primeiro regras (datas, códigos,
+empresas conhecidas, mapa aberto, listas); a IA entra só quando as regras não dão conta, e sempre com conferência da
+pessoa ("Detectei isto: confere?"). Motivo: o custo das IAs pode subir e modelos baratos podem ser piores; o app tem
+que continuar útil sem elas.

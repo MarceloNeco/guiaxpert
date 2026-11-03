@@ -12,7 +12,7 @@
 (function () {
   'use strict';
   var d = document, $ = function (id) { return d.getElementById(id); };
-  var VERSAO_APP = '1.5.11';
+  var VERSAO_APP = '1.5.12';
 
   /* ------------------------------------------------------------------
      1. UTILIDADES
@@ -379,7 +379,7 @@
           ls.forEach(function (l) {
             naNet.appendChild(h('button', { class: 'bt-grande', type: 'button', onclick: function () { j.fechar(function () { mostrarNoMapa(l); }); } }, [
               h('span', { class: 'ic-grande', 'aria-hidden': 'true', texto: '📍' }),
-              h('span', { class: 'tx' }, [h('b', { texto: l.nome }), h('small', { texto: [[l.endereco, l.cidade].filter(Boolean).join(', '), l.fonte].filter(Boolean).join(' · ') })])]));
+              h('span', { class: 'tx' }, [h('b', { texto: l.nome }), h('small', { texto: [[l.endereco, l.cidade].filter(Boolean).join(', '), l.longe && emViagem() ? '📍 ' + T('bscLonge') : null, l.fonte].filter(Boolean).join(' · ') })])]));
           });
         });
       }, 650);

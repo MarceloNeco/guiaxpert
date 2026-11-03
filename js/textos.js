@@ -19,6 +19,7 @@ window.TEXTOS = (function () {
     buscarDica: ['Nome de um lugar (ex.: Legítimo) ou de uma tela', 'A place name (e.g.: Legítimo) or a screen'],
     bscProcurandoFora: ['Procurando "{q}" na internet…', 'Searching "{q}" online…'],
     bscNaInternet: ['Achei na internet (toque para ver no mapa):', 'Found online (tap to see it on the map):'],
+    bscLonge: ['longe da viagem', 'far from the trip'],
     bscNadaFora: ['Não achei "{q}" na internet.', 'Couldn’t find "{q}" online.'],
     nadaAchado: ['Nada encontrado. Tente outra palavra ou limpe o filtro.', 'Nothing found. Try another word or clear the filter.'],
     carregando: ['Carregando…', 'Loading…'],

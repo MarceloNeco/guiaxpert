@@ -137,7 +137,18 @@ Deno.serve(async (req: Request) => {
   const r = await fetch(api, { headers });
   if (!r.ok) return json({ erro: "fsq-" + r.status, detalhe: (await r.text()).slice(0, 300) }, 502);
   const j = await r.json();
-  const lista = (j.results || []).map((x: any) => {
+  let resultados: any[] = j.results || [];
+  // o nome procurado não está perto da viagem (ex.: um bar de São Paulo procurado de dentro da viagem a Gramado)?
+  // procura de novo no Brasil todo: 1 chamada a mais, só neste caso
+  let segunda = 0;
+  if (temCentro && !resultados.some((x: any) => nomeBate(x.name, q))) {
+    const u2 = api.replace(/&ll=[^&]*&radius=\d+/, "") + "&near=" + encodeURIComponent("Brasil");
+    try {
+      const r2 = await fetch(u2, { headers });
+      if (r2.ok) { const j2 = await r2.json(); const novos = (j2.results || []).filter((x: any) => nomeBate(x.name, q)); segunda = novos.length; resultados = resultados.concat(novos); }
+    } catch (_) { /* fica com o que achou perto */ }
+  }
+  const lista = resultados.map((x: any) => {
     const id = x.fsq_place_id || x.fsq_id;
     const la = x.latitude ?? x.geocodes?.main?.latitude, lo = x.longitude ?? x.geocodes?.main?.longitude;
     if (!id || !Number.isFinite(la) || !Number.isFinite(lo)) return null;
@@ -152,8 +163,18 @@ Deno.serve(async (req: Request) => {
       confianca: "foursquare", gratis: false, lat: +Number(la).toFixed(5), lng: +Number(lo).toFixed(5), fonte: "Foursquare",
     };
   }).filter(Boolean);
-  return json({ lugares: juntar(lista, await ta), fonte: "api" });
+  const taLista = await ta;
+  // diagnóstico sem dado pessoal: quantos vieram de cada fonte (o termo é o nome de um lugar)
+  console.log("lugares:", JSON.stringify({ q: q.slice(0, 40), fsq: lista.length, fsqBrasil: segunda, ta: taLista.length, nomes: lista.concat(taLista).slice(0, 6).map((x: any) => x.nome) }));
+  return json({ lugares: juntar(lista, taLista), fonte: "api" });
 });
+
+// o nome do lugar contém o que a pessoa digitou? (sem acento, sem maiúscula, por palavra)
+function semAcento(t: string) { return String(t || "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, ""); }
+function nomeBate(nome: string, q: string) {
+  const n = " " + semAcento(nome).replace(/[^a-z0-9]+/g, " ") + " ", b = semAcento(q).replace(/[^a-z0-9]+/g, " ").trim();
+  return !!b && n.indexOf(" " + b) > -1;
+}
 
 // Tripadvisor: Terra API (terra.tripadvisor.com, chave no cabeçalho X-API-Key). A busca comum só devolve os lugares
 // liberados para a chave (allowlist); se vier vazia, usa a busca no catálogo inteiro, que traz nome, endereço,
@@ -218,7 +239,7 @@ async function doTripAdvisor(key: string, q: string, lat: number, lng: number, t
   let lista = t.lista;
   if (temCentro) {
     const d = (x: any) => x.lat == null ? 1e9 : Math.pow((x.lng - lng) * Math.cos(lat * Math.PI / 180), 2) + Math.pow(x.lat - lat, 2);
-    const perto = lista.filter((x: any) => d(x) < 1.8 * 1.8);   // ~200 km
+    const perto = lista.filter((x: any) => d(x) < 1.8 * 1.8 || nomeBate(x.nome, q));   // ~200 km, ou o nome procurado
     lista = (perto.length ? perto : lista).sort((a: any, b: any) => d(a) - d(b));
   }
   return lista.slice(0, 6);

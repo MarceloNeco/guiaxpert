@@ -32,7 +32,8 @@
      Prédio, condomínio, escritório, rua e endereço solto: fim, e marcados como "prédio ou endereço". */
   var RX_PREDIO = /\b(edif[ií]cio|condom[ií]nio|residencial|apartamentos?|escrit[óo]rio|office|building|galpão|dep[óo]sito|ltda|s\.?a\.?|eireli|mei)\b/i;
   function notaGuia(l, qn) {
-    var n = 0, nome = String(l.nome || '').toLowerCase();
+    var n = 0, nome = String(l.nome || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');   /* "Legítimo" = "legitimo" */
+    qn = String(qn || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '');
     var classe = l._classe || '', tipo = l._tipo || '';
     var comercial = /^(amenity|shop|tourism|leisure|craft)$/.test(classe) || l.confianca === 'foursquare' || l.confianca === 'tripadvisor';
     var predio = classe === 'building' || classe === 'office' || classe === 'place' || classe === 'highway' || classe === 'landuse' || RX_PREDIO.test(nome) ||
@@ -156,10 +157,14 @@
         var vistos = {}, todos = [];
         rs[0].concat(rs[1], rs[2]).forEach(function (l) { if (!vistos[l.id]) { vistos[l.id] = 1; todos.push(l); } });
         if (!todos.length && !navigator.onLine) throw new Error('offline');
-        /* com um centro conhecido, o que está a mais de 200 km só entra se faltar resultado perto */
+        /* com um centro conhecido, o que está a mais de 200 km só entra se faltar resultado perto,
+           MAS o lugar com o nome procurado fica sempre (marcado "longe"): procurar o bar de São Paulo
+           de dentro da viagem a Gramado tem que achar o bar de São Paulo */
+        var qb = semAcento(q);
         if (centro && centro.lat != null) {
-          var perto = todos.filter(function (l) { return dist(l, centro) < 1.8 * 1.8; });   /* ~200 km em graus */
-          if (perto.length >= 3) todos = perto;
+          todos.forEach(function (l) { l.longe = dist(l, centro) >= 1.8 * 1.8; });   /* ~200 km em graus */
+          var perto = todos.filter(function (l) { return !l.longe || nomeBate(l.nome, qb); });
+          if (todos.filter(function (l) { return !l.longe; }).length >= 3) todos = perto;
         }
         var qn = q.toLowerCase();
         todos.forEach(function (l) { l._nota = notaGuia(l, qn); });
@@ -171,6 +176,8 @@
         return todos.map(function (l) { delete l._nota; delete l._classe; delete l._tipo; delete l._peso; return l; }).slice(0, 10);
       });
       function dist(l, c) { var dx = (l.lng - c.lng) * Math.cos(c.lat * Math.PI / 180), dy = l.lat - c.lat; return dx * dx + dy * dy; }
+      function semAcento(t) { return String(t || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9]+/g, ' ').trim(); }
+      function nomeBate(nome, qb) { return !!qb && (' ' + semAcento(nome) + ' ').indexOf(' ' + qb) > -1; }
     },
 
     /* resumo do grupo para a IA: sem nome de ninguém */
