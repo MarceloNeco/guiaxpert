@@ -2,6 +2,19 @@
   "app": "guiaxpert",
   "versoes": [
     {
+      "versao": "1.5.21",
+      "data": "2026-11-03",
+      "substitui": "1.5.20",
+      "itens": {
+        "pt": [
+          "Campo do PIN mais claro ao trazer o cofre de outro aparelho (\"Digite 6 números\")."
+        ],
+        "en": [
+          "Clearer PIN field when bringing the safe from another device (\"Type 6 digits\")."
+        ]
+      }
+    },
+    {
       "versao": "1.5.20",
       "data": "2026-11-03",
       "substitui": "1.5.19",

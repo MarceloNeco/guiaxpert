@@ -12,7 +12,7 @@
 (function () {
   'use strict';
   var d = document, $ = function (id) { return d.getElementById(id); };
-  var VERSAO_APP = '1.5.20';
+  var VERSAO_APP = '1.5.21';
 
   /* ------------------------------------------------------------------
      1. UTILIDADES
@@ -1739,7 +1739,7 @@
   /* este celular não tem o cofre, mas a conta tem (reservas de outro celular) */
   function caixaTrazerCofre(tela, pronto, soQR) {
     var caixa = h('div', { class: 'cartao' }, [h('h3', { texto: T('trazerCofre') }), h('p', { class: 'sub', texto: T(soQR ? 'trazerCofreTextoQR' : 'trazerCofreTexto') })]);
-    var pin = h('input', { class: 'campo', id: 'gx-tc-pin', type: 'password', inputmode: 'numeric', autocomplete: 'new-password', maxlength: '6', placeholder: '••••••' });
+    var pin = h('input', { class: 'campo', id: 'gx-tc-pin', type: 'password', inputmode: 'numeric', autocomplete: 'new-password', maxlength: '6', placeholder: T('digite6') });
     var msg = h('p', { class: 'pequeno', role: 'status', 'aria-live': 'polite' });
     var fim = function (p) { return p.then(function (codigo) { return codigo ? mostrarCodigo(codigo) : null; }).then(function () { caixa.remove(); avisar(T('cofreTrazido')); pronto(); }); };
     var erro = function (e) { msg.textContent = e.message === 'pin-formato' ? T('pinFormato') : e.message === 'cancelado' ? '' : T('codigoErrado'); };
