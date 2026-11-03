@@ -595,3 +595,15 @@ body.travado #app, body.travado .janela-fundo.na-trava, body.travado #fundo-foto
 .acoes-res { display: flex; gap: .45rem; flex-wrap: wrap; }
 .acoes-res .bt { min-height: 2.75rem; padding: .45rem .9rem; font-size: .95rem; flex: 1 1 auto; }
 .dia-fixo { flex: 1; margin: .9rem .2rem .3rem; }
+
+/* aviso com botão (ex.: ver novidades) */
+.toast-bt { margin-left: .6rem; background: none; border: 0; color: var(--faixa); font: inherit; font-weight: 800; text-decoration: underline; cursor: pointer; padding: .2rem; }
+.lk { background: none; border: 0; padding: 0; font: inherit; color: inherit; text-decoration: underline; cursor: pointer; }
+/* checagem "pronto sem internet" */
+.checagem { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: .55rem; }
+.checagem li { display: flex; align-items: flex-start; gap: .55rem; flex-wrap: wrap; }
+.checagem .marca { flex: none; width: 1.5rem; height: 1.5rem; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; font-weight: 800; font-size: .9rem; }
+.checagem li.ok .marca { background: var(--rodovia-claro); color: var(--rodovia); }
+.checagem li.falta .marca { background: var(--faixa-claro); color: var(--faixa-tinta); }
+.checagem li > span:nth-child(2) { flex: 1; min-width: 12rem; }
+.novidades { margin: 0; padding-left: 1.1rem; display: flex; flex-direction: column; gap: .35rem; }

@@ -12,7 +12,7 @@
 (function () {
   'use strict';
   var d = document, $ = function (id) { return d.getElementById(id); };
-  var VERSAO_APP = '1.5.31';
+  var VERSAO_APP = '1.5.32';
 
   /* ------------------------------------------------------------------
      1. UTILIDADES
@@ -44,11 +44,32 @@
     return el;
   }
   var relogioAviso;
-  function avisar(msg) {
+  function avisar(msg, botao, acao, ms) {
     var t = $('gx-toast');
     if (!t) { t = h('div', { id: 'gx-toast', class: 'toast', role: 'status', 'aria-live': 'polite' }); d.body.appendChild(t); }
     t.textContent = msg; t.hidden = false;
-    clearTimeout(relogioAviso); relogioAviso = setTimeout(function () { t.hidden = true; }, 3500);
+    if (botao) t.appendChild(h('button', { class: 'toast-bt', type: 'button', texto: botao, onclick: function () { t.hidden = true; acao(); } }));
+    clearTimeout(relogioAviso); relogioAviso = setTimeout(function () { t.hidden = true; }, ms || 3500);
+  }
+  /* ---------- atualização: o app se atualiza sozinho ao abrir com internet; aqui só avisa e mostra o que mudou ---------- */
+  function compararVersao(a, b) {
+    a = String(a).split('.').map(Number); b = String(b).split('.').map(Number);
+    for (var i = 0; i < 3; i++) if ((a[i] || 0) !== (b[i] || 0)) return (a[i] || 0) - (b[i] || 0);
+    return 0;
+  }
+  function verNovidades(desde) {
+    fetch('versoes.json', { cache: 'no-cache' }).then(function (r) { return r.json(); }).then(function (j) {
+      var vs = (j.versoes || []).filter(function (x) { return !desde || compararVersao(x.versao, desde) > 0; }).slice(0, desde ? 12 : 6);
+      janela(T('novidades'), h('div', { class: 'linha', style: 'flex-direction:column;align-items:stretch;gap:.6rem' }, [h('p', { class: 'sub', texto: T('novidadesTexto') })].concat(vs.map(function (x) {
+        return h('div', { class: 'cartao', style: 'margin:0' }, [h('b', { texto: x.versao + ' · ' + fData(x.data) }),
+          h('ul', { class: 'novidades' }, ((x.itens || {})[idioma()] || (x.itens || {}).pt || []).map(function (t) { return h('li', { texto: t }); }))]);
+      }))));
+    }).catch(function () { avisar(T('semInternet')); });
+  }
+  function avisarAtualizacao() {
+    var vista = null;
+    try { vista = localStorage.getItem('guiaxpert.versaoVista'); localStorage.setItem('guiaxpert.versaoVista', VERSAO_APP); } catch (e) {}
+    if (vista && compararVersao(VERSAO_APP, vista) > 0) avisar(T('atualizadoPara', { v: VERSAO_APP }), T('verNovidades'), function () { verNovidades(vista); }, 9000);
   }
   var MESES = { pt: ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'], en: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'] };
   var SEMANA = { pt: ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'], en: ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'] };
@@ -284,7 +305,7 @@
     });
     g.appendChild(h('h2', { texto: T('grupoMais') }));
     g.appendChild(h('ul', {}, [h('li', {}, h('a', { href: '/', target: '_blank', rel: 'noopener' }, [h('span', { 'aria-hidden': 'true', texto: '🧭' }), T('portal') + ' ↗']))]));
-    g.appendChild(h('p', { class: 'pequeno', texto: 'GuiaXpert ' + VERSAO_APP + ' · ' + T('umaSolucao') }));
+    g.appendChild(h('p', { class: 'pequeno' }, [h('button', { class: 'lk', type: 'button', texto: 'GuiaXpert ' + VERSAO_APP, onclick: function () { Nav.fecharCamada(function () { verNovidades(null); }); } }), ' · ' + T('umaSolucao')]));
     g.hidden = false; f.hidden = false; g.classList.add('entrando');
     $('bt-menu').setAttribute('aria-expanded', 'true');
     Nav.abrirCamada(function () {
@@ -3120,6 +3141,7 @@
 
   TELAS.config = function (tela) {
     tela.appendChild(h('h1', { texto: T('rota_config') }));
+    tela.appendChild(cartaoProntoSemInternet());
     var tema = (function () { try { return localStorage.getItem('dgo:guiaxpert:tema') || 'auto'; } catch (e) { return 'auto'; } })();
     tela.appendChild(h('fieldset', {}, [h('legend', { texto: T('tema') }), h('div', { class: 'chips' }, ['auto', 'claro', 'escuro'].map(function (t) {
       return h('button', { class: 'chip', type: 'button', 'aria-pressed': tema === t ? 'true' : 'false', onclick: function () { aplicarTema(t); mostrar('config'); } }, T('tema_' + t));
@@ -3176,8 +3198,38 @@
     Promise.all([Banco.espaco(), Banco.pendentes()]).then(function (r) {
       esp.textContent = (r[0] ? T('espacoUsado', { mb: (r[0].usage / 1048576).toFixed(1) }) : '') + ' · ' + T('pendentesNuvem', { n: r[1] });
     });
-    tela.appendChild(h('p', { class: 'pequeno', texto: 'GuiaXpert ' + VERSAO_APP + ' · ' + T('umaSolucao') }));
+    tela.appendChild(h('p', { class: 'pequeno' }, [h('button', { class: 'lk', type: 'button', texto: 'GuiaXpert ' + VERSAO_APP + ' · ' + T('verNovidades'), onclick: function () { verNovidades(null); } }), ' · ' + T('umaSolucao')]));
   };
+  /* "Pronto para usar sem internet": confere o que já está guardado neste aparelho e oferece o que falta */
+  function cartaoProntoSemInternet() {
+    var v = estado.viagem, lista = h('ul', { class: 'checagem' });
+    var c = h('div', { class: 'cartao' }, [h('h3', { texto: T('sem_titulo') }), h('p', { class: 'sub', texto: T('sem_texto') }), lista]);
+    function linha(ok, txt, bt) { lista.appendChild(h('li', { class: ok ? 'ok' : 'falta' }, [h('span', { class: 'marca', 'aria-hidden': 'true', texto: ok ? '✓' : '!' }), h('span', { texto: txt }), bt || null])); }
+    var arquivos = ['index.html', 'js/app.js', 'js/cofre.js', 'js/banco.js', 'js/textos.js', 'styles.css'];
+    var pApp = window.caches ? Promise.all(arquivos.map(function (f) { return caches.match(new URL(f, location.href).href); })).then(function (rs) { return rs.every(Boolean); }).catch(function () { return false; }) : Promise.resolve(false);
+    var pRes = v ? Banco.listar('reservas', function (r) { return r.viagem_id === v.id && !r.apagado; }).then(function (rs) {
+      var precisa = rs.some(function (r) { return r.conteudo && r.conteudo.v === 2; });
+      return (precisa ? Banco.meta('viagem-chave:' + v.id, null) : Promise.resolve(true)).then(function (k) { return { n: rs.length, ok: !precisa || !!(k && k.seg) }; });
+    }) : Promise.resolve(null);
+    var pMapa = v && v.destino && window.Offline ? Offline.estado(v.destino).catch(function () { return null; }) : Promise.resolve(null);
+    Promise.all([pApp, pRes, pMapa]).then(function (r) {
+      linha(r[0], T(r[0] ? 'sem_appOk' : 'sem_appFalta'));
+      if (r[1] && r[1].n) linha(r[1].ok, r[1].ok ? T('sem_resOk', { n: r[1].n }) : T('sem_resFalta'),
+        r[1].ok ? null : h('button', { class: 'bt leve', type: 'button', texto: T('rota_reservas'), onclick: function () { Nav.ir('reservas'); } }));
+      if (r[2] && r[2].temMapa) {
+        var mb = (r[2].bytes / 1048576).toFixed(1).replace('.', ',');
+        var bt = r[2].guardado ? null : h('button', { class: 'bt sec', type: 'button', texto: '⬇ ' + T('guardarSemInternet', { mb: mb }), onclick: function () {
+          bt.disabled = true; bt.textContent = T('carregando');
+          Offline.guardarViagem(v.destino, function () {}).then(function () { avisar(T('guardadoSemInternet')); mostrar('config'); })
+            .catch(function () { bt.disabled = false; bt.textContent = '⬇ ' + T('guardarSemInternet', { mb: mb }); avisar(navigator.onLine ? T('erroRede') : T('semInternet')); });
+        } });
+        linha(r[2].guardado, T(r[2].guardado ? 'sem_mapaOk' : 'sem_mapaFalta'), bt);
+      }
+      if (v) linha(true, T('sem_dados'));
+      linha(jaInstalado(), T(jaInstalado() ? 'sem_instalado' : 'sem_naoInstalado'));
+    });
+    return c;
+  }
   function aplicarTema(t) {
     try { localStorage.setItem('dgo:guiaxpert:tema', t); } catch (e) {}
     if (t === 'auto') d.documentElement.removeAttribute('data-tema'); else d.documentElement.setAttribute('data-tema', t);
@@ -3197,6 +3249,7 @@
         aceitarConvitePendente().then(function (aceito) { if (!aceito) sincronizarNuvem(); });
         retomarPendente();
         setTimeout(oferecerReservasDoLink, 900);
+        setTimeout(avisarAtualizacao, 1600);
         var compartilhado = window.Importar && Importar.doEndereco();
         if (compartilhado) setTimeout(function () { if (estado.viagem) { Nav.ir('reservas'); setTimeout(function () { janelaImportar(compartilhado); }, 200); } else avisar(T('semViagemTexto')); }, 400);
       });

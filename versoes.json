@@ -2,6 +2,21 @@
   "app": "guiaxpert",
   "versoes": [
     {
+      "versao": "1.5.32",
+      "data": "2026-11-03",
+      "substitui": "1.5.31",
+      "itens": {
+        "pt": [
+          "Aviso \"GuiaXpert atualizado · ver novidades\" quando o app se atualiza sozinho; o número da versão (menu ☰ e Configurações) abre a lista de novidades.",
+          "Configurações começa com \"Pronto para usar sem internet?\": mostra o que já está guardado no aparelho (app, reservas com QR, mapa, roteiro) e oferece guardar o que falta."
+        ],
+        "en": [
+          "\"GuiaXpert updated · what's new\" notice when the app updates itself; the version number (☰ menu and Settings) opens the list of changes.",
+          "Settings starts with \"Ready to use offline?\": shows what is already saved on the device (app, bookings with QR, map, itinerary) and offers to save what's missing."
+        ]
+      }
+    },
+    {
       "versao": "1.5.31",
       "data": "2026-11-03",
       "substitui": "1.5.30",
