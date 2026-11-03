@@ -12,7 +12,7 @@
 (function () {
   'use strict';
   var d = document, $ = function (id) { return d.getElementById(id); };
-  var VERSAO_APP = '1.5.15';
+  var VERSAO_APP = '1.5.16';
 
   /* ------------------------------------------------------------------
      1. UTILIDADES
@@ -1480,13 +1480,13 @@
       c.local ? h('span', { class: 'sub', texto: c.local }) : null,
       c.nota ? h('span', { class: 'sub', texto: c.nota }) : null,
       h('div', { class: 'linha' }, [
-        c.qr ? h('button', { class: 'bt', type: 'button', onclick: function () { mostrarQRs([c], 0); } }, '▦ ' + T('mostrarQRIngresso')) : null,
+        c.qr || c.barra ? h('button', { class: 'bt', type: 'button', onclick: function () { mostrarQRs([c], 0); } }, '▦ ' + T('mostrarQRIngresso')) : null,
         h('button', { class: 'bt leve', type: 'button', onclick: function () { janelaReserva(x); } }, T('editar'))])
     ]);
   }
   /* vários ingressos do mesmo evento: um cartão, todos os QR de uma vez, editar o grupo inteiro */
   function cartaoGrupo(g) {
-    var c0 = g[0].c, comQR = g.filter(function (x) { return x.c.qr; }).map(function (x) { return x.c; });
+    var c0 = g[0].c, comQR = g.filter(function (x) { return x.c.qr || x.c.barra; }).map(function (x) { return x.c; });
     var lista = h('div', { class: 'linha', hidden: true, style: 'flex-direction:column;align-items:stretch;gap:.4rem' });
     g.forEach(function (x) {
       lista.appendChild(h('div', { class: 'linha entre', style: 'border-top:1px solid var(--linha);padding-top:.4rem' }, [
@@ -1510,6 +1510,7 @@
   function mostrarQRs(lista, inicio) {
     var i = inicio || 0;
     var titulo = h('b', {}), quem = h('span', {}), img = h('img', { alt: '', style: 'width:min(86vw,22rem);height:auto;border-radius:12px;background:#fff;image-rendering:pixelated;touch-action:pan-y' });
+    var EST_QR = img.getAttribute('style'), EST_BARRA = 'width:min(92vw,30rem);height:9rem;border-radius:8px;background:#fff;padding:.6rem;touch-action:pan-y';
     var cod = h('code', { style: 'font-size:1.3rem;user-select:all' }), pos = h('span', { class: 'sub' });
     var ant = h('button', { class: 'bt leve', type: 'button', 'aria-label': T('anterior'), texto: '‹ ' + T('anterior') });
     var prox = h('button', { class: 'bt', type: 'button', 'aria-label': T('proximo'), texto: T('proximo') + ' ›' });
@@ -1520,8 +1521,15 @@
     function mostrar() {
       var c = lista[i];
       titulo.textContent = c.titulo; quem.textContent = [c.pessoa, c.assento].filter(Boolean).join(' · ');
-      cod.textContent = c.codigo || ''; pos.textContent = lista.length > 1 ? T('nDeN', { i: i + 1, n: lista.length }) : '';
+      cod.textContent = c.barra || c.codigo || ''; pos.textContent = lista.length > 1 ? T('nDeN', { i: i + 1, n: lista.length }) : '';
       ant.disabled = i === 0; prox.disabled = i === lista.length - 1;
+      img.hidden = false;
+      if (c.barra && window.Barras) {   /* voucher com código de barras (ex.: Florybal, ITF) */
+        try { img.setAttribute('style', EST_BARRA); img.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(Barras.svg(c.barra, c.barraFormato)); img.alt = T('codigoBarras') + ' ' + c.barra; }
+        catch (e) { img.hidden = true; }
+        return;
+      }
+      img.setAttribute('style', EST_QR);
       carregarQR().then(function () { var q = qrcode(0, 'M'); q.addData(String(c.qr || c.codigo)); q.make(); img.src = q.createDataURL(8, 8); img.alt = 'QR ' + (c.codigo || ''); })
         .catch(function () { img.hidden = true; });
     }
@@ -1653,7 +1661,8 @@
           var marca = it.codigo ? 'cod:' + it.codigo : (it.titulo && it.quando ? 'ag:' + it.titulo + '|' + it.quando : null);
           if (marca && marcas[marca]) return;
           var dados = { tipo: it.tipo || 'outro', titulo: it.titulo || '', quando: it.quando || '', codigo: it.codigo || '', local: it.local || '', nota: it.nota || '',
-            pessoa: it.pessoa || '', assento: it.assento || '', qr: it.qr || (it.tipo === 'ingresso' ? it.codigo || '' : '') };   /* QR só de ingresso (voo e hotel não entram por QR) */
+            pessoa: it.pessoa || '', assento: it.assento || '', barra: it.barra || '', barraFormato: it.barraFormato || '',
+            qr: it.barra ? '' : (it.qr || (it.tipo === 'ingresso' ? it.codigo || '' : '')) };   /* QR só de ingresso (voo e hotel não entram por QR) */
           return Cofre.cifrar(dados).then(function (blob) {
             n++;
             return Banco.gravar('reservas', { viagem_id: estado.viagem.id, conteudo: blob, tipo: dados.tipo, marca: marca,

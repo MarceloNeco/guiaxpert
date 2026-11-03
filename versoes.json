@@ -2,6 +2,19 @@
   "app": "guiaxpert",
   "versoes": [
     {
+      "versao": "1.5.16",
+      "data": "2026-11-03",
+      "substitui": "1.5.15",
+      "itens": {
+        "pt": [
+          "Ingressos com código de barras (não só QR): o app desenha o código para mostrar na catraca, sem internet."
+        ],
+        "en": [
+          "Tickets with barcodes (not just QR): the app draws the code to show at the turnstile, offline."
+        ]
+      }
+    },
+    {
       "versao": "1.5.15",
       "data": "2026-11-03",
       "substitui": "1.5.14",

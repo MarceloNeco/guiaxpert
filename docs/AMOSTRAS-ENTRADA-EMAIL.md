@@ -44,9 +44,12 @@ por regras (sem IA na maioria das vezes). Recebidos em 02–03/Nov/2026. Os arqu
 - Remetente: `noreply@planne.com.br`. Assunto: "Parque Terra Mágica Florybal - Sua compra foi confirmada com sucesso!"
 - Corpo: "O identificador do seu pedido é **XXXXXXXXXX**" (10 caracteres A–Z/0–9), "O seu voucher está anexado",
   contato do parque, endereço (RS 466, 1630, km 5, Caracol, Canela).
-- **5 anexos PDF** "voucher-parque-…": um por pessoa, com **código de barras** (não QR), "Pedido #…",
-  produto "Passaporte Terra Mágica Florybal", "Utilizar em: dd/mm/aa", quantidade e tipo (adulto, menor…).
-- O app precisa mostrar **código de barras** também (não só QR).
+- **5 anexos PDF** "voucher-parque-terra-magica-florybal-<nº>.pdf": um por pessoa. Texto: "Pedido #XXXXXXXXXX",
+  número de 10 dígitos (é o do código de barras), "Utilizar em: dd/mm/aaaa", "Quantidade: Passaporte Adulto |
+  Infantil (4 a 15 anos) | Melhor Idade: 1", Nome e Sobrenome de quem usa, **Voucher** (8 caracteres) e **Senha**
+  (6 caracteres), comprador, valor, regras (reagendar só 24 h antes; 0–3 anos isentos; 60+ com RG/CNH).
+- **Código de barras ITF** (2 de 5 intercalado), desenhado em vetor: só aparece lendo a página renderizada
+  (pdftoppm + leitor), não nas imagens do PDF. O app desenha ITF e Code 128 (`js/barras.js`, conferido com leitor).
 
 ## 6. Print do pedido no site (WhatsApp)
 
