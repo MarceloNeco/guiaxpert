@@ -2,6 +2,21 @@
   "app": "guiaxpert",
   "versoes": [
     {
+      "versao": "1.5.23",
+      "data": "2026-11-03",
+      "substitui": "1.5.22",
+      "itens": {
+        "pt": [
+          "Reservas da viagem abrem para toda a família convidada: entrou na conta, abriu Reservas, vê localizador, código de barras e QR Code. Sem PIN e sem QR de outro aparelho.",
+          "Reservas guardadas antes desta versão: abra as Reservas no celular onde foram guardadas e digite o PIN uma última vez para liberar para todos."
+        ],
+        "en": [
+          "Trip bookings open for the whole invited family: signed in, open Bookings, see the locator, barcode and QR code. No PIN and no QR from another device.",
+          "Bookings saved before this version: open Bookings on the phone that saved them and type the PIN one last time to unlock them for everyone."
+        ]
+      }
+    },
+    {
       "versao": "1.5.22",
       "data": "2026-11-03",
       "substitui": "1.5.21",

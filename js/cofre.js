@@ -16,7 +16,7 @@
 (function () {
   'use strict';
   var ITER = 600000, FECHAR_MS = 5 * 60 * 1000;
-  var chave = null, relogio = null;
+  var chave = null, relogio = null, chavesViagem = {};
   var enc = new TextEncoder(), dec = new TextDecoder();
 
   function b64(buf) { var s = '', b = new Uint8Array(buf); for (var i = 0; i < b.length; i++) s += String.fromCharCode(b[i]); return btoa(s); }
@@ -191,6 +191,41 @@
         return segredoConta().then(function (seg) { return desembrulhar(r.conta, 'conta|' + seg); })
           .then(function (k) { chave = k; armar(); document.dispatchEvent(new CustomEvent('gx:cofre', { detail: { aberto: true } })); return true; });
       }).catch(function () { return false; });
+    },
+
+    /* ---- chave da viagem: reservas que toda a família da viagem abre, sem PIN ----
+       O servidor entrega a chave só a quem é da viagem (dono ou convidado). Fica guardada neste aparelho para abrir sem internet. */
+    chaveViagem: function (vid) {
+      if (!vid) return Promise.reject(new Error('sem-viagem'));
+      if (chavesViagem[vid]) return Promise.resolve(chavesViagem[vid]);
+      var uid = uidAgora();
+      return Banco.meta('viagem-chave:' + vid, null).then(function (m) {
+        if (m && m.seg && (!uid || m.uid === uid)) return m.seg;
+        if (!uid || !navigator.onLine) throw new Error('sem-chave-viagem');
+        return Conta.rpc('guiaxpert_segredo_viagem', { p_viagem: vid }).then(function (seg) {
+          if (typeof seg !== 'string' || seg.length < 20) throw new Error('sem-chave-viagem');
+          return Banco.definirMeta('viagem-chave:' + vid, { uid: uid, seg: seg }).then(function () { return seg; });
+        });
+      }).then(function (seg) {
+        var raw = deB64(seg); if (raw.length !== 32) throw new Error('chave-formato');
+        return crypto.subtle.importKey('raw', raw, { name: 'AES-GCM', length: 256 }, false, ['encrypt', 'decrypt']);
+      }).then(function (k) { chavesViagem[vid] = k; return k; });
+    },
+    cifrarViagem: function (vid, obj) {
+      return Cofre.chaveViagem(vid).then(function (k) {
+        var iv = aleatorio(12);
+        return crypto.subtle.encrypt({ name: 'AES-GCM', iv: iv }, k, enc.encode(JSON.stringify(obj))).then(function (c) {
+          return { v: 2, viagem: vid, iv: b64(iv), dados: b64(c) };
+        });
+      });
+    },
+    /* abre reserva de qualquer formato: v2 (chave da viagem) ou v1 (cofre pessoal, precisa estar aberto) */
+    decifrarReserva: function (blob) {
+      if (!blob) return Promise.resolve(null);
+      if (blob.v !== 2) return Cofre.decifrar(blob);
+      return Cofre.chaveViagem(blob.viagem).then(function (k) {
+        return crypto.subtle.decrypt({ name: 'AES-GCM', iv: deB64(blob.iv) }, k, deB64(blob.dados));
+      }).then(function (p) { return JSON.parse(dec.decode(p)); });
     },
 
     /* a conta tem um cofre (de outro celular) e este aparelho ainda não? */

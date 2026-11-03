@@ -12,7 +12,7 @@
 (function () {
   'use strict';
   var d = document, $ = function (id) { return d.getElementById(id); };
-  var VERSAO_APP = '1.5.22';
+  var VERSAO_APP = '1.5.23';
 
   /* ------------------------------------------------------------------
      1. UTILIDADES
@@ -1432,16 +1432,28 @@
       h('span', { class: 'pequeno', texto: T('res_daViagem') }),
       h('b', { texto: '🧳 ' + v.nome }),
       h('span', { class: 'sub', texto: fData(v.inicio) + ' – ' + fData(v.fim) + ' · ' + T('res_trocarViagem') })]));
-    pedirCofre(tela, function () {
-      Banco.listar('reservas', function (r) { return r.viagem_id === v.id; }).then(function (lista) {
+    var trancadas = 0;
+    abrirReservas(v).then(function () {
+      return Banco.listar('reservas', function (r) { return r.viagem_id === v.id; });
+    }).then(function (lista) {
         return Promise.all(lista.map(function (r) {
-          return Cofre.decifrar(r.conteudo).then(function (c) { return { reg: r, c: c }; }, function () {
-            /* reserva de outra pessoa da viagem (outro cofre): mostra só o compromisso, sem códigos */
-            var a = r.agenda; return a && a.titulo ? { reg: r, c: { tipo: 'outro', titulo: a.titulo, quando: a.quando, local: a.local, lat: a.lat, lng: a.lng, nota: T('res_deOutro') } } : null;
+          return Cofre.decifrarReserva(r.conteudo).then(function (c) { return { reg: r, c: c }; }, function () {
+            /* ainda no formato antigo, trancada no celular de quem guardou: mostra só o compromisso */
+            trancadas++;
+            var a = r.agenda; return a && a.titulo ? { reg: r, c: { tipo: (r.tipo || 'outro'), titulo: a.titulo, quando: a.quando, local: a.local, lat: a.lat, lng: a.lng, nota: T('res_trancada') }, trancada: true } : null;
           });
         }));
       }).then(function (itens) {
         itens = itens.filter(Boolean);
+        if (trancadas) {
+          /* foram guardadas antes da chave da viagem. Neste aparelho está o cofre antigo? pede o PIN uma última vez e libera para todos */
+          var av = h('div', { class: 'cartao aviso' }); tela.appendChild(av);
+          Cofre.existe().then(function (aqui) {
+            av.appendChild(h('b', { texto: (aqui ? '🔓 ' : '📱 ') + T(aqui ? 'res_liberarTitulo' : 'res_trancadasTitulo') }));
+            av.appendChild(h('p', { class: 'sub', texto: T(aqui ? 'res_liberarTexto' : 'res_trancadasTexto') }));
+            if (aqui) { var cx = h('div', {}); av.appendChild(cx); pedirCofreAntigo(cx, function () { migrarReservas(v).then(function () { avisar(T('res_liberadas')); mostrar('reservas'); }); }); }
+          });
+        }
         tela.appendChild(h('div', { class: 'linha' }, [
           h('button', { class: 'bt', type: 'button', onclick: function () { janelaReserva(null); } }, '＋ ' + T('novaReserva')),
           h('button', { class: 'bt sec', type: 'button', onclick: function () { escanearIngresso(); } }, '📷 ' + T('res_escanear')),
@@ -1485,9 +1497,7 @@
           if (!n) caixa.appendChild(h('p', { class: 'sub', texto: T('nadaAchado') }));
         }
         desenhar();
-        tela.appendChild(h('button', { class: 'bt leve', type: 'button', onclick: function () { Cofre.fechar(); mostrar('reservas'); } }, '🔒 ' + T('fecharCofre')));
       }).catch(function () { tela.appendChild(h('div', { class: 'alerta', texto: T('cofreErro') })); });
-    });
   };
   function linhaQuando(c) { return c.quando ? fData(c.quando.slice(0, 10)) + (c.quando.length > 10 ? ' · ' + c.quando.slice(11, 16) : '') : null; }
   function cartaoReserva(x) {
@@ -1580,7 +1590,7 @@
       g.reduce(function (p, x) {
         return p.then(function () {
           var dados = Object.assign({}, x.c, { tipo: tipo.value, titulo: tit.value.trim(), quando: quando.value, local: local.value.trim() });
-          return Cofre.cifrar(dados).then(function (blob) {
+          return cifrarReserva(x.reg.viagem_id, dados).then(function (blob) {
             var reg = x.reg; reg.conteudo = blob; reg.tipo = dados.tipo;
             reg.agenda = dados.quando ? Object.assign({}, reg.agenda || {}, { titulo: dados.titulo, quando: dados.quando, local: dados.local || null }) : null;
             return Banco.gravar('reservas', reg);
@@ -1615,7 +1625,7 @@
     ok.addEventListener('click', function () {
       if (!campos.titulo.value.trim()) { campos.titulo.focus(); return; }
       var dados = Object.assign({}, c, { tipo: campos.tipo.value, titulo: campos.titulo.value.trim(), quando: campos.quando.value, codigo: campos.codigo.value.trim(), local: campos.local.value.trim(), nota: campos.nota.value.trim() });
-      Cofre.cifrar(dados).then(function (blob) {
+      cifrarReserva(x && x.reg ? x.reg.viagem_id : estado.viagem.id, dados).then(function (blob) {
         var reg = x && x.reg ? x.reg : { viagem_id: estado.viagem.id, marca: dados.codigo ? 'cod:' + dados.codigo : null };
         reg.conteudo = blob; reg.tipo = dados.tipo; /* o tipo fica aberto para ícone; código e notas embaralhados */
         /* título, data e local ficam abertos para o roteiro mostrar o compromisso fixo 🔒 sem pedir o PIN */
@@ -1663,11 +1673,8 @@
     nao.addEventListener('click', function () { esquecerLinkReservas(); j.fechar(); });
     ok.addEventListener('click', function () {
       ok.disabled = true;
-      pedirCofre(caixa, function () {
-        caixa.textContent = '';
-        guardarReservasProntas(itens).then(function (n) { esquecerLinkReservas(); j.fechar(function () { avisar(n ? T('lnk_guardadas', { n: n }) : T('lnk_jaEstavam')); Nav.ir('reservas'); }); })
-          .catch(function () { ok.disabled = false; avisar(T('cofreErro')); });
-      });
+      guardarReservasProntas(itens).then(function (n) { esquecerLinkReservas(); j.fechar(function () { avisar(n ? T('lnk_guardadas', { n: n }) : T('lnk_jaEstavam')); Nav.ir('reservas'); }); })
+        .catch(function () { ok.disabled = false; avisar(T(navigator.onLine ? 'cofreErro' : 'semInternet')); });
     });
   }
   /* guarda cada reserva: o que é de agenda (título, data, local) fica aberto para o roteiro mostrar o compromisso;
@@ -1684,13 +1691,32 @@
           var dados = { tipo: it.tipo || 'outro', titulo: it.titulo || '', quando: it.quando || '', codigo: it.codigo || '', local: it.local || '', nota: it.nota || '',
             pessoa: it.pessoa || '', assento: it.assento || '', barra: it.barra || '', barraFormato: it.barraFormato || '',
             qr: it.barra ? '' : (it.qr || (it.tipo === 'ingresso' ? it.codigo || '' : '')) };   /* QR só de ingresso (voo e hotel não entram por QR) */
-          return Cofre.cifrar(dados).then(function (blob) {
+          return cifrarReserva(estado.viagem.id, dados).then(function (blob) {
             n++;
             return Banco.gravar('reservas', { viagem_id: estado.viagem.id, conteudo: blob, tipo: dados.tipo, marca: marca,
               agenda: dados.quando ? { titulo: dados.titulo, quando: dados.quando, local: dados.local || null, lat: it.lat != null ? it.lat : null, lng: it.lng != null ? it.lng : null, grupo: it.grupo || null } : null });
           });
         });
       }, Promise.resolve()).then(function () { return n; });
+    });
+  }
+  /* antes de mostrar reservas: tenta o cofre pessoal sozinho (sem pedir nada) e, se abriu,
+     passa as reservas antigas (v1, só deste cofre) para a chave da viagem — aí a família toda abre */
+  /* guarda com a chave da viagem; sem ela (sem internet na primeira vez), usa o cofre pessoal aberto e passa depois */
+  function cifrarReserva(vid, dados) {
+    return Cofre.cifrarViagem(vid, dados).catch(function (e) { if (Cofre.aberto()) return Cofre.cifrar(dados); throw e; });
+  }
+  function abrirReservas(v) {
+    return Cofre.abrirSozinho().then(function () { return Cofre.aberto() ? migrarReservas(v) : null; }).catch(function () { return null; });
+  }
+  function migrarReservas(v) {
+    return Banco.listar('reservas', function (r) { return r.viagem_id === v.id && r.conteudo && r.conteudo.v !== 2; }).then(function (rs) {
+      return rs.reduce(function (p, r) {
+        return p.then(function () {
+          return Cofre.decifrar(r.conteudo).then(function (c) { return Cofre.cifrarViagem(v.id, c); })
+            .then(function (blob) { r.conteudo = blob; return Banco.gravar('reservas', r); }).catch(function () {});
+        });
+      }, Promise.resolve());
     });
   }
   /* pede o PIN (ou cria o cofre) e depois chama "pronto" */
@@ -1851,11 +1877,11 @@
         add.addEventListener('click', function () {
           add.disabled = true;
           var gravar = function () {
-            return Cofre.cifrar({ tipo: c.tipo, titulo: c.titulo, quando: c.quando || '', codigo: c.codigo || '', local: c.local || '', nota: c.nota || '' })
+            return cifrarReserva(estado.viagem.id, { tipo: c.tipo, titulo: c.titulo, quando: c.quando || '', codigo: c.codigo || '', local: c.local || '', nota: c.nota || '' })
               .then(function (blob) { return Banco.gravar('reservas', { viagem_id: estado.viagem.id, tipo: c.tipo, conteudo: blob }); })
               .then(function () { add.textContent = '✓ ' + T('adicionado2'); });
           };
-          if (Cofre.aberto()) gravar(); else { var cx = h('div', {}); card.appendChild(cx); pedirCofre(cx, function () { cx.remove(); gravar(); }); add.disabled = false; }
+          gravar().catch(function () { add.disabled = false; avisar(T(navigator.onLine ? 'cofreErro' : 'semInternet')); });
         });
         card.appendChild(add); lista.appendChild(card);
       });
@@ -1982,9 +2008,9 @@
   /* cartão de texto (hotel ou voos) para mandar pelo WhatsApp: pede o cofre, monta só o essencial */
   function compartilharCartao(v, tipo) {
     var corpo = h('div', {}), j = janela(T(tipo === 'hotel' ? 'compartilharHotel' : 'compartilharVoos'), corpo);
-    pedirCofre(corpo, function () {
+    abrirReservas(v).then(function () {
       Banco.listar('reservas', function (r) { return r.viagem_id === v.id && r.tipo === tipo; }).then(function (rs) {
-        return Promise.all(rs.map(function (r) { return Cofre.decifrar(r.conteudo).catch(function () { return null; }); }));
+        return Promise.all(rs.map(function (r) { return Cofre.decifrarReserva(r.conteudo).catch(function () { return null; }); }));
       }).then(function (cs) {
         cs = cs.filter(Boolean);
         var linhas = [T('cartaoTitulo', { nome: v.nome, de: fData(v.inicio, true), ate: fData(v.fim, true) })];
