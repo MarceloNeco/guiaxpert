@@ -2,6 +2,23 @@
   "app": "guiaxpert",
   "versoes": [
     {
+      "versao": "1.5.14",
+      "data": "2026-11-03",
+      "substitui": "1.5.13",
+      "itens": {
+        "pt": [
+          "Compromissos fixos 🔒 no roteiro: ingressos e reservas com dia e hora aparecem no dia certo, na ordem do horário.",
+          "Reservas mostram para quem é cada ingresso e o setor, com o botão \"Mostrar QR para entrar\" em tela cheia.",
+          "Reservas podem chegar prontas por um link: o app mostra para conferir e guarda no cofre."
+        ],
+        "en": [
+          "Fixed commitments 🔒 in the itinerary: tickets and bookings with date and time show on the right day, in time order.",
+          "Bookings show who each ticket is for and the section, with a full-screen \"Show QR to get in\" button.",
+          "Bookings can arrive ready through a link: the app shows them to check and saves them in the safe."
+        ]
+      }
+    },
+    {
       "versao": "1.5.13",
       "data": "2026-11-03",
       "substitui": "1.5.12",

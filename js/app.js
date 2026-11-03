@@ -12,7 +12,7 @@
 (function () {
   'use strict';
   var d = document, $ = function (id) { return d.getElementById(id); };
-  var VERSAO_APP = '1.5.13';
+  var VERSAO_APP = '1.5.14';
 
   /* ------------------------------------------------------------------
      1. UTILIDADES
@@ -665,6 +665,24 @@
       var x = p.dias.filter(function (y) { return y.data === data; })[0];
       if (x) cab.appendChild(h('span', { class: 'sub', texto: Clima.icone(x.codigo) + ' ' + x.min + '°/' + x.max + '°' + (x.chuva != null ? ' ☔' + x.chuva + '%' : '') }));
     }).catch(function () {});
+    /* compromissos fixos 🔒: reservas com dia e hora (ingressos comprados, voo, hotel); o dia se monta em volta deles */
+    var fixos = h('div', { class: 'fixos' });
+    Banco.listar('reservas', function (r) { return r.viagem_id === v.id && r.agenda && r.agenda.quando && r.agenda.quando.slice(0, 10) === data; }).then(function (rs) {
+      var grupos = {};
+      rs.forEach(function (r) { var k = r.agenda.grupo || (r.agenda.titulo + '|' + r.agenda.quando); (grupos[k] = grupos[k] || []).push(r); });
+      Object.keys(grupos).map(function (k) { return grupos[k]; }).sort(function (a, b) { return a[0].agenda.quando < b[0].agenda.quando ? -1 : 1; }).forEach(function (g) {
+        var a = g[0].agenda, hora = a.quando.slice(11, 16);
+        var el = h('div', { class: 'item fixo' }, [h('span', { class: 'h', texto: hora || '—' }),
+          h('div', { class: 'x' }, [h('div', { class: 'linha' }, [h('span', { 'aria-hidden': 'true', texto: '🔒' }), h('b', { texto: a.titulo }),
+            g.length > 1 ? h('span', { class: 'etq', texto: T('nIngressos', { n: g.length }) }) : h('span', { class: 'etq', texto: T('res_' + (g[0].tipo || 'outro')) })]),
+            a.local ? h('span', { class: 'nota', texto: a.local }) : null,
+            h('span', { class: 'nota', texto: T('fixoNaoMuda') }),
+            h('button', { class: 'bt leve', type: 'button', style: 'align-self:flex-start;margin-top:.3rem', onclick: function () { Nav.ir('reservas'); } }, '▦ ' + T('verIngressos'))])]);
+        /* entra na ordem do horário, no meio dos outros itens do dia */
+        var depois = [].filter.call(bloco.querySelectorAll('.item:not(.fixo)'), function (it) { var t = (it.querySelector('.h') || {}).textContent || ''; return /^\d\d:\d\d$/.test(t) && t > hora; })[0];
+        if (depois) depois.parentNode.insertBefore(el, depois); else fixos.appendChild(el);
+      });
+    }).catch(function () {});
     var hj = data === hojeIso(), agoraMin = new Date().getHours() * 60 + new Date().getMinutes(), marcouAgora = false;
     (dmod.itens || []).forEach(function (it, idx) {
       var l = it.lugarId ? lugarPorId(it.lugarId) : null;
@@ -684,6 +702,7 @@
         dmod.itens.splice(idx, 1); Banco.gravar('roteiros', o).then(recarregarTela); } }) : null;
       bloco.appendChild(h('div', { class: 'item' + (agora ? ' agora' : '') + (conf ? ' confirmado' : '') }, [h('span', { class: 'h', texto: it.hora || '—' }), x, h('span', { class: 'linha', style: 'flex-wrap:nowrap;gap:0' }, [btConf, rm])]));
     });
+    bloco.appendChild(fixos);
     if (!(dmod.itens || []).length) bloco.appendChild(h('p', { class: 'sub', style: 'padding:1rem', texto: T('diaVazio') }));
     tela.appendChild(bloco);
     if (o.origem === 'pacote') tela.appendChild(h('p', { class: 'pequeno', texto: T('pacoteEditar') }));
@@ -1408,7 +1427,9 @@
             h('span', { class: 'pequeno', texto: T('res_' + c.tipo) }),
             h('b', { texto: c.titulo }),
             c.quando ? h('span', { texto: fData(c.quando.slice(0, 10)) + (c.quando.length > 10 ? ' · ' + c.quando.slice(11, 16) : '') }) : null,
+            c.pessoa || c.assento ? h('span', { texto: [c.pessoa, c.assento].filter(Boolean).join(' · ') }) : null,
             c.codigo ? h('span', { class: 'linha' }, [T('codigo') + ': ', h('code', { texto: c.codigo, style: 'user-select:all' })]) : null,
+            c.qr ? h('button', { class: 'bt', type: 'button', onclick: function () { mostrarQRIngresso(c); } }, '▦ ' + T('mostrarQRIngresso')) : null,
             c.local ? h('span', { class: 'sub', texto: c.local }) : null,
             c.nota ? h('span', { class: 'sub', texto: c.nota }) : null,
             h('div', { class: 'linha' }, [h('button', { class: 'bt leve', type: 'button', onclick: function () { janelaReserva(x); } }, T('editar'))])
@@ -1438,14 +1459,96 @@
     var j = janela(x ? T('editar') : T('novaReserva'), corpo);
     ok.addEventListener('click', function () {
       if (!campos.titulo.value.trim()) { campos.titulo.focus(); return; }
-      var dados = { tipo: campos.tipo.value, titulo: campos.titulo.value.trim(), quando: campos.quando.value, codigo: campos.codigo.value.trim(), local: campos.local.value.trim(), nota: campos.nota.value.trim() };
+      var dados = Object.assign({}, c, { tipo: campos.tipo.value, titulo: campos.titulo.value.trim(), quando: campos.quando.value, codigo: campos.codigo.value.trim(), local: campos.local.value.trim(), nota: campos.nota.value.trim() });
       Cofre.cifrar(dados).then(function (blob) {
         var reg = x ? x.reg : { viagem_id: estado.viagem.id };
-        reg.conteudo = blob; reg.tipo = dados.tipo; /* o tipo fica aberto para ícone; o resto embaralhado */
+        reg.conteudo = blob; reg.tipo = dados.tipo; /* o tipo fica aberto para ícone; código e notas embaralhados */
+        /* título, data e local ficam abertos para o roteiro mostrar o compromisso fixo 🔒 sem pedir o PIN */
+        reg.agenda = dados.quando ? Object.assign({}, reg.agenda || {}, { titulo: dados.titulo, quando: dados.quando, local: dados.local || null }) : null;
         return Banco.gravar('reservas', reg);
       }).then(function () { j.fechar(); avisar(T('salvo')); mostrar('reservas'); }).catch(function () { avisar(T('cofreFechou')); j.fechar(); mostrar('reservas'); });
     });
     if (apagar) apagar.addEventListener('click', function () { Banco.apagar('reservas', x.reg.id).then(function () { j.fechar(); mostrar('reservas'); }); });
+  }
+
+  /* ---------- reservas que chegaram prontas (link #reservas=, e no futuro roteiro@) ----------
+     Formato: base64url de { v:1, destino:'gramado', itens:[{ tipo, titulo, quando:'AAAA-MM-DDTHH:MM', local, lat, lng,
+     codigo, qr, pessoa, assento, nota, grupo }] }. Nada é guardado sem a pessoa conferir; o código vai para o cofre. */
+  function lerLinkReservas() {
+    var t = null; try { t = sessionStorage.getItem('guiaxpert.reservas-link'); } catch (e) {}
+    if (!t) return null;
+    try {
+      var b = t.replace(/-/g, '+').replace(/_/g, '/'); while (b.length % 4) b += '=';
+      var bytes = Uint8Array.from(atob(b), function (c) { return c.charCodeAt(0); });
+      var j = JSON.parse(new TextDecoder().decode(bytes));
+      return j && j.v === 1 && Array.isArray(j.itens) ? j : null;
+    } catch (e) { return null; }
+  }
+  function esquecerLinkReservas() { try { sessionStorage.removeItem('guiaxpert.reservas-link'); } catch (e) {} }
+  function oferecerReservasDoLink() {
+    var pac = lerLinkReservas();
+    if (!pac) return;
+    if (!estado.viagem) { avisar(T('semViagemTexto')); return; }
+    var itens = pac.itens.slice(0, 30);
+    var lista = h('div', { class: 'linha', style: 'flex-direction:column;align-items:stretch;gap:.5rem' });
+    itens.forEach(function (it) {
+      lista.appendChild(h('div', { class: 'cartao', style: 'margin:0' }, [
+        h('span', { class: 'pequeno', texto: T('res_' + (it.tipo || 'outro')) + (it.pessoa ? ' · ' + it.pessoa : '') }),
+        h('b', { texto: it.titulo || '' }),
+        it.quando ? h('span', { texto: fData(it.quando.slice(0, 10)) + (it.quando.length > 10 ? ' · ' + it.quando.slice(11, 16) : '') }) : null,
+        it.assento ? h('span', { class: 'sub', texto: it.assento }) : null,
+        it.codigo ? h('span', { class: 'sub', texto: T('codigo') + ': ' + it.codigo }) : null]));
+    });
+    var caixa = h('div', {});
+    var ok = h('button', { class: 'bt', type: 'button', texto: '🔒 ' + T('lnk_guardar', { n: itens.length }) });
+    var nao = h('button', { class: 'bt leve', type: 'button', texto: T('lnk_naoAgora') });
+    var corpo = h('div', { class: 'linha', style: 'flex-direction:column;align-items:stretch;gap:.6rem' }, [
+      h('p', { class: 'sub', texto: T('lnk_texto', { n: itens.length, viagem: estado.viagem.nome }) }), lista, caixa, h('div', { class: 'acoes' }, [nao, ok])]);
+    var j = janela(T('lnk_titulo'), corpo);
+    nao.addEventListener('click', function () { esquecerLinkReservas(); j.fechar(); });
+    ok.addEventListener('click', function () {
+      ok.disabled = true;
+      pedirCofre(caixa, function () {
+        caixa.textContent = '';
+        guardarReservasProntas(itens).then(function (n) { esquecerLinkReservas(); j.fechar(function () { avisar(T('lnk_guardadas', { n: n })); Nav.ir('reservas'); }); })
+          .catch(function () { ok.disabled = false; avisar(T('cofreErro')); });
+      });
+    });
+  }
+  /* guarda cada reserva: o que é de agenda (título, data, local) fica aberto para o roteiro mostrar o compromisso;
+     código, QR, pessoa, assento e nota ficam embaralhados no cofre */
+  function guardarReservasProntas(itens) {
+    return Banco.listar('reservas', function (r) { return r.viagem_id === estado.viagem.id; }).then(function (ja) {
+      var marcas = {}; ja.forEach(function (r) { if (r.marca) marcas[r.marca] = 1; });
+      var n = 0;
+      return itens.reduce(function (p, it) {
+        return p.then(function () {
+          var marca = it.codigo ? 'cod:' + it.codigo : null;   /* o mesmo ingresso duas vezes não duplica */
+          if (marca && marcas[marca]) return;
+          var dados = { tipo: it.tipo || 'outro', titulo: it.titulo || '', quando: it.quando || '', codigo: it.codigo || '', local: it.local || '', nota: it.nota || '',
+            pessoa: it.pessoa || '', assento: it.assento || '', qr: it.qr || it.codigo || '' };
+          return Cofre.cifrar(dados).then(function (blob) {
+            n++;
+            return Banco.gravar('reservas', { viagem_id: estado.viagem.id, conteudo: blob, tipo: dados.tipo, marca: marca,
+              agenda: dados.quando ? { titulo: dados.titulo, quando: dados.quando, local: dados.local || null, lat: it.lat != null ? it.lat : null, lng: it.lng != null ? it.lng : null, grupo: it.grupo || null } : null });
+          });
+        });
+      }, Promise.resolve()).then(function () { return n; });
+    });
+  }
+  /* QR do ingresso em tela cheia (para mostrar na entrada) */
+  function mostrarQRIngresso(c) {
+    var corpo = h('div', { class: 'linha', style: 'flex-direction:column;align-items:center;gap:.6rem;text-align:center' }, [
+      h('b', { texto: c.titulo }), c.pessoa ? h('span', { texto: c.pessoa + (c.assento ? ' · ' + c.assento : '') }) : null]);
+    var j = janela(T('qrIngresso'), corpo);
+    j.caixa.classList.add('cheia');
+    carregarQR().then(function () {
+      var q = qrcode(0, 'M'); q.addData(String(c.qr || c.codigo)); q.make();
+      corpo.appendChild(h('img', { src: q.createDataURL(8, 8), alt: 'QR ' + (c.codigo || ''), style: 'width:min(86vw,22rem);height:auto;border-radius:12px;background:#fff;image-rendering:pixelated' }));
+      corpo.appendChild(h('code', { texto: c.codigo, style: 'font-size:1.3rem;user-select:all' }));
+      corpo.appendChild(h('p', { class: 'pequeno', texto: T('qrBrilho') }));
+    }).catch(function () { corpo.appendChild(h('code', { texto: c.codigo, style: 'font-size:1.6rem' })); });
+    if (navigator.wakeLock && navigator.wakeLock.request) navigator.wakeLock.request('screen').catch(function () {});
   }
 
   /* pede o PIN (ou cria o cofre) e depois chama "pronto" */
@@ -2748,6 +2851,7 @@
         setTimeout(oferecerInstalar, 2500);
         aceitarConvitePendente().then(function (aceito) { if (!aceito) sincronizarNuvem(); });
         retomarPendente();
+        setTimeout(oferecerReservasDoLink, 900);
         var compartilhado = window.Importar && Importar.doEndereco();
         if (compartilhado) setTimeout(function () { if (estado.viagem) { Nav.ir('reservas'); setTimeout(function () { janelaImportar(compartilhado); }, 200); } else avisar(T('semViagemTexto')); }, 400);
       });
@@ -2911,6 +3015,9 @@
   function iniciar() {
     /* guarda o endereço como chegou: o link do e-mail traz o login no #access_token, e a navegação abaixo troca o # */
     var hashChegada = location.hash || '';
+    /* link "#reservas=..." (reservas prontas para guardar): fica na aba até a pessoa entrar e conferir */
+    var mRes = hashChegada.match(/^#reservas=([A-Za-z0-9_-]+)$/);
+    if (mRes) { try { sessionStorage.setItem('guiaxpert.reservas-link', mRes[1]); } catch (e) {} hashChegada = ''; }
     try { estado.idioma = localStorage.getItem('dgo:guiaxpert:idioma') || ((navigator.language || 'pt').indexOf('pt') === 0 ? 'pt' : 'en'); } catch (e) {}
     try { aplicarTema(localStorage.getItem('dgo:guiaxpert:tema') || 'auto'); } catch (e) {}
     traduzirMoldura();

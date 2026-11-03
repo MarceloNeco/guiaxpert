@@ -548,3 +548,7 @@ body.travado #app, body.travado .janela-fundo.na-trava, body.travado #fundo-foto
 #trava img { border-radius: 18px; }
 #trava h2 { font-size: 1.5rem; font-weight: 800; margin: .2rem 0 0; }
 #trava .bt { width: min(100%, 22rem); min-height: 3.4rem; font-size: 1.1rem; }
+
+/* compromisso fixo 🔒 no roteiro */
+.item.fixo { background: var(--rodovia-claro, #e3f1ea); border-radius: 14px; margin: .3rem .4rem; }
+.item.fixo .bt { flex: none; }
