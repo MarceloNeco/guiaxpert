@@ -2,6 +2,19 @@
   "app": "guiaxpert",
   "versoes": [
     {
+      "versao": "1.5.31",
+      "data": "2026-11-03",
+      "substitui": "1.5.30",
+      "itens": {
+        "pt": [
+          "Reservas só recolhem quando economiza espaço: um dia só ou até 3 reservas = tudo aberto, sem chevron; viagem com volume = dias e etapas recolhíveis."
+        ],
+        "en": [
+          "Bookings only collapse when it saves space: a single day or up to 3 bookings = all open, no chevron; bigger trips = collapsible days and steps."
+        ]
+      }
+    },
+    {
       "versao": "1.5.30",
       "data": "2026-11-03",
       "substitui": "1.5.29",

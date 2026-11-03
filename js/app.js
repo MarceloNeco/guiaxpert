@@ -12,7 +12,7 @@
 (function () {
   'use strict';
   var d = document, $ = function (id) { return d.getElementById(id); };
-  var VERSAO_APP = '1.5.30';
+  var VERSAO_APP = '1.5.31';
 
   /* ------------------------------------------------------------------
      1. UTILIDADES
@@ -1543,12 +1543,14 @@
         var hjIso = hojeIso(), diaFoco = null;
         cartoes.forEach(function (g) { var d = (g[0].c.quando || '').slice(0, 10); if (d && d >= hjIso && (!diaFoco || d < diaFoco)) diaFoco = d; });
         var diasDistintos = {}; cartoes.forEach(function (g) { diasDistintos[(g[0].c.quando || '').slice(0, 10) || 'sem'] = 1; });
-        var umDiaSo = Object.keys(diasDistintos).length <= 1;
+        /* recolher só quando economiza espaço de verdade: um dia só (ex.: passeio) ou poucas reservas = tudo aberto, sem chevron */
+        var totalReservas = cartoes.reduce(function (s2, g) { return s2 + g.length; }, 0);
+        var umDiaSo = Object.keys(diasDistintos).length <= 1 || totalReservas <= 3;
         function desenhar() {
           caixa.textContent = '';
           var diaAnt = null, n = 0, bloco = null, sec = null;
           /* com filtro ou busca, dias e etapas já vêm abertos (a pessoa está procurando algo) */
-          var abrirTudo = filtro !== 'todos' || !!busca;
+          var abrirTudo = filtro !== 'todos' || !!busca || umDiaSo;
           function alvo() { return sec ? sec.corpo : caixa; }
           function fecharBloco() {
             if (!bloco) return;
