@@ -12,7 +12,7 @@
 (function () {
   'use strict';
   var d = document, $ = function (id) { return d.getElementById(id); };
-  var VERSAO_APP = '1.5.14';
+  var VERSAO_APP = '1.5.15';
 
   /* ------------------------------------------------------------------
      1. UTILIDADES
@@ -1410,35 +1410,161 @@
   var TIPOS_RES = ['voo', 'hotel', 'carro', 'ingresso', 'restaurante', 'outro'];
   TELAS.reservas = function (tela) {
     tela.appendChild(h('h1', { texto: T('rota_reservas') }));
-    tela.appendChild(h('p', { class: 'sub', texto: T('reservasTexto') }));
     if (!estado.viagem) return semViagem(tela);
+    /* de qual viagem são estas reservas (com nomes parecidos, "Gram…" não basta) */
+    var v = estado.viagem;
+    tela.appendChild(h('button', { class: 'cartao viagem-atual', type: 'button', onclick: janelaContexto }, [
+      h('span', { class: 'pequeno', texto: T('res_daViagem') }),
+      h('b', { texto: '🧳 ' + v.nome }),
+      h('span', { class: 'sub', texto: fData(v.inicio) + ' – ' + fData(v.fim) + ' · ' + T('res_trocarViagem') })]));
     pedirCofre(tela, function () {
-      Banco.listar('reservas', function (r) { return r.viagem_id === estado.viagem.id; }).then(function (lista) {
+      Banco.listar('reservas', function (r) { return r.viagem_id === v.id; }).then(function (lista) {
         return Promise.all(lista.map(function (r) { return Cofre.decifrar(r.conteudo).then(function (c) { return { reg: r, c: c }; }); }));
       }).then(function (itens) {
-        itens.sort(function (a, b) { return (a.c.quando || '') < (b.c.quando || '') ? -1 : 1; });
         tela.appendChild(h('div', { class: 'linha' }, [
           h('button', { class: 'bt', type: 'button', onclick: function () { janelaReserva(null); } }, '＋ ' + T('novaReserva')),
-          h('button', { class: 'bt sec', type: 'button', onclick: function () { janelaImportar(''); } }, '✉ ' + T('colarEmail'))]));
-        if (!itens.length) tela.appendChild(h('p', { class: 'sub', texto: T('semReservas') }));
+          h('button', { class: 'bt sec', type: 'button', onclick: function () { escanearIngresso(); } }, '📷 ' + T('res_escanear')),
+          h('button', { class: 'bt leve', type: 'button', onclick: function () { janelaImportar(''); } }, '✉ ' + T('colarEmail'))]));
+        if (!itens.length) { tela.appendChild(h('p', { class: 'sub', texto: T('semReservas') })); return; }
+        /* grupos: ingressos do mesmo evento (mesmo grupo, ou mesmo título e horário) viram um cartão só */
+        var grupos = {}, ordem = [];
         itens.forEach(function (x) {
-          var c = x.c;
-          tela.appendChild(h('div', { class: 'cartao' }, [
-            h('span', { class: 'pequeno', texto: T('res_' + c.tipo) }),
-            h('b', { texto: c.titulo }),
-            c.quando ? h('span', { texto: fData(c.quando.slice(0, 10)) + (c.quando.length > 10 ? ' · ' + c.quando.slice(11, 16) : '') }) : null,
-            c.pessoa || c.assento ? h('span', { texto: [c.pessoa, c.assento].filter(Boolean).join(' · ') }) : null,
-            c.codigo ? h('span', { class: 'linha' }, [T('codigo') + ': ', h('code', { texto: c.codigo, style: 'user-select:all' })]) : null,
-            c.qr ? h('button', { class: 'bt', type: 'button', onclick: function () { mostrarQRIngresso(c); } }, '▦ ' + T('mostrarQRIngresso')) : null,
-            c.local ? h('span', { class: 'sub', texto: c.local }) : null,
-            c.nota ? h('span', { class: 'sub', texto: c.nota }) : null,
-            h('div', { class: 'linha' }, [h('button', { class: 'bt leve', type: 'button', onclick: function () { janelaReserva(x); } }, T('editar'))])
-          ]));
+          var k = (x.reg.agenda && x.reg.agenda.grupo) || (x.c.tipo === 'ingresso' && x.c.quando ? 'i|' + x.c.titulo + '|' + x.c.quando : 'r|' + x.reg.id);
+          if (!grupos[k]) { grupos[k] = []; ordem.push(k); }
+          grupos[k].push(x);
         });
+        var cartoes = ordem.map(function (k) { return grupos[k].sort(function (a, b) { return String(a.c.assento || a.c.pessoa || '').localeCompare(String(b.c.assento || b.c.pessoa || ''), 'pt', { numeric: true }); }); }).sort(function (a, b) { return (a[0].c.quando || '9') < (b[0].c.quando || '9') ? -1 : 1; });
+        /* filtro por tipo (só os que existem) e busca */
+        var tipos = TIPOS_RES.filter(function (t) { return itens.some(function (x) { return x.c.tipo === t; }); });
+        var filtro = 'todos', busca = '';
+        var chips = h('div', { class: 'chips rolar', role: 'tablist', 'aria-label': T('tipo') });
+        var campo = h('input', { class: 'campo', type: 'search', placeholder: T('res_buscar'), 'aria-label': T('res_buscar'), autocomplete: 'off' });
+        var caixa = h('div', {});
+        function chip(t) {
+          return h('button', { class: 'chip', type: 'button', role: 'tab', 'aria-selected': filtro === t ? 'true' : 'false', onclick: function () { filtro = t; desenharChips(); desenhar(); } },
+            t === 'todos' ? T('f_todos') + ' (' + cartoes.length + ')' : T('res_' + t));
+        }
+        function desenharChips() { chips.textContent = ''; ['todos'].concat(tipos).forEach(function (t) { chips.appendChild(chip(t)); }); }
+        if (tipos.length > 1) { desenharChips(); tela.appendChild(chips); }
+        if (cartoes.length > 3) tela.appendChild(campo);
+        tela.appendChild(caixa);
+        campo.addEventListener('input', function () { busca = normalizar(campo.value).trim(); desenhar(); });
+        function desenhar() {
+          caixa.textContent = '';
+          var diaAnt = null, n = 0;
+          cartoes.forEach(function (g) {
+            var c0 = g[0].c;
+            if (filtro !== 'todos' && c0.tipo !== filtro) return;
+            if (busca && !g.some(function (x) { return normalizar([x.c.titulo, x.c.pessoa, x.c.codigo, x.c.local, x.c.nota, T('res_' + x.c.tipo)].join(' ')).indexOf(busca) > -1; })) return;
+            n++;
+            var dia = (c0.quando || '').slice(0, 10) || 'sem';
+            if (dia !== diaAnt) { caixa.appendChild(h('h3', { class: 'dia-titulo', texto: dia === 'sem' ? T('res_semData') : semana(dia) + ', ' + fData(dia) })); diaAnt = dia; }
+            caixa.appendChild(g.length > 1 ? cartaoGrupo(g) : cartaoReserva(g[0]));
+          });
+          if (!n) caixa.appendChild(h('p', { class: 'sub', texto: T('nadaAchado') }));
+        }
+        desenhar();
         tela.appendChild(h('button', { class: 'bt leve', type: 'button', onclick: function () { Cofre.fechar(); mostrar('reservas'); } }, '🔒 ' + T('fecharCofre')));
       }).catch(function () { tela.appendChild(h('div', { class: 'alerta', texto: T('cofreErro') })); });
     });
   };
+  function linhaQuando(c) { return c.quando ? fData(c.quando.slice(0, 10)) + (c.quando.length > 10 ? ' · ' + c.quando.slice(11, 16) : '') : null; }
+  function cartaoReserva(x) {
+    var c = x.c;
+    return h('div', { class: 'cartao' }, [
+      h('span', { class: 'pequeno', texto: T('res_' + c.tipo) }),
+      h('b', { texto: c.titulo }),
+      linhaQuando(c) ? h('span', { texto: linhaQuando(c) }) : null,
+      c.pessoa || c.assento ? h('span', { texto: [c.pessoa, c.assento].filter(Boolean).join(' · ') }) : null,
+      c.codigo ? h('span', { class: 'linha' }, [T('codigo') + ': ', h('code', { texto: c.codigo, style: 'user-select:all' })]) : null,
+      c.local ? h('span', { class: 'sub', texto: c.local }) : null,
+      c.nota ? h('span', { class: 'sub', texto: c.nota }) : null,
+      h('div', { class: 'linha' }, [
+        c.qr ? h('button', { class: 'bt', type: 'button', onclick: function () { mostrarQRs([c], 0); } }, '▦ ' + T('mostrarQRIngresso')) : null,
+        h('button', { class: 'bt leve', type: 'button', onclick: function () { janelaReserva(x); } }, T('editar'))])
+    ]);
+  }
+  /* vários ingressos do mesmo evento: um cartão, todos os QR de uma vez, editar o grupo inteiro */
+  function cartaoGrupo(g) {
+    var c0 = g[0].c, comQR = g.filter(function (x) { return x.c.qr; }).map(function (x) { return x.c; });
+    var lista = h('div', { class: 'linha', hidden: true, style: 'flex-direction:column;align-items:stretch;gap:.4rem' });
+    g.forEach(function (x) {
+      lista.appendChild(h('div', { class: 'linha entre', style: 'border-top:1px solid var(--linha);padding-top:.4rem' }, [
+        h('span', {}, [h('b', { texto: x.c.pessoa || '—' }), x.c.assento ? h('span', { class: 'sub', texto: ' · ' + x.c.assento }) : null, x.c.codigo ? h('code', { class: 'pequeno', style: 'display:block;user-select:all', texto: x.c.codigo }) : null]),
+        h('button', { class: 'bt leve', type: 'button', onclick: function () { janelaReserva(x); } }, T('editar'))]));
+    });
+    var verUm = h('button', { class: 'lk', type: 'button', texto: T('res_verUmPorUm'), 'aria-expanded': 'false', onclick: function () { lista.hidden = !lista.hidden; verUm.setAttribute('aria-expanded', lista.hidden ? 'false' : 'true'); } });
+    return h('div', { class: 'cartao' }, [
+      h('span', { class: 'pequeno', texto: T('res_' + c0.tipo) + ' · ' + T('nIngressos', { n: g.length }) }),
+      h('b', { texto: c0.titulo }),
+      linhaQuando(c0) ? h('span', { texto: linhaQuando(c0) }) : null,
+      h('span', { texto: g.map(function (x) { return x.c.pessoa; }).filter(Boolean).join(', ') }),
+      c0.local ? h('span', { class: 'sub', texto: c0.local }) : null,
+      c0.nota ? h('span', { class: 'sub', texto: c0.nota }) : null,
+      h('div', { class: 'linha' }, [
+        comQR.length ? h('button', { class: 'bt', type: 'button', onclick: function () { mostrarQRs(comQR, 0); } }, '▦ ' + T('res_mostrarTodosQR', { n: comQR.length })) : null,
+        h('button', { class: 'bt leve', type: 'button', onclick: function () { janelaEditarGrupo(g); } }, '✎ ' + T('res_editarGrupo'))]),
+      verUm, lista]);
+  }
+  /* QR em tela cheia, um atrás do outro: arrastar para o lado ou ‹ › (a pessoa da fila vai mostrando) */
+  function mostrarQRs(lista, inicio) {
+    var i = inicio || 0;
+    var titulo = h('b', {}), quem = h('span', {}), img = h('img', { alt: '', style: 'width:min(86vw,22rem);height:auto;border-radius:12px;background:#fff;image-rendering:pixelated;touch-action:pan-y' });
+    var cod = h('code', { style: 'font-size:1.3rem;user-select:all' }), pos = h('span', { class: 'sub' });
+    var ant = h('button', { class: 'bt leve', type: 'button', 'aria-label': T('anterior'), texto: '‹ ' + T('anterior') });
+    var prox = h('button', { class: 'bt', type: 'button', 'aria-label': T('proximo'), texto: T('proximo') + ' ›' });
+    var corpo = h('div', { class: 'linha', style: 'flex-direction:column;align-items:center;gap:.5rem;text-align:center' }, [titulo, quem, img, cod, pos,
+      lista.length > 1 ? h('div', { class: 'acoes' }, [ant, prox]) : null, h('p', { class: 'pequeno', texto: T('qrBrilho') })]);
+    var j = janela(T('qrIngresso'), corpo);
+    j.caixa.classList.add('cheia');
+    function mostrar() {
+      var c = lista[i];
+      titulo.textContent = c.titulo; quem.textContent = [c.pessoa, c.assento].filter(Boolean).join(' · ');
+      cod.textContent = c.codigo || ''; pos.textContent = lista.length > 1 ? T('nDeN', { i: i + 1, n: lista.length }) : '';
+      ant.disabled = i === 0; prox.disabled = i === lista.length - 1;
+      carregarQR().then(function () { var q = qrcode(0, 'M'); q.addData(String(c.qr || c.codigo)); q.make(); img.src = q.createDataURL(8, 8); img.alt = 'QR ' + (c.codigo || ''); })
+        .catch(function () { img.hidden = true; });
+    }
+    ant.addEventListener('click', function () { if (i > 0) { i--; mostrar(); } });
+    prox.addEventListener('click', function () { if (i < lista.length - 1) { i++; mostrar(); } });
+    var x0 = null;
+    img.addEventListener('pointerdown', function (e) { x0 = e.clientX; });
+    img.addEventListener('pointerup', function (e) { if (x0 == null) return; var dx = e.clientX - x0; x0 = null; if (dx < -50) prox.click(); else if (dx > 50) ant.click(); });
+    mostrar();
+    if (navigator.wakeLock && navigator.wakeLock.request) navigator.wakeLock.request('screen').catch(function () {});
+  }
+  function mostrarQRIngresso(c) { mostrarQRs([c], 0); }
+  /* muda tipo, título, data/hora e local de todos os ingressos do grupo de uma vez */
+  function janelaEditarGrupo(g) {
+    var c = g[0].c;
+    var tipo = h('select', { class: 'campo', id: 'gx-g-tipo' }, TIPOS_RES.map(function (t) { return h('option', { value: t, selected: c.tipo === t }, T('res_' + t)); }));
+    var tit = h('input', { class: 'campo', id: 'gx-g-tit', maxlength: '100', value: c.titulo || '' });
+    var quando = h('input', { class: 'campo', id: 'gx-g-quando', type: 'datetime-local', value: c.quando || '' });
+    var local = h('input', { class: 'campo', id: 'gx-g-local', maxlength: '160', value: c.local || '' });
+    var ok = h('button', { class: 'bt', type: 'button' }, T('salvar'));
+    var j = janela(T('res_editarGrupo'), h('div', { class: 'linha', style: 'flex-direction:column;align-items:stretch' }, [
+      h('p', { class: 'sub', texto: T('res_editarGrupoTexto', { n: g.length }) }),
+      h('label', { class: 'rot', for: 'gx-g-tipo', texto: T('tipo') }), tipo, h('label', { class: 'rot', for: 'gx-g-tit', texto: T('titulo') }), tit,
+      h('label', { class: 'rot', for: 'gx-g-quando', texto: T('quando') }), quando, h('label', { class: 'rot', for: 'gx-g-local', texto: T('local') }), local, ok]));
+    ok.addEventListener('click', function () {
+      ok.disabled = true;
+      g.reduce(function (p, x) {
+        return p.then(function () {
+          var dados = Object.assign({}, x.c, { tipo: tipo.value, titulo: tit.value.trim(), quando: quando.value, local: local.value.trim() });
+          return Cofre.cifrar(dados).then(function (blob) {
+            var reg = x.reg; reg.conteudo = blob; reg.tipo = dados.tipo;
+            reg.agenda = dados.quando ? Object.assign({}, reg.agenda || {}, { titulo: dados.titulo, quando: dados.quando, local: dados.local || null }) : null;
+            return Banco.gravar('reservas', reg);
+          });
+        });
+      }, Promise.resolve()).then(function () { j.fechar(function () { avisar(T('salvo')); mostrar('reservas'); }); })
+        .catch(function () { avisar(T('cofreFechou')); j.fechar(function () { mostrar('reservas'); }); });
+    });
+  }
+  /* câmera: lê o QR de um ingresso e já abre a reserva com o código preenchido */
+  function escanearIngresso() {
+    lerQR({ livre: true }).then(function (txt) { janelaReserva({ c: { tipo: 'ingresso', codigo: String(txt).slice(0, 120), qr: String(txt).slice(0, 500) } }); }).catch(function () {});
+  }
   function janelaReserva(x) {
     var c = x ? x.c : {};
     var campos = {
@@ -1450,18 +1576,18 @@
       nota: h('textarea', { class: 'campo', id: 'gx-r-nota', maxlength: '500', rows: '3' }, c.nota || '')
     };
     var ok = h('button', { class: 'bt', type: 'button' }, T('salvar'));
-    var apagar = x ? h('button', { class: 'bt perigo', type: 'button' }, T('apagar')) : null;
+    var apagar = x && x.reg ? h('button', { class: 'bt perigo', type: 'button' }, T('apagar')) : null;
     var corpo = h('div', { class: 'linha', style: 'flex-direction:column;align-items:stretch' }, [
       h('label', { class: 'rot', for: 'gx-r-tipo', texto: T('tipo') }), campos.tipo, h('label', { class: 'rot', for: 'gx-r-tit', texto: T('titulo') }), campos.titulo,
       h('label', { class: 'rot', for: 'gx-r-quando', texto: T('quando') }), campos.quando, h('label', { class: 'rot', for: 'gx-r-cod', texto: T('codigo') }), campos.codigo,
       h('label', { class: 'rot', for: 'gx-r-local', texto: T('local') }), campos.local, h('label', { class: 'rot', for: 'gx-r-nota', texto: T('nota') }), campos.nota,
       h('div', { class: 'acoes' }, [apagar, ok])]);
-    var j = janela(x ? T('editar') : T('novaReserva'), corpo);
+    var j = janela(x && x.reg ? T('editar') : T('novaReserva'), corpo);
     ok.addEventListener('click', function () {
       if (!campos.titulo.value.trim()) { campos.titulo.focus(); return; }
       var dados = Object.assign({}, c, { tipo: campos.tipo.value, titulo: campos.titulo.value.trim(), quando: campos.quando.value, codigo: campos.codigo.value.trim(), local: campos.local.value.trim(), nota: campos.nota.value.trim() });
       Cofre.cifrar(dados).then(function (blob) {
-        var reg = x ? x.reg : { viagem_id: estado.viagem.id };
+        var reg = x && x.reg ? x.reg : { viagem_id: estado.viagem.id, marca: dados.codigo ? 'cod:' + dados.codigo : null };
         reg.conteudo = blob; reg.tipo = dados.tipo; /* o tipo fica aberto para ícone; código e notas embaralhados */
         /* título, data e local ficam abertos para o roteiro mostrar o compromisso fixo 🔒 sem pedir o PIN */
         reg.agenda = dados.quando ? Object.assign({}, reg.agenda || {}, { titulo: dados.titulo, quando: dados.quando, local: dados.local || null }) : null;
@@ -1510,7 +1636,7 @@
       ok.disabled = true;
       pedirCofre(caixa, function () {
         caixa.textContent = '';
-        guardarReservasProntas(itens).then(function (n) { esquecerLinkReservas(); j.fechar(function () { avisar(T('lnk_guardadas', { n: n })); Nav.ir('reservas'); }); })
+        guardarReservasProntas(itens).then(function (n) { esquecerLinkReservas(); j.fechar(function () { avisar(n ? T('lnk_guardadas', { n: n }) : T('lnk_jaEstavam')); Nav.ir('reservas'); }); })
           .catch(function () { ok.disabled = false; avisar(T('cofreErro')); });
       });
     });
@@ -1523,10 +1649,11 @@
       var n = 0;
       return itens.reduce(function (p, it) {
         return p.then(function () {
-          var marca = it.codigo ? 'cod:' + it.codigo : null;   /* o mesmo ingresso duas vezes não duplica */
+          /* abrir o mesmo link duas vezes não duplica: pelo código, ou por título + horário */
+          var marca = it.codigo ? 'cod:' + it.codigo : (it.titulo && it.quando ? 'ag:' + it.titulo + '|' + it.quando : null);
           if (marca && marcas[marca]) return;
           var dados = { tipo: it.tipo || 'outro', titulo: it.titulo || '', quando: it.quando || '', codigo: it.codigo || '', local: it.local || '', nota: it.nota || '',
-            pessoa: it.pessoa || '', assento: it.assento || '', qr: it.qr || it.codigo || '' };
+            pessoa: it.pessoa || '', assento: it.assento || '', qr: it.qr || (it.tipo === 'ingresso' ? it.codigo || '' : '') };   /* QR só de ingresso (voo e hotel não entram por QR) */
           return Cofre.cifrar(dados).then(function (blob) {
             n++;
             return Banco.gravar('reservas', { viagem_id: estado.viagem.id, conteudo: blob, tipo: dados.tipo, marca: marca,
@@ -1536,21 +1663,6 @@
       }, Promise.resolve()).then(function () { return n; });
     });
   }
-  /* QR do ingresso em tela cheia (para mostrar na entrada) */
-  function mostrarQRIngresso(c) {
-    var corpo = h('div', { class: 'linha', style: 'flex-direction:column;align-items:center;gap:.6rem;text-align:center' }, [
-      h('b', { texto: c.titulo }), c.pessoa ? h('span', { texto: c.pessoa + (c.assento ? ' · ' + c.assento : '') }) : null]);
-    var j = janela(T('qrIngresso'), corpo);
-    j.caixa.classList.add('cheia');
-    carregarQR().then(function () {
-      var q = qrcode(0, 'M'); q.addData(String(c.qr || c.codigo)); q.make();
-      corpo.appendChild(h('img', { src: q.createDataURL(8, 8), alt: 'QR ' + (c.codigo || ''), style: 'width:min(86vw,22rem);height:auto;border-radius:12px;background:#fff;image-rendering:pixelated' }));
-      corpo.appendChild(h('code', { texto: c.codigo, style: 'font-size:1.3rem;user-select:all' }));
-      corpo.appendChild(h('p', { class: 'pequeno', texto: T('qrBrilho') }));
-    }).catch(function () { corpo.appendChild(h('code', { texto: c.codigo, style: 'font-size:1.6rem' })); });
-    if (navigator.wakeLock && navigator.wakeLock.request) navigator.wakeLock.request('screen').catch(function () {});
-  }
-
   /* pede o PIN (ou cria o cofre) e depois chama "pronto" */
   function pedirCofre(tela, pronto) {
     if (Cofre.aberto()) { pronto(); return; }
@@ -1641,15 +1753,19 @@
     }).catch(function () { corpo.appendChild(h('p', { class: 'conferir', texto: T('cofreErro') })); });
   }
   /* celular novo: lê o QR pela câmera (ou cola o texto do QR) */
-  function lerQR() {
+  function lerQR(op) {
+    op = op || {};
     return new Promise(function (ok, erro) {
       var video = h('video', { playsinline: true, autoplay: true, muted: true, style: 'width:100%;border-radius:12px;background:#000;max-height:50vh' });
       var manual = h('input', { class: 'campo', placeholder: 'GXK1:…', 'aria-label': T('colarQR'), autocomplete: 'off' });
       var msg = h('p', { class: 'pequeno', role: 'status' });
-      var corpo = h('div', { class: 'linha', style: 'flex-direction:column;align-items:stretch' }, [h('p', { class: 'sub', texto: T('lerQRTexto') }), video, manual, msg]);
+      if (op.livre) manual.placeholder = T('res_digitarCodigo');
+      var corpo = h('div', { class: 'linha', style: 'flex-direction:column;align-items:stretch' }, [h('p', { class: 'sub', texto: T(op.livre ? 'res_escanearTexto' : 'lerQRTexto') }), video, manual, msg]);
       var fluxo = null, parar = function () { if (fluxo) fluxo.getTracks().forEach(function (t) { t.stop(); }); fluxo = null; };
       var j = janela(T('lerQR'), corpo, function () { parar(); erro(new Error('cancelado')); });
-      var achou = function (txt) { var m = /^GXK1:([A-Za-z0-9+\/=]{40,48})$/.exec(String(txt || '').trim()); if (!m) { msg.textContent = T('qrInvalido'); return; } parar(); j.fechar(function () { ok(m[1]); }); };
+      var achou = function (txt) {
+        if (op.livre) { var t = String(txt || '').trim(); if (!t) return; parar(); j.fechar(function () { ok(t); }); return; }
+        var m = /^GXK1:([A-Za-z0-9+\/=]{40,48})$/.exec(String(txt || '').trim()); if (!m) { msg.textContent = T('qrInvalido'); return; } parar(); j.fechar(function () { ok(m[1]); }); };
       manual.addEventListener('change', function () { achou(manual.value); });
       carregarQR().then(function () {
         if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) { video.hidden = true; msg.textContent = T('semCamera'); return; }

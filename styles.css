@@ -552,3 +552,6 @@ body.travado #app, body.travado .janela-fundo.na-trava, body.travado #fundo-foto
 /* compromisso fixo 🔒 no roteiro */
 .item.fixo { background: var(--rodovia-claro, #e3f1ea); border-radius: 14px; margin: .3rem .4rem; }
 .item.fixo .bt { flex: none; }
+
+.cartao.viagem-atual { display: flex; flex-direction: column; align-items: flex-start; gap: .1rem; width: 100%; text-align: left; border: 0; cursor: pointer; }
+.dia-titulo { font-size: 1rem; font-weight: 800; margin: 1rem .2rem .3rem; color: var(--suave); }

@@ -2,6 +2,23 @@
   "app": "guiaxpert",
   "versoes": [
     {
+      "versao": "1.5.15",
+      "data": "2026-11-03",
+      "substitui": "1.5.14",
+      "itens": {
+        "pt": [
+          "Reservas mais claras: mostra de qual viagem são (e troca com um toque), separa por dia em ordem de horário, filtra por tipo (voo, hospedagem, carro, ingresso) e tem busca.",
+          "Ingressos do mesmo evento viram um cartão só: \"Mostrar os 4 QR\" passa um atrás do outro (arrastando ou com ‹ ›) e \"Editar o grupo\" muda todos de uma vez.",
+          "Novo: 📷 Escanear ingresso pela câmera."
+        ],
+        "en": [
+          "Clearer bookings: shows which trip they belong to (switch with one tap), groups by day in time order, filters by type (flight, stay, car, ticket) and has search.",
+          "Tickets for the same event become one card: \"Show all 4 QR\" goes one after another (swipe or ‹ ›) and \"Edit the group\" changes all at once.",
+          "New: 📷 Scan a ticket with the camera."
+        ]
+      }
+    },
+    {
       "versao": "1.5.14",
       "data": "2026-11-03",
       "substitui": "1.5.13",
