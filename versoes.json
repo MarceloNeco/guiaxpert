@@ -2,6 +2,21 @@
   "app": "guiaxpert",
   "versoes": [
     {
+      "versao": "1.5.18",
+      "data": "2026-11-03",
+      "substitui": "1.5.17",
+      "itens": {
+        "pt": [
+          "Viagem a Gramado abre com fotos do Natal Luz iluminado à noite (arcos de luz, Igreja São Pedro, ruas decoradas) e segue só com fotos de lá.",
+          "Previsão do tempo não mostra mais \"0° / 0°\" no dia em que ainda não há previsão."
+        ],
+        "en": [
+          "The Gramado trip opens with night photos of the Natal Luz lights (light arches, São Pedro church, decorated streets) and shows only photos from there.",
+          "The forecast no longer shows \"0° / 0°\" on days without a forecast yet."
+        ]
+      }
+    },
+    {
       "versao": "1.5.17",
       "data": "2026-11-03",
       "substitui": "1.5.16",

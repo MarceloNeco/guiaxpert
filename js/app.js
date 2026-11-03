@@ -12,7 +12,7 @@
 (function () {
   'use strict';
   var d = document, $ = function (id) { return d.getElementById(id); };
-  var VERSAO_APP = '1.5.17';
+  var VERSAO_APP = '1.5.18';
 
   /* ------------------------------------------------------------------
      1. UTILIDADES
@@ -442,7 +442,7 @@
      movimento" do aparelho e com a aba escondida. Nunca nas telas de uso (roteiro, mapa, reservas). */
   var FOTOS_MUNDO = ['cristo', 'coliseu', 'comida-pizza', 'oia', 'eiffel', 'taj', 'comida-doce', 'masp', 'iguacu', 'machu', 'guanabara', 'sydney', 'muralha', 'noronha', 'lencois', 'veadeiros'];
   /* fotos do próprio destino entram primeiro na viagem para lá (as do mundo seguem no rodízio) */
-  var FOTOS_DESTINO = { gramado: ['gramado-lago', 'canela-caracol', 'gramado-hortensia'] };
+  var FOTOS_DESTINO = { gramado: ['gramado-igreja-noite', 'gramado-natal-arcos', 'gramado-natal-rua', 'gramado-noite', 'gramado-lago', 'canela-caracol', 'gramado-hortensia'] };
   FOTOS_DESTINO.canela = FOTOS_DESTINO.gramado;
   function fotosDaViagem(v) {
     var txt = normalizar([v && v.destino, v && v.destinoTexto, v && v.nome].join(' '));
@@ -453,8 +453,8 @@
   function faixaFotos(titulo, sub, op) {
     op = op || {};
     var dia = Math.floor((Date.now() - new Date(new Date().getFullYear(), 0, 0)) / 86400000);
-    var FOTOS = op.destino ? op.destino.concat(FOTOS_MUNDO) : FOTOS_MUNDO;
-    var n = FOTOS.length, inicio = (op.indice != null ? op.indice : op.destino ? dia % op.destino.length : dia) % n;
+    var FOTOS = op.destino ? op.destino.slice() : FOTOS_MUNDO;   /* na viagem: só fotos de lá */
+    var n = FOTOS.length, inicio = (op.indice != null ? op.indice : op.destino ? 0 : dia) % n;
     var img = function (id, ativa) { return h('img', { class: 'hero-foto' + (ativa ? ' ativa' : ''), alt: '', decoding: 'async', loading: 'eager', sizes: '100vw',
       src: 'img/fundos/' + id + '-640.webp', srcset: 'img/fundos/' + id + '-640.webp 640w, img/fundos/' + id + '-1280.webp 1280w' }); };
     var a = img(FOTOS[inicio], true), b = img(FOTOS[(inicio + 1) % n], false);

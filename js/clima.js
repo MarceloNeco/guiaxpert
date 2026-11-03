@@ -41,7 +41,7 @@
         return { data: data, codigo: d.weather_code[i], max: Math.round(d.temperature_2m_max[i]), min: Math.round(d.temperature_2m_min[i]),
                  chuva: d.precipitation_probability_max ? d.precipitation_probability_max[i] : null,
                  vento: d.wind_speed_10m_max ? Math.round(d.wind_speed_10m_max[i]) : null };
-      });
+      }).filter(function (x, i) { return d.temperature_2m_max[i] != null && d.temperature_2m_min[i] != null; });   /* último dia às vezes vem vazio: não mostrar "0°/0°" */
     });
   }
 
