@@ -2,6 +2,19 @@
   "app": "guiaxpert",
   "versoes": [
     {
+      "versao": "1.5.13",
+      "data": "2026-11-03",
+      "substitui": "1.5.12",
+      "itens": {
+        "pt": [
+          "Gramado e Canela: 21 lugares novos no guia, com dicas de quem já foi (Parque Terra Mágica Florybal, Casa do Colono, Lavanda, Trattoria Boniatto, bate-volta de Nova Petrópolis e Caminhos de Pedra)."
+        ],
+        "en": [
+          "Gramado and Canela: 21 new places in the guide, with tips from people who have been there (Terra Mágica Florybal, Casa do Colono, Lavender park, Trattoria Boniatto, Nova Petrópolis and Caminhos de Pedra day trips)."
+        ]
+      }
+    },
+    {
       "versao": "1.5.12",
       "data": "2026-11-03",
       "itens": {
