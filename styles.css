@@ -628,4 +628,11 @@ body.travado #app, body.travado .janela-fundo.na-trava, body.travado #fundo-foto
 .arquivo-viagens .cartao { margin-bottom: .6rem; }
 .cartao.passada, .arquivo .escolha { opacity: .85; }
 
-#gx-pdf { position: fixed; left: -10000px; top: 0; width: 720px; background: #f3f5f4; }
+#gx-pdf { position: fixed; left: -10000px; top: 0; width: 760px; height: 4000px; border: 0; background: #fff; }
+
+/* marca: Guia + X em destaque ("o X marca o local") + pert */
+:root { --marca-x: #e8590c; }
+:root[data-tema="escuro"] { --marca-x: #ff9a4d; }
+@media (prefers-color-scheme: dark) { :root:not([data-tema="claro"]) { --marca-x: #ff9a4d; } }
+.marca-x { font-weight: 900; color: var(--marca-x); }
+.hero-titulo .marca-x { color: #ffb070; }

@@ -47,6 +47,7 @@
     .abertura-marca img { width: 6.5rem; height: 6.5rem; border-radius: 28%; box-shadow: 0 14px 40px rgba(0,0,0,.45), 0 0 0 1px rgba(255,255,255,.12); }
     .abertura-marca strong { font-size: 2.1rem; font-weight: 800; letter-spacing: -.02em; }
     .abertura-marca span { font-size: 1.05rem; opacity: .95; }
+    .abertura-marca .ab-x { font-weight: 900; color: #ffb070; font-size: 1em; opacity: 1; }
     @keyframes ab-kb { from { transform: scale(1); } to { transform: scale(1.08); } }
     @media (prefers-reduced-motion: reduce) { .ab-f img { animation: none; } }
   </style>
@@ -55,7 +56,7 @@
 <body>
   <!-- abertura: colagem de cartões-postais (Cristo, Torre Eiffel, Coliseu, Machu Picchu) fundidos + marca, enquanto o app carrega (some sozinha) -->
   <div id="abertura" aria-hidden="true"><div class="ab-colagem"><div class="ab-f ab-cristo"><img alt="" decoding="async" fetchpriority="high" src="img/fundos/cristo-640.webp" srcset="img/fundos/cristo-640.webp 640w, img/fundos/cristo-1280.webp 1280w" sizes="(orientation: landscape) 35vw, 100vw"></div><div class="ab-f ab-eiffel"><img alt="" decoding="async" fetchpriority="high" src="img/fundos/eiffel-640.webp" srcset="img/fundos/eiffel-640.webp 640w, img/fundos/eiffel-1280.webp 1280w" sizes="(orientation: landscape) 35vw, 100vw"></div><div class="ab-f ab-coliseu"><img alt="" decoding="async" fetchpriority="high" src="img/fundos/coliseu-640.webp" srcset="img/fundos/coliseu-640.webp 640w, img/fundos/coliseu-1280.webp 1280w" sizes="(orientation: landscape) 35vw, 100vw"></div><div class="ab-f ab-machu"><img alt="" decoding="async" fetchpriority="high" src="img/fundos/machu-640.webp" srcset="img/fundos/machu-640.webp 640w, img/fundos/machu-1280.webp 1280w" sizes="(orientation: landscape) 35vw, 100vw"></div></div><div class="abertura-veu"></div>
-    <div class="abertura-marca"><img src="icone-192.png" alt="" width="104" height="104"><strong>GuiaXpert</strong><span>Seu guia, do seu jeito</span></div></div>
+    <div class="abertura-marca"><img src="icone-192.png" alt="" width="104" height="104"><strong>Guia<span class="ab-x">X</span>pert</strong><span>Seu guia, do seu jeito</span></div></div>
   <!-- fundo discreto com a foto do dia (só nas telas de leitura) -->
   <img id="fundo-foto" alt="" aria-hidden="true" decoding="async">
   <a class="pular" href="#conteudo" data-t="pular">Pular para o conteúdo</a>

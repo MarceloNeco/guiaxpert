@@ -217,6 +217,8 @@ window.TEXTOS = (function () {
     cmp_mostrarCodigos: ['🎟 Mostrar códigos ({n})', '🎟 Show codes ({n})'], cmp_mostrarLocalizador: ['🔑 Mostrar localizador', '🔑 Show booking code'],
     cmp_gerandoPdf: ['Montando o PDF…', 'Building the PDF…'], cmp_pdfErro: ['Não deu para montar o PDF. Tente de novo (ou use a página navegável).', 'Could not build the PDF. Try again (or use the browsable page).'],
     cmp_copiado: ['Copiado', 'Copied'],
+    cmp_pessoas: ['Participantes e contatos', 'Travelers and contacts'], cmp_pessoasDica: ['(nomes, idades e telefones que houver)', '(names, ages and any phone numbers)'],
+    cmp_participantes: ['Participantes da viagem ({n})', 'Travelers ({n})'], cmp_contatos: ['Contatos', 'Contacts'],
     cmp_mais: ['mais detalhes', 'more details'],
     cmp_tituloCurto: ['Compartilhar roteiro', 'Share itinerary'],
     cmp_titulo: ['Compartilhar com quem não tem o app', 'Share with people without the app'],

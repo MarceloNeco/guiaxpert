@@ -2,6 +2,25 @@
   "app": "guiaxpert",
   "versoes": [
     {
+      "versao": "1.5.45",
+      "data": "2026-11-11",
+      "substitui": "1.5.44",
+      "itens": {
+        "pt": [
+          "Marca GuiaXpert com o X em destaque (negrito, laranja: \"o X marca o local\"), na abertura, na tela de entrar, no menu e no roteiro compartilhado.",
+          "Roteiro compartilhado: seção \"👨‍👩‍👧 Participantes da viagem\" (recolhível; aberta no PDF) com nomes, idades e contatos que houver (ex.: telefone do hotel, clicável).",
+          "Mais fácil de ler no celular: letra maior, dia em âmbar com 📅, horário com 🕒, todos os códigos em azul e negrito (localizador maior).",
+          "PDF sem página quase vazia: pode quebrar entre cartões de código; códigos de barras dois por linha; montado num quadro isolado (sem interferência do visual do app)."
+        ],
+        "en": [
+          "GuiaXpert brand with the X highlighted (bold, orange: \"X marks the spot\"), on the opening screen, sign-in, menu and shared itinerary.",
+          "Shared itinerary: \"👨‍👩‍👧 Travelers\" section (collapsible; open in the PDF) with names, ages and any contacts (e.g. hotel phone, tappable).",
+          "Easier to read on the phone: larger text, day in amber with 📅, time with 🕒, all codes in bold blue (booking code larger).",
+          "No almost-empty PDF pages: it can break between code cards; barcodes two per row; built in an isolated frame (no interference from the app's styles)."
+        ]
+      }
+    },
+    {
       "versao": "1.5.44",
       "data": "2026-11-11",
       "substitui": "1.5.43",
