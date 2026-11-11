@@ -12,7 +12,7 @@
 (function () {
   'use strict';
   var d = document, $ = function (id) { return d.getElementById(id); };
-  var VERSAO_APP = '1.5.41';
+  var VERSAO_APP = '1.5.42';
 
   /* ------------------------------------------------------------------
      1. UTILIDADES
@@ -147,11 +147,18 @@
     opcao: null, dia: 0, filtro: 'todos', busca: '', descobertas: [], pos: null, soDia: false
   };
 
+  /* viagem que já terminou vai para o arquivo (fora do seletor e das listas principais) */
+  function ehPassada(v) { return !!(v && v.fim && v.fim < hojeIso()); }
+  function iconeViagem(v) { return v && v.tipo === 'passeio' ? '🚶' : '🧳'; }
+  var primeiraCarga = true;
   function carregarViagem(id) {
     return Banco.listar('viagens').then(function (vs) {
       vs.sort(function (a, b) { return a.inicio < b.inicio ? -1 : 1; });
-      var v = (id && vs.filter(function (x) { return x.id === id; })[0]) ||
-              vs.filter(function (x) { return x.fim >= hojeIso(); })[0] || vs[vs.length - 1] || null;
+      var proxima = vs.filter(function (x) { return x.fim >= hojeIso(); })[0];
+      var v = (id && vs.filter(function (x) { return x.id === id; })[0]) || proxima || vs[vs.length - 1] || null;
+      /* ao abrir o app: se a viagem aberta já passou e existe uma próxima, abre a próxima (a passada fica no arquivo) */
+      if (primeiraCarga && ehPassada(v) && proxima && window.Contexto && Contexto.emViagem()) { v = proxima; Contexto.definir('viagem', v.id); }
+      primeiraCarga = false;
       if (window.Contexto && !Contexto.emViagem()) v = null;      /* Explorar: sem viagem aberta */
       estado.viagem = v;
       return Promise.all([
@@ -361,10 +368,23 @@
         return h('button', { class: 'escolha' + (ativo ? ' ativa' : ''), type: 'button', onclick: function () { j.fechar(fn); } }, [h('b', { texto: rotulo }), sub ? h('span', { class: 'pequeno', texto: sub }) : null]);
       };
       corpo.appendChild(item(!emViagem(), '🌍 ' + T('explorar'), T('explorarSub'), function () { Contexto.definir('explorar').then(recarregarContexto).then(function () { Nav.ir('explorar', { substituir: true }); }); }));
-      vs.forEach(function (v) {
-        corpo.appendChild(item(emViagem() && estado.viagem && estado.viagem.id === v.id, '🧳 ' + v.nome, fData(v.inicio, true) + ' – ' + fData(v.fim, true),
-          function () { Contexto.definir('viagem', v.id).then(recarregarContexto).then(function () { Nav.ir('inicio', { substituir: true }); }); }));
-      });
+      function itemViagem(v) {
+        return item(emViagem() && estado.viagem && estado.viagem.id === v.id, iconeViagem(v) + ' ' + v.nome,
+          (v.inicio === v.fim ? semana(v.inicio) + ' ' + fData(v.inicio, true) : fData(v.inicio, true) + ' – ' + fData(v.fim, true)) + (ehPassada(v) ? ' · ' + T('passada') : ''),
+          function () { Contexto.definir('viagem', v.id).then(recarregarContexto).then(function () { Nav.ir('inicio', { substituir: true }); }); });
+      }
+      /* próximas e em andamento, a mais perto primeiro; as passadas ficam recolhidas no arquivo */
+      var futuras = vs.filter(function (v) { return !ehPassada(v); }).sort(function (a, b) { return a.inicio < b.inicio ? -1 : 1; });
+      var passadas = vs.filter(ehPassada);
+      futuras.forEach(function (v) { corpo.appendChild(itemViagem(v)); });
+      if (passadas.length) {
+        var aberta = estado.viagem && passadas.some(function (v) { return v.id === estado.viagem.id; }) && emViagem();
+        var lista = h('div', { class: 'linha arquivo', style: 'flex-direction:column;align-items:stretch;gap:.4rem', hidden: !aberta });
+        passadas.forEach(function (v) { lista.appendChild(itemViagem(v)); });
+        var bt = h('button', { class: 'bt leve', type: 'button', 'aria-expanded': aberta ? 'true' : 'false', texto: '🗂 ' + T('viagensPassadas', { n: passadas.length }) });
+        bt.addEventListener('click', function () { lista.hidden = !lista.hidden; bt.setAttribute('aria-expanded', lista.hidden ? 'false' : 'true'); });
+        corpo.appendChild(bt); corpo.appendChild(lista);
+      }
       corpo.appendChild(h('button', { class: 'bt sec', type: 'button', texto: '＋ ' + T('novoPasseioOuViagem'), onclick: function () { estado.rascunho = null; j.fechar(function () { Nav.ir('nova'); }); } }));
     });
   }
@@ -2790,12 +2810,20 @@
     tela.appendChild(h('div', { class: 'linha entre' }, [h('span'), h('button', { class: 'bt', type: 'button', onclick: function () { estado.rascunho = null; Nav.ir('nova'); } }, '＋ ' + T('novo'))]));
     tela.appendChild(h('p', { class: 'sub', texto: T('viagensTexto') }));
     Banco.listar('viagens').then(function (vs) {
-      vs.sort(function (a, b) { return a.inicio > b.inicio ? -1 : 1; });
       if (!vs.length) tela.appendChild(h('p', { class: 'sub', texto: T('semViagemTexto') }));
-      vs.forEach(function (v) {
+      var futuras = vs.filter(function (v) { return !ehPassada(v); }).sort(function (a, b) { return a.inicio < b.inicio ? -1 : 1; });
+      var passadas = vs.filter(ehPassada).sort(function (a, b) { return a.inicio > b.inicio ? -1 : 1; });
+      var alvo = tela;
+      if (futuras.length) tela.appendChild(h('h2', { class: 'secao', texto: T('proximasViagens') }));
+      futuras.concat(passadas).forEach(function (v, i) {
+        if (i === futuras.length) {
+          var det = h('details', { class: 'arquivo-viagens' }, [h('summary', { texto: '🗂 ' + T('arquivoViagens', { n: passadas.length }) }),
+            h('p', { class: 'pequeno', texto: T('arquivoTexto') })]);
+          tela.appendChild(det); alvo = det;
+        }
         var atual = estado.viagem && estado.viagem.id === v.id;
-        tela.appendChild(h('div', { class: 'cartao', style: atual ? 'border-color:var(--serra)' : null }, [
-          h('div', { class: 'linha entre' }, [h('b', { texto: v.nome }), atual ? h('span', { class: 'etq gratis', texto: T('emUso') }) : null]),
+        alvo.appendChild(h('div', { class: 'cartao' + (ehPassada(v) ? ' passada' : ''), style: atual ? 'border-color:var(--serra)' : null }, [
+          h('div', { class: 'linha entre' }, [h('b', { texto: iconeViagem(v) + ' ' + v.nome }), atual ? h('span', { class: 'etq gratis', texto: T('emUso') }) : null]),
           h('span', { class: 'sub', texto: fData(v.inicio) + ' – ' + fData(v.fim) + ' · ' + T('nPessoas', { n: (v.pessoas || []).length }) }),
           h('div', { class: 'linha' }, [
             !atual ? h('button', { class: 'bt sec', type: 'button', onclick: function () { Contexto.definir('viagem', v.id).then(recarregarContexto).then(function () { Nav.ir('inicio'); }); } }, T('abrirViagem')) : null,

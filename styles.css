@@ -619,3 +619,11 @@ body.travado #app, body.travado .janela-fundo.na-trava, body.travado #fundo-foto
   body.imprimindo #gx-impressao { display: block; }
   body.imprimindo { background: #fff !important; }
 }
+
+/* arquivo de viagens passadas */
+.secao { font-size: 1rem; margin: 1rem .2rem .4rem; color: var(--suave); }
+.arquivo-viagens { margin-top: 1rem; display: flex; flex-direction: column; gap: .6rem; }
+.arquivo-viagens > summary { cursor: pointer; font-weight: 700; padding: .7rem .2rem; color: var(--suave); }
+.arquivo-viagens[open] > summary { margin-bottom: .4rem; }
+.arquivo-viagens .cartao { margin-bottom: .6rem; }
+.cartao.passada, .arquivo .escolha { opacity: .85; }

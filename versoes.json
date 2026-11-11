@@ -2,6 +2,23 @@
   "app": "guiaxpert",
   "versoes": [
     {
+      "versao": "1.5.42",
+      "data": "2026-11-11",
+      "substitui": "1.5.41",
+      "itens": {
+        "pt": [
+          "Viagens passadas vão para o arquivo: o seletor mostra só as de hoje em diante (a mais próxima primeiro) e guarda as passadas em \"🗂 Viagens passadas\".",
+          "Minhas viagens: \"Próximas e em andamento\" e \"Arquivo: viagens passadas\", para consultar, compartilhar ou apagar.",
+          "Ao abrir o app, se a viagem aberta já passou, ele abre a próxima. Passeio de um dia com ícone 🚶."
+        ],
+        "en": [
+          "Past trips go to the archive: the selector shows only today onward (nearest first) and keeps past ones under \"🗂 Past trips\".",
+          "My trips: \"Upcoming and ongoing\" and \"Archive: past trips\", to look up, share or delete.",
+          "When the app opens, if the open trip is over, it opens the next one. One-day outings get the 🚶 icon."
+        ]
+      }
+    },
+    {
       "versao": "1.5.41",
       "data": "2026-11-11",
       "substitui": "1.5.40",
