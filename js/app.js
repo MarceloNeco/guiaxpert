@@ -12,7 +12,7 @@
 (function () {
   'use strict';
   var d = document, $ = function (id) { return d.getElementById(id); };
-  var VERSAO_APP = '1.5.43';
+  var VERSAO_APP = '1.5.44';
 
   /* ------------------------------------------------------------------
      1. UTILIDADES
@@ -2393,6 +2393,7 @@
             /* onde dá para cortar: entre um item e outro do dia */
             var cortes = [].slice.call(el.querySelectorAll('li')).slice(1).map(function (li) { return li.getBoundingClientRect().top - base.top; }).filter(function (t) { return t > 0; });
             var links = [].slice.call(el.querySelectorAll('a[href]')).map(function (a) { var r = a.getBoundingClientRect(); return { x: r.left - base.left, y: r.top - base.top, w: r.width, h: r.height, url: a.href }; });
+            var textos = [].slice.call(el.querySelectorAll('code.copiavel')).map(function (c) { var r = c.getBoundingClientRect(); return { x: r.left - base.left, y: r.top - base.top, w: r.width, h: r.height, t: c.textContent }; });
             var escala = cv.width / base.width, ini = 0, total = base.height;
             while (ini < total - 1) {
               var cabe = (M + ALT - y) / pxmm;                       /* px que ainda cabem nesta página */
@@ -2409,6 +2410,13 @@
               var hmm = (fim - ini) * pxmm;
               pdf.addImage(fatia.toDataURL('image/jpeg', 0.9), 'JPEG', M, y, LARG, hmm);
               links.forEach(function (l) { if (l.y >= ini && l.y + l.h <= fim) pdf.link(M + l.x * pxmm, y + (l.y - ini) * pxmm, l.w * pxmm, l.h * pxmm, { url: l.url }); });
+              textos.forEach(function (c) {
+                if (c.y < ini || c.y + c.h > fim) return;
+                var alt = c.h * pxmm, tam = alt / 0.3528 * 0.8;   /* mm → pontos */
+                pdf.setFont('courier', 'normal'); pdf.setFontSize(tam);
+                var largTxt = pdf.getTextWidth(c.t), escalaH = largTxt ? (c.w * pxmm) / largTxt : 1;
+                pdf.text(c.t, M + c.x * pxmm, y + (c.y - ini) * pxmm + alt * 0.8, { renderingMode: 'invisible', horizontalScale: escalaH });
+              });
               y += hmm + GAP; ini = fim;
             }
           });
@@ -2456,8 +2464,9 @@
             if (c.barra && window.Barras) { larga = true; img = '<img class="cod-img cod-barras" alt="" src="data:image/svg+xml;charset=utf-8,' + encodeURIComponent(Barras.svg(c.barra, c.barraFormato)) + '">'; }
             else if (c.qr && window.qrcode) { var q = qrcode(0, 'M'); q.addData(String(c.qr)); q.make(); img = '<img class="cod-img" alt="" src="' + q.createDataURL(4, 4) + '">'; }
           } catch (e) {}
-          cards += '<div class="cod' + (larga ? ' larga' : '') + '">' + (c.pessoa ? '<b>' + esc(c.pessoa) + '</b>' : '') + (c.assento ? '<small>' + esc(c.assento) + '</small>' : '') +
-            img + (c.codigo ? '<code>' + esc(c.codigo) + '</code>' : '') + (c.barra && c.barra !== c.codigo ? '<code class="num">' + esc(c.barra) + '</code>' : '') +
+          var loc = !img;   /* sem QR nem barras: é localizador (voo, hotel, carro) — número grande, azul */
+          cards += '<div class="cod' + (larga ? ' larga' : '') + (loc ? ' loc' : '') + '">' + (c.pessoa ? '<b>' + esc(c.pessoa) + '</b>' : '') + (c.assento ? '<small>' + esc(c.assento) + '</small>' : '') +
+            img + (c.codigo ? '<code class="copiavel">' + esc(c.codigo) + '</code>' + (op.pdf ? '' : '<button type="button" class="copiar" data-c="' + esc(c.codigo) + '">📋 ' + esc(T('copiar')) + '</button>') : '') + (c.barra && c.barra !== c.codigo ? '<code class="num">' + esc(c.barra) + '</code>' : '') +
             (notaPorCartao && c.nota ? '<details class="mais"' + (op.pdf ? ' open' : '') + '><summary>' + esc(T('cmp_mais')) + '</summary><small>' + esc(c.nota) + '</small></details>' : '') + '</div>';
           if (!notaPorCartao && c.nota && notas.indexOf(c.nota) < 0) notas.push(c.nota);
         });
@@ -2521,12 +2530,18 @@
         '.cod.larga{grid-column:1/-1}.cod-img{width:118px;height:118px;image-rendering:pixelated;background:#fff;margin:2px 0}.cod-img.cod-barras{width:100%;max-width:300px;height:58px}' +
         '.mais{align-self:stretch;text-align:left}.mais summary{cursor:pointer;color:#0e5a43;font-size:.85em;text-align:center}.mais small{display:block;margin-top:4px}' +
         'code{font-size:.95em;letter-spacing:.02em}.num{color:#55636a;font-size:.8em}.nota-res{color:#55636a;font-size:.85em;margin:6px 0 0}' +
+        '.copiavel{-webkit-user-select:all;user-select:all}.cod.loc{grid-column:1/-1}.cod.loc code{font-size:1.45em;font-weight:800;color:#1a5fb4;letter-spacing:.06em;white-space:nowrap;overflow-wrap:normal}' +
+        '.copiar{margin-top:4px;border:1px solid #c9d6e8;background:#eef4fc;color:#1a5fb4;border-radius:999px;padding:5px 12px;font:inherit;font-size:.85em;font-weight:700;cursor:pointer}' +
+        '@media print{.copiar{display:none}}' +
         '@media (max-width:520px){.dia li{flex-direction:column;gap:2px}.h{width:auto;font-size:.85em;color:#0e5a43}.dia{padding:12px 14px}}' +
         'footer{color:#55636a;font-size:.8rem;text-align:center;margin:18px 0 8px}' +
         '@media print{body{background:#fff}.doc{padding:0}.capa{-webkit-print-color-adjust:exact;print-color-adjust:exact}.dia{border:1px solid #d3dbd8}}';
       var corpo = '<div class="doc">' + html + '</div>';
       var docHtml = '<!doctype html><html lang="' + (idioma() === 'en' ? 'en' : 'pt-BR') + '"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">' +
-        '<title>' + esc(nomeArquivo(v.nome)) + '</title><style>' + estilo + '</style></head><body>' + corpo + '</body></html>';
+        '<title>' + esc(nomeArquivo(v.nome)) + '</title><style>' + estilo + '</style></head><body>' + corpo +
+        (op.codigos ? '<script>document.addEventListener("click",function(e){var b=e.target.closest&&e.target.closest(".copiar");if(!b)return;var t=b.getAttribute("data-c"),ok=function(){var o=b.textContent;b.textContent="✓ ' + esc(T('cmp_copiado')) + '";setTimeout(function(){b.textContent=o},1600)};' +
+          'if(navigator.clipboard&&window.isSecureContext){navigator.clipboard.writeText(t).then(ok,velho)}else velho();function velho(){var a=document.createElement("textarea");a.value=t;a.style.position="fixed";a.style.opacity="0";document.body.appendChild(a);a.select();try{document.execCommand("copy");ok()}catch(x){}a.remove()}});</script>' : '') +
+        '</body></html>';
       return { html: docHtml, corpo: corpo, estilo: estilo };
     });
   }

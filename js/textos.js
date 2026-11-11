@@ -216,6 +216,7 @@ window.TEXTOS = (function () {
     cmp_botao: ['Compartilhar', 'Share'], cmp_roteiroCasa: ['Roteiro (PDF ou página)', 'Itinerary (PDF or page)'],
     cmp_mostrarCodigos: ['🎟 Mostrar códigos ({n})', '🎟 Show codes ({n})'], cmp_mostrarLocalizador: ['🔑 Mostrar localizador', '🔑 Show booking code'],
     cmp_gerandoPdf: ['Montando o PDF…', 'Building the PDF…'], cmp_pdfErro: ['Não deu para montar o PDF. Tente de novo (ou use a página navegável).', 'Could not build the PDF. Try again (or use the browsable page).'],
+    cmp_copiado: ['Copiado', 'Copied'],
     cmp_mais: ['mais detalhes', 'more details'],
     cmp_tituloCurto: ['Compartilhar roteiro', 'Share itinerary'],
     cmp_titulo: ['Compartilhar com quem não tem o app', 'Share with people without the app'],

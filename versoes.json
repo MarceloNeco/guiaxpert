@@ -2,6 +2,21 @@
   "app": "guiaxpert",
   "versoes": [
     {
+      "versao": "1.5.44",
+      "data": "2026-11-11",
+      "substitui": "1.5.43",
+      "itens": {
+        "pt": [
+          "Roteiro compartilhado: localizador maior, em azul e numa linha só, com botão \"📋 Copiar\" na página navegável (tocar no código também seleciona tudo).",
+          "No PDF, os códigos podem ser selecionados e copiados no leitor (Acrobat, leitor do celular)."
+        ],
+        "en": [
+          "Shared itinerary: larger booking code, in blue and on one line, with a \"📋 Copy\" button in the browsable page (tapping the code also selects it).",
+          "In the PDF, codes can be selected and copied in the reader (Acrobat, phone viewer)."
+        ]
+      }
+    },
+    {
       "versao": "1.5.43",
       "data": "2026-11-11",
       "substitui": "1.5.42",
