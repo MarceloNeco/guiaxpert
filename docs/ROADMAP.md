@@ -80,6 +80,14 @@ dados abertos; a IA, quando houver, só refina (ex.: escrever a lista com outras
 | E20 | **Planejar a ida até o embarque**: traslado até o aeroporto ou rodoviária, estimativa de trânsito, Uber/táxi, metrô/ônibus quando há pouca mala, chegada com antecedência pelo tipo de voo. | Regras de antecedência (internacional 3 h, nacional 1 h 30–2 h, rodoviária 30–45 min) + tempo de rota aberto (OSRM) com margem por horário de pico; transporte público pelos horários abertos (GTFS) quando a bagagem é pouca; link pronto para Uber/99/táxi. Vira compromisso "Sair de casa às 12:40" no roteiro, com lembrete. Mesma lógica na volta. |
 | E21 | **Compartilhar com quem não tem o app**: **PDF** e **página HTML navegável** do roteiro. | Página estática única (abre sem internet depois de baixada) e PDF pela impressão do navegador. Padrão sem dados sensíveis (sem localizadores, PINs e QR); opção de incluir com aviso. Mandar pelo WhatsApp ou e-mail. |
 
+| E22 | **Uma pessoa, várias formas de entrar**: juntar Google (Gmail do trabalho) e e-mail pessoal (Yahoo) na mesma conta, em "Minha conta → Ligar outra forma de entrar". | Supabase *manual identity linking* (ligar no painel do Auth); a pessoa entra com uma e confirma a outra. Sem isso (1.5.35), cada forma é uma conta, e o convite aceita qualquer uma pelo código. |
+| E23 | **RootifyONE: telas de família e convites**: viagens, membros e papéis, convites (e-mail, usos, validade, tentativas), quem usa a IA da família e o consumo. | Tudo já está no Supabase (tabelas `guiaxpert_membros`, `guiaxpert_convites`, `ia_uso`; funções `ia_disponivel`, `pode_usar_chaves_servico`); falta só a tela no admin. |
+
+**Convite pela pessoa, não pelo jeito de entrar (1.5.35):** quem já é da viagem (ou o dono) abre qualquer convite e cai
+direto na viagem, sem erro, mesmo com convite usado ou vencido. Entrou com o e-mail do convite (ou convite sem e-mail):
+aceita. Entrou com outro e-mail (ex.: Google do trabalho): o app pede só o código do convite. Primeira vez com o e-mail
+indicado: código + senha, conta já confirmada. Quem vem por convite nunca vê o código de acesso do app.
+
 **Regra da IA no app (feito na 1.5.34):** o botão ✦ IA só aparece quando há IA de verdade para aquela pessoa: (1) chave
 própria no aparelho, ou (2) chave guardada no servidor (Vault do Supabase, nunca no app) **e** a pessoa é da família, isto é,
 da equipe ou convidada para uma viagem da equipe (`ia_disponivel()`, `pode_usar_chaves_servico()`). Outras famílias não

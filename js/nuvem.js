@@ -128,7 +128,7 @@
     /* convites e membros (funções do banco) */
     criarConviteEmail: function (viagemId, papel, email) { return Conta.rpc('guiaxpert_criar_convite_email', { p_viagem: viagemId, p_papel: papel || 've', p_email: email, p_dias: 14 }).then(function (r) { return Array.isArray(r) ? r[0] : r; }); },
     criarConvite: function (viagemId, papel, dias) { return Conta.rpc('guiaxpert_criar_convite', { p_viagem: viagemId, p_papel: papel || 've', p_dias: dias || 7 }); },
-    aceitarConvite: function (token) { return Conta.rpc('guiaxpert_aceitar_convite', { p_token: token }).then(function (r) { return Array.isArray(r) ? r[0] : r; }); },
+    aceitarConvite: function (token, codigo) { return Conta.rpc('guiaxpert_aceitar_convite', { p_token: token, p_codigo: codigo || null }).then(function (r) { return Array.isArray(r) ? r[0] : r; }); },
     membros: function (viagemId) { return Conta.rpc('guiaxpert_listar_membros', { p_viagem: viagemId }); },
     mudarMembro: function (viagemId, userId, papel) { return Conta.rpc('guiaxpert_mudar_membro', { p_viagem: viagemId, p_user: userId, p_papel: papel }); },
     sairViagem: function (viagemId) { return Conta.rpc('guiaxpert_sair_viagem', { p_viagem: viagemId }); },

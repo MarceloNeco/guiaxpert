@@ -12,7 +12,7 @@
 (function () {
   'use strict';
   var d = document, $ = function (id) { return d.getElementById(id); };
-  var VERSAO_APP = '1.5.34';
+  var VERSAO_APP = '1.5.35';
 
   /* ------------------------------------------------------------------
      1. UTILIDADES
@@ -2280,15 +2280,42 @@
   }
   function convitePendente() { try { return localStorage.getItem('guiaxpert.convite'); } catch (e) { return null; } }
   /* fase 1: aceita no servidor. Pode rodar antes de o app estar liberado: ser da viagem já libera o app */
+  /* o convite foi para outro e-mail (ex.: entrou pelo Google do trabalho): pede só o código, sem drama */
+  function pedirCodigoConvite(nome, msgErro) {
+    return new Promise(function (ok) {
+      var eu = (Conta.sessao() || {}).email || '';
+      var cod = h('input', { class: 'campo', id: 'gx-pc-cod', inputmode: 'numeric', autocomplete: 'one-time-code', maxlength: '6', placeholder: T('digite6') });
+      var msg = h('p', { class: 'pequeno', role: 'status', 'aria-live': 'polite', texto: msgErro || '' });
+      var bt = h('button', { class: 'bt', type: 'button', texto: T('conviteEntrar') });
+      var feito = false;
+      var j = janela('✉️ ' + (nome ? T('conviteParaViagem', { viagem: nome }) : T('convite')), h('div', { class: 'linha', style: 'flex-direction:column;align-items:stretch' }, [
+        h('p', { class: 'sub', texto: T('conviteOutroEmail', { email: eu }) }),
+        h('label', { class: 'rot', for: 'gx-pc-cod', texto: T('conviteCodigoRot') }), cod, bt, msg]), function () { if (!feito) ok(null); });
+      function ir() { if (!/^\d{6}$/.test(cod.value.trim())) { msg.textContent = T('conviteCodigoFormato'); cod.focus(); return; } feito = true; j.fechar(function () { ok(cod.value.trim()); }); }
+      bt.addEventListener('click', ir); cod.addEventListener('keydown', function (e) { if (e.key === 'Enter') ir(); });
+      setTimeout(function () { cod.focus(); }, 60);
+    });
+  }
   function aceitarConviteNoServidor() {
     var tok = convitePendente();
     if (!tok || !Conta.sessao() || !window.Nuvem) return Promise.resolve(false);
     try { localStorage.removeItem('guiaxpert.convite'); } catch (e) {}
     avisar(T('aceitandoConvite'));
-    return Nuvem.aceitarConvite(tok).then(function (r) {
-      try { localStorage.setItem('guiaxpert.conviteRecente', JSON.stringify({ viagem_id: r.viagem_id, nome: r.nome || '' })); } catch (e) {}
-      return true;
-    }).catch(function (e) {
+    function tentar(codigo) {
+      return Nuvem.aceitarConvite(tok, codigo).then(function (r) {
+        if (r && r.erro === 'codigo-necessario' || r && r.erro === 'codigo-errado') {
+          return pedirCodigoConvite(r.nome, r.erro === 'codigo-errado' ? T('conviteCodigoErrado') : '').then(function (c) {
+            if (!c) { try { localStorage.setItem('guiaxpert.convite', tok); } catch (e) {} return false; }   /* desistiu: o convite continua guardado */
+            return tentar(c);
+          });
+        }
+        if (r && r.erro === 'travado') { avisar(T('conviteTravado')); return false; }
+        if (!r || !r.viagem_id) return false;
+        try { localStorage.setItem('guiaxpert.conviteRecente', JSON.stringify({ viagem_id: r.viagem_id, nome: r.nome || '', jaEra: !!r.ja_era })); } catch (e) {}
+        return true;
+      });
+    }
+    return tentar(null).catch(function (e) {
       /* já era da viagem (ex.: abriu o convite de novo): segue normal */
       avisar(e && /dono/i.test(e.message) ? T('conviteSeu') : e && /inválido|vencido/i.test(e.message) ? T('conviteInvalido') : T('erroRede'));
       return false;
@@ -2300,7 +2327,7 @@
       var rec = null; try { rec = JSON.parse(localStorage.getItem('guiaxpert.conviteRecente') || 'null'); localStorage.removeItem('guiaxpert.conviteRecente'); } catch (e) {}
       if (!rec || !rec.viagem_id) return false;
       return Nuvem.sincronizar().then(function () { return Contexto.definir('viagem', rec.viagem_id); }).then(recarregarContexto).then(function () {
-        avisar(T('conviteAceito', { nome: rec.nome || '' })); Nav.ir('inicio', { substituir: true }); return true;
+        avisar(T(rec.jaEra ? 'conviteJaEra' : 'conviteAceito', { nome: rec.nome || '' })); Nav.ir('inicio', { substituir: true }); return true;
       });
     }).catch(function () { return false; });
   }
@@ -2311,8 +2338,7 @@
     var ver = h('button', { class: 'bt leve', type: 'button', 'aria-label': T('mostrarSenha'), texto: '👁', onclick: function () { senha.type = senha.type === 'password' ? 'text' : 'password'; } });
     var msg = h('p', { class: 'pequeno', role: 'status', 'aria-live': 'polite' });
     var bt = h('button', { class: 'bt cheio', type: 'button', texto: T('conviteEntrar') });
-    [h('p', { class: 'sub', texto: T('conviteCodigoTexto') }),
-      h('span', { class: 'rot', texto: T('email') }), h('b', { class: 'campo-fixo', texto: x.email }),
+    [h('span', { class: 'rot', texto: T('email') }), h('b', { class: 'campo-fixo', texto: x.email }),
       h('label', { class: 'rot', for: 'gx-cc-cod', texto: T('conviteCodigoRot') }), cod,
       h('label', { class: 'rot', for: 'gx-cc-senha', texto: T('conviteSenhaRot') }), h('div', { class: 'linha', style: 'flex-wrap:nowrap' }, [senha, ver]),
       bt, msg].forEach(function (el) { caixa.appendChild(el); });
@@ -2841,8 +2867,11 @@
         var x = Array.isArray(r) ? r[0] : r; if (!x || !x.viagem) return;
         aviso.appendChild(h('b', { texto: '✉️ ' + T('conviteDe', { quem: x.quem || '', viagem: x.viagem }) }));
         faixa.parentNode && faixa.parentNode.insertBefore(aviso, faixa.nextSibling);
-        if (!s && x.email && x.pede_codigo) { formConviteCodigo(aviso, tokConvite, x); return; }
-        aviso.appendChild(h('p', { class: 'sub', texto: T(s ? 'conviteEntrouTexto' : 'conviteEntreTexto') }));
+        if (s) { aviso.appendChild(h('p', { class: 'sub', texto: T('conviteEntrouTexto') })); return; }
+        aviso.appendChild(h('p', { class: 'sub', texto: T('conviteComoPrefere') }));
+        aviso.appendChild(h('button', { class: 'bt cheio', type: 'button', texto: 'G  ' + T('conviteGoogle'), onclick: function () { Conta.google(); } }));
+        if (x.email && x.pede_codigo) { aviso.appendChild(h('p', { class: 'pequeno', texto: T('conviteOuEmail', { email: x.email }) })); formConviteCodigo(aviso, tokConvite, x); return; }
+        aviso.appendChild(h('p', { class: 'pequeno', texto: T('conviteOuSenha') }));
       }).catch(function () {});
     }
     if (a.motivo === 'sql-faltando') tela.appendChild(h('div', { class: 'alerta' }, [h('b', { texto: T('sqlFaltando') }), T('sqlFaltandoTexto')]));
