@@ -12,7 +12,7 @@
 (function () {
   'use strict';
   var d = document, $ = function (id) { return d.getElementById(id); };
-  var VERSAO_APP = '1.5.38';
+  var VERSAO_APP = '1.5.39';
 
   /* ------------------------------------------------------------------
      1. UTILIDADES
@@ -3603,8 +3603,19 @@
     try { aplicarTema(localStorage.getItem('dgo:guiaxpert:tema') || 'auto'); } catch (e) {}
     traduzirMoldura();
     lerConvite();
-    setTimeout(function () { procurarAtualizacao(false); }, 3000);
-    window.addEventListener('online', function () { procurarAtualizacao(false); });
+    /* atualização proativa, mesmo no ícone (que pode ficar dias "aberto" em segundo plano):
+       ao abrir, quando a internet volta, quando o app volta para a frente (15 min depois da última conferida) e a cada 30 min */
+    var ultimaConferida = 0;
+    function conferirSePreciso(forcar) {
+      if (!forcar && Date.now() - ultimaConferida < 15 * 60000) return;
+      ultimaConferida = Date.now();
+      if (navigator.serviceWorker && navigator.serviceWorker.getRegistration) navigator.serviceWorker.getRegistration().then(function (r) { if (r) r.update().catch(function () {}); }).catch(function () {});
+      procurarAtualizacao(false);
+    }
+    setTimeout(function () { conferirSePreciso(true); }, 3000);
+    window.addEventListener('online', function () { conferirSePreciso(true); });
+    d.addEventListener('visibilitychange', function () { if (!d.hidden) conferirSePreciso(false); });
+    setInterval(function () { if (!d.hidden) conferirSePreciso(false); }, 30 * 60000);
     var rota = Nav.iniciar();
     estado.rota = rota;
     $('bt-menu').addEventListener('click', abrirGaveta);

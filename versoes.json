@@ -2,6 +2,19 @@
   "app": "guiaxpert",
   "versoes": [
     {
+      "versao": "1.5.39",
+      "data": "2026-11-11",
+      "substitui": "1.5.38",
+      "itens": {
+        "pt": [
+          "Atualização proativa também no ícone instalado: confere versão nova ao abrir, quando a internet volta, quando o app volta para a frente e a cada 30 min."
+        ],
+        "en": [
+          "Proactive updates also on the installed icon: checks for a new version on open, when the internet returns, when the app comes to the front and every 30 min."
+        ]
+      }
+    },
+    {
       "versao": "1.5.38",
       "data": "2026-11-11",
       "substitui": "1.5.37",
