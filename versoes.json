@@ -2,6 +2,23 @@
   "app": "guiaxpert",
   "versoes": [
     {
+      "versao": "1.5.40",
+      "data": "2026-11-11",
+      "substitui": "1.5.39",
+      "itens": {
+        "pt": [
+          "Compartilhar o roteiro com quem não tem o app: página navegável (.html, abre até sem internet) ou PDF, pelo botão 📤 no Roteiro ou em Quem → Quem fica em casa.",
+          "Escolha o que vai: roteiro dia a dia, links de mapa, hotel/voos/carro. Localizadores, códigos e QR ficam desligados por padrão (com aviso ao ligar).",
+          "No dia de chegada de voo, o check-in do hotel fecha o dia (depois do voo, do carro e da estrada), no Roteiro, nas Reservas e no arquivo."
+        ],
+        "en": [
+          "Share the itinerary with people without the app: browsable page (.html, opens even offline) or PDF, from the 📤 button in Itinerary or in People → Who stays home.",
+          "Choose what goes: day-by-day plan, map links, hotel/flights/car. Locators, codes and QR are off by default (with a warning when turned on).",
+          "On a flight arrival day, hotel check-in closes the day (after the flight, car and drive), in Itinerary, Bookings and the file."
+        ]
+      }
+    },
+    {
       "versao": "1.5.39",
       "data": "2026-11-11",
       "substitui": "1.5.38",

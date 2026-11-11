@@ -609,3 +609,13 @@ body.travado #app, body.travado .janela-fundo.na-trava, body.travado #fundo-foto
 .bt-google:hover { filter: brightness(.97); }
 .bt-google:focus-visible { outline: 3px solid var(--faixa); outline-offset: 2px; }
 .cartao .ou { text-align: center; margin: 0; }
+
+/* compartilhar roteiro: opções e impressão (PDF) */
+.cmp-opcao { display: flex; gap: .6rem; align-items: flex-start; cursor: pointer; }
+.cmp-opcao input { width: 1.3rem; height: 1.3rem; margin-top: .15rem; flex: none; accent-color: var(--rodovia); }
+#gx-impressao { display: none; }
+@media print {
+  body.imprimindo > *:not(#gx-impressao) { display: none !important; }
+  body.imprimindo #gx-impressao { display: block; }
+  body.imprimindo { background: #fff !important; }
+}

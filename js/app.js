@@ -12,7 +12,7 @@
 (function () {
   'use strict';
   var d = document, $ = function (id) { return d.getElementById(id); };
-  var VERSAO_APP = '1.5.39';
+  var VERSAO_APP = '1.5.40';
 
   /* ------------------------------------------------------------------
      1. UTILIDADES
@@ -706,6 +706,7 @@
       h('button', { class: 'bt leve', type: 'button', onclick: function () { janelaNovaOpcao(); } }, '＋ ' + T('outraOpcao')),
       o.origem !== 'pacote' ? h('button', { class: 'bt leve', type: 'button', onclick: function () { apagarOpcao(o); } }, T('apagarOpcao')) : null
     ]);
+    barra.appendChild(h('button', { class: 'bt leve', type: 'button', texto: '📤 ' + T('cmp_botao'), onclick: function () { janelaCompartilharRoteiro(v); } }));
     tela.appendChild(barra);
     if (o.origem === 'ia') tela.appendChild(h('div', { class: 'alerta' }, [h('b', { texto: T('iaConfira') }), T('iaConfiraTexto')]));
 
@@ -735,10 +736,10 @@
       var gs = Object.keys(grupos).map(function (k) { return grupos[k]; });
       var objs = gs.map(function (g) { return { tipo: g[0].tipo, titulo: g[0].agenda.titulo, quando: g[0].agenda.quando }; });
       var chv = chavesComoNaVida(objs);
-      gs.forEach(function (g, i) { g._k = chv[i]; g._cedo = objs[i]._chegaCedo; });
+      gs.forEach(function (g, i) { g._k = chv[i]; g._cedo = objs[i]._chegaCedo; g._fim = !!objs[i]._fimDoDia; });
       gs.sort(function (a, b) { return a._k < b._k ? -1 : a._k > b._k ? 1 : 0; }).forEach(function (g) {
         var a = g[0].agenda, hora = a.quando.slice(11, 16), pos = g._k.slice(11, 16), pr = papelReserva({ tipo: g[0].tipo, titulo: a.titulo });
-        var horaTxt = hora || '—';
+        var horaTxt = g._fim ? '—' : (hora || '—');
         var dica = hora && (pr === 'entra' && g[0].tipo === 'hotel' || pr === 'sai') ? T(pr === 'sai' ? 'ateAs' : 'aPartirDe', { h: hora }) : '';
         var el = h('div', { class: 'item fixo' }, [h('span', { class: 'h', texto: horaTxt }),
           h('div', { class: 'x' }, [h('div', { class: 'linha' }, [h('span', { 'aria-hidden': 'true', texto: '🔒' }), h('b', { texto: a.titulo }),
@@ -1708,7 +1709,9 @@
       else if (p === 'entra' && c.tipo === 'hotel') {
         var chega = maior(x.vooMax || '', x.pegaCarro);   /* último passo antes do hotel naquele dia */
         c._chegaCedo = chega && chega < hh ? hh : null;     /* chegam antes do horário de check-in: avisar */
-        nv = maior(maior(hh, x.vooMax), x.pegaCarro); if (nv !== hh || hh === x.vooMax || hh === x.pegaCarro) { hh = nv; n = 8; }
+        /* dia de chegada de voo: o check-in fecha o dia (depois do voo, do carro e da estrada), não fica no meio pela hora "a partir de" */
+        if (x.vooMax != null) { hh = '99:98'; n = 8; c._fimDoDia = true; }
+        else { nv = maior(hh, x.pegaCarro); if (nv !== hh || hh === x.pegaCarro) { hh = nv; n = 8; } }
       }
       return d + 'T' + hh + '|' + n + '|' + normalizar(c.titulo || '');
     });
@@ -2223,6 +2226,7 @@
     c.appendChild(h('p', { class: 'sub', texto: T('quemFicaEmCasaTexto') }));
     c.appendChild(h('div', { class: 'linha' }, [
       h('button', { class: 'bt leve', type: 'button', texto: '🏨 ' + T('compartilharHotel'), onclick: function () { compartilharCartao(v, 'hotel'); } }),
+      h('button', { class: 'bt leve', type: 'button', texto: '📄 ' + T('cmp_roteiroCasa'), onclick: function () { janelaCompartilharRoteiro(v); } }),
       h('button', { class: 'bt leve', type: 'button', texto: '✈ ' + T('compartilharVoos'), onclick: function () { compartilharCartao(v, 'voo'); } })
     ]));
     return c;
@@ -2262,6 +2266,153 @@
       Nuvem.criarConvite(v.id, papel, 14).then(function (tok) {
         mostrarPronto(T('conviteMensagem2', { quem: quem, nome: v.nome, pode: pode }) + '\n' + location.origin + location.pathname + '#convite=' + tok + '\n\n' + T('conviteComoEntrar'));
       }).catch(function () { msg.textContent = navigator.onLine ? T('erroRede') : T('semInternet'); });
+    });
+  }
+  /* ---------- Compartilhar com quem não tem o app: página navegável (.html) ou PDF (E21) ----------
+     Tudo montado aqui, por regras, sem IA. Padrão sem dados sensíveis: localizadores, PINs, notas das reservas e QR só com "Incluir códigos". */
+  function esc(t) { return String(t == null ? '' : t).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
+  function janelaCompartilharRoteiro(v) {
+    var forma = 'html';
+    var op = { roteiro: true, mapas: true, hotel: true, codigos: false };
+    var corpo = h('div', { class: 'linha', style: 'flex-direction:column;align-items:stretch;gap:.7rem' });
+    var j = janela('📤 ' + T('cmp_tituloCurto'), corpo);
+    function marca(chave, rotulo, dica) {
+      var cb = h('input', { type: 'checkbox', id: 'gx-cmp-' + chave, checked: op[chave] });
+      cb.addEventListener('change', function () { op[chave] = cb.checked; aviso.hidden = !op.codigos; });
+      return h('label', { class: 'cmp-opcao', for: 'gx-cmp-' + chave }, [cb, h('span', {}, [h('b', { texto: rotulo }), dica ? h('span', { class: 'pequeno', texto: ' ' + dica }) : null])]);
+    }
+    var aviso = h('p', { class: 'alerta', hidden: true, texto: T('cmp_avisoCodigos') });
+    var formas = h('div', { class: 'chips', role: 'radiogroup', 'aria-label': T('cmp_forma') });
+    function desenharFormas() {
+      formas.textContent = '';
+      [['html', '🌐 ' + T('cmp_html')], ['pdf', '📄 PDF']].forEach(function (f) {
+        formas.appendChild(h('button', { class: 'chip', type: 'button', role: 'radio', 'aria-checked': forma === f[0] ? 'true' : 'false', 'aria-pressed': forma === f[0] ? 'true' : 'false', texto: f[1], onclick: function () { forma = f[0]; desenharFormas(); dicaForma.textContent = T(forma === 'html' ? 'cmp_htmlDica' : 'cmp_pdfDica'); } }));
+      });
+    }
+    var dicaForma = h('p', { class: 'pequeno', texto: T('cmp_htmlDica') });
+    desenharFormas();
+    var msg = h('p', { class: 'pequeno', role: 'status', 'aria-live': 'polite' });
+    var ok = h('button', { class: 'bt', type: 'button', texto: T('cmp_gerar') });
+    [h('p', { class: 'sub', texto: T('cmp_texto') }), h('b', { texto: T('cmp_forma') }), formas, dicaForma, h('b', { texto: T('cmp_oQue') }),
+      marca('roteiro', T('cmp_roteiro'), T('cmp_roteiroDica')), marca('mapas', T('cmp_mapas')), marca('hotel', T('cmp_hotel'), T('cmp_hotelDica')),
+      marca('codigos', T('cmp_codigos'), T('cmp_codigosDica')), aviso, ok, msg].forEach(function (el) { corpo.appendChild(el); });
+    ok.addEventListener('click', function () {
+      ok.disabled = true; msg.textContent = T('carregando');
+      montarDocumentoViagem(v, op).then(function (doc) {
+        ok.disabled = false; msg.textContent = '';
+        if (forma === 'pdf') { j.fechar(function () { imprimirDocumento(doc.corpo, doc.estilo); }); return; }
+        entregarHtml(doc.html, nomeArquivo(v.nome) + '.html', v.nome);
+      }).catch(function () { ok.disabled = false; msg.textContent = T('erroRede'); });
+    });
+  }
+  function nomeArquivo(t) { return 'Roteiro - ' + String(t || 'viagem').replace(/[\\/:*?"<>|]+/g, ' ').trim(); }
+  function entregarHtml(html, nome, titulo) {
+    var arq = null; try { arq = new File([html], nome, { type: 'text/html' }); } catch (e) {}
+    if (arq && navigator.canShare && navigator.canShare({ files: [arq] })) {
+      navigator.share({ files: [arq], title: titulo }).catch(function () {});
+      return;
+    }
+    var url = URL.createObjectURL(new Blob([html], { type: 'text/html' }));
+    var a = h('a', { href: url, download: nome }); d.body.appendChild(a); a.click(); a.remove();
+    setTimeout(function () { URL.revokeObjectURL(url); }, 60000);
+    avisar(T('cmp_baixado'));
+  }
+  /* PDF: imprime só o documento (o sistema oferece "Salvar como PDF"; no iPhone, Compartilhar → Salvar em Arquivos) */
+  function imprimirDocumento(corpo, estilo) {
+    var caixa = $('gx-impressao'); if (caixa) caixa.remove();
+    caixa = h('div', { id: 'gx-impressao' });
+    caixa.innerHTML = '<style>' + estilo + '</style>' + corpo;   /* conteúdo montado aqui mesmo, tudo escapado por esc() */
+    d.body.appendChild(caixa); d.body.classList.add('imprimindo');
+    var limpar = function () { d.body.classList.remove('imprimindo'); var c2 = $('gx-impressao'); if (c2) c2.remove(); window.removeEventListener('afterprint', limpar); };
+    window.addEventListener('afterprint', limpar);
+    setTimeout(function () { window.print(); setTimeout(limpar, 60000); }, 300);
+  }
+  function montarDocumentoViagem(v, op) {
+    var dias = diasDaViagem(v), o = estado.opcao;
+    var pr = op.codigos ? abrirReservas(v).then(function () { return carregarQR().catch(function () {}); }) : Promise.resolve();
+    return pr.then(function () {
+      return Banco.listar('reservas', function (r) { return r.viagem_id === v.id && !r.apagado; });
+    }).then(function (rs) {
+      return Promise.all(rs.map(function (r) {
+        if (!op.codigos) return { reg: r, c: null };
+        return Cofre.decifrarReserva(r.conteudo).then(function (c) { return { reg: r, c: c }; }, function () { return { reg: r, c: null }; });
+      }));
+    }).then(function (rs) {
+      function mapa(lat, lng, q) {
+        if (!op.mapas) return '';
+        var alvo = lat != null && lng != null ? lat + ',' + lng : q; if (!alvo) return '';
+        return ' <a class="mapa" href="https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(alvo) + '">' + esc(T('cmp_verMapa')) + '</a>';
+      }
+      function codigosDe(lista) {
+        if (!op.codigos) return '';
+        var out = '';
+        lista.forEach(function (x) {
+          var c = x.c; if (!c) return;
+          var img = '';
+          try {
+            if (c.barra && window.Barras) img = '<img class="cod-img barra" alt="" src="data:image/svg+xml;charset=utf-8,' + encodeURIComponent(Barras.svg(c.barra, c.barraFormato)) + '">';
+            else if (c.qr && window.qrcode) { var q = qrcode(0, 'M'); q.addData(String(c.qr)); q.make(); img = '<img class="cod-img" alt="" src="' + q.createDataURL(5, 6) + '">'; }
+          } catch (e) {}
+          out += '<div class="cod">' + img + '<div>' + (c.pessoa ? '<b>' + esc(c.pessoa) + '</b> ' : '') + (c.assento ? esc(c.assento) + ' · ' : '') +
+            (c.codigo ? esc(T('codigo')) + ': <code>' + esc(c.codigo) + '</code>' : '') + (c.nota ? '<br><small>' + esc(c.nota) + '</small>' : '') + '</div></div>';
+        });
+        return out;
+      }
+      var hoje = new Date();
+      var html = '<header class="capa"><p class="selo">GuiaXpert</p><h1>' + esc(v.nome) + '</h1><p class="datas">' +
+        esc(v.inicio === v.fim ? semana(v.inicio) + ', ' + fData(v.inicio) : fData(v.inicio) + ' – ' + fData(v.fim)) + (v.destinoTexto ? ' · ' + esc(v.destinoTexto) : '') + '</p>';
+      if (op.hotel) {
+        var e = (v.estadias || [])[0];
+        if (e && (e.nome || e.endereco)) html += '<p class="hotel">🏨 ' + esc(e.nome || '') + (e.endereco ? ' — ' + esc(e.endereco) : '') + mapa(e.lat, e.lng, e.endereco || e.nome) + '</p>';
+      }
+      html += '</header>';
+      dias.forEach(function (dia, i) {
+        var linhas = [];
+        /* compromissos fixos (reservas com dia e hora), agrupados como no app */
+        var grupos = {}, ordem = [];
+        rs.forEach(function (x) {
+          var a = x.reg.agenda; if (!a || !a.quando || a.quando.slice(0, 10) !== dia) return;
+          if (!op.hotel && (x.reg.tipo === 'hotel' || x.reg.tipo === 'voo' || x.reg.tipo === 'carro')) return;
+          var k = a.grupo || (a.titulo + '|' + a.quando); if (!grupos[k]) { grupos[k] = []; ordem.push(k); } grupos[k].push(x);
+        });
+        var objs = ordem.map(function (k) { var a = grupos[k][0].reg.agenda; return { tipo: grupos[k][0].reg.tipo, titulo: a.titulo, quando: a.quando }; });
+        var chv = chavesComoNaVida(objs);
+        ordem.forEach(function (k, n) {
+          var g = grupos[k], a = g[0].reg.agenda, hh = a.quando.slice(11, 16), pr2 = papelReserva(objs[n]);
+          var quando = !hh ? '' : (pr2 === 'entra' && g[0].reg.tipo === 'hotel') ? T('aPartirDe', { h: hh }) : pr2 === 'sai' ? T('ateAs', { h: hh }) : hh;
+          linhas.push({ k: chv[n].slice(11), html: '<li class="fixo"><span class="h">' + esc(objs[n]._fimDoDia ? '' : (hh || '—')) + '</span><div><b>🔒 ' + esc(a.titulo) + '</b>' +
+            (g.length > 1 ? ' <span class="etq">' + esc(T('nIngressos', { n: g.length })) + '</span>' : '') + (quando && quando !== hh ? '<br><small>' + esc(quando) + '</small>' : '') +
+            (a.local ? '<br><small>' + esc(a.local) + '</small>' + mapa(a.lat, a.lng, a.local) : '') + codigosDe(g) + '</div></li>' });
+        });
+        /* atividades do roteiro escolhido */
+        if (op.roteiro && o && o.dias && o.dias.length) {
+          var dm = o.dias[mapearDia(i, dias.length, o.dias.length)] || { itens: [] };
+          (dm.itens || []).forEach(function (it) {
+            var l = it.lugarId ? lugarPorId(it.lugarId) : null;
+            linhas.push({ k: (it.hora || '99:99') + '|6', html: '<li><span class="h">' + esc(it.hora || '') + '</span><div><b>' + esc(it.titulo || (l && l.nome) || '') + '</b>' +
+              (it.nota ? '<br><small>' + esc(it.nota) + '</small>' : '') + (l && l.endereco ? '<br><small>' + esc(l.endereco) + '</small>' : '') +
+              (l ? mapa(l.lat, l.lng, l.endereco || l.nome) : '') + '</div></li>' });
+          });
+        }
+        linhas.sort(function (a, b) { return a.k < b.k ? -1 : a.k > b.k ? 1 : 0; });
+        html += '<section class="dia"><h2>' + esc(semana(dia) + ', ' + fData(dia)) + '</h2>' +
+          (linhas.length ? '<ul>' + linhas.map(function (x) { return x.html; }).join('') + '</ul>' : '<p class="livre">' + esc(T('cmp_diaLivre')) + '</p>') + '</section>';
+      });
+      html += '<footer>' + esc(T('cmp_rodape', { data: fData(iso(hoje)) })) + '<br>' + esc(T('cmp_semCodigos' + (op.codigos ? 'Com' : ''))) + '</footer>';
+      var estilo = 'body{margin:0;font-family:-apple-system,system-ui,"Segoe UI",Roboto,sans-serif;color:#172024;background:#f3f5f4}' +
+        '.doc{max-width:760px;margin:0 auto;padding:16px}' +
+        '.capa{background:#0e5a43;color:#fff;border-radius:18px;padding:20px 18px;margin-bottom:14px}.capa h1{margin:.1em 0;font-size:1.6rem}.selo{margin:0;opacity:.8;font-size:.85rem;letter-spacing:.06em;text-transform:uppercase}.datas,.hotel{margin:.3em 0}.capa a{color:#fcf1cc}' +
+        '.dia{background:#fff;border-radius:16px;padding:14px 16px;margin:12px 0;break-inside:avoid;page-break-inside:avoid}.dia h2{margin:0 0 .5em;font-size:1.1rem;color:#0e5a43}' +
+        '.dia ul{list-style:none;margin:0;padding:0}.dia li{display:flex;gap:12px;padding:8px 0;border-top:1px solid #e3e9e6}.dia li:first-child{border-top:0}' +
+        '.h{flex:none;width:3.2em;font-weight:700;font-variant-numeric:tabular-nums}.fixo b{color:#6a3a1c}small{color:#55636a}.etq{font-size:.8em;background:#fcf1cc;border-radius:8px;padding:1px 6px}' +
+        '.mapa{font-size:.85em;color:#0e5a43;white-space:nowrap}.livre{color:#55636a;margin:0}' +
+        '.cod{display:flex;gap:10px;align-items:center;margin-top:8px}.cod-img{width:110px;height:110px;image-rendering:pixelated;background:#fff}.cod-img.barra{width:220px;height:70px}code{font-size:1.05em}' +
+        'footer{color:#55636a;font-size:.8rem;text-align:center;margin:18px 0 8px}' +
+        '@media print{body{background:#fff}.doc{padding:0}.capa{-webkit-print-color-adjust:exact;print-color-adjust:exact}.dia{border:1px solid #d3dbd8}}';
+      var corpo = '<div class="doc">' + html + '</div>';
+      var docHtml = '<!doctype html><html lang="' + (idioma() === 'en' ? 'en' : 'pt-BR') + '"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">' +
+        '<title>' + esc(nomeArquivo(v.nome)) + '</title><style>' + estilo + '</style></head><body>' + corpo + '</body></html>';
+      return { html: docHtml, corpo: corpo, estilo: estilo };
     });
   }
   /* cartão de texto (hotel ou voos) para mandar pelo WhatsApp: pede o cofre, monta só o essencial */
