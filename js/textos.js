@@ -212,6 +212,7 @@ window.TEXTOS = (function () {
     atualizando: ['Atualizando…', 'Updating…'],
     iphoneDicaTitulo: ['No iPhone, pelo ícone da tela de início', 'On iPhone, from the home screen icon'],
     iphoneDica: ['O ícone tem login separado do Safari: entre aqui também. Se o Google não voltar para o app, use "Sem senha": chega um código no seu e-mail (vale até para conta do Google).', 'The icon has a separate login from Safari: sign in here too. If Google does not come back to the app, use "No password": a code arrives in your email (works even for Google accounts).'],
+    ultimaVezGoogle: ['Da última vez você entrou com o Google.', 'Last time you signed in with Google.'], ouComEmail: ['ou entre com e-mail e senha:', 'or sign in with email and password:'],
     copiar: ['Copiar', 'Copy'],
     nReservas: ['{n} reservas', '{n} bookings'],
     res_transfer: ['🚐 Traslado', '🚐 Transfer'], res_onibus: ['🚌 Ônibus/trem', '🚌 Bus/train'], res_passeio: ['🗺 Passeio', '🗺 Tour'],

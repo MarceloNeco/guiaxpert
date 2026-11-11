@@ -12,7 +12,7 @@
 (function () {
   'use strict';
   var d = document, $ = function (id) { return d.getElementById(id); };
-  var VERSAO_APP = '1.5.37';
+  var VERSAO_APP = '1.5.38';
 
   /* ------------------------------------------------------------------
      1. UTILIDADES
@@ -2900,7 +2900,7 @@
         faixa.parentNode && faixa.parentNode.insertBefore(aviso, faixa.nextSibling);
         if (s) { aviso.appendChild(h('p', { class: 'sub', texto: T('conviteEntrouTexto') })); return; }
         aviso.appendChild(h('p', { class: 'sub', texto: T('conviteComoPrefere') }));
-        aviso.appendChild(h('button', { class: 'bt cheio', type: 'button', texto: 'G  ' + T('conviteGoogle'), onclick: function () { Conta.google(); } }));
+        aviso.appendChild(h('button', { class: 'bt-google', type: 'button', onclick: function () { Conta.google(); } }, [h('span', { svg: '<svg viewBox="0 0 48 48" width="22" height="22" aria-hidden="true"><path fill="#EA4335" d="M24 9.5c3.5 0 6.6 1.2 9.1 3.6l6.8-6.8C35.8 2.4 30.3 0 24 0 14.6 0 6.6 5.4 2.6 13.3l7.9 6.1C12.4 13.7 17.7 9.5 24 9.5z"/><path fill="#4285F4" d="M46.5 24.5c0-1.6-.1-3.1-.4-4.5H24v9h12.7c-.6 3-2.3 5.5-4.8 7.2l7.7 6c4.5-4.2 6.9-10.3 6.9-17.7z"/><path fill="#FBBC05" d="M10.5 28.6c-.5-1.4-.8-3-.8-4.6s.3-3.2.8-4.6l-7.9-6.1C1 16.5 0 20.1 0 24s1 7.5 2.6 10.7l7.9-6.1z"/><path fill="#34A853" d="M24 48c6.5 0 11.9-2.1 15.9-5.8l-7.7-6c-2.1 1.4-4.9 2.3-8.2 2.3-6.3 0-11.6-4.2-13.5-10l-7.9 6.1C6.6 42.6 14.6 48 24 48z"/></svg>' }), h('span', { texto: T('conviteGoogle') })]));
         if (x.email && x.pede_codigo) { aviso.appendChild(h('p', { class: 'pequeno', texto: T('conviteOuEmail', { email: x.email }) })); formConviteCodigo(aviso, tokConvite, x); return; }
         aviso.appendChild(h('p', { class: 'pequeno', texto: T('conviteOuSenha') }));
       }).catch(function () {});
@@ -2933,14 +2933,21 @@
       var ver = h('button', { class: 'bt leve', type: 'button', 'aria-label': T('mostrarSenha'), texto: '👁', onclick: function () { senha.type = senha.type === 'password' ? 'text' : 'password'; } });
       var msg = h('p', { class: 'pequeno', role: 'status', 'aria-live': 'polite' });
       var bt = h('button', { class: 'bt cheio', type: 'button' }, T('entrar'));
+      /* login social primeiro, em destaque (quem veio por convite já tem o botão no cartão do convite) */
+      if (!convitePendente()) {
+        var ult = Conta.ultimoJeito && Conta.ultimoJeito();
+        tela.appendChild(h('div', { class: 'cartao' }, [
+          ult && ult.modo === 'google' ? h('p', { class: 'pequeno', texto: '⭐ ' + T('ultimaVezGoogle') }) : null,
+          h('button', { class: 'bt-google', type: 'button', onclick: function () { Conta.google(); } }, [h('span', { svg: '<svg viewBox="0 0 48 48" width="22" height="22" aria-hidden="true"><path fill="#EA4335" d="M24 9.5c3.5 0 6.6 1.2 9.1 3.6l6.8-6.8C35.8 2.4 30.3 0 24 0 14.6 0 6.6 5.4 2.6 13.3l7.9 6.1C12.4 13.7 17.7 9.5 24 9.5z"/><path fill="#4285F4" d="M46.5 24.5c0-1.6-.1-3.1-.4-4.5H24v9h12.7c-.6 3-2.3 5.5-4.8 7.2l7.7 6c4.5-4.2 6.9-10.3 6.9-17.7z"/><path fill="#FBBC05" d="M10.5 28.6c-.5-1.4-.8-3-.8-4.6s.3-3.2.8-4.6l-7.9-6.1C1 16.5 0 20.1 0 24s1 7.5 2.6 10.7l7.9-6.1z"/><path fill="#34A853" d="M24 48c6.5 0 11.9-2.1 15.9-5.8l-7.7-6c-2.1 1.4-4.9 2.3-8.2 2.3-6.3 0-11.6-4.2-13.5-10l-7.9 6.1C6.6 42.6 14.6 48 24 48z"/></svg>' }), h('span', { texto: T('conviteGoogle') })]),
+          h('p', { class: 'pequeno ou', texto: T('ouComEmail') })]));
+      }
       tela.appendChild(h('div', { class: 'cartao' }, [
         h('label', { class: 'rot', for: 'gx-email', texto: T('email') }), email,
         h('label', { class: 'rot', for: 'gx-senha', texto: T('senha') }), h('div', { class: 'linha', style: 'flex-wrap:nowrap' }, [senha, ver]), bt, msg,
         h('div', { class: 'linha' }, [
           h('button', { class: 'lk', type: 'button', onclick: function () { if (!email.value) { msg.textContent = T('digiteEmail'); email.focus(); return; } Conta.esqueci(email.value).then(function () { msg.textContent = T('emailEnviado'); }).catch(function () { msg.textContent = T('erroRede'); }); } }, T('esqueciSenha')),
           h('button', { class: 'lk', type: 'button', onclick: function () { if (!email.value || senha.value.length < 8) { msg.textContent = T('criarContaDica'); return; } Conta.criarConta(email.value, senha.value).then(function (j) { msg.textContent = j && j.access_token ? T('contaCriada') : T('confirmeEmail'); if (j && j.access_token) iniciarAcesso(); }).catch(function (e) { msg.textContent = e.message || T('erroRede'); }); } }, T('criarConta'))
-        ]),
-        h('button', { class: 'bt leve cheio', type: 'button', onclick: function () { Conta.google(); } }, 'Google')
+        ])
       ]));
       /* sem senha: código de 6 números (ou link) por e-mail */
       var codBox = h('div', { hidden: true, style: 'display:flex;flex-direction:column;gap:.6rem' });

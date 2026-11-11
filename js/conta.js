@@ -55,7 +55,7 @@
 
     entrar: function (email, senha) {
       return fetch(base() + '/auth/v1/token?grant_type=password', { method: 'POST', headers: cab(), body: JSON.stringify({ email: email, password: senha }) })
-        .then(json).then(function (j) { return guardarSessao(j, email); });
+        .then(json).then(function (j) { gravar('guiaxpert.ultimoLogin', { modo: 'senha', email: email, em: Date.now() }); return guardarSessao(j, email); });
     },
     criarConta: function (email, senha) {
       gravar(PEDIDO, { em: Date.now() });
@@ -66,7 +66,10 @@
       gravar(PEDIDO, { em: Date.now() });
       return fetch(base() + '/auth/v1/recover?redirect_to=' + encodeURIComponent(voltaPara()), { method: 'POST', headers: cab(), body: JSON.stringify({ email: email }) }).then(json);
     },
+    /* como a pessoa entrou da última vez neste aparelho (para destacar o mesmo caminho) */
+    ultimoJeito: function () { return ler('guiaxpert.ultimoLogin'); },
     google: function () {
+      gravar('guiaxpert.ultimoLogin', { modo: 'google', em: Date.now() });
       gravar(PEDIDO, { em: Date.now() });
       location.href = base() + '/auth/v1/authorize?provider=google&redirect_to=' + encodeURIComponent(voltaPara());
     },
@@ -115,7 +118,7 @@
     confirmarCodigo: function (email, codigo) {
       return fetch(base() + '/auth/v1/verify', { method: 'POST', headers: cab(),
         body: JSON.stringify({ type: 'email', email: email, token: String(codigo || '').replace(/\D/g, '') }) })
-        .then(json).then(function (j) { gravar(PEDIDO, null); return guardarSessao(j, email); });
+        .then(json).then(function (j) { gravar(PEDIDO, null); gravar('guiaxpert.ultimoLogin', { modo: 'codigo', email: email, em: Date.now() }); return guardarSessao(j, email); });
     },
 
     /* digital/rosto: ao sair, a sessão fica trancada neste aparelho em vez de encerrada */

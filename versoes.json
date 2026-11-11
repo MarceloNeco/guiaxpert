@@ -2,6 +2,21 @@
   "app": "guiaxpert",
   "versoes": [
     {
+      "versao": "1.5.38",
+      "data": "2026-11-11",
+      "substitui": "1.5.37",
+      "itens": {
+        "pt": [
+          "Tela de entrar: \"Continuar com o Google\" em destaque, com o logo, antes do e-mail e senha.",
+          "O app lembra como você entrou da última vez neste aparelho (\"Da última vez você entrou com o Google\")."
+        ],
+        "en": [
+          "Sign-in screen: \"Continue with Google\" highlighted, with the logo, before email and password.",
+          "The app remembers how you signed in last time on this device (\"Last time you signed in with Google\")."
+        ]
+      }
+    },
+    {
       "versao": "1.5.37",
       "data": "2026-11-11",
       "substitui": "1.5.36",
