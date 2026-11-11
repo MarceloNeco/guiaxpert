@@ -2,6 +2,23 @@
   "app": "guiaxpert",
   "versoes": [
     {
+      "versao": "1.5.36",
+      "data": "2026-11-11",
+      "substitui": "1.5.35",
+      "itens": {
+        "pt": [
+          "O app confere sozinho se há versão nova ao abrir (e quando a internet volta) e oferece \"Atualizar agora\".",
+          "Botão \"🔄 Procurar atualização\" em Configurações e na tela de entrar, com o número da versão à vista.",
+          "No iPhone, pelo ícone da tela de início: aviso de que o login é separado do Safari e dica do \"Sem senha\" (código por e-mail)."
+        ],
+        "en": [
+          "The app checks for a new version when it opens (and when the internet returns) and offers \"Update now\".",
+          "\"🔄 Check for update\" button in Settings and on the sign-in screen, with the version number visible.",
+          "On iPhone, from the home screen icon: note that sign-in is separate from Safari, and the \"No password\" (email code) tip."
+        ]
+      }
+    },
+    {
       "versao": "1.5.35",
       "data": "2026-11-11",
       "substitui": "1.5.34",

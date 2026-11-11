@@ -12,7 +12,7 @@
 (function () {
   'use strict';
   var d = document, $ = function (id) { return d.getElementById(id); };
-  var VERSAO_APP = '1.5.35';
+  var VERSAO_APP = '1.5.36';
 
   /* ------------------------------------------------------------------
      1. UTILIDADES
@@ -65,6 +65,32 @@
           h('ul', { class: 'novidades' }, ((x.itens || {})[idioma()] || (x.itens || {}).pt || []).map(function (t) { return h('li', { texto: t }); }))]);
       }))));
     }).catch(function () { avisar(T('semInternet')); });
+  }
+  /* o celular está com a versão mais nova? compara com versoes.json do servidor; "Atualizar agora" limpa a cópia guardada e recarrega */
+  function atualizarAgora() {
+    if (!navigator.onLine) { avisar(T('semInternet')); return; }
+    avisar(T('atualizando'));
+    var p1 = window.caches ? caches.keys().then(function (ns) { return Promise.all(ns.filter(function (n) { return /^dgo-guiaxpert-/.test(n); }).map(function (n) { return caches.delete(n); })); }) : Promise.resolve();
+    var p2 = navigator.serviceWorker && navigator.serviceWorker.getRegistrations ? navigator.serviceWorker.getRegistrations().then(function (rs) { return Promise.all(rs.map(function (r) { return r.update().catch(function () {}); })); }) : Promise.resolve();
+    Promise.all([p1, p2]).catch(function () {}).then(function () { location.reload(); });
+  }
+  function procurarAtualizacao(manual) {
+    if (!navigator.onLine) { if (manual) avisar(T('semInternet')); return Promise.resolve(false); }
+    return fetch('versoes.json?v=' + Date.now(), { cache: 'no-store' }).then(function (r) { return r.json(); }).then(function (j) {
+      var ultima = j && j.versoes && j.versoes[0] && j.versoes[0].versao;
+      if (ultima && compararVersao(ultima, VERSAO_APP) > 0) {
+        if (manual) atualizarAgora();
+        else avisar(T('novaVersao', { v: ultima }), T('atualizarAgora'), atualizarAgora, 15000);
+        return true;
+      }
+      if (manual) avisar(T('versaoEmDia', { v: VERSAO_APP }));
+      return false;
+    }).catch(function () { if (manual) avisar(T('erroRede')); return false; });
+  }
+  function rodapeVersao() {
+    return h('p', { class: 'pequeno', style: 'text-align:center;margin-top:1rem' }, [
+      'GuiaXpert ' + VERSAO_APP + ' · ',
+      h('button', { class: 'lk', type: 'button', texto: '🔄 ' + T('procurarAtualizacao'), onclick: function () { procurarAtualizacao(true); } })]);
   }
   function avisarAtualizacao() {
     var vista = null;
@@ -2856,8 +2882,13 @@
   /* ------------------------------------------------------------------
      8. ENTRAR (acesso), CONTA E CONFIGURAÇÕES
      ------------------------------------------------------------------ */
+  function ehIphoneIcone() { return /iphone|ipad|ipod/i.test(navigator.userAgent) && (navigator.standalone === true || (window.matchMedia && matchMedia('(display-mode: standalone)').matches)); }
   TELAS.entrar = function (tela) {
     var a = estado.acesso || {}, s = Conta.sessao();
+    setTimeout(function () {
+      if (!s && ehIphoneIcone()) tela.appendChild(h('div', { class: 'cartao' }, [h('b', { texto: '📱 ' + T('iphoneDicaTitulo') }), h('p', { class: 'sub', texto: T('iphoneDica') })]));
+      tela.appendChild(rodapeVersao());
+    }, 0);
     var faixa = faixaFotos(T('entrarTitulo'), T('entrarTexto'));
     tela.appendChild(faixa);
     var tokConvite = convitePendente();
@@ -3338,6 +3369,7 @@
       esp.textContent = (r[0] ? T('espacoUsado', { mb: (r[0].usage / 1048576).toFixed(1) }) : '') + ' · ' + T('pendentesNuvem', { n: r[1] });
     });
     tela.appendChild(h('p', { class: 'pequeno' }, [h('button', { class: 'lk', type: 'button', texto: 'GuiaXpert ' + VERSAO_APP + ' · ' + T('verNovidades'), onclick: function () { verNovidades(null); } }), ' · ' + T('umaSolucao')]));
+    tela.appendChild(h('button', { class: 'bt leve', type: 'button', texto: '🔄 ' + T('procurarAtualizacao'), onclick: function () { procurarAtualizacao(true); } }));
   };
   /* "Pronto para usar sem internet": confere o que já está guardado neste aparelho e oferece o que falta */
   function cartaoProntoSemInternet() {
@@ -3564,6 +3596,8 @@
     try { aplicarTema(localStorage.getItem('dgo:guiaxpert:tema') || 'auto'); } catch (e) {}
     traduzirMoldura();
     lerConvite();
+    setTimeout(function () { procurarAtualizacao(false); }, 3000);
+    window.addEventListener('online', function () { procurarAtualizacao(false); });
     var rota = Nav.iniciar();
     estado.rota = rota;
     $('bt-menu').addEventListener('click', abrirGaveta);
