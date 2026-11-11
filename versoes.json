@@ -2,6 +2,19 @@
   "app": "guiaxpert",
   "versoes": [
     {
+      "versao": "1.5.37",
+      "data": "2026-11-11",
+      "substitui": "1.5.36",
+      "itens": {
+        "pt": [
+          "Nova tela de abertura: colagem do Cristo Redentor, Torre Eiffel, Coliseu e Machu Picchu, fundidos sem linha de divisão, com o ícone no centro. No celular as fotos ficam em cima e embaixo; no computador, lado a lado."
+        ],
+        "en": [
+          "New opening screen: a collage of Christ the Redeemer, the Eiffel Tower, the Colosseum and Machu Picchu, blended with no dividing line, with the icon in the middle. On phones the photos sit above and below; on computers, side by side."
+        ]
+      }
+    },
+    {
       "versao": "1.5.36",
       "data": "2026-11-11",
       "substitui": "1.5.35",

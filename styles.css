@@ -519,15 +519,7 @@ body.sem-rolagem .bt-assistente { bottom: calc(var(--barra) + env(safe-area-inse
 }
 @media (prefers-reduced-motion: reduce) { .hero-foto { transition: none; } .hero-foto.ativa { animation: none; } }
 
-/* ---------- abertura ---------- */
-#abertura { position: fixed; inset: 0; z-index: 200; background: var(--fundo); display: grid; place-items: center; transition: opacity .45s ease; }
-#abertura.sai { opacity: 0; pointer-events: none; }
-#abertura-foto { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
-.abertura-veu { position: absolute; inset: 0; background: linear-gradient(180deg, rgba(0,0,0,.25), rgba(0,0,0,.6)); }
-.abertura-marca { position: relative; display: grid; justify-items: center; gap: .5rem; color: #fff; text-shadow: 0 1px 3px rgba(0,0,0,.6); }
-.abertura-marca img { width: 4.5rem; height: 4.5rem; border-radius: 22%; box-shadow: 0 8px 24px rgba(0,0,0,.35); }
-.abertura-marca strong { font-size: 1.9rem; font-weight: 800; letter-spacing: -.02em; }
-.abertura-marca span { font-size: 1rem; opacity: .9; }
+/* ---------- abertura: o CSS fica inline no <head> do index.html (aparece antes de este arquivo carregar) ---------- */
 /* ---------- fundo discreto ---------- */
 #fundo-foto { position: fixed; inset: 0; width: 100%; height: 100%; object-fit: cover; z-index: -1; opacity: 0; transition: opacity .6s ease; pointer-events: none;
   filter: saturate(.9); }

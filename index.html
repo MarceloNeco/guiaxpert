@@ -14,12 +14,48 @@
   <link rel="manifest" href="manifest.json">
   <link rel="icon" href="icone-192.png">
   <link rel="apple-touch-icon" href="apple-touch-icon.png">
+  <!-- abertura: CSS crítico aqui no <head> para a colagem aparecer antes de o resto carregar -->
+  <style>
+    #abertura { position: fixed; inset: 0; z-index: 200; background: #13202a radial-gradient(ellipse at 50% 52%, #24404c, #13202a 70%); overflow: hidden; display: grid; place-items: center; transition: opacity .5s ease; }
+    #abertura.sai { opacity: 0; pointer-events: none; }
+    .ab-colagem { position: absolute; inset: 0; }
+    .ab-f { position: absolute; left: 0; right: 0; overflow: hidden; }
+    .ab-f img { width: 100%; height: 100%; object-fit: cover; display: block; animation: ab-kb 14s ease-in-out infinite alternate; transform-origin: center; }
+    /* celular (retrato): 2 fotos em cima e 2 embaixo, fundidas (sem linha); o meio fica calmo para o ícone, sem atração escondida atrás dele */
+    .ab-f:nth-child(1) { top: 0; height: 28%; -webkit-mask-image: linear-gradient(to bottom, #000 72%, transparent); mask-image: linear-gradient(to bottom, #000 72%, transparent); }
+    .ab-f:nth-child(2) { top: 18%; height: 27%; -webkit-mask-image: linear-gradient(to bottom, transparent, #000 26%, #000 74%, transparent); mask-image: linear-gradient(to bottom, transparent, #000 26%, #000 74%, transparent); }
+    .ab-f:nth-child(3) { top: 63%; height: 24%; -webkit-mask-image: linear-gradient(to bottom, transparent, #000 26%, #000 74%, transparent); mask-image: linear-gradient(to bottom, transparent, #000 26%, #000 74%, transparent); }
+    .ab-f:nth-child(4) { bottom: 0; height: 24%; -webkit-mask-image: linear-gradient(to top, #000 72%, transparent); mask-image: linear-gradient(to top, #000 72%, transparent); }
+    .ab-cristo img { object-position: 66% 42%; } .ab-eiffel img { object-position: 50% 45%; }
+    .ab-coliseu img { object-position: 42% 45%; } .ab-machu img { object-position: 30% 45%; animation-direction: alternate-reverse; }
+    .ab-eiffel img { animation-direction: alternate-reverse; }
+    /* desktop/notebook (paisagem): 4 colunas lado a lado, fundidas nas laterais */
+    @media (orientation: landscape) {
+      .ab-f { top: 0; bottom: 0; height: auto !important; left: auto; right: auto; }
+      .ab-f:nth-child(1) { top: 0; bottom: 0; left: 0; width: 31%; -webkit-mask-image: linear-gradient(to right, #000 72%, transparent); mask-image: linear-gradient(to right, #000 72%, transparent); }
+      .ab-f:nth-child(2) { top: 0; bottom: 0; left: 21%; width: 35%; -webkit-mask-image: linear-gradient(to right, transparent, #000 26%, #000 74%, transparent); mask-image: linear-gradient(to right, transparent, #000 26%, #000 74%, transparent); }
+      .ab-f:nth-child(3) { top: 0; bottom: 0; left: 46%; width: 35%; -webkit-mask-image: linear-gradient(to right, transparent, #000 26%, #000 74%, transparent); mask-image: linear-gradient(to right, transparent, #000 26%, #000 74%, transparent); }
+      .ab-f:nth-child(4) { top: 0; bottom: 0; right: 0; width: 30%; -webkit-mask-image: linear-gradient(to left, #000 72%, transparent); mask-image: linear-gradient(to left, #000 72%, transparent); }
+      .ab-cristo img { object-position: 64% 50%; } .ab-eiffel img { object-position: 50% 55%; }
+      .ab-coliseu img { object-position: 38% 50%; } .ab-machu img { object-position: 24% 50%; }
+    }
+    /* véu: escurece de leve o centro para o ícone e o nome destacarem */
+    .abertura-veu { position: absolute; inset: 0; background: linear-gradient(rgba(8,16,22,.08), rgba(8,16,22,.08) 36%, rgba(8,16,22,.42) 46%, rgba(8,16,22,.42) 62%, rgba(8,16,22,.08) 72%, rgba(8,16,22,.14)); }
+    @media (orientation: portrait) { .abertura-marca { transform: translateY(2.5vh); } }
+    @media (orientation: landscape) { .abertura-veu { background: radial-gradient(ellipse 26% 34% at 50% 54%, rgba(8,16,22,.66) 0, rgba(8,16,22,.36) 45%, rgba(8,16,22,0) 100%), linear-gradient(rgba(8,16,22,.10), rgba(8,16,22,.18)); } }
+    .abertura-marca { position: relative; display: grid; justify-items: center; gap: .55rem; color: #fff; text-shadow: 0 2px 8px rgba(0,0,0,.65); font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+    .abertura-marca img { width: 6.5rem; height: 6.5rem; border-radius: 28%; box-shadow: 0 14px 40px rgba(0,0,0,.45), 0 0 0 1px rgba(255,255,255,.12); }
+    .abertura-marca strong { font-size: 2.1rem; font-weight: 800; letter-spacing: -.02em; }
+    .abertura-marca span { font-size: 1.05rem; opacity: .95; }
+    @keyframes ab-kb { from { transform: scale(1); } to { transform: scale(1.08); } }
+    @media (prefers-reduced-motion: reduce) { .ab-f img { animation: none; } }
+  </style>
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-  <!-- abertura: foto do dia + marca, enquanto o app carrega (some sozinha) -->
-  <div id="abertura" aria-hidden="true"><img id="abertura-foto" alt="" decoding="async"><div class="abertura-veu"></div>
-    <div class="abertura-marca"><img src="icone-192.png" alt="" width="72" height="72"><strong>GuiaXpert</strong><span>Seu guia, do seu jeito</span></div></div>
+  <!-- abertura: colagem de cartões-postais (Cristo, Torre Eiffel, Coliseu, Machu Picchu) fundidos + marca, enquanto o app carrega (some sozinha) -->
+  <div id="abertura" aria-hidden="true"><div class="ab-colagem"><div class="ab-f ab-cristo"><img alt="" decoding="async" fetchpriority="high" src="img/fundos/cristo-640.webp" srcset="img/fundos/cristo-640.webp 640w, img/fundos/cristo-1280.webp 1280w" sizes="(orientation: landscape) 35vw, 100vw"></div><div class="ab-f ab-eiffel"><img alt="" decoding="async" fetchpriority="high" src="img/fundos/eiffel-640.webp" srcset="img/fundos/eiffel-640.webp 640w, img/fundos/eiffel-1280.webp 1280w" sizes="(orientation: landscape) 35vw, 100vw"></div><div class="ab-f ab-coliseu"><img alt="" decoding="async" fetchpriority="high" src="img/fundos/coliseu-640.webp" srcset="img/fundos/coliseu-640.webp 640w, img/fundos/coliseu-1280.webp 1280w" sizes="(orientation: landscape) 35vw, 100vw"></div><div class="ab-f ab-machu"><img alt="" decoding="async" fetchpriority="high" src="img/fundos/machu-640.webp" srcset="img/fundos/machu-640.webp 640w, img/fundos/machu-1280.webp 1280w" sizes="(orientation: landscape) 35vw, 100vw"></div></div><div class="abertura-veu"></div>
+    <div class="abertura-marca"><img src="icone-192.png" alt="" width="104" height="104"><strong>GuiaXpert</strong><span>Seu guia, do seu jeito</span></div></div>
   <!-- fundo discreto com a foto do dia (só nas telas de leitura) -->
   <img id="fundo-foto" alt="" aria-hidden="true" decoding="async">
   <a class="pular" href="#conteudo" data-t="pular">Pular para o conteúdo</a>
