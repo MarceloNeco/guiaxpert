@@ -69,6 +69,22 @@ O app é para **montar** o roteiro (pesquisar, sugerir, decidir), não só para 
 | E16 | **✦ IA também responde sobre o próprio app** ("onde fica a opção X?", "para que serve Y?"): base de ajuda do app (telas, botões, passos) consultada por palavra-chave e entregue à IA junto da pergunta (RAG leve, sem banco de vetores); sem internet, mostra o trecho da ajuda direto. Pedido do dono em 03/Nov/2026, para depois da viagem. |
 | E15 | Seletor de roteiro no topo: trocar só quando a pessoa quiser; o padrão é a próxima viagem. |
 
+**Pedidos do dono em 11/Nov/2026 (próximas versões)** — sempre com **independência da IA**: tudo funciona por regras e
+dados abertos; a IA, quando houver, só refina (ex.: escrever a lista com outras palavras), nunca é a base.
+
+| # | Item | Como, sem depender de IA |
+|---|---|---|
+| E17 | **Arrumação das malas pela previsão**: lista por pessoa (idade), dias, lugar e clima previsto; marcável e compartilhada com a família. | Tabela de regras: dias × faixa de temperatura (Open-Meteo, já usado) × chuva × tipo de lugar (serra, praia, cidade) × atividades do roteiro (parque → tênis; Natal Luz à noite → casaco). Recalcula quando a previsão muda e avisa o que mudou. |
+| E18 | **Lembretes e alertas no calendário** (convite por e-mail para Google, Outlook, iPhone) e **aviso quando a previsão muda**. | Gera `.ics` de cada compromisso e manda como convite pelo Resend; quando a chuva prevista cruza um limite num dia com atividade ao ar livre, manda atualização do evento + aviso (push ou e-mail). Liga com E7. |
+| E19 | **Roteiros de datas passadas saem da lista** e vão para um **Arquivo**. | Viagem com fim antes de hoje sai do seletor e das listas; fica em "Arquivo", consultável e reutilizável ("fazer de novo", vira modelo para E12/E9). |
+| E20 | **Planejar a ida até o embarque**: traslado até o aeroporto ou rodoviária, estimativa de trânsito, Uber/táxi, metrô/ônibus quando há pouca mala, chegada com antecedência pelo tipo de voo. | Regras de antecedência (internacional 3 h, nacional 1 h 30–2 h, rodoviária 30–45 min) + tempo de rota aberto (OSRM) com margem por horário de pico; transporte público pelos horários abertos (GTFS) quando a bagagem é pouca; link pronto para Uber/99/táxi. Vira compromisso "Sair de casa às 12:40" no roteiro, com lembrete. Mesma lógica na volta. |
+| E21 | **Compartilhar com quem não tem o app**: **PDF** e **página HTML navegável** do roteiro. | Página estática única (abre sem internet depois de baixada) e PDF pela impressão do navegador. Padrão sem dados sensíveis (sem localizadores, PINs e QR); opção de incluir com aviso. Mandar pelo WhatsApp ou e-mail. |
+
+**Regra da IA no app (feito na 1.5.34):** o botão ✦ IA só aparece quando há IA de verdade para aquela pessoa: (1) chave
+própria no aparelho, ou (2) chave guardada no servidor (Vault do Supabase, nunca no app) **e** a pessoa é da família, isto é,
+da equipe ou convidada para uma viagem da equipe (`ia_disponivel()`, `pode_usar_chaves_servico()`). Outras famílias não
+gastam as chaves do dono. Sem IA, nada some do app: só o assistente fica escondido.
+
 ## APK Android (fora da loja) e lojas
 
 - **APK = o mesmo site empacotado** com **TWA** (Trusted Web Activity) pelo Bubblewrap do Google. Mesmo código,
