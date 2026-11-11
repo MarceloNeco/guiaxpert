@@ -12,7 +12,7 @@
 (function () {
   'use strict';
   var d = document, $ = function (id) { return d.getElementById(id); };
-  var VERSAO_APP = '1.5.32';
+  var VERSAO_APP = '1.5.33';
 
   /* ------------------------------------------------------------------
      1. UTILIDADES
@@ -2183,7 +2183,8 @@
     avisar(T('carregando'));
     Nuvem.criarConvite(v.id, papel, 14).then(function (tok) {
       var link = location.origin + location.pathname + '#convite=' + tok;
-      var texto = T('conviteMensagem', { nome: v.nome, papel: T(papel === 'edita' ? 'papelEdita' : 'papelVe').toLowerCase() }) + '\n' + link;
+      var eu = (Conta.sessao() || {}), quem = String(eu.nome || '').split(' ')[0] || String(eu.email || '').split('@')[0];
+      var texto = T('conviteMensagem2', { quem: quem, nome: v.nome, pode: T(papel === 'edita' ? 'convitePodeEditar' : 'convitePodeVer') }) + '\n' + link + '\n\n' + T('conviteComoEntrar');
       enviarTexto(T('convite'), texto);
     }).catch(function () { avisar(navigator.onLine ? T('erroRede') : T('semInternet')); });
   }
@@ -2227,16 +2228,31 @@
     var m = (location.hash || '').match(/^#convite=([a-z0-9]{16,40})$/);
     if (m) { try { localStorage.setItem('guiaxpert.convite', m[1]); } catch (e) {} history.replaceState(null, '', location.pathname); }
   }
-  function aceitarConvitePendente() {
-    var tok = null; try { tok = localStorage.getItem('guiaxpert.convite'); } catch (e) {}
+  function convitePendente() { try { return localStorage.getItem('guiaxpert.convite'); } catch (e) { return null; } }
+  /* fase 1: aceita no servidor. Pode rodar antes de o app estar liberado: ser da viagem já libera o app */
+  function aceitarConviteNoServidor() {
+    var tok = convitePendente();
     if (!tok || !Conta.sessao() || !window.Nuvem) return Promise.resolve(false);
     try { localStorage.removeItem('guiaxpert.convite'); } catch (e) {}
     avisar(T('aceitandoConvite'));
     return Nuvem.aceitarConvite(tok).then(function (r) {
-      return Nuvem.sincronizar().then(function () { return Contexto.definir('viagem', r.viagem_id); }).then(recarregarContexto).then(function () {
-        avisar(T('conviteAceito', { nome: r.nome || '' })); Nav.ir('inicio', { substituir: true }); return true;
+      try { localStorage.setItem('guiaxpert.conviteRecente', JSON.stringify({ viagem_id: r.viagem_id, nome: r.nome || '' })); } catch (e) {}
+      return true;
+    }).catch(function (e) {
+      /* já era da viagem (ex.: abriu o convite de novo): segue normal */
+      avisar(e && /dono/i.test(e.message) ? T('conviteSeu') : e && /inválido|vencido/i.test(e.message) ? T('conviteInvalido') : T('erroRede'));
+      return false;
+    });
+  }
+  /* fase 2: com o app liberado, traz a viagem e abre nela */
+  function aceitarConvitePendente() {
+    return aceitarConviteNoServidor().then(function () {
+      var rec = null; try { rec = JSON.parse(localStorage.getItem('guiaxpert.conviteRecente') || 'null'); localStorage.removeItem('guiaxpert.conviteRecente'); } catch (e) {}
+      if (!rec || !rec.viagem_id) return false;
+      return Nuvem.sincronizar().then(function () { return Contexto.definir('viagem', rec.viagem_id); }).then(recarregarContexto).then(function () {
+        avisar(T('conviteAceito', { nome: rec.nome || '' })); Nav.ir('inicio', { substituir: true }); return true;
       });
-    }).catch(function (e) { avisar(e && /inválido|vencido/i.test(e.message) ? T('conviteInvalido') : T('erroRede')); return false; });
+    }).catch(function () { return false; });
   }
   function cartaoPessoa(p, v) {
     var x = v ? perfilNaViagem(p, v) : p;
@@ -2734,7 +2750,18 @@
      ------------------------------------------------------------------ */
   TELAS.entrar = function (tela) {
     var a = estado.acesso || {}, s = Conta.sessao();
-    tela.appendChild(faixaFotos(T('entrarTitulo'), T('entrarTexto')));
+    var faixa = faixaFotos(T('entrarTitulo'), T('entrarTexto'));
+    tela.appendChild(faixa);
+    var tokConvite = convitePendente();
+    if (tokConvite) {
+      var aviso = h('div', { class: 'cartao convite-chegou', role: 'status' });
+      Conta.rpcPublico('guiaxpert_ver_convite', { p_token: tokConvite }).then(function (r) {
+        var x = Array.isArray(r) ? r[0] : r; if (!x || !x.viagem) return;
+        aviso.appendChild(h('b', { texto: '✉️ ' + T('conviteDe', { quem: x.quem || '', viagem: x.viagem }) }));
+        aviso.appendChild(h('p', { class: 'sub', texto: T(s ? 'conviteEntrouTexto' : 'conviteEntreTexto') }));
+        faixa.parentNode && faixa.parentNode.insertBefore(aviso, faixa.nextSibling);
+      }).catch(function () {});
+    }
     if (a.motivo === 'sql-faltando') tela.appendChild(h('div', { class: 'alerta' }, [h('b', { texto: T('sqlFaltando') }), T('sqlFaltandoTexto')]));
     if (a.motivo === 'conferir' || a.motivo === 'sem-internet') tela.appendChild(h('div', { class: 'alerta' }, [h('b', { texto: T('conferirAcesso') }), T('conferirAcessoTexto')]));
     if (!s) {
@@ -3241,7 +3268,11 @@
   function iniciarAcesso() {
     return Conta.acesso().then(function (a) {
       estado.acesso = a;
-      if (!a.liberado) { mostrar('entrar'); return; }
+      if (!a.liberado) {
+        /* entrou pela primeira vez por um convite: aceita primeiro (ser da viagem libera o app) e confere de novo */
+        if (Conta.sessao() && convitePendente() && a.motivo !== 'sem-internet') return aceitarConviteNoServidor().then(function (ok) { if (ok) return iniciarAcesso(); mostrar('entrar'); });
+        mostrar('entrar'); return;
+      }
       return recarregarContexto().then(function () {
         mostrar(estado.rota === 'entrar' ? (emViagem() ? 'inicio' : 'explorar') : estado.rota);
         oferecerBio();

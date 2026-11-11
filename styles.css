@@ -607,3 +607,5 @@ body.travado #app, body.travado .janela-fundo.na-trava, body.travado #fundo-foto
 .checagem li.falta .marca { background: var(--faixa-claro); color: var(--faixa-tinta); }
 .checagem li > span:nth-child(2) { flex: 1; min-width: 12rem; }
 .novidades { margin: 0; padding-left: 1.1rem; display: flex; flex-direction: column; gap: .35rem; }
+
+.convite-chegou { border: 2px solid var(--rodovia); }

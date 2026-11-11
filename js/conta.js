@@ -150,6 +150,10 @@
       if (s && navigator.onLine) fetch(base() + '/auth/v1/logout?scope=local', { method: 'POST', headers: cab(s.access_token) }).catch(function () {});
     },
 
+    /* RPC sem login (só o que o servidor libera para anônimos, ex.: ver de quem é um convite) */
+    rpcPublico: function (nome, args) {
+      return fetch(base() + '/rest/v1/rpc/' + nome, { method: 'POST', headers: cab(null), body: JSON.stringify(args || {}) }).then(json);
+    },
     rpc: function (nome, args) {
       return Conta.token().then(function (t) {
         if (!t) throw new Error('sem-sessao');

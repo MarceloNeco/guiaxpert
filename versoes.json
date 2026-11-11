@@ -2,6 +2,23 @@
   "app": "guiaxpert",
   "versoes": [
     {
+      "versao": "1.5.33",
+      "data": "2026-11-11",
+      "substitui": "1.5.32",
+      "itens": {
+        "pt": [
+          "Convite de viagem já libera o app: quem cria a conta pelo convite não precisa de código de acesso.",
+          "A tela de entrar mostra \"Fulano convidou você para a viagem X\" quando a pessoa chega por um convite.",
+          "Mensagem do convite diz quem convidou e o que a pessoa pode fazer, sem termos técnicos."
+        ],
+        "en": [
+          "A trip invite now unlocks the app: whoever signs up through an invite needs no access code.",
+          "The sign-in screen shows \"So-and-so invited you to trip X\" when arriving through an invite.",
+          "The invite message says who invited you and what you can do, without jargon."
+        ]
+      }
+    },
+    {
       "versao": "1.5.32",
       "data": "2026-11-03",
       "substitui": "1.5.31",
