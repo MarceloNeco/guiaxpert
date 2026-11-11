@@ -12,7 +12,7 @@
 (function () {
   'use strict';
   var d = document, $ = function (id) { return d.getElementById(id); };
-  var VERSAO_APP = '1.5.33';
+  var VERSAO_APP = '1.5.34';
 
   /* ------------------------------------------------------------------
      1. UTILIDADES
@@ -1257,8 +1257,30 @@
   }
   /* o passo "Confira e salve" do Vamos achar juntos, aberto direto com um lugar já achado */
   function janelaAcharJuntosConfirmar(l) { janelaAcharJuntos(l.nome, function (n) { if (estado.viagem && estado.opcao && podeEditar()) janelaAddAoRoteiro(n); }, l); }
+  /* IA de verdade para ESTA pessoa? (1) chave própria no aparelho, ou (2) chave guardada no servidor (Vault) e a pessoa
+     é da equipe ou foi convidada para uma viagem dela ("da família"). Sem isso, o botão ✦ IA nem aparece. */
+  function temChavePropria() {
+    try { var c = JSON.parse(localStorage.getItem('dgo:global:chaves-ia') || '{}') || {}; return Object.keys(c).some(function (k) { return !!c[k]; }); } catch (e) { return false; }
+  }
+  function iaParaMim() {
+    if (temChavePropria()) return true;
+    var x = null; try { x = JSON.parse(localStorage.getItem('guiaxpert.iaServidor') || 'null'); } catch (e) {}
+    var uid = (function () { try { return JSON.parse(atob(String((Conta.sessao() || {}).access_token).split('.')[1].replace(/-/g, '+').replace(/_/g, '/'))).sub; } catch (e) { return null; } })();
+    return !!(x && x.ok && uid && x.uid === uid);
+  }
+  function conferirIA() {
+    if (!window.Conta || !Conta.sessao() || !navigator.onLine) return Promise.resolve(iaParaMim());
+    var uid = null; try { uid = JSON.parse(atob(String(Conta.sessao().access_token).split('.')[1].replace(/-/g, '+').replace(/_/g, '/'))).sub; } catch (e) {}
+    return Conta.rpc('ia_disponivel', {}).then(function (r) {
+      var x = Array.isArray(r) ? r[0] : r;
+      try { localStorage.setItem('guiaxpert.iaServidor', JSON.stringify({ uid: uid, ok: !!(x && x.disponivel), em: Date.now() })); } catch (e) {}
+      botaoAssistente();
+      return iaParaMim();
+    }).catch(function () { return iaParaMim(); });
+  }
   function botaoAssistente() {
     var antigo = $('bt-assistente');
+    if (!iaParaMim()) { if (antigo) antigo.remove(); return; }
     if (antigo) { var r = antigo.querySelector('.ia-rotulo'); if (r) r.textContent = idioma() === 'en' ? 'AI' : 'IA'; return; }
     var b = h('button', { class: 'bt-assistente', id: 'bt-assistente', type: 'button', 'aria-label': T('assistente'), title: T('assistente'), onclick: function () { janelaAssistente(); } },
       [h('span', { 'aria-hidden': 'true', texto: '✦' }), h('span', { class: 'ia-rotulo', 'aria-hidden': 'true', texto: idioma() === 'en' ? 'AI' : 'IA' })]);
@@ -2180,13 +2202,41 @@
     return c;
   }
   function convidar(v, papel) {
-    avisar(T('carregando'));
-    Nuvem.criarConvite(v.id, papel, 14).then(function (tok) {
-      var link = location.origin + location.pathname + '#convite=' + tok;
-      var eu = (Conta.sessao() || {}), quem = String(eu.nome || '').split(' ')[0] || String(eu.email || '').split('@')[0];
-      var texto = T('conviteMensagem2', { quem: quem, nome: v.nome, pode: T(papel === 'edita' ? 'convitePodeEditar' : 'convitePodeVer') }) + '\n' + link + '\n\n' + T('conviteComoEntrar');
-      enviarTexto(T('convite'), texto);
-    }).catch(function () { avisar(navigator.onLine ? T('erroRede') : T('semInternet')); });
+    var email = h('input', { class: 'campo', id: 'gx-cv-email', type: 'email', autocomplete: 'off', inputmode: 'email', placeholder: 'nome@email.com' });
+    var msg = h('p', { class: 'pequeno', role: 'status', 'aria-live': 'polite' });
+    var ok = h('button', { class: 'bt', type: 'button', texto: T('conviteGerar') });
+    var aberto = h('button', { class: 'lk', type: 'button', texto: T('conviteSemEmail') });
+    var corpo = h('div', { class: 'linha', style: 'flex-direction:column;align-items:stretch' }, [
+      h('p', { class: 'sub', texto: T('conviteEmailTexto') }),
+      h('label', { class: 'rot', for: 'gx-cv-email', texto: T('conviteEmailRot') }), email, ok, msg, aberto]);
+    var j = janela(T(papel === 'edita' ? 'convidarEdita' : 'convidarVe'), corpo);
+    setTimeout(function () { email.focus(); }, 60);
+    var eu = (Conta.sessao() || {}), quem = String(eu.nome || '').split(' ')[0] || String(eu.email || '').split('@')[0];
+    var pode = T(papel === 'edita' ? 'convitePodeEditar' : 'convitePodeVer');
+    function mostrarPronto(texto) {
+      corpo.textContent = '';
+      corpo.appendChild(h('p', { class: 'sub', texto: T('conviteProntoTexto') }));
+      corpo.appendChild(h('pre', { class: 'cartao-texto', texto: texto }));
+      corpo.appendChild(h('button', { class: 'bt', type: 'button', texto: '📤 ' + T('enviar'), onclick: function () { enviarTexto(T('convite'), texto); } }));
+      corpo.appendChild(h('button', { class: 'bt leve', type: 'button', texto: '📋 ' + T('copiar'), onclick: function () { navigator.clipboard.writeText(texto).then(function () { avisar(T('copiadoCole')); }).catch(function () { prompt(T('copieManual'), texto); }); } }));
+    }
+    function gerar() {
+      var e = email.value.trim().toLowerCase();
+      if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(e)) { msg.textContent = T('digiteEmail'); email.focus(); return; }
+      ok.disabled = true; msg.textContent = T('carregando');
+      Nuvem.criarConviteEmail(v.id, papel, e).then(function (r) {
+        var link = location.origin + location.pathname + '#convite=' + r.token;
+        mostrarPronto(T('conviteMensagem2', { quem: quem, nome: v.nome, pode: pode }) + '\n' + link + '\n\n' + T('conviteMensagemCodigo', { email: e, codigo: r.codigo }));
+      }).catch(function () { ok.disabled = false; msg.textContent = navigator.onLine ? T('erroRede') : T('semInternet'); });
+    }
+    ok.addEventListener('click', gerar);
+    email.addEventListener('keydown', function (ev) { if (ev.key === 'Enter') gerar(); });
+    aberto.addEventListener('click', function () {
+      msg.textContent = T('carregando');
+      Nuvem.criarConvite(v.id, papel, 14).then(function (tok) {
+        mostrarPronto(T('conviteMensagem2', { quem: quem, nome: v.nome, pode: pode }) + '\n' + location.origin + location.pathname + '#convite=' + tok + '\n\n' + T('conviteComoEntrar'));
+      }).catch(function () { msg.textContent = navigator.onLine ? T('erroRede') : T('semInternet'); });
+    });
   }
   /* cartão de texto (hotel ou voos) para mandar pelo WhatsApp: pede o cofre, monta só o essencial */
   function compartilharCartao(v, tipo) {
@@ -2253,6 +2303,38 @@
         avisar(T('conviteAceito', { nome: rec.nome || '' })); Nav.ir('inicio', { substituir: true }); return true;
       });
     }).catch(function () { return false; });
+  }
+  /* chegou por convite com e-mail: digita o código e cria a senha; a conta nasce pronta e já entra na viagem */
+  function formConviteCodigo(caixa, tok, x) {
+    var cod = h('input', { class: 'campo', id: 'gx-cc-cod', inputmode: 'numeric', autocomplete: 'one-time-code', maxlength: '6', placeholder: T('digite6') });
+    var senha = h('input', { class: 'campo', id: 'gx-cc-senha', type: 'password', autocomplete: 'new-password', placeholder: T('senha8') });
+    var ver = h('button', { class: 'bt leve', type: 'button', 'aria-label': T('mostrarSenha'), texto: '👁', onclick: function () { senha.type = senha.type === 'password' ? 'text' : 'password'; } });
+    var msg = h('p', { class: 'pequeno', role: 'status', 'aria-live': 'polite' });
+    var bt = h('button', { class: 'bt cheio', type: 'button', texto: T('conviteEntrar') });
+    [h('p', { class: 'sub', texto: T('conviteCodigoTexto') }),
+      h('span', { class: 'rot', texto: T('email') }), h('b', { class: 'campo-fixo', texto: x.email }),
+      h('label', { class: 'rot', for: 'gx-cc-cod', texto: T('conviteCodigoRot') }), cod,
+      h('label', { class: 'rot', for: 'gx-cc-senha', texto: T('conviteSenhaRot') }), h('div', { class: 'linha', style: 'flex-wrap:nowrap' }, [senha, ver]),
+      bt, msg].forEach(function (el) { caixa.appendChild(el); });
+    function ir() {
+      if (!/^\d{6}$/.test(cod.value.trim())) { msg.textContent = T('conviteCodigoFormato'); cod.focus(); return; }
+      if (senha.value.length < 8) { msg.textContent = T('senha8'); senha.focus(); return; }
+      bt.disabled = true; msg.textContent = T('carregando');
+      Conta.contaPeloConvite(tok, cod.value.trim(), senha.value).then(function (j) {
+        if (j && j.ok) { msg.textContent = T('conviteContaPronta'); iniciarAcesso(); return; }
+        bt.disabled = false;
+        if (j && j.existe) {
+          msg.textContent = T('conviteJaTemConta');
+          var em = $('gx-email'); if (em) { em.value = j.email; var sn = $('gx-senha'); if (sn) sn.focus(); }
+          return;
+        }
+        msg.textContent = T({ codigo: 'conviteCodigoErrado', travado: 'conviteTravado', senha: 'senha8' }[j && j.erro] || 'conviteInvalido');
+      }).catch(function () { bt.disabled = false; msg.textContent = navigator.onLine ? T('erroRede') : T('semInternet'); });
+    }
+    bt.addEventListener('click', ir);
+    senha.addEventListener('keydown', function (e) { if (e.key === 'Enter') ir(); });
+    var em = $('gx-email'); if (em && !em.value) em.value = x.email;
+    setTimeout(function () { cod.focus(); }, 80);
   }
   function cartaoPessoa(p, v) {
     var x = v ? perfilNaViagem(p, v) : p;
@@ -2758,8 +2840,9 @@
       Conta.rpcPublico('guiaxpert_ver_convite', { p_token: tokConvite }).then(function (r) {
         var x = Array.isArray(r) ? r[0] : r; if (!x || !x.viagem) return;
         aviso.appendChild(h('b', { texto: '✉️ ' + T('conviteDe', { quem: x.quem || '', viagem: x.viagem }) }));
-        aviso.appendChild(h('p', { class: 'sub', texto: T(s ? 'conviteEntrouTexto' : 'conviteEntreTexto') }));
         faixa.parentNode && faixa.parentNode.insertBefore(aviso, faixa.nextSibling);
+        if (!s && x.email && x.pede_codigo) { formConviteCodigo(aviso, tokConvite, x); return; }
+        aviso.appendChild(h('p', { class: 'sub', texto: T(s ? 'conviteEntrouTexto' : 'conviteEntreTexto') }));
       }).catch(function () {});
     }
     if (a.motivo === 'sql-faltando') tela.appendChild(h('div', { class: 'alerta' }, [h('b', { texto: T('sqlFaltando') }), T('sqlFaltandoTexto')]));
@@ -3281,6 +3364,7 @@
         retomarPendente();
         setTimeout(oferecerReservasDoLink, 900);
         setTimeout(avisarAtualizacao, 1600);
+        conferirIA();
         var compartilhado = window.Importar && Importar.doEndereco();
         if (compartilhado) setTimeout(function () { if (estado.viagem) { Nav.ir('reservas'); setTimeout(function () { janelaImportar(compartilhado); }, 200); } else avisar(T('semViagemTexto')); }, 400);
       });

@@ -154,6 +154,12 @@
     rpcPublico: function (nome, args) {
       return fetch(base() + '/rest/v1/rpc/' + nome, { method: 'POST', headers: cab(null), body: JSON.stringify(args || {}) }).then(json);
     },
+    /* conta pelo convite: código + senha nova; a conta nasce confirmada e já entra */
+    contaPeloConvite: function (token, codigo, senha) {
+      return fetch(base() + '/functions/v1/convite-conta', { method: 'POST', headers: cab(null), body: JSON.stringify({ token: token, codigo: codigo, senha: senha }) })
+        .then(function (r) { return r.json().catch(function () { return { erro: 'servidor' }; }); })
+        .then(function (j) { if (j && j.ok) return Conta.entrar(j.email, senha).then(function () { return j; }); return j; });
+    },
     rpc: function (nome, args) {
       return Conta.token().then(function (t) {
         if (!t) throw new Error('sem-sessao');

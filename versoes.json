@@ -2,6 +2,21 @@
   "app": "guiaxpert",
   "versoes": [
     {
+      "versao": "1.5.34",
+      "data": "2026-11-11",
+      "substitui": "1.5.33",
+      "itens": {
+        "pt": [
+          "Convite por e-mail: quem convida diz o e-mail da pessoa e recebe link + código de 6 números; quem chega digita o código e cria a senha, sem confirmar e-mail. Só aquele e-mail consegue usar o convite.",
+          "Botão ✦ IA só aparece quando há IA para a pessoa: chave própria no aparelho, ou chave guardada no servidor e a pessoa é da família (convidada numa viagem da equipe)."
+        ],
+        "en": [
+          "Email invites: the inviter types the person's email and gets a link + 6-digit code; the invitee types the code and creates a password, no email confirmation. Only that email can use the invite.",
+          "The ✦ AI button only shows when AI is available to that person: their own key on the device, or a key stored on the server and the person is family (invited to a team trip)."
+        ]
+      }
+    },
+    {
       "versao": "1.5.33",
       "data": "2026-11-11",
       "substitui": "1.5.32",
