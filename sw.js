@@ -2,7 +2,7 @@
    como app no celular e no computador.
    Ao publicar uma versao nova do seu site, troque o numero de VERSAO
    abaixo (ex.: 'v1' -> 'v2') para o aparelho pegar os arquivos novos. */
-var VERSAO = 'guiaxpert-v1.5.40';
+var VERSAO = 'guiaxpert-v1.5.41';
 /* Todos os apps moram no mesmo endereco (marceloneco.github.io) e dividem
    os caches. Por isso o nome leva a pasta do app: assim um app nunca apaga
    o modo sem internet de outro. A pasta vem do proprio endereco, entao este
@@ -50,7 +50,8 @@ self.addEventListener('fetch', function (e) {
           ok(r || (req.mode === 'navigate' ? caches.match('./index.html') : fetch(req)));
         });
       }
-      var prazo = setTimeout(reserva, 4000);
+      /* abrir rápido: a página espera a rede no máximo 2,5 s (os outros arquivos, 4 s); a conferência de versão nova vem logo depois */
+      var prazo = setTimeout(reserva, req.mode === 'navigate' ? 2500 : 4000);
       fetch(req, { cache: 'no-cache' }).then(function (r) {
         clearTimeout(prazo);
         if (r && r.status === 200) {

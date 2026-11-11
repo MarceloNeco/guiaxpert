@@ -2,6 +2,21 @@
   "app": "guiaxpert",
   "versoes": [
     {
+      "versao": "1.5.41",
+      "data": "2026-11-11",
+      "substitui": "1.5.40",
+      "itens": {
+        "pt": [
+          "A tela de abertura do Android (ícone sobre fundo liso, desenhada pelo próprio sistema) passa a ter o mesmo azul-escuro da colagem de fotos, para emendar sem pulo.",
+          "Abre mais rápido com sinal fraco: a página espera a internet no máximo 2,5 s antes de usar a cópia guardada."
+        ],
+        "en": [
+          "The Android launch screen (icon on a plain background, drawn by the system) now uses the same dark blue as the photo collage, for a seamless transition.",
+          "Opens faster on weak signal: the page waits at most 2.5 s for the network before using the saved copy."
+        ]
+      }
+    },
+    {
       "versao": "1.5.40",
       "data": "2026-11-11",
       "substitui": "1.5.39",
