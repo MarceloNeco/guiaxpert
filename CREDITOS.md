@@ -6,6 +6,7 @@
 | Mapa sem internet: `pmtiles` 4.3.0 e `protomaps-leaflet` 5.1.0 | https://github.com/protomaps | BSD-3-Clause | arquivos em `vendor/pmtiles/`, carregados só quando o mapa abre |
 | Recorte de mapa `mapas/gramado.pmtiles` | OpenStreetMap via build diário do Protomaps (2026-10-29) | ODbL 1.0 — "© OpenStreetMap contributors" | arquivo no repositório e em `solverone-dados/conteudo/guiaxpert/mapas/` |
 | QR: `qrcode-generator` 2.0.4 (Kazuhiko Arase, MIT) e `jsQR` 1.4.0 (Cosmo Wolfe, Apache-2.0) | npm | MIT / Apache-2.0 | `vendor/qr/`, carregados só ao transferir o cofre |
+| PDF do roteiro: `jsPDF` 2.5.1 (James Hall, yWorks) e `html2canvas` 1.4.1 (Niklas von Hertzen) | npm | MIT (`vendor/pdf/LICENSE-*.txt`) | `vendor/pdf/`, carregados só quando a pessoa gera um PDF |
 | Leaflet 1.9.4 (mapa) | https://leafletjs.com | BSD-2-Clause | arquivo no repositório (`vendor/leaflet/`), carregado só quando o mapa abre |
 | Dados de mapa, lugares e endereços (Descobrir, mapa, coordenadas do pacote) | OpenStreetMap | ODbL 1.0 — "© OpenStreetMap contributors" | consultados na hora (Overpass, Nominatim, tiles) e coordenadas guardadas no pacote |
 | Previsão do tempo (1ª opção) | Open-Meteo (https://open-meteo.com) | CC BY 4.0 (dados), uso não comercial grátis | consultada na hora; a tela cita a fonte |

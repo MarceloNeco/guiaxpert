@@ -12,7 +12,7 @@
 (function () {
   'use strict';
   var d = document, $ = function (id) { return d.getElementById(id); };
-  var VERSAO_APP = '1.5.42';
+  var VERSAO_APP = '1.5.43';
 
   /* ------------------------------------------------------------------
      1. UTILIDADES
@@ -2318,24 +2318,103 @@
       marca('codigos', T('cmp_codigos'), T('cmp_codigosDica')), aviso, ok, msg].forEach(function (el) { corpo.appendChild(el); });
     ok.addEventListener('click', function () {
       ok.disabled = true; msg.textContent = T('carregando');
+      op.pdf = forma === 'pdf';
       montarDocumentoViagem(v, op).then(function (doc) {
         ok.disabled = false; msg.textContent = '';
-        if (forma === 'pdf') { j.fechar(function () { imprimirDocumento(doc.corpo, doc.estilo); }); return; }
+        if (forma === 'pdf') {
+          ok.disabled = true; msg.textContent = T('cmp_gerandoPdf');
+          gerarPdf(doc).then(function (blob) {
+            ok.disabled = false; msg.textContent = '';
+            entregarArquivo(blob, nomeArquivo(v.nome) + '.pdf', 'application/pdf', v.nome);
+          }).catch(function () { ok.disabled = false; msg.textContent = T('cmp_pdfErro'); });
+          return;
+        }
         entregarHtml(doc.html, nomeArquivo(v.nome) + '.html', v.nome);
       }).catch(function () { ok.disabled = false; msg.textContent = T('erroRede'); });
     });
   }
   function nomeArquivo(t) { return 'Roteiro - ' + String(t || 'viagem').replace(/[\\/:*?"<>|]+/g, ' ').trim(); }
-  function entregarHtml(html, nome, titulo) {
-    var arq = null; try { arq = new File([html], nome, { type: 'text/html' }); } catch (e) {}
+  function entregarHtml(html, nome, titulo) { entregarArquivo(new Blob([html], { type: 'text/html' }), nome, 'text/html', titulo); }
+  /* arquivo pronto: no celular abre a tela de compartilhar (WhatsApp, Drive, "Abrir com" Acrobat…); no computador, baixa */
+  function entregarArquivo(blob, nome, tipo, titulo) {
+    var arq = null; try { arq = new File([blob], nome, { type: tipo }); } catch (e) {}
     if (arq && navigator.canShare && navigator.canShare({ files: [arq] })) {
       navigator.share({ files: [arq], title: titulo }).catch(function () {});
       return;
     }
-    var url = URL.createObjectURL(new Blob([html], { type: 'text/html' }));
+    var url = URL.createObjectURL(blob);
     var a = h('a', { href: url, download: nome }); d.body.appendChild(a); a.click(); a.remove();
     setTimeout(function () { URL.revokeObjectURL(url); }, 60000);
     avisar(T('cmp_baixado'));
+  }
+  /* PDF de verdade, gerado aqui (sem impressora): cada bloco (capa, dias, rodapé) vira imagem nítida e é arrumado em páginas A4,
+     quebrando só entre itens do dia, nunca no meio de um; os links "ver no mapa" continuam clicáveis */
+  var pdfLibs = null;
+  function carregarPdf() {
+    if (window.jspdf && window.html2canvas) return Promise.resolve();
+    if (pdfLibs) return pdfLibs;
+    pdfLibs = ['vendor/pdf/html2canvas.min.js', 'vendor/pdf/jspdf.umd.min.js'].reduce(function (p, src) {
+      return p.then(function () { return new Promise(function (ok, erro) { var s = h('script', { src: src }); s.onload = ok; s.onerror = function () { pdfLibs = null; erro(new Error('pdf')); }; d.head.appendChild(s); }); });
+    }, Promise.resolve());
+    return pdfLibs;
+  }
+  function gerarPdf(doc) {
+    var caixa = h('div', { id: 'gx-pdf', 'aria-hidden': 'true' });
+    caixa.innerHTML = '<style>' + doc.estilo + '#gx-pdf .doc{width:720px;padding:0;margin:0}#gx-pdf .capa,#gx-pdf .dia{margin:0}</style>' + doc.corpo;   /* montado aqui, tudo escapado por esc() */
+    d.body.appendChild(caixa);
+    var limpar = function () { caixa.remove(); };
+    return carregarPdf().then(function () {
+      var imgs = [].slice.call(caixa.querySelectorAll('img'));
+      return Promise.all(imgs.map(function (im) { return im.complete ? null : new Promise(function (ok) { im.onload = im.onerror = ok; }); }));
+    }).then(function () {
+      /* códigos de barras são SVG: o montador do PDF não desenha SVG, então viram PNG nítido antes */
+      var svgs = [].slice.call(caixa.querySelectorAll('img')).filter(function (im) { return /^data:image\/svg/.test(im.getAttribute('src') || ''); });
+      return Promise.all(svgs.map(function (im) {
+        return new Promise(function (ok) {
+          var fonte = new Image();
+          fonte.onload = function () {
+            var cv = h('canvas'); cv.width = 1200; cv.height = 260;
+            var g = cv.getContext('2d'); g.fillStyle = '#fff'; g.fillRect(0, 0, cv.width, cv.height); g.imageSmoothingEnabled = false;
+            g.drawImage(fonte, 0, 0, cv.width, cv.height);
+            im.onload = im.onerror = function () { ok(); }; im.src = cv.toDataURL('image/png');
+          };
+          fonte.onerror = function () { ok(); };
+          fonte.src = im.getAttribute('src');
+        });
+      }));
+    }).then(function () {
+      var pdf = new window.jspdf.jsPDF({ unit: 'mm', format: 'a4', orientation: 'portrait' });
+      var M = 10, LARG = 190, ALT = 297 - 2 * M, y = M, GAP = 4;
+      var blocos = [].slice.call(caixa.querySelectorAll('.doc > header, .doc > section, .doc > footer'));
+      return blocos.reduce(function (p, el) {
+        return p.then(function () {
+          return window.html2canvas(el, { scale: 2, backgroundColor: '#ffffff', logging: false, useCORS: true }).then(function (cv) {
+            var base = el.getBoundingClientRect(), pxmm = LARG / base.width;   /* mm por px de tela */
+            /* onde dá para cortar: entre um item e outro do dia */
+            var cortes = [].slice.call(el.querySelectorAll('li')).slice(1).map(function (li) { return li.getBoundingClientRect().top - base.top; }).filter(function (t) { return t > 0; });
+            var links = [].slice.call(el.querySelectorAll('a[href]')).map(function (a) { var r = a.getBoundingClientRect(); return { x: r.left - base.left, y: r.top - base.top, w: r.width, h: r.height, url: a.href }; });
+            var escala = cv.width / base.width, ini = 0, total = base.height;
+            while (ini < total - 1) {
+              var cabe = (M + ALT - y) / pxmm;                       /* px que ainda cabem nesta página */
+              if (cabe < 40 && y > M) { pdf.addPage(); y = M; continue; }
+              var fim = total;
+              if (total - ini > cabe) {
+                var cand = cortes.filter(function (c) { return c > ini + 20 && c - ini <= cabe; });
+                if (cand.length) fim = cand[cand.length - 1];
+                else if (y > M) { pdf.addPage(); y = M; continue; }   /* nem um item cabe: começa em página nova */
+                else fim = ini + cabe;                                 /* item maior que a página: corta mesmo */
+              }
+              var fatia = h('canvas'); fatia.width = cv.width; fatia.height = Math.ceil((fim - ini) * escala);
+              fatia.getContext('2d').drawImage(cv, 0, Math.floor(ini * escala), cv.width, fatia.height, 0, 0, cv.width, fatia.height);
+              var hmm = (fim - ini) * pxmm;
+              pdf.addImage(fatia.toDataURL('image/jpeg', 0.9), 'JPEG', M, y, LARG, hmm);
+              links.forEach(function (l) { if (l.y >= ini && l.y + l.h <= fim) pdf.link(M + l.x * pxmm, y + (l.y - ini) * pxmm, l.w * pxmm, l.h * pxmm, { url: l.url }); });
+              y += hmm + GAP; ini = fim;
+            }
+          });
+        });
+      }, Promise.resolve()).then(function () { var b = pdf.output('blob'); limpar(); return b; });
+    }).catch(function (e) { limpar(); throw e; });
   }
   /* PDF: imprime só o documento (o sistema oferece "Salvar como PDF"; no iPhone, Compartilhar → Salvar em Arquivos) */
   function imprimirDocumento(corpo, estilo) {
@@ -2363,20 +2442,29 @@
         var alvo = lat != null && lng != null ? lat + ',' + lng : q; if (!alvo) return '';
         return ' <a class="mapa" href="https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(alvo) + '">' + esc(T('cmp_verMapa')) + '</a>';
       }
+      /* códigos juntos numa área de expandir (no PDF já aberta): um cartãozinho por pessoa; a observação aparece uma vez só */
       function codigosDe(lista) {
         if (!op.codigos) return '';
-        var out = '';
-        lista.forEach(function (x) {
-          var c = x.c; if (!c) return;
-          var img = '';
+        var cards = '', notas = [], n = 0, todasNotas = [];
+        lista.forEach(function (x) { if (x.c && x.c.nota && todasNotas.indexOf(x.c.nota) < 0) todasNotas.push(x.c.nota); });
+        var notaPorCartao = todasNotas.length > 1;   /* observações diferentes por pessoa (ex.: voucher e senha): ficam dentro do cartão */
+        lista.slice().sort(function (a, b) { return String((a.c || {}).pessoa || '').localeCompare(String((b.c || {}).pessoa || ''), 'pt'); }).forEach(function (x) {
+          var c = x.c; if (!c || !(c.codigo || c.qr || c.barra)) return;
+          n++;
+          var img = '', larga = false;
           try {
-            if (c.barra && window.Barras) img = '<img class="cod-img barra" alt="" src="data:image/svg+xml;charset=utf-8,' + encodeURIComponent(Barras.svg(c.barra, c.barraFormato)) + '">';
-            else if (c.qr && window.qrcode) { var q = qrcode(0, 'M'); q.addData(String(c.qr)); q.make(); img = '<img class="cod-img" alt="" src="' + q.createDataURL(5, 6) + '">'; }
+            if (c.barra && window.Barras) { larga = true; img = '<img class="cod-img cod-barras" alt="" src="data:image/svg+xml;charset=utf-8,' + encodeURIComponent(Barras.svg(c.barra, c.barraFormato)) + '">'; }
+            else if (c.qr && window.qrcode) { var q = qrcode(0, 'M'); q.addData(String(c.qr)); q.make(); img = '<img class="cod-img" alt="" src="' + q.createDataURL(4, 4) + '">'; }
           } catch (e) {}
-          out += '<div class="cod">' + img + '<div>' + (c.pessoa ? '<b>' + esc(c.pessoa) + '</b> ' : '') + (c.assento ? esc(c.assento) + ' · ' : '') +
-            (c.codigo ? esc(T('codigo')) + ': <code>' + esc(c.codigo) + '</code>' : '') + (c.nota ? '<br><small>' + esc(c.nota) + '</small>' : '') + '</div></div>';
+          cards += '<div class="cod' + (larga ? ' larga' : '') + '">' + (c.pessoa ? '<b>' + esc(c.pessoa) + '</b>' : '') + (c.assento ? '<small>' + esc(c.assento) + '</small>' : '') +
+            img + (c.codigo ? '<code>' + esc(c.codigo) + '</code>' : '') + (c.barra && c.barra !== c.codigo ? '<code class="num">' + esc(c.barra) + '</code>' : '') +
+            (notaPorCartao && c.nota ? '<details class="mais"' + (op.pdf ? ' open' : '') + '><summary>' + esc(T('cmp_mais')) + '</summary><small>' + esc(c.nota) + '</small></details>' : '') + '</div>';
+          if (!notaPorCartao && c.nota && notas.indexOf(c.nota) < 0) notas.push(c.nota);
         });
-        return out;
+        if (!n) return '';
+        var rotulo = lista[0] && lista[0].reg && (lista[0].reg.tipo === 'ingresso') ? T('cmp_mostrarCodigos', { n: n }) : T('cmp_mostrarLocalizador', { n: n });
+        return '<details class="codigos"' + (op.pdf ? ' open' : '') + '><summary>' + esc(rotulo) + '</summary><div class="cods">' + cards + '</div>' +
+          notas.map(function (t) { return '<p class="nota-res">' + esc(t) + '</p>'; }).join('') + '</details>';
       }
       var hoje = new Date();
       var html = '<header class="capa"><p class="selo">GuiaXpert</p><h1>' + esc(v.nome) + '</h1><p class="datas">' +
@@ -2423,10 +2511,17 @@
         '.doc{max-width:760px;margin:0 auto;padding:16px}' +
         '.capa{background:#0e5a43;color:#fff;border-radius:18px;padding:20px 18px;margin-bottom:14px}.capa h1{margin:.1em 0;font-size:1.6rem}.selo{margin:0;opacity:.8;font-size:.85rem;letter-spacing:.06em;text-transform:uppercase}.datas,.hotel{margin:.3em 0}.capa a{color:#fcf1cc}' +
         '.dia{background:#fff;border-radius:16px;padding:14px 16px;margin:12px 0;break-inside:avoid;page-break-inside:avoid}.dia h2{margin:0 0 .5em;font-size:1.1rem;color:#0e5a43}' +
-        '.dia ul{list-style:none;margin:0;padding:0}.dia li{display:flex;gap:12px;padding:8px 0;border-top:1px solid #e3e9e6}.dia li:first-child{border-top:0}' +
-        '.h{flex:none;width:3.2em;font-weight:700;font-variant-numeric:tabular-nums}.fixo b{color:#6a3a1c}small{color:#55636a}.etq{font-size:.8em;background:#fcf1cc;border-radius:8px;padding:1px 6px}' +
+        '.dia ul{list-style:none;margin:0;padding:0}.dia li{display:flex;gap:12px;padding:9px 0;border-top:1px solid #e3e9e6}.dia li:first-child{border-top:0}' +
+        '.dia li>div{flex:1;min-width:0;overflow-wrap:anywhere}' +
+        '.h{flex:none;width:3em;font-weight:700;font-variant-numeric:tabular-nums}.h:empty{display:none}.fixo b{color:#6a3a1c}small{color:#55636a}.etq{font-size:.8em;background:#fcf1cc;border-radius:8px;padding:1px 6px;white-space:nowrap}' +
         '.mapa{font-size:.85em;color:#0e5a43;white-space:nowrap}.livre{color:#55636a;margin:0}' +
-        '.cod{display:flex;gap:10px;align-items:center;margin-top:8px}.cod-img{width:110px;height:110px;image-rendering:pixelated;background:#fff}.cod-img.barra{width:220px;height:70px}code{font-size:1.05em}' +
+        '.codigos{margin-top:8px}summary{display:block;list-style:none;cursor:pointer}summary::-webkit-details-marker{display:none}.codigos>summary{color:#0e5a43;font-weight:700;padding:6px 0}.codigos>summary::before{content:"▸ "}.codigos[open]>summary::before{content:"▾ "}' +
+        '.cods{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:8px;margin-top:6px}' +
+        '.cod{border:1px solid #e3e9e6;border-radius:12px;padding:8px;display:flex;flex-direction:column;align-items:center;text-align:center;gap:3px;break-inside:avoid;page-break-inside:avoid}' +
+        '.cod.larga{grid-column:1/-1}.cod-img{width:118px;height:118px;image-rendering:pixelated;background:#fff;margin:2px 0}.cod-img.cod-barras{width:100%;max-width:300px;height:58px}' +
+        '.mais{align-self:stretch;text-align:left}.mais summary{cursor:pointer;color:#0e5a43;font-size:.85em;text-align:center}.mais small{display:block;margin-top:4px}' +
+        'code{font-size:.95em;letter-spacing:.02em}.num{color:#55636a;font-size:.8em}.nota-res{color:#55636a;font-size:.85em;margin:6px 0 0}' +
+        '@media (max-width:520px){.dia li{flex-direction:column;gap:2px}.h{width:auto;font-size:.85em;color:#0e5a43}.dia{padding:12px 14px}}' +
         'footer{color:#55636a;font-size:.8rem;text-align:center;margin:18px 0 8px}' +
         '@media print{body{background:#fff}.doc{padding:0}.capa{-webkit-print-color-adjust:exact;print-color-adjust:exact}.dia{border:1px solid #d3dbd8}}';
       var corpo = '<div class="doc">' + html + '</div>';

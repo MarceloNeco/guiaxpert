@@ -2,6 +2,25 @@
   "app": "guiaxpert",
   "versoes": [
     {
+      "versao": "1.5.43",
+      "data": "2026-11-11",
+      "substitui": "1.5.42",
+      "itens": {
+        "pt": [
+          "PDF de verdade, gerado no próprio app (sem passar pela impressora): no celular abre \"compartilhar/abrir com\" (Acrobat, Drive, WhatsApp…); no computador, baixa.",
+          "PDF sem páginas vazias: a capa divide a página com o 1º dia; quebra só entre itens, nunca no meio de um; o nome do dia vai sempre junto do 1º item; links \"ver no mapa\" clicáveis.",
+          "Códigos de barras e QR aparecem no PDF e são lidos pela câmera; na página navegável, os códigos ficam juntos em \"🎟 Mostrar códigos\", em cartõezinhos por pessoa.",
+          "Página navegável cabe na tela do celular: horário em cima do título, observação da reserva uma vez só (ou dentro do cartão quando muda por pessoa)."
+        ],
+        "en": [
+          "A real PDF, built in the app (no printer): on the phone it opens \"share/open with\" (Acrobat, Drive, WhatsApp…); on the computer, it downloads.",
+          "No blank PDF pages: the cover shares the page with day 1; breaks only between items; the day name stays with its first item; \"see on map\" links are clickable.",
+          "Barcodes and QR codes show in the PDF and scan with a camera; in the browsable page, codes are grouped under \"🎟 Show codes\", one small card per person.",
+          "The browsable page fits the phone screen: time above the title, booking notes shown once (or inside each card when they differ)."
+        ]
+      }
+    },
+    {
       "versao": "1.5.42",
       "data": "2026-11-11",
       "substitui": "1.5.41",
