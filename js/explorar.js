@@ -14,11 +14,12 @@
   function GX() { return window.GX; }
 
   function geocodificar(texto, lg) {
-    return fetch('https://nominatim.openstreetmap.org/search?format=jsonv2&limit=1&q=' + encodeURIComponent(texto), { headers: { 'Accept-Language': lg === 'en' ? 'en' : 'pt-BR' } })
+    var ctl = window.AbortController ? new AbortController() : null; if (ctl) setTimeout(function () { ctl.abort(); }, 12000);
+    return fetch('https://nominatim.openstreetmap.org/search?format=jsonv2&limit=1&q=' + encodeURIComponent(texto), { headers: { 'Accept-Language': lg === 'en' ? 'en' : 'pt-BR' }, signal: ctl ? ctl.signal : undefined })
       .then(function (r) { return r.ok ? r.json() : []; }).then(function (j) {
         if (!j || !j[0]) return null;
         var bb = (j[0].boundingbox || []).map(Number);   /* [sul, norte, oeste, leste] */
-        return { lat: +(+j[0].lat).toFixed(4), lng: +(+j[0].lon).toFixed(4), nome: (j[0].display_name || texto).split(',')[0], bbox: bb.length === 4 ? bb : null };
+        return { lat: +(+j[0].lat).toFixed(4), lng: +(+j[0].lon).toFixed(4), nome: (j[0].display_name || texto).split(',')[0], bbox: bb.length === 4 ? bb : null, tipo: j[0].addresstype || j[0].type || '' };
       });
   }
 
@@ -76,25 +77,27 @@
       /* cidade: centra e procura lugares em volta; país ou continente (área grande): só mostra a região no mapa */
       function irParaTexto(q, bt) {
         if (!q) return;
-        if (bt) bt.disabled = true;
+        if (bt) { bt.disabled = true; bt.textContent = '…'; }
+        g.avisar(T('procurandoLugar', { q: q }), null, null, 12000);
         geocodificar(q, g.idioma()).then(function (c) {
-          if (bt) bt.disabled = false;
+          if (bt) { bt.disabled = false; bt.textContent = T('ir'); }
           if (!c) { g.avisar(T('cidadeNaoAchada')); return; }
           var bb = c.bbox, tam = bb ? Math.max(bb[1] - bb[0], bb[3] - bb[2]) : 0;
           estadoEx.centro = { lat: c.lat, lng: c.lng }; estadoEx.nome = c.nome; estadoEx.descobertas = []; estado.busca = '';
-          estadoEx.zoom = tam > 20 ? 3 : tam > 8 ? 5 : tam > 2 ? 7 : tam > .5 ? 10 : 13;
+          /* continente bem longe; país pelo ponto principal (Portugal sem puxar Açores e Madeira); estado; cidade */
+          estadoEx.zoom = c.tipo === 'continent' ? 3 : c.tipo === 'country' ? (tam > 30 ? 4 : 6) : c.tipo === 'state' ? 7 : tam > 20 ? 3 : tam > 8 ? 5 : tam > 2 ? 7 : tam > .5 ? 10 : 13;
           if (tam > .5) { g.avisar(T('regiaoNoMapa', { nome: c.nome })); g.mostrar('explorar'); return; }
           descobrir();
-        }).catch(function () { if (bt) bt.disabled = false; g.avisar(navigator.onLine ? T('osmErro') : T('semInternet')); });
+        }).catch(function () { if (bt) { bt.disabled = false; bt.textContent = T('ir'); } g.avisar(navigator.onLine ? T('osmErro') : T('semInternet'), T('tentarDeNovo'), function () { irParaTexto(q, bt); }, 10000); });
       }
       function descobrir() {
         if (estadoEx.zoom && estadoEx.zoom < 12) estadoEx.zoom = 14;
         var c = estadoEx.centro || estado.pos;
         if (!c) { g.pegarPosicao().then(function (p) { estadoEx.centro = { lat: p.lat, lng: p.lng }; descobrir(); }).catch(function () {}); return; }
-        g.avisar(T('carregando'));
         /* remonta a tela: o mapa recentra e a lista mostra o que veio */
-        Descobrir.perto(c, 6000).then(function (l) { estadoEx.descobertas = l; g.avisar(T('descobertos', { n: l.length })); g.mostrar('explorar'); })
-          .catch(function () { estadoEx.descobertas = []; g.mostrar('explorar'); g.avisar(navigator.onLine ? T('osmErro') : T('semInternet')); });
+        g.avisar(T('procurandoPerto'), null, null, 20000);
+        Descobrir.perto(c, 5000).then(function (l) { estadoEx.descobertas = l; g.avisar(l.length ? T('descobertos', { n: l.length }) : T('nadaPerto')); g.mostrar('explorar'); })
+          .catch(function () { estadoEx.descobertas = []; g.mostrar('explorar'); g.avisar(navigator.onLine ? T('osmFora') : T('semInternet'), T('tentarDeNovo'), descobrir, 12000); });
       }
       function planejarHoje() {
         var c = estadoEx.centro || estado.pos;

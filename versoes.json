@@ -2,6 +2,37 @@
   "app": "guiaxpert",
   "versoes": [
     {
+      "versao": "1.5.53",
+      "data": "2026-11-12",
+      "substitui": "1.5.52",
+      "itens": {
+        "pt": [
+          "Viagem nova sem guia pronto: a tela Hoje mostra \"Comece por aqui\" (ver o que tem lá, guardar ideias, montar os dias) e a viagem abre no Hoje, não no Roteiro vazio.",
+          "\"Buscar lugares perto\": mais rápido, com três servidores do mapa aberto (se um cai, tenta o outro), aviso honesto quando estão fora do ar e botão \"Tentar de novo\" (antes dizia \"nada encontrado\"). Planejando de casa, busca em volta do destino, não de onde você está.",
+          "⭐ e \"Guardar nas ideias\" agora são a mesma coisa: tudo que tem ⭐ aparece em Ideias, mesmo lugares vindos da internet, e continua lá depois de fechar o app.",
+          "Ideia por link: procura também na internet pelo nome e, se não achar, guarda o nome com o link. A mensagem do Instagram só aparece para link do Instagram.",
+          "🎤 Ditado: se o reconhecimento de voz do navegador não devolve o texto (acontece no computador), o botão destrava sozinho em alguns segundos e explica; tocar de novo sempre para.",
+          "Fotos: destino sem fotos nossas busca a foto da cidade na Wikimedia Commons (com crédito); sem foto, fundo neutro. Nunca mais a foto de outra cidade.",
+          "Viagem ao exterior: cartão \"Lisboa em 1 minuto\" com hora local, moeda e câmbio do dia, idioma, tomada, emergência e documentos; \"O que levar\" inclui passaporte e adaptador e aparece mesmo antes da previsão.",
+          "Alternativas: \"Escolher esta\" manda as outras para ⭐ Ideias (plano B); o lembrete para decidir pode ser 1 semana, 3 dias ou na véspera.",
+          "Busca 🔍 acha também os lugares que o \"Buscar perto\" trouxe; restaurantes não aparecem mais como \"Passeio\"; horário do mapa aberto em português; sem resultados repetidos; endereço sem vírgula sobrando.",
+          "Explorar: país vai até o país (Portugal sem os Açores); \"Procurando…\" enquanto busca e \"Tentar de novo\" se falhar.",
+          "Acrescentar ao dia já tem Observação/link; Comparar mostra a observação e explica quando falta ligar ao lugar; datas da nova viagem aparecem por extenso; \"1 pessoa\"; no celular, Compartilhar e Calendário só com o ícone; Salvos passa a se chamar Ideias."
+        ],
+        "en": [
+          "New trip without a guide: Start here card; opens on Today.",
+          "Find nearby: multiple open-map servers, honest errors, retry; searches around the destination.",
+          "⭐ and Save to ideas are one thing; starred places persist.",
+          "Idea from link: web search and save name+link.",
+          "Dictation never gets stuck.",
+          "Destination photo from Wikimedia Commons or a neutral background.",
+          "Abroad: country card (time, currency and rate, plug, emergency, documents).",
+          "Alternatives: unpicked go to Ideas; reminder 7/3/1 days.",
+          "Search and Explore fixes."
+        ]
+      }
+    },
+    {
       "versao": "1.5.52",
       "data": "2026-11-12",
       "substitui": "1.5.51",

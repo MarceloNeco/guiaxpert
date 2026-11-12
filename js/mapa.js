@@ -120,6 +120,11 @@
           lista.appendChild(lin);
         });
         if (!itens.length) lista.appendChild(h('p', { class: 'sub', style: 'padding:1rem', texto: estado.filtro === 'paraVoces' && !Object.keys(GX.somaGostos()).length ? T('semGostosAinda') : T('nadaAchado') }));
+        /* destino sem guia pronto e sem lugares ainda: o primeiro passo fica à vista, não escondido no fim da lista */
+        if (!itens.length && !(estado.busca || '').trim() && op.buscarPerto && estado.filtro === 'todos') {
+          resumo.appendChild(h('div', { class: 'painel-acoes' }, [h('button', { class: 'bt', type: 'button', texto: '🔎 ' + T('descobrirBotao'), onclick: function (e) { e.currentTarget.disabled = true; e.currentTarget.textContent = T('procurandoPerto'); op.buscarPerto(); } }),
+            h('span', { class: 'pequeno', texto: T('podeDemorar') })]));
+        }
         /* não achou aqui? procura na internet pelo nome ou endereço (só quando a pessoa toca) */
         var q = (estado.busca || '').trim();
         if (q.length >= 3 && op.buscarFora) {

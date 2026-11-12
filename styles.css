@@ -801,3 +801,11 @@ table.comparar .bom { color: var(--rodovia); margin-top: .25rem; }
 .busca-net > p, .busca-net > div, .busca-net > .bt.leve { grid-column: 1 / -1; }
 .busca-net > .bt-grande { height: 100%; }
 .painel[data-estado="resumo"]:has(.painel-acoes) { height: auto; }
+/* destino sem foto própria: faixa neutra nas cores do app (estrada à noite), nunca a foto de outra cidade */
+.hero.neutro { background: radial-gradient(120% 90% at 20% 10%, color-mix(in srgb, var(--rodovia) 70%, #0b1d17) 0%, #0f2a22 55%, #0a1814 100%); }
+.hero.neutro::after { content: ""; position: absolute; left: 0; right: 0; bottom: 38%; height: 3px; background: repeating-linear-gradient(90deg, var(--faixa) 0 34px, transparent 34px 64px); opacity: .55; }
+body.sem-foto #fundo-foto, body.sem-foto #fundo-anim { opacity: 0 !important; }
+@media (max-width: 480px) { .so-largo { display: none; } }
+.data-extenso { display: block; margin-top: .25rem; color: var(--rodovia); font-weight: 600; }
+.cartao.comece .linha { gap: .5rem; }
+.cartao.pais .kv > span:first-child { color: var(--suave); }

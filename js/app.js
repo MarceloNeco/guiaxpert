@@ -12,7 +12,7 @@
 (function () {
   'use strict';
   var d = document, $ = function (id) { return d.getElementById(id); };
-  var VERSAO_APP = '1.5.52';
+  var VERSAO_APP = '1.5.53';
 
   /* ------------------------------------------------------------------
      1. UTILIDADES
@@ -395,25 +395,34 @@
       var bt = h('button', { class: 'bt-voz', type: 'button', 'aria-label': T('falarNoCampo'), title: T('falarNoCampo'), svg: '<svg viewBox="0 0 24 24"><rect x="9" y="2" width="6" height="12" rx="3"/><path d="M5 10v1a7 7 0 0 0 14 0v-1M12 18v4"/></svg>' });
       var caixa = h('span', { class: 'campo-voz' + (c.tagName === 'TEXTAREA' ? ' area' : '') });
       c.parentNode.insertBefore(caixa, c); caixa.appendChild(c); caixa.appendChild(bt);
-      var rec = null;
+      var rec = null, dica = c.placeholder, relogio = null;
+      /* volta ao normal na hora (não espera o navegador avisar que terminou: no computador às vezes ele nunca avisa) */
+      function soltar(msg) {
+        clearTimeout(relogio); relogio = null;
+        if (rec) { var r = rec; rec = null; r.onresult = r.onerror = r.onend = r.onspeechend = null; try { r.abort(); } catch (e) {} }
+        c.placeholder = dica; bt.classList.remove('ouvindo'); bt.setAttribute('aria-pressed', 'false');
+        if (msg) avisar(T(msg));
+      }
       bt.addEventListener('click', function () {
-        if (rec) { try { rec.stop(); } catch (e) {} return; }
+        if (rec) { soltar(); c.focus(); return; }          /* 2º toque: para e destrava sempre */
         /* só o resultado final: o Chrome do Android repete a frase inteira a cada pedaço quando há resultados parciais */
         rec = new SR_VOZ(); rec.lang = idioma() === 'en' ? 'en-US' : 'pt-BR'; rec.interimResults = false; rec.continuous = false; rec.maxAlternatives = 1;
-        var base = c.value ? c.value.replace(/\s+$/, '') + ' ' : '', dica = c.placeholder;
+        var base = c.value ? c.value.replace(/\s+$/, '') + ' ' : '';
         bt.classList.add('ouvindo'); bt.setAttribute('aria-pressed', 'true'); c.placeholder = T('faleAgora');
+        /* no máximo 15 s ouvindo; depois que a pessoa para de falar, até 8 s para o texto chegar */
+        relogio = setTimeout(function () { soltar('vozSemResposta'); }, 15000);
+        rec.onspeechend = function () { clearTimeout(relogio); relogio = setTimeout(function () { soltar('vozSemResposta'); }, 8000); };
         rec.onresult = function (e) {
           var r = e.results[e.results.length - 1]; if (!r || r.isFinal === false) return;
           var t = semRepeticao(String(r[0].transcript || '').trim());
-          if (!t) return;
-          c.value = (base + t).slice(0, +(c.getAttribute('maxlength') || 1000));
-          c.dispatchEvent(new Event('input', { bubbles: true }));
+          if (t) { c.value = (base + t).slice(0, +(c.getAttribute('maxlength') || 1000)); c.dispatchEvent(new Event('input', { bubbles: true })); }
+          soltar(); c.focus();
         };
         rec.onerror = function (e) {
-          avisar(T(e.error === 'not-allowed' || e.error === 'service-not-allowed' ? 'vozPermitir' : e.error === 'network' ? 'vozSemInternet' : e.error === 'no-speech' ? 'naoOuvi' : 'vozErro'));
+          soltar(e.error === 'not-allowed' || e.error === 'service-not-allowed' ? 'vozPermitir' : e.error === 'network' ? 'vozSemInternet' : e.error === 'no-speech' ? 'naoOuvi' : e.error === 'aborted' ? null : 'vozErro');
         };
-        rec.onend = function () { rec = null; c.placeholder = dica; bt.classList.remove('ouvindo'); bt.setAttribute('aria-pressed', 'false'); c.focus(); };
-        try { rec.start(); } catch (e) { rec = null; bt.classList.remove('ouvindo'); }
+        rec.onend = function () { if (rec) soltar(); };
+        try { rec.start(); } catch (e) { soltar('vozErro'); }
       });
     });
   }
@@ -447,6 +456,7 @@
   var BARRA_VIAGEM = ['inicio', 'roteiro', 'mapa', 'reservas', 'familia'];
   var BARRA_EXPLORAR = ['explorar', 'salvos', 'viagens'];
   var ICONE_ROTA = { inicio: 'hoje', roteiro: 'roteiro', mapa: 'mapa', reservas: 'reservas', familia: 'quem', explorar: 'mapa', salvos: 'salvos', viagens: 'viagens' };
+  function nPessoasTxt(n) { return n === 1 ? T('umaPessoa') : T('nPessoas', { n: n }); }
   function emViagem() { return !!(window.Contexto && Contexto.emViagem()); }
   var voltando = false;
   function voltarParaViagem(rota) {
@@ -575,7 +585,10 @@
       funcs.forEach(function (r) {
         lista.appendChild(h('button', { class: 'bt leve', type: 'button', onclick: function () { j.fechar(); setTimeout(function () { Nav.ir(r); }, 0); } }, T('rota_' + r)));
       });
-      todosLugares().map(function (l) { return { l: l, n: notaBusca(l, q) }; }).filter(function (x) { return x.n > 0; })
+      /* procura também no que o "Buscar lugares perto" já trouxe para o mapa */
+      var locais = todosLugares(), idsLoc = {}; locais.forEach(function (l) { idsLoc[l.id] = 1; });
+      locais = locais.concat((estado.descobertas || []).filter(function (l) { return !idsLoc[l.id]; }));
+      locais.map(function (l) { return { l: l, n: notaBusca(l, q) }; }).filter(function (x) { return x.n > 0; })
         .sort(function (a, b) { return b.n - a.n; }).map(function (x) { return x.l; }).slice(0, 20).forEach(function (l) {
         lista.appendChild(h('button', { class: 'bt leve', type: 'button', onclick: function () {
           estado.busca = ''; estado.filtro = 'todos'; estado.abrirLugar = l.id; j.fechar(); setTimeout(function () { Nav.ir(emViagem() ? 'mapa' : 'explorar'); }, 0);
@@ -692,12 +705,16 @@
   var MQ_LARGO = window.matchMedia ? matchMedia('(min-width: 1024px)') : { matches: false };
   function fundoDaTela() {
     var f = $('fundo-foto'); if (!f) return;
-    var fotos = estado.viagem && emViagem() ? fotosDaViagem(estado.viagem) : null;
+    var naViagem = !!(estado.viagem && emViagem());
+    var fotos = naViagem ? fotosDaViagem(estado.viagem) : null;
+    /* viagem sem foto do lugar: sem foto de fundo (cor neutra), em vez da foto de outra cidade */
+    d.body.classList.toggle('sem-foto', naViagem && !fotos);
+    if (naViagem && !fotos) { fundoAnimado(null); return; }
     var id = (fotos && fotos.length ? fotos[(new Date().getDate()) % fotos.length] : null) || window.GX_FOTO_DO_DIA;
     if (!id) return;
-    var alvo = 'img/fundos/' + id + (MQ_LARGO.matches ? '-1280.webp' : '-fundo.webp');
+    var alvo = srcFoto(id, MQ_LARGO.matches ? 1280 : 'fundo');
     if (f.getAttribute('src') !== alvo) f.setAttribute('src', alvo);
-    var lista = fotos && fotos.length > 1 ? fotos : FOTOS_MUNDO;
+    var lista = naViagem ? fotos : FOTOS_MUNDO;
     var k = Math.max(0, lista.indexOf(id));
     fundoAnimado(lista.slice(k).concat(lista.slice(0, k)));
   }
@@ -739,7 +756,7 @@
       if (fundoAnim.i % 2) nova.classList.add('kb2');
       nova.classList.add('ativa'); velha.classList.remove('ativa');
     };
-    var src = 'img/fundos/' + id + '-1280.webp';
+    var src = srcFoto(id, 1280);
     if (nova.getAttribute('src') === src && nova.complete) { pronto(); return; }
     nova.onload = pronto; nova.setAttribute('src', src);
   }
@@ -764,18 +781,38 @@
     'veadeiros': ['veadeiros'], 'paris': ['eiffel'], 'roma': ['coliseu'], 'santorini': ['oia'], 'agra': ['taj'], 'cusco': ['machu'], 'machu picchu': ['machu'],
     'sydney': ['sydney'], 'pequim': ['muralha'], 'beijing': ['muralha'] };
   FOTOS_DESTINO.canela = FOTOS_DESTINO.gramado; FOTOS_DESTINO.rio = FOTOS_DESTINO['rio de janeiro']; FOTOS_DESTINO.iguacu = FOTOS_DESTINO['foz do iguacu'];
-  /* viagem pelo Brasil sem fotos próprias: cartões-postais do Brasil; fora do Brasil: os do mundo */
-  var FOTOS_BRASIL = ['cristo', 'guanabara', 'iguacu', 'masp', 'noronha', 'lencois', 'veadeiros', 'comida-doce'];
-  var UFS = /\b(ac|al|ap|am|ba|ce|df|es|go|ma|mt|ms|mg|pa|pb|pr|pe|pi|rj|rn|rs|ro|rr|sc|sp|se|to|brasil|brazil)\b/;
+  /* foto da viagem: as nossas (Gramado, São Paulo, Paris…); senão a da cidade na Wikimedia Commons (achada pelo Wikidata e
+     guardada na viagem); senão nenhuma (fundo neutro). Nunca a foto de outra cidade. */
   function fotosDaViagem(v) {
     var txt = normalizar([v && v.destino, v && v.destinoTexto, v && v.nome].join(' '));
-    for (var k in FOTOS_DESTINO) if (txt.indexOf(k) > -1) {
-      var proprias = FOTOS_DESTINO[k];
-      /* poucas fotos do lugar: completa com as do país (o fundo do computador precisa de mais de uma para passar) */
-      return proprias.length >= 3 ? proprias : proprias.concat((FOTOS_BRASIL.indexOf(proprias[0]) > -1 ? FOTOS_BRASIL : FOTOS_MUNDO).filter(function (f) { return proprias.indexOf(f) < 0; }));
-    }
-    var noBrasil = (v && v.pais === 'BR') || UFS.test(txt) || !!(estado.pacote && estado.pacote.pais === 'BR');
-    return noBrasil ? FOTOS_BRASIL : FOTOS_MUNDO;
+    for (var k in FOTOS_DESTINO) if (txt.indexOf(k) > -1) return FOTOS_DESTINO[k];
+    return v && v.fotosCommons && v.fotosCommons.length ? v.fotosCommons : null;
+  }
+  var buscandoFoto = {};
+  function buscarFotoCommons(v) {
+    if (!v || v.fotosCommons || v.fotosTentou || buscandoFoto[v.id] || !navigator.onLine) return Promise.resolve(false);
+    var txt = normalizar([v.destino, v.destinoTexto, v.nome].join(' '));
+    for (var k in FOTOS_DESTINO) if (txt.indexOf(k) > -1) return Promise.resolve(false);
+    var nome = String(v.destinoTexto || v.nome || '').split(/[,(]/)[0].trim(); if (!nome) return Promise.resolve(false);
+    buscandoFoto[v.id] = 1;
+    var W = 'https://www.wikidata.org/w/api.php?format=json&origin=*&';
+    var c = centroViagem();
+    return fetch(W + 'action=wbsearchentities&type=item&limit=8&language=' + (idioma() === 'en' ? 'en' : 'pt') + '&uselang=pt&search=' + encodeURIComponent(nome))
+      .then(function (r) { return r.json(); }).then(function (j) {
+        var ids = (j.search || []).map(function (x) { return x.id; }); if (!ids.length) return [];
+        return fetch(W + 'action=wbgetentities&props=claims&ids=' + ids.join('|')).then(function (r) { return r.json(); }).then(function (e) {
+          return ids.map(function (id) { return e.entities && e.entities[id]; }).filter(Boolean);
+        });
+      }).then(function (ents) {
+        var val = function (en, p) { var cl = en.claims && en.claims[p]; return cl && cl[0] && cl[0].mainsnak && cl[0].mainsnak.datavalue && cl[0].mainsnak.datavalue.value; };
+        /* a entidade certa: tem foto e fica perto do destino da viagem (Bonito de MS, não o de PE) */
+        var boas = ents.map(function (en) { var co = val(en, 'P625'); return { foto: val(en, 'P18'), co: co }; }).filter(function (x) { return x.foto && x.co; });
+        if (c) boas = boas.filter(function (x) { return Geo.distancia({ lat: x.co.latitude, lng: x.co.longitude }, c) < 60; });
+        var f = boas[0] && boas[0].foto;
+        v.fotosTentou = true;
+        if (f) v.fotosCommons = ['https://commons.wikimedia.org/wiki/Special:FilePath/' + encodeURIComponent(String(f).replace(/ /g, '_')) + '?width={w}'];
+        return Banco.gravar('viagens', v).then(function (nv) { if (estado.viagem && estado.viagem.id === nv.id) estado.viagem = nv; return !!f; });
+      }).catch(function () { return false; }).then(function (ok) { delete buscandoFoto[v.id]; return ok; });
   }
   var fotosTimer = null, creditosFotos = null;
   /* nome da marca: Guia + X (negrito, outra cor: "o X marca o local") + pert */
@@ -793,21 +830,28 @@
     return el;
   }
   function marcaHtml(t) { return String(t).split('GuiaXpert').join('Guia<span class="marca-x">X</span>pert'); }
+  /* foto: id das nossas (img/fundos/<id>-640.webp) ou endereço da Wikimedia Commons com {w} no lugar da largura */
+  function srcFoto(id, w) { return /^https?:/.test(id) ? id.replace('{w}', w === 'fundo' ? 640 : w) : 'img/fundos/' + id + '-' + w + '.webp'; }
   function faixaFotos(titulo, sub, op) {
     op = op || {};
     var dia = Math.floor((Date.now() - new Date(new Date().getFullYear(), 0, 0)) / 86400000);
     var FOTOS = op.destino ? op.destino.slice() : FOTOS_MUNDO;   /* na viagem: só fotos de lá */
+    /* destino sem foto própria nem da Wikimedia: faixa neutra (nunca a foto de outra cidade) */
+    if (op.neutro) {
+      return h('div', { class: 'hero neutro' + (op.compacta ? ' compacta' : ''), 'aria-hidden': 'true' }, [h('div', { class: 'hero-veu' }),
+        h('div', { class: 'hero-texto' }, [titulo ? comMarca(h('p', { class: 'hero-titulo', texto: titulo })) : null, sub ? h('p', { class: 'hero-sub', texto: sub }) : null])]);
+    }
     var n = FOTOS.length, inicio = (op.indice != null ? op.indice : op.destino ? 0 : dia) % n;
     var img = function (id, ativa) { return h('img', { class: 'hero-foto' + (ativa ? ' ativa' : ''), alt: '', decoding: 'async', loading: 'eager', sizes: '100vw',
-      src: 'img/fundos/' + id + '-640.webp', srcset: 'img/fundos/' + id + '-640.webp 640w, img/fundos/' + id + '-1280.webp 1280w' }); };
+      src: srcFoto(id, 640), srcset: srcFoto(id, 640) + ' 640w, ' + srcFoto(id, 1280) + ' 1280w' }); };
     var a = img(FOTOS[inicio], true), b = img(FOTOS[(inicio + 1) % n], false);
-    var cred = h('button', { class: 'hero-cred', type: 'button', texto: '📷', 'aria-label': T('creditosFotos'), onclick: janelaCreditosFotos });
+    var cred = h('button', { class: 'hero-cred', type: 'button', texto: '📷', 'aria-label': T('creditosFotos'), onclick: function () { janelaCreditosFotos(FOTOS); } });
     var caixa = h('div', { class: 'hero' + (op.compacta ? ' compacta' : ''), 'aria-hidden': 'true' }, [a, b, h('div', { class: 'hero-veu' }),
       h('div', { class: 'hero-texto' }, [titulo ? comMarca(h('p', { class: 'hero-titulo', texto: titulo })) : null, sub ? h('p', { class: 'hero-sub', texto: sub }) : null]), cred]);
     cred.removeAttribute('aria-hidden');
     var i = inicio, atual = a, prox = b, ocupado = false;
     var reduz = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
-    function fonte(el, id) { el.src = 'img/fundos/' + id + '-640.webp'; el.srcset = 'img/fundos/' + id + '-640.webp 640w, img/fundos/' + id + '-1280.webp 1280w'; }
+    function fonte(el, id) { el.src = srcFoto(id, 640); el.srcset = srcFoto(id, 640) + ' 640w, ' + srcFoto(id, 1280) + ' 1280w'; }
     /* troca para a próxima (dir = 1) ou a anterior (dir = -1): esmaece; a nova começa a se mexer devagar */
     var vezes = 0;
     function passar(dir) {
@@ -836,9 +880,14 @@
     caixa.addEventListener('pointerup', function (e) { if (x0 == null) return; var dx = e.clientX - x0; x0 = null; if (Math.abs(dx) > 40) passar(dx < 0 ? 1 : -1); });
     return caixa;
   }
-  function janelaCreditosFotos() {
+  function janelaCreditosFotos(fotos) {
     var corpo = h('div', { class: 'linha', style: 'flex-direction:column;align-items:stretch;gap:.5rem' }, [h('p', { class: 'sub', texto: T('creditosFotosTexto') })]);
     var j = janela(T('creditosFotos'), corpo);
+    /* fotos da Wikimedia Commons achadas para o destino: o crédito (autor e licença) está na página de cada arquivo */
+    (fotos || []).filter(function (f) { return /^https?:/.test(f); }).forEach(function (f) {
+      var arq = decodeURIComponent(f.split('Special:FilePath/')[1] || '').split('?')[0];
+      corpo.appendChild(h('p', { class: 'pequeno' }, [h('a', { href: 'https://commons.wikimedia.org/wiki/File:' + encodeURIComponent(arq), target: '_blank', rel: 'noopener', texto: arq.replace(/_/g, ' ').slice(0, 70) }), ' · Wikimedia Commons (' + T('verAutorLicenca') + ')']));
+    });
     (creditosFotos ? Promise.resolve(creditosFotos) : fetch('img/fundos/creditos.json').then(function (r) { return r.json(); }).then(function (x) { creditosFotos = x; return x; })).then(function (lista) {
       lista.forEach(function (c) {
         corpo.appendChild(h('p', { class: 'pequeno' }, [h('a', { href: c.pagina, target: '_blank', rel: 'noopener', texto: c.titulo.replace(/\.(jpe?g|png)$/i, '').slice(0, 60) }), ' · ' + c.autor + ' · ' + c.licenca]));
@@ -859,9 +908,17 @@
     }
     var dias = diasDaViagem(v), hj = hojeIso(), di = dias.indexOf(hj);
     var antes = di < 0 && dataDe(v.inicio) > dataDe(hj);
-    if (antes) tela.appendChild(faixaFotos(v.nome, fData(v.inicio) + ' – ' + fData(v.fim), { destino: fotosDaViagem(v) }));
+    if (antes) tela.appendChild(faixaFotos(v.nome, fData(v.inicio) + ' – ' + fData(v.fim), { destino: fotosDaViagem(v), neutro: !fotosDaViagem(v) }));
+    if (!fotosDaViagem(v)) buscarFotoCommons(v).then(function (ok) { if (ok && estado.rota === 'inicio') mostrar('inicio'); });
     else tela.appendChild(h('div', {}, [h('h1', { texto: v.nome }), h('p', { class: 'sub', texto: fData(v.inicio) + ' – ' + fData(v.fim) })]));
     if (estado.pacote && estado.pacote.offline) tela.appendChild(h('p', { class: 'pequeno', texto: T('usandoCopia') }));
+    var cp = cartaoPais(v); if (cp) tela.appendChild(cp);
+    /* destino sem guia pronto: um caminho claro para começar (sem IA) */
+    if (!estado.pacote && antes) tela.appendChild(h('div', { class: 'cartao comece' }, [h('h3', { texto: '🧭 ' + T('comeceTitulo') }), h('p', { class: 'sub', texto: T('comeceTexto') }),
+      h('div', { class: 'linha' }, [
+        h('button', { class: 'bt', type: 'button', texto: '🔎 ' + T('comeceVer'), onclick: function () { Nav.ir('mapa'); setTimeout(function () { buscarPerto(null); }, 300); } }),
+        h('button', { class: 'bt sec', type: 'button', texto: '⭐ ' + T('comeceIdeias'), onclick: function () { Nav.ir('salvos'); } }),
+        h('button', { class: 'bt leve', type: 'button', texto: '🗓 ' + T('comeceDias'), onclick: function () { Nav.ir('roteiro'); } })])]));
 
     var dias2 = Math.round((dataDe(v.inicio) - dataDe(hj)) / 86400000);
     if (di < 0 && dias2 > 0) {
@@ -950,7 +1007,11 @@
     cx.textContent = '';
     cx.appendChild(h('h3', { texto: T('climaTitulo') }));
     var ds = p.dias.filter(function (x) { return dias.indexOf(x.data) > -1; });
-    if (!ds.length) { cx.appendChild(h('p', { class: 'sub', texto: T('climaLonge', { n: p.dias.length }) })); return; }
+    if (!ds.length) {
+      cx.appendChild(h('p', { class: 'sub', texto: T('climaLonge', { n: p.dias.length }) }));
+      if (estado.viagem) cx.appendChild(h('button', { class: 'bt sec', type: 'button', style: 'align-self:flex-start', texto: '🧳 ' + T('malasBotao'), onclick: function () { janelaMalas(estado.viagem, []); } }));
+      return;
+    }
     cx.appendChild(h('div', { class: 'clima' }, ds.map(function (x) {
       return h('div', { class: 'd', 'aria-label': fData(x.data) + ': ' + x.min + '° a ' + x.max + '°' }, [
         h('span', { texto: semana(x.data) + ' ' + fData(x.data, true) }), h('b', { texto: Clima.icone(x.codigo) }),
@@ -971,14 +1032,17 @@
 
   /* E17 "O que levar": lista por regras a partir da previsão (frio, calor, chuva, vento, nº de dias); marca o que já foi pra mala */
   function janelaMalas(v, ds) {
-    var n = diasDaViagem(v).length, min = Math.min.apply(null, ds.map(function (x) { return x.min; })), max = Math.max.apply(null, ds.map(function (x) { return x.max; }));
+    var n = diasDaViagem(v).length, comPrev = ds.length > 0;
+    var min = comPrev ? Math.min.apply(null, ds.map(function (x) { return x.min; })) : 99, max = comPrev ? Math.max.apply(null, ds.map(function (x) { return x.max; })) : -99;
     var chuva = ds.filter(function (x) { return x.chuva != null && x.chuva >= 50; }).length, vento = ds.some(function (x) { return x.vento != null && x.vento >= 40; });
     var itens = [T('malaRoupas', { n: n, m: n + 1 }), T('malaSapato')];
     if (min <= 12) itens.push(T('malaFrioForte', { t: min })); else if (min <= 17) itens.push(T('malaFrio', { t: min }));
     if (max >= 27) itens.push(T('malaCalor', { t: max }));
     if (chuva) { itens.push(T('malaChuva', { n: chuva })); itens.push(T('malaChuva2')); }
     if (vento) itens.push(T('malaVento'));
+    if (!comPrev) itens.push(T('malaVerPrevisao'));
     itens.push(T('malaCriancas'), T('malaRemedios'), T('malaCarregador'), T('malaDocs'));
+    var pais = paisDaViagem(v); if (pais && pais.cod !== 'BR') itens.push(T('malaExterior'), T('malaTomada', { t: pais.tomada }));
     var chave = 'malas:' + v.id, lista = h('ul', { class: 'checagem' });
     Banco.meta(chave, {}).then(function (feitos) {
       itens.forEach(function (t, i) {
@@ -988,7 +1052,7 @@
       });
     });
     janela('🧳 ' + T('malasBotao'), h('div', { class: 'linha', style: 'flex-direction:column;align-items:stretch' }, [
-      h('p', { class: 'sub', texto: T('malasDica', { min: min, max: max }) }), lista, h('p', { class: 'pequeno', texto: T('malasRodape') })]));
+      h('p', { class: 'sub', texto: comPrev ? T('malasDica', { min: min, max: max }) : T('malasSemPrevisao') }), lista, h('p', { class: 'pequeno', texto: T('malasRodape') })]));
   }
   /* dia da viagem → dia do modelo de roteiro: 1º = chegada, último = volta, meio = repete os dias do meio */
   function mapearDia(i, nViagem, nModelo) {
@@ -1026,8 +1090,9 @@
       h('button', { class: 'bt leve', type: 'button', onclick: function () { janelaNovaOpcao(); } }, '＋ ' + T('outraOpcao')),
       h('button', { class: 'bt leve', type: 'button', onclick: function () { janelaEstaOpcao(o); } }, '✎ ' + T('estaOpcao'))
     ]);
-    barra.appendChild(h('button', { class: 'bt leve', type: 'button', texto: '📤 ' + T('cmp_botao'), onclick: function () { janelaCompartilharRoteiro(v); } }));
-    barra.appendChild(h('button', { class: 'bt leve', type: 'button', texto: '📅 ' + T('calBotao'), title: T('calDica'), onclick: function () { exportarCalendario(v, o); } }));
+    /* no celular, Compartilhar e Calendário ficam só com o ícone (a barra cabe numa linha e sobra tela para o dia) */
+    barra.appendChild(h('button', { class: 'bt leve', type: 'button', 'aria-label': T('cmp_botao'), title: T('cmp_botao'), onclick: function () { janelaCompartilharRoteiro(v); } }, ['📤', h('span', { class: 'so-largo', texto: ' ' + T('cmp_botao') })]));
+    barra.appendChild(h('button', { class: 'bt leve', type: 'button', 'aria-label': T('calBotao'), title: T('calDica'), onclick: function () { exportarCalendario(v, o); } }, ['📅', h('span', { class: 'so-largo', texto: ' ' + T('calBotao') })]));
     tela.appendChild(barra);
     if (o.origem === 'ia') tela.appendChild(h('div', { class: 'alerta' }, [h('b', { texto: T('iaConfira') }), T('iaConfiraTexto')]));
 
@@ -1171,6 +1236,53 @@
     if (!m) return null;
     return { abre: (+m[1]) * 60 + (+m[2] || 0), fecha: (+m[3]) * 60 + (+m[4] || 0) };
   }
+  /* ---------- viagem ao exterior: o básico do país, sem IA (tabela fixa + câmbio do Banco Central Europeu via frankfurter.app) ---------- */
+  var SCHENGEN = 'Passaporte válido por 3 meses além da volta; seguro viagem com cobertura mínima de 30 mil euros (Espaço Schengen); confira se o ETIAS já é exigido';
+  var PAISES = [
+    { cod: 'PT', nomes: ['portugal', 'lisboa', 'porto', 'algarve', 'sintra', 'madeira', 'acores', 'coimbra'], fuso: 'Europe/Lisbon', moeda: 'EUR', moedaNome: 'euro (€)', idioma: 'português', tomada: 'F', emerg: '112', docs: SCHENGEN },
+    { cod: 'ES', nomes: ['espanha', 'madri', 'madrid', 'barcelona', 'sevilha', 'valencia', 'granada'], fuso: 'Europe/Madrid', moeda: 'EUR', moedaNome: 'euro (€)', idioma: 'espanhol', tomada: 'F', emerg: '112', docs: SCHENGEN },
+    { cod: 'FR', nomes: ['franca', 'paris', 'nice', 'lyon', 'marselha', 'bordeaux'], fuso: 'Europe/Paris', moeda: 'EUR', moedaNome: 'euro (€)', idioma: 'francês', tomada: 'E', emerg: '112', docs: SCHENGEN },
+    { cod: 'IT', nomes: ['italia', 'roma', 'milao', 'veneza', 'florenca', 'napoles', 'toscana'], fuso: 'Europe/Rome', moeda: 'EUR', moedaNome: 'euro (€)', idioma: 'italiano', tomada: 'F e L', emerg: '112', docs: SCHENGEN },
+    { cod: 'DE', nomes: ['alemanha', 'berlim', 'munique', 'frankfurt', 'hamburgo'], fuso: 'Europe/Berlin', moeda: 'EUR', moedaNome: 'euro (€)', idioma: 'alemão', tomada: 'F', emerg: '112', docs: SCHENGEN },
+    { cod: 'GB', nomes: ['inglaterra', 'londres', 'reino unido', 'escocia', 'edimburgo'], fuso: 'Europe/London', moeda: 'GBP', moedaNome: 'libra (£)', idioma: 'inglês', tomada: 'G', emerg: '999', docs: 'Passaporte válido durante a estada; autorização eletrônica ETA do Reino Unido antes de embarcar; seguro viagem recomendado' },
+    { cod: 'US', nomes: ['estados unidos', 'eua', 'orlando', 'miami', 'nova york', 'new york', 'las vegas', 'california', 'los angeles'], fuso: 'America/New_York', moeda: 'USD', moedaNome: 'dólar (US$)', idioma: 'inglês', tomada: 'A e B', emerg: '911', docs: 'Passaporte e visto americano válidos; seguro viagem recomendado (saúde é cara)' },
+    { cod: 'AR', nomes: ['argentina', 'buenos aires', 'bariloche', 'mendoza', 'ushuaia'], fuso: 'America/Argentina/Buenos_Aires', moeda: 'ARS', moedaNome: 'peso argentino', idioma: 'espanhol', tomada: 'C e I', emerg: '911', docs: 'RG com menos de 10 anos de emissão ou passaporte; autorização de viagem para menores sem os dois pais' },
+    { cod: 'CL', nomes: ['chile', 'santiago', 'atacama', 'valparaiso'], fuso: 'America/Santiago', moeda: 'CLP', moedaNome: 'peso chileno', idioma: 'espanhol', tomada: 'C e L', emerg: '131 (ambulância) / 133 (polícia)', docs: 'RG com menos de 10 anos de emissão ou passaporte; autorização para menores sem os dois pais' },
+    { cod: 'UY', nomes: ['uruguai', 'montevideu', 'punta del este', 'colonia'], fuso: 'America/Montevideo', moeda: 'UYU', moedaNome: 'peso uruguaio', idioma: 'espanhol', tomada: 'C, F e L', emerg: '911', docs: 'RG com menos de 10 anos de emissão ou passaporte; autorização para menores sem os dois pais' },
+    { cod: 'MX', nomes: ['mexico', 'cancun', 'cidade do mexico', 'playa del carmen', 'tulum'], fuso: 'America/Cancun', moeda: 'MXN', moedaNome: 'peso mexicano', idioma: 'espanhol', tomada: 'A e B', emerg: '911', docs: 'Passaporte; confira a exigência de visto ou autorização eletrônica para brasileiros' },
+    { cod: 'JP', nomes: ['japao', 'toquio', 'kyoto', 'osaka'], fuso: 'Asia/Tokyo', moeda: 'JPY', moedaNome: 'iene (¥)', idioma: 'japonês', tomada: 'A e B', emerg: '119 (ambulância) / 110 (polícia)', docs: 'Passaporte; brasileiros com passaporte comum: confira a isenção de visto em vigor' }
+  ];
+  var UFS_BR = /\b(ac|al|ap|am|ba|ce|df|es|go|ma|mt|ms|mg|pa|pb|pr|pe|pi|rj|rn|rs|ro|rr|sc|sp|se|to|brasil|brazil)\b/;
+  function paisDaViagem(v) {
+    if (!v) return null;
+    var txt = normalizar([v.destino, v.destinoTexto, v.nome].join(' '));
+    if ((estado.pacote && estado.pacote.pais === 'BR' && estado.viagem === v) || UFS_BR.test(txt)) return { cod: 'BR' };
+    for (var i = 0; i < PAISES.length; i++) if (PAISES[i].nomes.some(function (n) { return new RegExp('\\b' + n + '\\b').test(txt); })) return PAISES[i];
+    return null;
+  }
+  function cartaoPais(v) {
+    var p = paisDaViagem(v); if (!p || p.cod === 'BR') return null;
+    var agora = new Date(), hora = '', dif = '';
+    try {
+      hora = agora.toLocaleTimeString('pt-BR', { timeZone: p.fuso, hour: '2-digit', minute: '2-digit' });
+      var hl = new Date(agora.toLocaleString('en-US', { timeZone: p.fuso })), hb = new Date(agora.toLocaleString('en-US', { timeZone: 'America/Sao_Paulo' }));
+      var dh = Math.round((hl - hb) / 3600000); dif = dh === 0 ? T('mesmoHorarioBrasilia') : T('difBrasilia', { n: (dh > 0 ? '+' : '') + dh });
+    } catch (e) {}
+    var cambio = h('span', { texto: '…' });
+    var nome = String(v.destinoTexto || v.nome).split(/[,(]/)[0].trim();
+    var c = h('div', { class: 'cartao pais' }, [h('h3', { texto: '🌍 ' + T('paisEm1Min', { nome: nome }) }),
+      h('div', { class: 'kv' }, [h('span', { texto: T('horaLocal') }), h('span', { texto: hora + (dif ? ' (' + dif + ')' : '') })]),
+      h('div', { class: 'kv' }, [h('span', { texto: T('moeda') }), h('span', {}, [p.moedaNome + ' · ', cambio])]),
+      h('div', { class: 'kv' }, [h('span', { texto: T('idiomaLocal') }), h('span', { texto: p.idioma })]),
+      h('div', { class: 'kv' }, [h('span', { texto: T('tomada') }), h('span', { texto: T('tipoTomada', { t: p.tomada }) })]),
+      h('div', { class: 'kv' }, [h('span', { texto: T('emergencia') }), h('span', { texto: p.emerg })]),
+      h('div', { class: 'kv' }, [h('span', { texto: T('documentos') }), h('span', { texto: p.docs })]),
+      h('p', { class: 'pequeno', texto: T('paisRodape') })]);
+    if (navigator.onLine) fetch('https://api.frankfurter.dev/v1/latest?base=' + p.moeda + '&symbols=BRL').then(function (r) { return r.json(); }).then(function (j) {
+      var x = j && j.rates && j.rates.BRL; cambio.textContent = x ? T('cambio', { m: p.moeda, v: x.toFixed(x < 0.1 ? 4 : 2).replace('.', ','), d: fData(j.date) }) : T('cambioSem');
+    }).catch(function () { cambio.textContent = T('cambioSem'); }); else cambio.textContent = T('cambioSem');
+    return c;
+  }
   /* ---------- tempo por passeio, alternativas e avisos do dia (sem IA: regras + previsão aberta) ---------- */
   /* que tipo de passeio é para o tempo: 'vista' (bondinho, mirante, cascata: neblina some com tudo), 'aberto' (chuva atrapalha), 'coberto' */
   function tipoTempo(l) {
@@ -1273,6 +1385,11 @@
     var di = o.dias.indexOf(dmod), antes = JSON.stringify(o.dias), tit = dmod.itens[idx].titulo;
     mudarItem(o, dmod, idx, function (item) { item.alt = false; }).then(function (alvo) {
       var dd = alvo.dias[di], esc = dd.itens[idx];
+      /* as que não foram escolhidas não somem: viram ⭐ ideias da viagem (plano B) */
+      dd.itens.forEach(function (it, i) {
+        if (i === idx || !(it.alt && (it.hora || '') === (esc.hora || '')) || !it.lugarId) return;
+        var l = lugarPorId(it.lugarId); if (l && !estado.favoritos['lugar:' + l.id]) alternarFavorito(l);
+      });
       dd.itens = dd.itens.filter(function (it, i) { return i === idx || !(it.alt && (it.hora || '') === (esc.hora || '')); });
       return Banco.gravar('roteiros', alvo).then(function () { return alvo; });
     }).then(function (alvo) {
@@ -1287,6 +1404,7 @@
   function janelaComparar(dmod, idxs, data) {
     var its = idxs.map(function (i) { return dmod.itens[i]; }), ls = its.map(function (it) { return it.lugarId ? lugarPorId(it.lugarId) : null; });
     var linhas = [
+      ['📝 ' + T('nota'), function (l, it) { return it.nota || '—'; }],
       ['📍 ' + T('cmpOnde'), function (l) { return l ? [l.endereco || cidadeDoLugar(l)].filter(Boolean).join('') : ''; }],
       ['🚗 ' + T('cmpDoHotel'), function (l) { return doHotelTexto(l) || '—'; }],
       ['💲 ' + T('preco'), function (l) { return l && l.preco || '—'; }],
@@ -1300,12 +1418,15 @@
     var celTempo = [];
     linhas.forEach(function (ln) {
       tab.appendChild(h('tr', {}, [h('th', { scope: 'row', texto: ln[0] })].concat(ls.map(function (l, i) {
-        var td = h('td', {}, comLinks(ln[1](l))); if (ln[2]) celTempo[i] = td; return td; }))));
+        var td = h('td', {}, comLinks(ln[1](l, its[i]))); if (ln[2]) celTempo[i] = td; return td; }))));
     });
     tab.appendChild(h('tr', {}, [h('th', { scope: 'row', texto: '🔗 ' + T('site') })].concat(ls.map(function (l, i) {
       var u = l && (l.compra || l.site) || ((its[i].nota || '').match(RE_LINK) || [])[0];
       return h('td', {}, u ? h('a', { href: u, target: '_blank', rel: 'noopener', texto: T('abrirSite') + ' ↗' }) : '—'); }))));
-    janela('⚖ ' + T('compararAlt'), h('div', {}, [h('div', { class: 'comparar-caixa' }, tab), h('p', { class: 'pequeno', style: 'margin-top:.6rem', texto: T('cmpRodape') })]));
+    var semLugar = ls.some(function (l) { return !l; });
+    janela('⚖ ' + T('compararAlt'), h('div', {}, [h('div', { class: 'comparar-caixa' }, tab),
+      semLugar ? h('p', { class: 'alerta pequeno', style: 'margin-top:.6rem', texto: T('cmpSemLugar') }) : null,
+      h('p', { class: 'pequeno', style: 'margin-top:.6rem', texto: T('cmpRodape') })]));
     var c = centroViagem(), per = Clima.periodoDaHora(its[0].hora);
     if (c && per) Clima.porHora(c.lat, c.lng).then(function (res) {
       var p = Clima.periodo(res.horas, data, per); if (!p) return;
@@ -1354,8 +1475,17 @@
   }
   /* lembrete no calendário do celular: na véspera, às 19h, decidir (a previsão de 1 dia antes é a mais certa) */
   function lembreteDecidir(dmod, idxs, data) {
+    /* quanto antes avisar: passeio com voucher e vagas limitadas pede antecedência; a previsão só fica boa perto da data */
+    var corpo = h('div', { class: 'linha', style: 'flex-direction:column;align-items:stretch' }, [h('p', { class: 'sub', texto: T('lembreteQuando') })]);
+    var j = janela('📅 ' + T('lembreteDecidir'), corpo);
+    [[7, 'lembrete7'], [3, 'lembrete3'], [1, 'lembrete1']].forEach(function (x) {
+      corpo.appendChild(h('button', { class: x[0] === 1 ? 'bt' : 'bt leve', type: 'button', texto: T(x[1]), onclick: function () { j.fechar(function () { gerarLembrete(dmod, idxs, data, x[0]); }); } }));
+    });
+  }
+  function gerarLembrete(dmod, idxs, data, antes) {
     var nomes = idxs.map(function (i) { return dmod.itens[i].titulo; });
-    var d0 = dataDe(data); d0.setDate(d0.getDate() - 1);
+    var d0 = dataDe(data); d0.setDate(d0.getDate() - antes);
+    if (iso(d0) < hojeIso()) d0 = dataDe(hojeIso());
     var ics = montarIcs([{ ini: icsData(iso(d0), '19:00'), fim: icsData(iso(d0), '19:15'), titulo: T('icsDecidir', { lista: nomes.join(' / ') }),
       texto: T('icsDecidirTexto', { dia: semana(data) + ' ' + fData(data, true) }), alarme: 0 }]);
     entregarArquivo(new Blob([ics], { type: 'text/calendar' }), 'decidir-' + data + '.ics', 'text/calendar', T('lembreteDecidir'));
@@ -1613,6 +1743,7 @@
   }
   function janelaItem(o, dmod) {
     var hora = campoHora('gx-item-hora'), fim = campoHora('gx-item-fim');
+    var nota = h('input', { class: 'campo', type: 'text', id: 'gx-item-nota', maxlength: '300', placeholder: T('exNotaLink') });
     var alt = campoAlternativa('gx-item-alt');
     var tit = h('input', { class: 'campo', type: 'text', id: 'gx-item-tit', maxlength: '100', placeholder: T('exItem') });
     var sel = h('select', { class: 'campo', id: 'gx-item-lugar' }, [h('option', { value: '' }, T('semLugar'))].concat(
@@ -1622,13 +1753,14 @@
       h('div', { class: 'dois' }, [h('div', { class: 'linha', style: 'flex-direction:column;align-items:stretch;gap:.3rem' }, [h('label', { class: 'rot', for: 'gx-item-hora', texto: T('hora') }), hora]),
         h('div', { class: 'linha', style: 'flex-direction:column;align-items:stretch;gap:.3rem' }, [h('label', { class: 'rot', for: 'gx-item-fim', texto: T('ateHora') }), fim])]),
       h('label', { class: 'rot', for: 'gx-item-tit', texto: T('oQue') }), tit,
+      h('label', { class: 'rot', for: 'gx-item-nota', texto: T('notaOuLink') }), nota,
       h('label', { class: 'rot', for: 'gx-item-lugar', texto: T('lugarOpcional') }), campoLugarComBusca(sel, function (n) { if (!tit.value) tit.value = n.nome; }), alt.el, ok]);
     var j = janela(T('addItem'), corpo);
     sel.addEventListener('change', function () { if (sel.value && !tit.value) tit.value = lugarPorId(sel.value).nome; });
     ok.addEventListener('click', function () {
       if (!tit.value.trim()) { tit.focus(); avisar(T('faltaOque')); return; }
       if (lerHora(hora) == null || lerHora(fim) == null) return;
-      addItemNaOpcao(o, dmod, { fim: fim.value || undefined, hora: hora.value, titulo: tit.value.trim(), nota: null, tipo: null, lugarId: sel.value || null, alt: alt.chk.checked || undefined }).then(function () { j.fechar(); recarregar(); });
+      addItemNaOpcao(o, dmod, { fim: fim.value || undefined, hora: hora.value, titulo: tit.value.trim(), nota: nota.value.trim() || null, tipo: null, lugarId: sel.value || null, alt: alt.chk.checked || undefined }).then(function () { j.fechar(); recarregar(); });
     });
   }
   /* editar um item do dia: hora, o que, nota, lugar; ver no mapa; tirar */
@@ -1993,6 +2125,7 @@
       },
       centro: centroViagem(), zoom: 13, cidade: v.destino, filtros: FILTROS,
       buscarFora: function (q) { return Descobrir.buscarNome(q, estado.pos || centroViagem(), idioma()); },
+      buscarPerto: estado.pacote ? null : function () { buscarPerto(null); },
       acrescentar: function (ls) { var ids = {}; estado.descobertas.forEach(function (x) { ids[x.id] = 1; }); ls.forEach(function (l) { if (!ids[l.id] && !lugarPorId(l.id)) estado.descobertas.push(l); }); },
       acharJuntos: function (q, aoCriar) { janelaAcharJuntos(q, aoCriar); },
       topo: function (topo) {
@@ -2009,11 +2142,7 @@
         var c = centroViagem();
         return h('div', { class: 'cartao', style: 'margin:.5rem' }, [
           h('div', { class: 'linha' }, [
-            h('button', { class: 'bt sec', type: 'button', disabled: !c, texto: T('descobrirBotao'), onclick: function (e) {
-              var bt = e.currentTarget; bt.disabled = true; bt.textContent = T('carregando');
-              Descobrir.perto(estado.pos || c, 8000).then(function (l) { estado.descobertas = l; avisar(T('descobertos', { n: l.length })); mostrar('mapa'); })
-                .catch(function () { bt.disabled = false; bt.textContent = T('descobrirBotao'); avisar(navigator.onLine ? T('osmErro') : T('semInternet')); });
-            } }),
+            h('button', { class: 'bt sec', type: 'button', disabled: !c, texto: T('descobrirBotao'), onclick: function (e) { buscarPerto(e.currentTarget); } }),
             h('button', { class: 'bt leve', type: 'button', texto: '＋ ' + T('novoLugar'), onclick: janelaNovoLugar })
           ]),
           h('p', { class: 'pequeno', texto: '© OpenStreetMap contributors (ODbL)' })
@@ -2022,6 +2151,20 @@
     });
   };
   TELAS.explorar = function (tela) { Explorar.tela(tela); };
+  /* "Buscar lugares perto" do destino (mapa aberto). Usa a posição da pessoa só se ela já está lá (a menos de 30 km);
+     planejando de casa, busca em volta do destino. Avisa que pode demorar e diz a verdade quando o servidor cai. */
+  function buscarPerto(bt) {
+    var c = centroViagem(); if (!c) return;
+    var p = estado.pos && Geo.distancia(estado.pos, c) < 30 ? estado.pos : c;
+    if (bt) { bt.disabled = true; bt.textContent = T('procurandoPerto'); }
+    avisar(T('procurandoPerto'), null, null, 20000);
+    Descobrir.perto(p, 5000).then(function (l) {
+      estado.descobertas = l; avisar(l.length ? T('descobertos', { n: l.length }) : T('nadaPerto')); mostrar('mapa');
+    }).catch(function (e) {
+      if (bt) { bt.disabled = false; bt.textContent = T('descobrirBotao'); }
+      avisar(!navigator.onLine || (e && e.message === 'offline') ? T('semInternet') : T('osmFora'), T('tentarDeNovo'), function () { buscarPerto(bt); }, 12000);
+    });
+  }
   /* Salvos: fora de viagem, os lugares guardados sem viagem. Dentro da viagem vira "Ideias da viagem":
      tudo o que a pessoa marcou com ⭐ ou guardou (da internet ou à mão), num lugar só, sem dia ainda.
      Filtros que se combinam: tipo (comer, passeio…) e cidade (Gramado, Canela…). Cada ideia tem "Pôr no dia". */
@@ -2076,13 +2219,16 @@
     function guardar(l) {
       var u = link.value.trim();
       var id = 'lugar:' + l.id, ja = estado.favoritos[id];
+      var vid = estado.viagem && emViagem() ? estado.viagem.id : null;
+      if (!lugarPorId(l.id)) return Banco.gravar('lugares', Object.assign({}, l, { viagem_id: vid })).then(function (n) { estado.lugaresProprios.push(n); return guardar(n); });
       var reg = Object.assign({}, ja || { id: id, tipo: 'lugar', ref: l.id, nome: l.nome, viagem_id: estado.viagem ? estado.viagem.id : null }, u ? { link: u } : {});
       return Banco.gravar('favoritos', reg).then(function (r) { estado.favoritos[id] = r; j.fechar(); avisar(T('ilGuardada', { nome: l.nome })); mostrar('salvos'); });
     }
     bt.addEventListener('click', function () {
       var pal = palavrasDoLink(link.value.trim()), nm = nome.value.trim(), q = [nm, pal].filter(Boolean).join(' ');
       res.textContent = '';
-      if (!q) { res.appendChild(h('p', { class: 'alerta', texto: T('ilPrecisaNome') })); nome.focus(); return; }
+      var social = /instagram|facebook|tiktok|youtu|wa\.me|whatsapp/i.test(link.value);
+      if (!q) { res.appendChild(h('p', { class: 'alerta', texto: T(social ? 'ilPrecisaNome' : 'ilPrecisaNomeSite') })); nome.focus(); return; }
       /* tenta: o nome digitado; o último pedaço do link (".../parque-do-caracol"); pedaços de 2 e 3 palavras do link */
       var ws = pal.split(' ').filter(Boolean), tentativas = [nm, ws.slice(-3).join(' '), ws.slice(-2).join(' ')];
       for (var i = 0; i + 1 < ws.length; i++) { tentativas.push(ws.slice(i, i + 2).join(' ')); if (i + 2 < ws.length) tentativas.push(ws.slice(i, i + 3).join(' ')); }
@@ -2094,6 +2240,26 @@
         res.appendChild(h('button', { class: 'bt-grande', type: 'button', onclick: function () { guardar(x.l); } }, [h('span', { class: 'ic-grande', 'aria-hidden': 'true', texto: '⭐' }),
           h('span', { class: 'tx' }, [h('b', { texto: x.l.nome }), h('small', { texto: [cidadeDoLugar(x.l), x.l.descricao].filter(Boolean).join(' · ').slice(0, 90) })])]));
       });
+      /* nada no guia: procura também na internet pelo nome (como a 🔍), perto da viagem */
+      if (!achados.length && nm && navigator.onLine) {
+        var net = h('div', { class: 'linha', style: 'flex-direction:column;align-items:stretch;gap:.4rem' }, [h('p', { class: 'sub', texto: '🔎 ' + T('bscProcurandoFora', { q: nm }) })]);
+        res.appendChild(net);
+        Descobrir.buscarNome(nm, centroViagem() || estado.pos, idioma()).then(function (ls) {
+          net.textContent = '';
+          if (!ls.length) { net.appendChild(h('p', { class: 'sub', texto: T('bscNadaFora', { q: nm }) })); return; }
+          net.appendChild(h('p', { class: 'sub', texto: T('eEsse') + '?' }));
+          ls.slice(0, 4).forEach(function (l) {
+            net.appendChild(h('button', { class: 'bt-grande', type: 'button', onclick: function () { guardar(l); } }, [h('span', { class: 'ic-grande', 'aria-hidden': 'true', texto: '⭐' }),
+              h('span', { class: 'tx' }, [h('b', { texto: l.nome }), h('small', { texto: [l.endereco, l.fonte].filter(Boolean).join(' · ') })])]));
+          });
+        }).catch(function () { net.textContent = ''; });
+      }
+      /* sempre dá para guardar a dica do jeito que veio: nome + link (sem ponto no mapa; dá para marcar depois em ✎ Editar) */
+      if (nm) res.appendChild(h('button', { class: 'bt sec', type: 'button', texto: '💾 ' + T('ilSoLink', { nome: nm }), onclick: function () {
+        var u = link.value.trim();
+        guardar({ id: 'ideia-' + Date.now().toString(36), nome: nm, categoria: 'atracao', subcategoria: null, descricao: u || null, site: u && !social ? u : null,
+          endereco: null, lat: null, lng: null, confianca: 'meu', gratis: false });
+      } }));
       res.appendChild(h('button', { class: 'bt leve', type: 'button', texto: '🤝 ' + T(achados.length ? 'naoEnenhum' : 'acharJuntos'), onclick: function () {
         var u = link.value.trim(), nm = nome.value.trim() || q;
         j.fechar(function () { janelaAcharJuntos(nm, function (n) {
@@ -2205,8 +2371,8 @@
     corpo.appendChild(linksLugar(l));
     if (estado.viagem && estado.opcao && podeEditar()) corpo.appendChild(h('button', { class: 'bt', type: 'button', onclick: function () { janelaAddAoRoteiro(l); } }, '＋ ' + T('porNoDia')));
     if (!estado.viagem && window.Explorar) Explorar.acoes(l, corpo);
-    else if ((l.confianca === 'osm' || l.confianca === 'foursquare' || l.confianca === 'tripadvisor') && !estado.lugaresProprios.some(function (x) { return x.id === l.id; })) corpo.appendChild(h('button', { class: 'bt leve', type: 'button', onclick: function () {
-      Banco.gravar('lugares', Object.assign({}, l, { viagem_id: estado.viagem.id })).then(function () { avisar(T('salvo')); recarregar(); }); } }, T('salvarLugar')));
+    else if (!fav && (l.confianca === 'osm' || l.confianca === 'foursquare' || l.confianca === 'tripadvisor')) corpo.appendChild(h('button', { class: 'bt leve', type: 'button', onclick: function () {
+      alternarFavorito(l).then(function () { avisar(T('ilGuardada', { nome: l.nome })); recarregar(); }); } }, T('salvarLugar')));
     if (estado.lugaresProprios.some(function (x) { return x.id === l.id; })) corpo.appendChild(h('div', { class: 'linha' }, [
       h('button', { class: 'bt leve', type: 'button', onclick: function () { janelaNovoLugar(l); } }, '✎ ' + T('editarLugar')),
       h('button', { class: 'bt perigo', type: 'button', onclick: function () { Banco.apagar('lugares', l.id).then(recarregar); } }, T('tirarDaLista'))]));
@@ -2226,10 +2392,15 @@
     if (dh) g.appendChild(h('span', { class: 'pequeno', texto: dh }));
     return g;
   }
+  /* ⭐ = ideia. Um lugar vindo da internet ou do "Buscar perto" ainda não está guardado: guarda o lugar junto,
+     senão a ideia some ao recarregar (ela aponta para um lugar que não existe mais) */
   function alternarFavorito(l) {
     var id = 'lugar:' + l.id, ja = estado.favoritos[id];
-    var p = ja ? Banco.apagar('favoritos', id) : Banco.gravar('favoritos', { id: id, tipo: 'lugar', ref: l.id, nome: l.nome, viagem_id: estado.viagem ? estado.viagem.id : null });
-    return p.then(function (r) { if (ja) delete estado.favoritos[id]; else estado.favoritos[id] = r; return !ja; });
+    var vid = estado.viagem && emViagem() ? estado.viagem.id : null;
+    var guardarLugar = !ja && !lugarPorId(l.id) ? Banco.gravar('lugares', Object.assign({}, l, { viagem_id: vid })).then(function (n) { estado.lugaresProprios.push(n); }) : Promise.resolve();
+    return guardarLugar.then(function () {
+      return ja ? Banco.apagar('favoritos', id) : Banco.gravar('favoritos', { id: id, tipo: 'lugar', ref: l.id, nome: l.nome, viagem_id: vid });
+    }).then(function (r) { if (ja) delete estado.favoritos[id]; else estado.favoritos[id] = r; return !ja; });
   }
   function janelaAddAoRoteiro(l) {
     var v = estado.viagem, dias = diasDaViagem(v);
@@ -3353,7 +3524,7 @@
           var dm = o.dias[mapearDia(i, dias.length, o.dias.length)] || { itens: [] };
           (dm.itens || []).forEach(function (it) {
             var l = it.lugarId ? lugarPorId(it.lugarId) : null;
-            linhas.push({ k: (it.hora || '99:99') + '|6', html: '<li><span class="h">' + esc(it.hora || '') + (it.fim ? '<br><small>–' + esc(it.fim) + '</small>' : '') + '</span><div><b>' + (it.alt ? '🔀 ' : '') + esc(it.titulo || (l && l.nome) || '') + '</b>' + (it.alt ? ' <small>(' + esc(T('altCurto')) + ')</small>' : '') +
+            linhas.push({ k: (it.hora || '99:99') + '|6', html: '<li><span class="h">' + esc(it.hora || '') + (it.fim ? '<br><small>–' + esc(it.fim) + '</small>' : '') + '</span><div><b>' + (it.alt ? '🔀 ' : '') + esc(it.titulo || (l && l.nome) || '') + '</b>' + (l && it.titulo && normalizar(it.titulo).indexOf(normalizar(l.nome)) < 0 ? ' · ' + esc(l.nome) : '') + (it.alt ? ' <small>(' + esc(T('altCurto')) + ')</small>' : '') +
               (it.nota ? '<br><small>' + escLinks(it.nota) + '</small>' : '') + (l && l.endereco ? '<br><small>' + esc(l.endereco) + '</small>' : '') +
               (l ? mapa(l.lat, l.lng, l.endereco || l.nome) : '') + '</div></li>' });
           });
@@ -3785,7 +3956,7 @@
         var atual = estado.viagem && estado.viagem.id === v.id;
         alvo.appendChild(h('div', { class: 'cartao' + (ehPassada(v) ? ' passada' : ''), style: atual ? 'border-color:var(--serra)' : null }, [
           h('div', { class: 'linha entre' }, [h('b', { texto: iconeViagem(v) + ' ' + v.nome }), atual ? h('span', { class: 'etq gratis', texto: T('emUso') }) : null]),
-          h('span', { class: 'sub', texto: fData(v.inicio) + ' – ' + fData(v.fim) + ' · ' + T('nPessoas', { n: (v.pessoas || []).length }) }),
+          h('span', { class: 'sub', texto: fData(v.inicio) + ' – ' + fData(v.fim) + ' · ' + nPessoasTxt((v.pessoas || []).length) }),
           h('div', { class: 'linha' }, [
             !atual ? h('button', { class: 'bt sec', type: 'button', onclick: function () { Contexto.definir('viagem', v.id).then(recarregarContexto).then(function () { Nav.ir('inicio'); }); } }, T('abrirViagem')) : null,
             h('button', { class: 'bt perigo', type: 'button', onclick: function () { confirmarApagarViagem(v); } }, T('apagar'))
@@ -3843,7 +4014,7 @@
       if (msg !== true) { erro.textContent = msg; return; }
       if (i < total - 1) { r.passo++; estado.irAoTopo = true; mostrar('nova'); return; }
       prox.disabled = true; prox.textContent = T('criando');
-      criarViagem(r).then(function () { estado.rascunho = null; Nav.ir('roteiro', { substituir: true }); }).catch(function () { prox.disabled = false; erro.textContent = T('erroSalvar'); });
+      criarViagem(r).then(function () { estado.rascunho = null; Nav.ir('inicio', { substituir: true }); }).catch(function () { prox.disabled = false; erro.textContent = T('erroSalvar'); });
     });
   };
   var PASSO = {};
@@ -3893,9 +4064,13 @@
     c.appendChild(h('h1', { texto: T('pDatas') }));
     var ini = h('input', { class: 'campo', type: 'date', id: 'gx-w-ini', value: r.inicio });
     var fim = h('input', { class: 'campo', type: 'date', id: 'gx-w-fim', value: r.fim });
-    c.appendChild(h('div', { class: 'dois' }, [h('div', {}, [h('label', { class: 'rot', for: 'gx-w-ini', texto: T('ida') }), ini]), h('div', {}, [h('label', { class: 'rot', for: 'gx-w-fim', texto: T('volta') }), fim])]));
-    ini.addEventListener('change', function () { r.inicio = ini.value; if (!r.fim || r.fim < r.inicio) { r.fim = r.inicio; fim.value = r.inicio; } });
-    fim.addEventListener('change', function () { r.fim = fim.value; });
+    /* o campo de data segue o idioma do navegador (às vezes mês/dia): embaixo, a data escrita por extenso tira a dúvida */
+    var extIni = h('span', { class: 'pequeno data-extenso' }), extFim = h('span', { class: 'pequeno data-extenso' });
+    var porExtenso = function () { extIni.textContent = r.inicio ? semana(r.inicio) + ', ' + fData(r.inicio) : ''; extFim.textContent = r.fim ? semana(r.fim) + ', ' + fData(r.fim) : ''; };
+    c.appendChild(h('div', { class: 'dois' }, [h('div', {}, [h('label', { class: 'rot', for: 'gx-w-ini', texto: T('ida') }), ini, extIni]), h('div', {}, [h('label', { class: 'rot', for: 'gx-w-fim', texto: T('volta') }), fim, extFim])]));
+    ini.addEventListener('change', function () { r.inicio = ini.value; if (!r.fim || r.fim < r.inicio) { r.fim = r.inicio; fim.value = r.inicio; } porExtenso(); });
+    fim.addEventListener('change', function () { r.fim = fim.value; porExtenso(); });
+    porExtenso();
     val(function () {
       if (!r.inicio || !r.fim) return T('faltaDatas');
       if (r.fim < r.inicio) return T('voltaAntes');
@@ -3986,7 +4161,7 @@
     c.appendChild(h('p', { class: 'dica', texto: T('nomeDica') }));
     c.appendChild(h('div', { class: 'cartao' }, [
       h('span', { texto: '📍 ' + r.destinoTexto }), h('span', { texto: '🗓 ' + fData(r.inicio) + ' – ' + fData(r.fim) }),
-      h('span', { texto: '👥 ' + T('nPessoas', { n: r.pessoas.length }) }), h('span', { texto: '🏨 ' + (r.estadias.filter(function (e) { return e.nome; }).map(function (e) { return e.nome; }).join(', ') || '—') })]));
+      h('span', { texto: '👥 ' + nPessoasTxt(r.pessoas.length) }), h('span', { texto: '🏨 ' + (r.estadias.filter(function (e) { return e.nome; }).map(function (e) { return e.nome; }).join(', ') || '—') })]));
     var opc = function (id, k, rot, dica, on) {
       var cb = h('input', { type: 'checkbox', id: id }); cb.checked = on; cb.addEventListener('change', function () { r[k] = cb.checked; });
       return h('div', {}, [cb, h('label', { for: id, texto: ' ' + rot }), h('p', { class: 'dica', texto: dica })]);

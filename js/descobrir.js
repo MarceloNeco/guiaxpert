@@ -12,7 +12,27 @@
    ===================================================================== */
 (function () {
   'use strict';
-  var OVERPASS = 'https://overpass-api.de/api/interpreter';
+  /* servidores públicos do Overpass: se um cai ou demora, tenta o próximo (cada um com até 20 s) */
+  var OVERPASS = ['https://overpass-api.de/api/interpreter', 'https://overpass.kumi.systems/api/interpreter', 'https://overpass.private.coffee/api/interpreter'];
+  function pedirOverpass(q, i) {
+    i = i || 0;
+    if (i >= OVERPASS.length) return Promise.reject(new Error('osm-fora'));
+    var ctl = window.AbortController ? new AbortController() : null, t = ctl ? setTimeout(function () { ctl.abort(); }, 20000) : null;
+    return fetch(OVERPASS[i], { method: 'POST', body: 'data=' + encodeURIComponent(q), headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, signal: ctl ? ctl.signal : undefined })
+      .then(function (r) { if (t) clearTimeout(t); if (!r.ok) throw new Error('osm-' + r.status); return r.json(); })
+      .catch(function (e) { if (t) clearTimeout(t); if (!navigator.onLine) throw new Error('offline'); return pedirOverpass(q, i + 1); });
+  }
+  /* horário do OpenStreetMap ("Mo-Fr 09:00-17:00; Oct-Apr …") em português */
+  var DIAS_OSM = { Mo: 'seg', Tu: 'ter', We: 'qua', Th: 'qui', Fr: 'sex', Sa: 'sáb', Su: 'dom', PH: 'feriados' };
+  var MESES_OSM = { Jan: 'jan', Feb: 'fev', Mar: 'mar', Apr: 'abr', May: 'mai', Jun: 'jun', Jul: 'jul', Aug: 'ago', Sep: 'set', Oct: 'out', Nov: 'nov', Dec: 'dez' };
+  function horarioPt(h) {
+    if (!h) return null;
+    return String(h).replace(/\b(Mo|Tu|We|Th|Fr|Sa|Su|PH)\b/g, function (m) { return DIAS_OSM[m]; })
+      .replace(/\b(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)\b/g, function (m) { return MESES_OSM[m]; })
+      .replace(/\boff\b/g, 'fechado').replace(/24\/7/g, 'todos os dias, 24 h').replace(/;\s*/g, '; ').replace(/,(?=\S)/g, ', ');
+  }
+  /* "rua, número, bairro, cidade" sem vírgula sobrando quando falta a rua */
+  function juntarEndereco(partes) { return partes.filter(function (x) { return x && String(x).trim(); }).join(', ') || null; }
 
   function categoria(t) {
     if (t.amenity === 'restaurant' || t.amenity === 'fast_food') return ['comer', 'restaurante'];
@@ -52,16 +72,15 @@
   var Descobrir = {
     /* jeito 2: OpenStreetMap ao redor de um ponto (raio em metros) */
     perto: function (centro, raio) {
-      raio = Math.min(raio || 6000, 15000);
+      raio = Math.min(raio || 5000, 8000);
       var a = '(around:' + raio + ',' + centro.lat.toFixed(4) + ',' + centro.lng.toFixed(4) + ')';
-      var q = '[out:json][timeout:25];(' +
+      var q = '[out:json][timeout:18];(' +
         'nwr["amenity"~"^(restaurant|cafe|ice_cream|pub|bar)$"]["name"]' + a + ';' +
         'nwr["tourism"~"^(attraction|museum|viewpoint|zoo|theme_park)$"]["name"]' + a + ';' +
         'nwr["shop"~"^(chocolate|confectionery)$"]["name"]' + a + ';' +
         'nwr["craft"="brewery"]["name"]' + a + ';' +
-        ');out center tags 300;';
-      return fetch(OVERPASS, { method: 'POST', body: 'data=' + encodeURIComponent(q), headers: { 'Content-Type': 'application/x-www-form-urlencoded' } })
-        .then(function (r) { if (!r.ok) throw new Error('osm-' + r.status); return r.json(); })
+        ');out center tags 250;';
+      return pedirOverpass(q)
         .then(function (j) {
           var vistos = {};
           return (j.elements || []).map(function (e) {
@@ -73,7 +92,7 @@
               id: 'osm-' + e.type + '-' + e.id, nome: t.name, categoria: c[0], subcategoria: c[1],
               descricao: t.cuisine ? t.cuisine.replace(/;/g, ', ').replace(/_/g, ' ') : null,
               endereco: end || null, site: t.website || t['contact:website'] || null,
-              telefone: t.phone || t['contact:phone'] || null, horario: t.opening_hours || null,
+              telefone: t.phone || t['contact:phone'] || null, horario: horarioPt(t.opening_hours),
               reserva: null, preco: null, criancas: null, confianca: 'osm', gratis: t.fee === 'no',
               lat: lat != null ? +(+lat).toFixed(5) : null, lng: lng != null ? +(+lng).toFixed(5) : null,
               fonte: 'OpenStreetMap', dieta: {
@@ -105,15 +124,16 @@
         return fetch(u, { headers: { 'Accept-Language': lg } }).then(function (r) { if (!r.ok) throw new Error('osm-' + r.status); return r.json(); })
           .then(function (lista) {
             return (lista || []).map(function (x) {
-              var t = { amenity: x.class === 'amenity' ? x.type : null, tourism: x.class === 'tourism' ? x.type : null, shop: x.class === 'shop' ? x.type : null, leisure: x.class === 'leisure' ? x.type : null, craft: x.class === 'craft' ? x.type : null };
+              var cl = x.class || x.category;   /* jsonv2 chama de "category" */
+              var t = { amenity: cl === 'amenity' ? x.type : null, tourism: cl === 'tourism' ? x.type : null, shop: cl === 'shop' ? x.type : null, leisure: cl === 'leisure' ? x.type : null, craft: cl === 'craft' ? x.type : null };
               var c = categoria(t), a = x.address || {}, ex = x.extratags || {};
               var nome = x.name || (x.display_name || '').split(',')[0];
-              var end = [a.road, a.house_number].filter(Boolean).join(', ') + (a.suburb || a.neighbourhood ? ', ' + (a.suburb || a.neighbourhood) : '') + (a.city || a.town || a.municipality ? ', ' + (a.city || a.town || a.municipality) : '');
-              return { id: 'osm-' + (x.osm_type || 'n').charAt(0) + '-' + x.osm_id, nome: nome, categoria: c[0], subcategoria: c[1] || (x.class === 'amenity' || x.class === 'shop' ? x.type.replace(/_/g, ' ') : null),
+              var end = juntarEndereco([a.road, a.house_number, a.suburb || a.neighbourhood, a.city || a.town || a.municipality]);
+              return { id: 'osm-' + (x.osm_type || 'n').charAt(0) + '-' + x.osm_id, nome: nome, categoria: c[0], subcategoria: c[1] || (cl === 'amenity' || cl === 'shop' ? x.type.replace(/_/g, ' ') : null),
                 descricao: ex.cuisine ? ex.cuisine.replace(/;/g, ', ').replace(/_/g, ' ') : null, endereco: end || (x.display_name || '').split(',').slice(1, 4).join(',').trim() || null,
-                site: ex.website || ex['contact:website'] || null, telefone: ex.phone || ex['contact:phone'] || null, horario: ex.opening_hours || null,
+                site: ex.website || ex['contact:website'] || null, telefone: ex.phone || ex['contact:phone'] || null, horario: horarioPt(ex.opening_hours),
                 reserva: null, preco: null, criancas: null, confianca: 'osm', gratis: false, lat: +(+x.lat).toFixed(5), lng: +(+x.lon).toFixed(5), fonte: 'OpenStreetMap',
-                _classe: x.class, _tipo: x.type };
+                _classe: cl, _tipo: x.type };
             }).filter(function (l) { return l.nome; });
           });
       }
@@ -130,7 +150,7 @@
               var p = f.properties || {}, g = (f.geometry && f.geometry.coordinates) || [];
               if (!p.name || p.osm_key === 'highway' || p.osm_key === 'place' || p.osm_key === 'boundary') return null;
               var t = {}; t[p.osm_key] = p.osm_value; var c = categoria(t);
-              var end = [p.street, p.housenumber].filter(Boolean).join(', ') + (p.district ? ', ' + p.district : '') + (p.city ? ', ' + p.city : '');
+              var end = juntarEndereco([p.street, p.housenumber, p.district, p.city]);
               return { id: 'osm-' + String(p.osm_type || 'N').charAt(0).toLowerCase() + '-' + p.osm_id, nome: p.name, categoria: c[0], subcategoria: c[1] || (p.osm_key === 'amenity' || p.osm_key === 'shop' ? String(p.osm_value).replace(/_/g, ' ') : null),
                 descricao: null, endereco: end || null, site: null, telefone: null, horario: null, reserva: null, preco: null, criancas: null, confianca: 'osm', gratis: false,
                 lat: +(+g[1]).toFixed(5), lng: +(+g[0]).toFixed(5), fonte: 'OpenStreetMap',
@@ -162,7 +182,13 @@
       var regiao = !!(centro && centro.lat != null);
       return Promise.all([pega(doServidor()), pega(deNominatim(regiao)), pega(dePhoton())]).then(function (rs) {
         var vistos = {}, todos = [];
-        rs[0].concat(rs[1], rs[2]).forEach(function (l) { if (!vistos[l.id]) { vistos[l.id] = 1; todos.push(l); } });
+        rs[0].concat(rs[1], rs[2]).forEach(function (l) {
+          if (vistos[l.id]) return; vistos[l.id] = 1;
+          /* o mesmo lugar vindo de duas fontes (ou duas vezes do mapa aberto): mesmo nome a menos de ~200 m vira um só */
+          var nn = semAcento(l.nome), dup = todos.filter(function (x) { return semAcento(x.nome) === nn && Math.abs(x.lat - l.lat) < 0.002 && Math.abs(x.lng - l.lng) < 0.002; })[0];
+          if (dup) { ['endereco', 'site', 'telefone', 'horario'].forEach(function (k) { if (!dup[k] && l[k]) dup[k] = l[k]; }); return; }
+          todos.push(l);
+        });
         if (!todos.length && !navigator.onLine) throw new Error('offline');
         /* com um centro conhecido (a viagem), o que está a mais de ~150 km fica de fora da lista principal:
            vai para "lista.longe" e a tela oferece "ver resultados longe da viagem" (procurar o bar de São Paulo
