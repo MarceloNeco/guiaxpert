@@ -2,6 +2,27 @@
   "app": "guiaxpert",
   "versoes": [
     {
+      "versao": "1.5.46",
+      "data": "2026-11-12",
+      "substitui": "1.5.45",
+      "itens": {
+        "pt": [
+          "No computador (tela a partir de 1024 px), o app usa a tela toda: a foto da viagem aparece de verdade no fundo, com um véu claro (ou escuro) para ler bem.",
+          "Hoje no computador: foto grande como banner, contagem e cartões à esquerda, previsão do tempo à direita.",
+          "Reservas no computador: os dias ficam lado a lado em duas colunas, já abertos.",
+          "Barra de atalhos no computador vira uma barra flutuante no centro; a tela de entrar mostra a foto à esquerda e o formulário à direita; as janelas abrem como caixa no meio da tela.",
+          "No celular e no tablet nada muda."
+        ],
+        "en": [
+          "On a computer (screens 1024 px and wider) the app uses the whole screen: the trip photo shows for real in the background, with a light (or dark) veil to keep text readable.",
+          "Today on a computer: big photo banner, countdown and cards on the left, weather on the right.",
+          "Bookings on a computer: days sit side by side in two columns, already open.",
+          "On a computer the shortcut bar becomes a floating bar in the middle; the sign-in screen shows the photo on the left and the form on the right; dialogs open as a box in the middle of the screen.",
+          "Nothing changes on phones and tablets."
+        ]
+      }
+    },
+    {
       "versao": "1.5.45",
       "data": "2026-11-11",
       "substitui": "1.5.44",

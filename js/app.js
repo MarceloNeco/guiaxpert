@@ -12,7 +12,7 @@
 (function () {
   'use strict';
   var d = document, $ = function (id) { return d.getElementById(id); };
-  var VERSAO_APP = '1.5.45';
+  var VERSAO_APP = '1.5.46';
 
   /* ------------------------------------------------------------------
      1. UTILIDADES
@@ -484,10 +484,12 @@
     /* telas de mapa: a página não rola; só o mapa e a lista */
     d.body.classList.toggle('sem-rolagem', rota === 'mapa' || rota === 'explorar');
     d.body.classList.toggle('com-fundo', rota !== 'mapa' && rota !== 'explorar' && rota !== 'entrar');
+    d.body.classList.toggle('na-entrar', rota === 'entrar');
     if (window.Mapa) Mapa.destruir();
     var m = $('conteudo'); m.textContent = '';
-    var tela = h('section', { class: 'tela' + (rota === 'mapa' || rota === 'explorar' ? ' larga' : '') });
+    var tela = h('section', { class: 'tela' + (rota === 'mapa' || rota === 'explorar' ? ' larga' : ''), 'data-rota': rota });
     m.appendChild(tela);
+    fundoDaTela();
     $('bt-inicio').setAttribute('aria-current', rota === 'inicio' || rota === 'explorar' ? 'page' : 'false');
     montarBarra(); desenharChip(); if (lib) botaoAssistente();
     try { TELAS[rota](tela); } catch (e) { console.error(e); tela.appendChild(h('div', { class: 'alerta' }, [h('b', { texto: T('erroTela') }), String(e.message || e)])); }
@@ -495,6 +497,17 @@
     window.scrollTo(0, mesmaTela && !estado.irAoTopo ? rolagem : 0); estado.irAoTopo = false;
   }
 
+  /* computador: a foto de fundo vira foto de verdade (a da viagem, nítida); no celular continua a discreta e leve */
+  var MQ_LARGO = window.matchMedia ? matchMedia('(min-width: 1024px)') : { matches: false };
+  function fundoDaTela() {
+    var f = $('fundo-foto'); if (!f) return;
+    var fotos = estado.viagem && emViagem() ? fotosDaViagem(estado.viagem) : null;
+    var id = (fotos && fotos.length ? fotos[(new Date().getDate()) % fotos.length] : null) || window.GX_FOTO_DO_DIA;
+    if (!id) return;
+    var alvo = 'img/fundos/' + id + (MQ_LARGO.matches ? '-1280.webp' : '-fundo.webp');
+    if (f.getAttribute('src') !== alvo) f.setAttribute('src', alvo);
+  }
+  if (MQ_LARGO.addEventListener) MQ_LARGO.addEventListener('change', function () { fundoDaTela(); });
   function semViagem(tela) {
     tela.appendChild(h('div', { class: 'cartao' }, [
       h('h2', { texto: T('semViagemTitulo') }), h('p', { class: 'sub', texto: T('semViagemTexto') }),
@@ -627,7 +640,7 @@
     }
 
     /* clima */
-    var c = centroViagem(), cx = h('div', { class: 'cartao' }, [h('h3', { texto: T('climaTitulo') }), h('p', { class: 'sub', texto: T('carregando') })]);
+    var c = centroViagem(), cx = h('div', { class: 'cartao cartao-clima' }, [h('h3', { texto: T('climaTitulo') }), h('p', { class: 'sub', texto: T('carregando') })]);
     tela.appendChild(cx);
     if (c) Clima.previsao(c.lat, c.lng).then(function (p) { desenharClima(cx, p, dias); }).catch(function () { cx.lastChild.textContent = T('climaSem'); });
     else cx.lastChild.textContent = T('climaSemLugar');
@@ -1634,7 +1647,7 @@
         var filtro = 'todos', busca = '';
         var chips = h('div', { class: 'chips rolar', role: 'tablist', 'aria-label': T('tipo') });
         var campo = h('input', { class: 'campo', type: 'search', placeholder: T('res_buscar'), 'aria-label': T('res_buscar'), autocomplete: 'off' });
-        var caixa = h('div', {});
+        var caixa = h('div', { class: 'res-dias' });
         function chip(t) {
           return h('button', { class: 'chip', type: 'button', role: 'tab', 'aria-selected': filtro === t ? 'true' : 'false', onclick: function () { filtro = t; desenharChips(); desenhar(); } },
             t === 'todos' ? T('f_todos') + ' (' + cartoes.length + ')' : T('res_' + t));
@@ -1667,7 +1680,7 @@
           function fecharDia() { fecharBloco(); if (sec) { sec.resumo.textContent = sec.icones.filter(function (x, i, a) { return a.indexOf(x) === i; }).join(' ') + ' · ' + sec.icones.length; } sec = null; }
           function abrirDia(dia) {
             fecharDia();
-            var chave = v.id + '|' + dia, aberto = abrirTudo || umDiaSo || (diasAbertos[chave] != null ? diasAbertos[chave] : dia === diaFoco || dia === 'sem');
+            var chave = v.id + '|' + dia, aberto = abrirTudo || umDiaSo || (diasAbertos[chave] != null ? diasAbertos[chave] : dia === diaFoco || dia === 'sem' || MQ_LARGO.matches);
             var corpo = h('div', { class: 'dia-corpo', hidden: !aberto });
             var resumo = h('span', { class: 'dia-resumo' });
             var mais = dia === 'sem' ? null : h('button', { class: 'dia-mais', type: 'button', 'aria-label': T('addNesteDia'), title: T('addNesteDia'), texto: '＋', onclick: function () { janelaAddNoDia(v, dia); } });

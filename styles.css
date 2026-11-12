@@ -636,3 +636,70 @@ body.travado #app, body.travado .janela-fundo.na-trava, body.travado #fundo-foto
 @media (prefers-color-scheme: dark) { :root:not([data-tema="claro"]) { --marca-x: #ff9a4d; } }
 .marca-x { font-weight: 900; color: var(--marca-x); }
 .hero-titulo .marca-x { color: #ffb070; }
+
+/* =====================================================================
+   Computador (notebook e monitor grande): aproveitar a tela.
+   Foto da viagem de verdade no fundo, conteúdo mais largo e em grade,
+   barra de atalhos flutuante no centro, janelas como diálogo.
+   O celular não muda (tudo aqui só vale de 1024px para cima).
+   ===================================================================== */
+@media (min-width: 1024px) {
+  /* fundo: foto nítida da viagem + véu para leitura (mais forte no meio, onde fica o texto) */
+  body.com-fundo #fundo-foto, body.na-entrar #fundo-foto { opacity: 1; filter: saturate(1.05); }
+  body.com-fundo::after, body.na-entrar::after { content: ""; position: fixed; inset: 0; z-index: -1; pointer-events: none;
+    background: linear-gradient(90deg,
+      color-mix(in srgb, var(--fundo) 30%, transparent) 0%,
+      color-mix(in srgb, var(--fundo) 80%, transparent) 16%,
+      color-mix(in srgb, var(--fundo) 84%, transparent) 50%,
+      color-mix(in srgb, var(--fundo) 80%, transparent) 84%,
+      color-mix(in srgb, var(--fundo) 30%, transparent) 100%); }
+  :root[data-tema="escuro"] body.com-fundo #fundo-foto { opacity: 1; }
+  @media (prefers-color-scheme: dark) { :root:not([data-tema="claro"]) body.com-fundo #fundo-foto { opacity: 1; } }
+  body.com-fundo .topo { background: color-mix(in srgb, var(--fundo) 72%, transparent); }
+
+  /* telas de conteúdo mais largas */
+  .tela[data-rota="inicio"], .tela[data-rota="roteiro"], .tela[data-rota="reservas"], .tela[data-rota="viagens"],
+  .tela[data-rota="familia"], .tela[data-rota="entrar"], .tela[data-rota="salvos"] { max-width: 78rem; padding-left: 2rem; padding-right: 2rem; }
+
+  /* Hoje: banner largo e cartões em duas colunas */
+  .tela[data-rota="inicio"] { display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); column-gap: 1.4rem; row-gap: 1.2rem; align-items: start; grid-auto-flow: row dense; }
+  .tela[data-rota="inicio"] > * { grid-column: span 7; min-width: 0; }
+  .tela[data-rota="inicio"] > .hero, .tela[data-rota="inicio"] > div:first-child, .tela[data-rota="inicio"] > .pequeno { grid-column: 1 / -1; }
+  .tela[data-rota="inicio"] > .hero { height: 52vh; min-height: 20rem; max-height: 30rem; margin: .4rem 0 .2rem; }
+  .tela[data-rota="inicio"] > .cartao-clima { grid-column: 8 / -1; grid-row: span 4; }
+  .tela[data-rota="inicio"] > .grade { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .tela[data-rota="inicio"] .hero-titulo { font-size: 2.8rem; }
+  .tela[data-rota="inicio"] .hero-sub { font-size: 1.15rem; }
+  .tela[data-rota="inicio"] .hero-texto { left: 2.2rem; bottom: 2rem; }
+
+  /* Reservas: dias lado a lado (abertos por padrão no computador) */
+  .tela[data-rota="reservas"] > .viagem-atual { max-width: 40rem; }
+  .tela[data-rota="reservas"] > .acoes-res { max-width: 40rem; }
+  .tela[data-rota="reservas"] > input.campo { max-width: 40rem; }
+  .res-dias { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .4rem 1.6rem; align-items: start; }
+  .res-dias > .dia-sec { margin: 0; min-width: 0; }
+
+  /* Roteiro: dia em cartão largo, itens em duas colunas quando cabem */
+  .tela[data-rota="roteiro"] .tempo { padding: 1.2rem 1.6rem; }
+
+  /* Entrar: foto grande à esquerda, formulário à direita */
+  .tela[data-rota="entrar"] { display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr); column-gap: 2.2rem; row-gap: 1.1rem; align-items: start; grid-auto-flow: row dense; }
+  .tela[data-rota="entrar"] > * { grid-column: 2; min-width: 0; }
+  .tela[data-rota="entrar"] > .hero { grid-column: 1; grid-row: 1 / span 20; position: sticky; top: calc(var(--topo) + .8rem);
+    height: calc(100vh - var(--topo) - var(--barra) - 3rem); max-height: 46rem; min-height: 28rem; margin: .4rem 0 0; }
+  .tela[data-rota="entrar"] .hero-titulo { font-size: 2.6rem; }
+  .tela[data-rota="entrar"] .hero-texto { left: 2rem; bottom: 2rem; }
+
+  /* barra de atalhos: flutuante, no centro, em vez de faixa de ponta a ponta */
+  .barra { left: 50%; right: auto; transform: translateX(-50%); bottom: .9rem; width: min(40rem, calc(100% - 2rem));
+    border: 1px solid var(--linha); border-radius: 999px; box-shadow: var(--sombra-flutua); padding: 0 .6rem; overflow: hidden;
+    background: color-mix(in srgb, var(--sup) 92%, transparent); -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px); }
+  .barra button { min-height: 3.6rem; }
+  body { padding-bottom: calc(var(--barra) + 1.6rem); }
+
+  /* janelas: diálogo centralizado com respiro */
+  .janela { width: min(100%, 40rem); max-height: 86vh; padding: .6rem 1.6rem 1.6rem; box-shadow: 0 30px 80px -20px rgba(0, 0, 0, .45); }
+  .janela::before { display: none; }
+  .janela-fundo { -webkit-backdrop-filter: blur(3px); backdrop-filter: blur(3px); }
+}
+@media (min-width: 1024px) and (prefers-reduced-motion: reduce) { .janela-fundo { -webkit-backdrop-filter: none; backdrop-filter: none; } }
