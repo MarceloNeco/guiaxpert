@@ -741,7 +741,8 @@
    "gratis": false,
    "lat": -29.38452,
    "lng": -50.87537,
-   "geoFonte": "endereco"
+   "geoFonte": "endereco",
+   "tempo": "aberto"
   },
   {
    "id": "snowland",
@@ -760,7 +761,8 @@
    "gratis": false,
    "lat": -29.39385,
    "lng": -50.92148,
-   "geoFonte": "endereco"
+   "geoFonte": "endereco",
+   "tempo": "coberto"
   },
   {
    "id": "gramado-zoo",
@@ -779,7 +781,8 @@
    "gratis": false,
    "lat": -29.4165,
    "lng": -50.87132,
-   "geoFonte": "endereco"
+   "geoFonte": "endereco",
+   "tempo": "aberto"
   },
   {
    "id": "mundo-criamigos",
@@ -816,7 +819,8 @@
    "gratis": false,
    "lat": -29.36097,
    "lng": -50.8486,
-   "geoFonte": "endereco"
+   "geoFonte": "endereco",
+   "tempo": "coberto"
   },
   {
    "id": "parque-olivas-de-gramado",
@@ -835,7 +839,8 @@
    "gratis": false,
    "lat": -29.30385,
    "lng": -50.93503,
-   "geoFonte": "nome"
+   "geoFonte": "nome",
+   "tempo": "aberto"
   },
   {
    "id": "alpen-park-canela",
@@ -854,7 +859,8 @@
    "gratis": false,
    "lat": -29.36155,
    "lng": -50.78546,
-   "geoFonte": "nome"
+   "geoFonte": "nome",
+   "tempo": "aberto"
   },
   {
    "id": "parque-do-caracol-cascata-canela",
@@ -882,7 +888,8 @@
     "https://viajepragramado.com.br/parque-do-caracol-em-canela-2026/",
     "https://www.dstourgramado.com.br/post/parque-do-caracol-canela-ingresso-com-desconto-cupom-dstour",
     "https://www.melhoresdestinos.com.br/cascata-caracol.html"
-   ]
+   ],
+   "tempo": "vista"
   },
   {
    "id": "catedral-de-pedra-canela",
@@ -901,7 +908,8 @@
    "gratis": true,
    "lat": -29.36375,
    "lng": -50.8092,
-   "geoFonte": "nome"
+   "geoFonte": "nome",
+   "tempo": "aberto"
   },
   {
    "id": "skyglass-canela",
@@ -924,7 +932,8 @@
    "fontes": [
     "https://skyglasscanela.com.br",
     "https://lojaskyglasscanela.com.br/produto/vitrine/plataforma"
-   ]
+   ],
+   "tempo": "vista"
   },
   {
    "id": "bondinhos-aereos-canela",
@@ -952,7 +961,8 @@
    "apelidos": [
     "bondinho",
     "teleférico"
-   ]
+   ],
+   "tempo": "vista"
   },
   {
    "id": "parque-knorr-aldeia-do-papai-noel",
@@ -998,7 +1008,8 @@
    "gratis": true,
    "lat": -29.39496,
    "lng": -50.87561,
-   "geoFonte": "osm-nome"
+   "geoFonte": "osm-nome",
+   "tempo": "aberto"
   },
   {
    "id": "rua-coberta",
@@ -1017,7 +1028,8 @@
    "gratis": true,
    "lat": -29.37859,
    "lng": -50.8732,
-   "geoFonte": "osm-nome"
+   "geoFonte": "osm-nome",
+   "tempo": "coberto"
   },
   {
    "id": "praca-das-etnias-vila-de-natal",
@@ -1036,7 +1048,8 @@
    "gratis": true,
    "lat": -29.38304,
    "lng": -50.87172,
-   "geoFonte": "osm-endereco"
+   "geoFonte": "osm-endereco",
+   "tempo": "aberto"
   },
   {
    "id": "igreja-sao-pedro",
@@ -1059,7 +1072,8 @@
    "apelidos": [
     "Igreja Matriz",
     "Matriz São Pedro"
-   ]
+   ],
+   "tempo": "coberto"
   },
   {
    "id": "parada-de-natal",
@@ -1078,7 +1092,8 @@
    "gratis": true,
    "lat": -29.37723,
    "lng": -50.87466,
-   "geoFonte": "osm-endereco"
+   "geoFonte": "osm-endereco",
+   "tempo": "aberto"
   },
   {
    "id": "acendimento-das-luzes",
@@ -1097,7 +1112,8 @@
    "gratis": true,
    "lat": -29.37889,
    "lng": -50.87384,
-   "geoFonte": "osm-endereco"
+   "geoFonte": "osm-endereco",
+   "tempo": "aberto"
   },
   {
    "id": "grande-desfile-de-natal",
@@ -1116,7 +1132,8 @@
    "gratis": false,
    "lat": -29.3693,
    "lng": -50.8811,
-   "geoFonte": "osm-endereco"
+   "geoFonte": "osm-endereco",
+   "tempo": "coberto"
   },
   {
    "id": "nativitaten-show-do-lago",
@@ -1135,7 +1152,8 @@
    "gratis": false,
    "lat": -29.4018,
    "lng": -50.86519,
-   "geoFonte": "osm-endereco"
+   "geoFonte": "osm-endereco",
+   "tempo": "aberto"
   },
   {
    "id": "o-brilho-do-natal",
@@ -1173,7 +1191,8 @@
    "gratis": true,
    "lat": -29.37948,
    "lng": -50.87437,
-   "geoFonte": "osm-nome"
+   "geoFonte": "osm-nome",
+   "tempo": "aberto"
   },
   {
    "id": "rua-torta",
@@ -1192,7 +1211,8 @@
    "gratis": true,
    "lat": -29.38247,
    "lng": -50.87234,
-   "geoFonte": "osm-nome"
+   "geoFonte": "osm-nome",
+   "tempo": "aberto"
   },
   {
    "id": "avenida-borges-de-medeiros",
@@ -1211,7 +1231,8 @@
    "gratis": true,
    "lat": -29.37723,
    "lng": -50.87466,
-   "geoFonte": "osm-endereco"
+   "geoFonte": "osm-endereco",
+   "tempo": "aberto"
   },
   {
    "id": "pao-com-linguica",
@@ -1249,7 +1270,8 @@
    "gratis": false,
    "lat": -29.37374,
    "lng": -50.85276,
-   "geoFonte": "osm-nome"
+   "geoFonte": "osm-nome",
+   "tempo": "aberto"
   },
   {
    "id": "vinicola-jolimont",
@@ -1268,7 +1290,8 @@
    "gratis": false,
    "lat": -29.36561,
    "lng": -50.76848,
-   "geoFonte": "osm-nome"
+   "geoFonte": "osm-nome",
+   "tempo": "coberto"
   },
   {
    "id": "mundo-a-vapor-canela",
@@ -1287,7 +1310,8 @@
    "gratis": false,
    "lat": -29.36168,
    "lng": -50.83486,
-   "geoFonte": "osm-nome"
+   "geoFonte": "osm-nome",
+   "tempo": "coberto"
   },
   {
    "id": "roda-gigante-roda-canela",
@@ -1305,7 +1329,8 @@
    "confianca": "baixa",
    "gratis": false,
    "lat": null,
-   "lng": null
+   "lng": null,
+   "tempo": "vista"
   },
   {
    "id": "sabor-da-nonna",
@@ -1517,7 +1542,8 @@
    "apelidos": [
     "Terra Mágica",
     "Parque Florybal"
-   ]
+   ],
+   "tempo": "aberto"
   },
   {
    "id": "taberna-mf",
@@ -1677,7 +1703,8 @@
    "lat": -29.41545,
    "lng": -50.87092,
    "geoFonte": "nome",
-   "cidade": "Gramado"
+   "cidade": "Gramado",
+   "tempo": "aberto"
   },
   {
    "id": "pedra-do-silencio",
@@ -1697,7 +1724,8 @@
    "lat": -29.33587,
    "lng": -51.03153,
    "geoFonte": "nome",
-   "cidade": "Nova Petrópolis"
+   "cidade": "Nova Petrópolis",
+   "tempo": "aberto"
   },
   {
    "id": "edelbrau",
@@ -1737,7 +1765,8 @@
    "lat": -29.37093,
    "lng": -51.10883,
    "geoFonte": "nome",
-   "cidade": "Nova Petrópolis"
+   "cidade": "Nova Petrópolis",
+   "tempo": "aberto"
   },
   {
    "id": "praca-das-flores",
@@ -1757,7 +1786,8 @@
    "lat": -29.37586,
    "lng": -51.11206,
    "geoFonte": "nome",
-   "cidade": "Nova Petrópolis"
+   "cidade": "Nova Petrópolis",
+   "tempo": "aberto"
   },
   {
    "id": "casa-sander",
@@ -1777,7 +1807,8 @@
    "lat": -29.38886,
    "lng": -51.00473,
    "geoFonte": "endereco",
-   "cidade": "Nova Petrópolis"
+   "cidade": "Nova Petrópolis",
+   "tempo": "aberto"
   },
   {
    "id": "caminhos-de-pedra",
@@ -1797,7 +1828,8 @@
    "lat": -29.1748,
    "lng": -51.44033,
    "geoFonte": "nome",
-   "cidade": "Bento Gonçalves"
+   "cidade": "Bento Gonçalves",
+   "tempo": "aberto"
   },
   {
    "id": "parque-da-ovelha",
@@ -1817,7 +1849,8 @@
    "lat": -29.17742,
    "lng": -51.4325,
    "geoFonte": "nome",
-   "cidade": "Bento Gonçalves"
+   "cidade": "Bento Gonçalves",
+   "tempo": "aberto"
   },
   {
    "id": "benevento",
@@ -1972,7 +2005,8 @@
    "geoFonte": "osm",
    "apelidos": [
     "Big Land"
-   ]
+   ],
+   "tempo": "coberto"
   },
   {
    "nome": "Aerozuum (Parque Bondinhos Aéreos)",
@@ -2002,7 +2036,8 @@
     "Aerozum",
     "Aerozoom",
     "montanha-russa"
-   ]
+   ],
+   "tempo": "vista"
   },
   {
    "nome": "Eagle Tirolesa (Parque Bondinhos Aéreos)",
@@ -2031,7 +2066,8 @@
    "apelidos": [
     "Eagle",
     "tirolesa"
-   ]
+   ],
+   "tempo": "vista"
   },
   {
    "nome": "Pé da Cascata Explorer (Brocker Turismo)",
@@ -2061,7 +2097,8 @@
     "Pé da Cascata",
     "balanço infinito",
     "trilha da cascata"
-   ]
+   ],
+   "tempo": "vista"
   }
  ],
  "roteiros": [

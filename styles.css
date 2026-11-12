@@ -719,3 +719,29 @@ body.travado #app, body.travado .janela-fundo.na-trava, body.travado #fundo-foto
 /* Roteiro: a fileira de dias fica presa no alto ao rolar (troca de dia sem voltar ao topo) */
 .tela[data-rota="roteiro"] > .dias { position: sticky; top: calc(var(--topo) + env(safe-area-inset-top, 0px)); z-index: 6; margin: 0 -.4rem; padding: .35rem .4rem;
   background: color-mix(in srgb, var(--fundo) 88%, transparent); -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px); border-radius: 0 0 18px 18px; }
+
+/* alternativas (ainda não decidido) no roteiro */
+.alternativas { margin: .4rem .6rem; border: 2px dashed var(--faixa, #f2b705); border-radius: 16px; background: color-mix(in srgb, var(--faixa-claro, #fff3c4) 45%, transparent); }
+.alt-cab { display: grid; grid-template-columns: 3.3rem 1fr; gap: .2rem .75rem; padding: .7rem 1.15rem .2rem; align-items: start; }
+.alt-cab .h { font-weight: 800; color: var(--rodovia); }
+.alternativas .item.alt { display: flex; flex-direction: column; align-items: stretch; gap: .35rem; padding: .7rem 1.15rem; }
+.alternativas .item.alt .h { display: none; }
+.alternativas .item.alt > .linha:last-child { justify-content: flex-start !important; gap: .4rem !important; }
+.alt-acoes { padding: .2rem 1.15rem .8rem; gap: .5rem; }
+.bt.escolher { min-height: 2.4rem; padding: .3rem .8rem; font-size: .9rem; }
+.nota.aviso { color: var(--evita); font-weight: 600; }
+.nota.aviso-tempo { color: var(--faixa-tinta, #6b4f00); }
+.nota.aviso-tempo.forte { color: var(--evita); font-weight: 600; }
+.nota.bom { color: var(--rodovia); }
+.periodos { flex-basis: 100%; display: flex; gap: .4rem .9rem; flex-wrap: wrap; }
+.periodos .per.ruim { color: var(--evita); font-weight: 700; }
+.comparar-caixa { overflow-x: auto; margin: 0 -.2rem; }
+table.comparar { border-collapse: collapse; width: 100%; min-width: 34rem; font-size: .92rem; }
+table.comparar th, table.comparar td { text-align: left; vertical-align: top; padding: .5rem .55rem; border-bottom: 1px solid var(--linha); }
+table.comparar thead th, table.comparar tr:first-child th { font-size: 1rem; }
+table.comparar th[scope="row"] { white-space: nowrap; color: var(--suave); font-weight: 700; }
+table.comparar .aviso { color: var(--evita); font-weight: 600; margin-top: .25rem; }
+table.comparar .bom { color: var(--rodovia); margin-top: .25rem; }
+.campo-alt input { margin-top: .3rem; width: 1.2rem; height: 1.2rem; }
+
+.item .h .ate { display: block; font-size: .78rem; font-weight: 600; color: var(--suave); }

@@ -2,6 +2,35 @@
   "app": "guiaxpert",
   "versoes": [
     {
+      "versao": "1.5.50",
+      "data": "2026-11-12",
+      "substitui": "1.5.49",
+      "itens": {
+        "pt": [
+          "Alternativas: ao pôr um passeio no dia, marque \"É uma alternativa (ainda não decidi)\". As opções do mesmo horário aparecem juntas numa caixa \"Alternativas: escolha uma\", com ⚖ Comparar (onde fica, distância do hotel, preço, crianças, horário, comprar antes, como fica com o tempo) e \"Escolher esta\" (as outras saem, com Desfazer).",
+          "Lembrete para decidir: um toque cria no calendário do celular um aviso na véspera, às 19h, para olhar a previsão e só então comprar o ingresso.",
+          "Tempo por passeio: o dia mostra manhã, tarde e noite (chuva e neblina). Passeios de vista (bondinho, mirante, cascata, Skyglass) avisam neblina e chuva; ao ar livre avisam chuva; quando dá, sugere o melhor dia e um plano B coberto (Snowland, Mundo a Vapor, Big Land…).",
+          "Avisos do dia: fora do horário de funcionamento, um passeio que começa antes do outro terminar, tempo de carro entre Gramado e Canela, e dia cheio (sugere descanso para crianças pequenas e avós).",
+          "Voo de volta: diz a que horas sair do hotel para chegar 1h30 antes, já contando a estrada e a devolução do carro.",
+          "Distância e tempo do hotel em cada lugar (o app acha o hotel pelo endereço da reserva).",
+          "Ideias da viagem: \"🔗 Ideia por link\" — cole o link do Instagram, WhatsApp ou de um site; o app acha o lugar e guarda como ⭐ ideia com o link junto.",
+          "Roteiro: campo \"Até\" (hora de fim) para eventos como a oficina das 16h às 17h; botão 📅 Calendário põe o roteiro e os compromissos no calendário do celular, com aviso 1 h antes (sem códigos de reserva).",
+          "Hoje: \"🧳 O que levar\", lista pela previsão (frio, calor, chuva, vento, nº de dias) para ir marcando o que já foi para a mala."
+        ],
+        "en": [
+          "Alternatives: mark an outing as an alternative; options at the same time show together with Compare and Pick this (with Undo).",
+          "Reminder to decide: adds a calendar alert the evening before to check the forecast before buying.",
+          "Weather per outing: morning/afternoon/evening with rain and fog; view outings warn about fog, outdoor ones about rain; suggests a better day and an indoor plan B.",
+          "Day warnings: outside opening hours, overlaps, driving time between towns, busy day.",
+          "Return flight: when to leave the hotel, including the drive and car return.",
+          "Distance and drive time from the hotel on every place.",
+          "Trip ideas: Idea from a link (Instagram, WhatsApp, websites).",
+          "Itinerary: end time for events; Calendar button exports the itinerary with 1 h reminders (no booking codes).",
+          "Today: What to pack, from the forecast, with tick boxes."
+        ]
+      }
+    },
+    {
       "versao": "1.5.49",
       "data": "2026-11-12",
       "substitui": "1.5.48",

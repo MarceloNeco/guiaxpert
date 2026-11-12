@@ -119,6 +119,40 @@
     }).catch(function () { return tentar(i + 1, lat, lng); });
   }
 
+  /* por hora: Open-Meteo (16 dias, com visibilidade) e, se falhar, MET Norway (10 dias; blocos de 6 h depois de 2–3 dias) */
+  function horasOpenMeteo(lat, lng) {
+    return buscar('https://api.open-meteo.com/v1/forecast?latitude=' + lat.toFixed(3) + '&longitude=' + lng.toFixed(3) +
+      '&hourly=weather_code,precipitation_probability,visibility,cloud_cover_low&timezone=auto&forecast_days=16').then(function (j) {
+      if (j && j.error) throw new Error('open-meteo');
+      var hh = j.hourly || {};
+      return { em: Date.now(), fonte: 'Open-Meteo', horas: (hh.time || []).map(function (t, i) {
+        return { t: t, cod: hh.weather_code ? hh.weather_code[i] : null, chuva: hh.precipitation_probability ? hh.precipitation_probability[i] : null,
+                 vis: hh.visibility ? hh.visibility[i] : null, nuvem: hh.cloud_cover_low ? hh.cloud_cover_low[i] : null };
+      }).filter(function (x) { return x.cod != null; }) };
+    });
+  }
+  function horasMet(lat, lng) {
+    var fuso = Math.round(lng / 15) * 3600 * 1000, p2 = function (n) { return (n < 10 ? '0' : '') + n; };
+    return buscar('https://api.met.no/weatherapi/locationforecast/2.0/complete?lat=' + lat.toFixed(4) + '&lon=' + lng.toFixed(4)).then(function (j) {
+      var out = [];
+      (j.properties && j.properties.timeseries || []).forEach(function (p) {
+        var x = p.data || {}, det = x.instant && x.instant.details || {}, b1 = x.next_1_hours, b6 = x.next_6_hours, b = b1 || b6;
+        if (!b || !b.summary) return;
+        var mm = b.details && b.details.precipitation_amount, prob = b.details && b.details.probability_of_precipitation;
+        var chuva = prob != null ? Math.round(prob) : mm == null ? null : mm >= (b1 ? 1 : 3) ? 75 : mm >= (b1 ? 0.2 : 0.8) ? 50 : 10;
+        var nevoa = det.fog_area_fraction != null && det.fog_area_fraction >= 50;
+        var reg = { cod: codigoMet(b.summary.symbol_code), chuva: chuva, vis: nevoa ? 500 : null, nuvem: det.cloud_area_fraction_low != null ? det.cloud_area_fraction_low : null };
+        var t0 = Date.parse(p.time) + fuso;
+        for (var k = 0; k < (b1 ? 1 : 6); k++) {
+          var d = new Date(t0 + k * 3600000);
+          out.push(Object.assign({ t: d.toISOString().slice(0, 10) + 'T' + p2(d.getUTCHours()) + ':00' }, reg));
+        }
+      });
+      var vistos = {}; out = out.filter(function (x) { if (vistos[x.t]) return false; vistos[x.t] = 1; return true; });
+      return { em: Date.now(), fonte: 'MET Norway', horas: out };
+    });
+  }
+
   var Clima = {
     icone: function (c) { return CODIGOS[c] || '🌡'; },
 
@@ -152,6 +186,43 @@
       if (dia.max != null && dia.max >= (sens.calor ? 27 : 30)) a.push('climaCalor');
       if (dia.vento != null && dia.vento >= 45) a.push('climaVento');
       return a;
+    },
+
+    /* previsão por hora (Open-Meteo): chuva, código do tempo, visibilidade e nuvem baixa.
+       Serve para os avisos por passeio: neblina some com a vista do bondinho/mirante; chuva atrapalha o que é ao ar livre. */
+    porHora: function (lat, lng) {
+      var chave = 'clima-h:' + lat.toFixed(2) + ',' + lng.toFixed(2);
+      return Banco.meta(chave, null).then(function (g) {
+        if (g && Date.now() - g.em < 3600 * 1000) return g;
+        return horasOpenMeteo(lat, lng).catch(function () { return horasMet(lat, lng); }).then(function (res) {
+          if (!res.horas.length) throw new Error('vazio');
+          Banco.definirMeta(chave, res);
+          return res;
+        }).catch(function () { if (g) { g.antiga = true; return g; } throw new Error('sem-clima'); });
+      });
+    },
+    /* resumo de um período do dia: manha 8–12h, tarde 12–18h, noite 18–22h */
+    PERIODOS: { manha: [8, 12], tarde: [12, 18], noite: [18, 22] },
+    periodo: function (horas, data, nome) {
+      var f = Clima.PERIODOS[nome]; if (!horas || !f) return null;
+      var hs = horas.filter(function (x) { if (x.t.slice(0, 10) !== data) return false; var h = +x.t.slice(11, 13); return h >= f[0] && h < f[1]; });
+      if (!hs.length) return null;
+      var chuva = pior(hs.map(function (x) { return x.chuva || 0; }));
+      var visMin = hs.reduce(function (m, x) { return x.vis != null ? Math.min(m, x.vis) : m; }, 1e9);
+      var nevoa = hs.filter(function (x) { return x.cod === 45 || x.cod === 48 || (x.vis != null && x.vis < 1000) || (x.nuvem != null && x.nuvem >= 90); }).length;
+      var chuvosas = hs.filter(function (x) { return x.cod >= 51; });
+      return { chuva: chuva, neblina: nevoa >= Math.ceil(hs.length / 2), visMin: visMin < 1e9 ? visMin : null,
+               cod: chuvosas.length >= hs.length / 3 && chuvosas.length ? pior(chuvosas.map(function (x) { return x.cod; })) : (nevoa >= Math.ceil(hs.length / 2) ? 45 : maisFrequente(hs.map(function (x) { return x.cod; }))) };
+    },
+    periodoDaHora: function (hora) { var h = +String(hora || '').slice(0, 2); return !hora ? null : h < 12 ? 'manha' : h < 18 ? 'tarde' : 'noite'; },
+    /* risco de um passeio num período: tipo 'vista' (bondinho, mirante), 'aberto' (ao ar livre) ou 'coberto' */
+    risco: function (tipo, per) {
+      if (!per || !tipo || tipo === 'coberto') return null;
+      if (tipo === 'vista' && per.neblina) return { nivel: 2, chave: 'tempoNeblinaVista', icone: '🌫' };
+      var forte = per.chuva >= 70 || [65, 82, 95, 96, 99].indexOf(per.cod) > -1 || ((per.cod === 63 || per.cod === 81) && per.chuva >= 60);
+      if (forte) return { nivel: 2, chave: tipo === 'vista' ? 'tempoChuvaVista' : 'tempoChuvaAberto', icone: '🌧' };
+      if (per.chuva >= 40 || (per.cod >= 61 && per.chuva >= 20)) return { nivel: 1, chave: tipo === 'vista' ? 'tempoTalvezChuvaVista' : 'tempoTalvezChuva', icone: '🌦' };
+      return null;
     },
 
     _fontes: FONTES
