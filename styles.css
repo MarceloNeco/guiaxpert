@@ -809,3 +809,9 @@ body.sem-foto #fundo-foto, body.sem-foto #fundo-anim { opacity: 0 !important; }
 .data-extenso { display: block; margin-top: .25rem; color: var(--rodovia); font-weight: 600; }
 .cartao.comece .linha { gap: .5rem; }
 .cartao.pais .kv > span:first-child { color: var(--suave); }
+.lugar summary .resumo-desc { grid-column: 1 / -1; color: var(--suave); }
+details.lugar[open] summary .resumo-desc { display: none; }
+/* data em dd/mm/aaaa com 📅 que abre o calendário do aparelho */
+.campo-data { position: relative; display: block; }
+.campo-data .data-nativa { position: absolute; right: .3rem; bottom: 0; width: 2.4rem; height: 1px; opacity: 0; pointer-events: none; border: 0; padding: 0; }
+.bt-cal { font-size: 1.1rem; }

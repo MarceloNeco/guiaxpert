@@ -135,7 +135,14 @@ Deno.serve(async (req: Request) => {
     : { Authorization: `Bearer ${key}`, "X-Places-Api-Version": "2025-06-17", "Accept-Language": lang === "en" ? "en" : "pt-BR" };
 
   const r = await fetch(api, { headers });
-  if (!r.ok) return json({ erro: "fsq-" + r.status, detalhe: (await r.text()).slice(0, 300) }, 502);
+  if (!r.ok) {
+    // Foursquare recusou (cota, plano, chave): registra o motivo (sem a chave) e devolve o que o Tripadvisor achou,
+    // em vez de derrubar a busca inteira com 502
+    const detalhe = (await r.text()).slice(0, 300);
+    console.log("lugares: foursquare recusou", JSON.stringify({ status: r.status, legado, detalhe }));
+    const t = await ta;
+    return json({ lugares: t, fonte: t.length ? "tripadvisor" : "nenhuma", aviso: "fsq-" + r.status });
+  }
   const j = await r.json();
   let resultados: any[] = j.results || [];
   // o nome procurado não está perto da viagem (ex.: um bar de São Paulo procurado de dentro da viagem a Gramado)?
@@ -219,11 +226,11 @@ async function taBuscar(key: string, q: string, lang: string, comCatalogo = true
     }
     return { status: 200, lista, api: "terra", detalhe: null };
   }
-  if (r.status !== 401 && r.status !== 403 && r.status !== 404) return { status: r.status, lista: [], api: "terra", detalhe: (await r.text()).slice(0, 200) };
+  if (r.status !== 401 && r.status !== 403 && r.status !== 404) { const det = (await r.text()).slice(0, 200); console.log("lugares: tripadvisor terra recusou", JSON.stringify({ status: r.status, det })); return { status: r.status, lista: [], api: "terra", detalhe: det }; }
   // reserva: chave da Content API antiga
   const u = "https://api.content.tripadvisor.com/api/v1/location/search?key=" + encodeURIComponent(key) + "&searchQuery=" + encodeURIComponent(q) + "&language=" + (lang === "en" ? "en" : "pt");
   const v = await fetch(u, { headers: { accept: "application/json" } });
-  if (!v.ok) return { status: v.status, lista: [], api: "content", detalhe: (await v.text()).slice(0, 200) };
+  if (!v.ok) { const det = (await v.text()).slice(0, 200); console.log("lugares: tripadvisor content recusou", JSON.stringify({ status: v.status, terra: r.status, det })); return { status: v.status, lista: [], api: "content", detalhe: det }; }
   const jv = await v.json();
   const lista = (jv.data || []).slice(0, 8).map((x: any) => {
     const a = x.address_obj || {}; const cat = x.category?.name || "";

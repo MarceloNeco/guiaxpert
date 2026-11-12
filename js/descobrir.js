@@ -70,6 +70,7 @@
   }
 
   var Descobrir = {
+    horarioPt: horarioPt,
     /* jeito 2: OpenStreetMap ao redor de um ponto (raio em metros) */
     perto: function (centro, raio) {
       raio = Math.min(raio || 5000, 8000);
