@@ -2,6 +2,21 @@
   "app": "guiaxpert",
   "versoes": [
     {
+      "versao": "1.5.51",
+      "data": "2026-11-12",
+      "substitui": "1.5.50",
+      "itens": {
+        "pt": [
+          "No Explorar, o logo do app, a casinha 🏠 e \"Hoje\" do menu voltam para a sua viagem (a próxima; se não houver, a última). Antes eles ficavam no Explorar e não dava para sair.",
+          "A lupa voltou a aparecer na busca do mapa."
+        ],
+        "en": [
+          "In Explore, the app logo, 🏠 and Today take you back to your trip (the next one, or the last).",
+          "The search magnifier is back on the map."
+        ]
+      }
+    },
+    {
       "versao": "1.5.50",
       "data": "2026-11-12",
       "substitui": "1.5.49",

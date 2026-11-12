@@ -790,3 +790,4 @@ table.comparar .bom { color: var(--rodovia); margin-top: .25rem; }
   body.rolando .bt-assistente { opacity: 0; transform: translateY(1rem); pointer-events: none; }
 }
 .etq.no-roteiro { background: var(--rodovia-claro); color: var(--rodovia); }
+.busca-caixa > svg { z-index: 2; pointer-events: none; }

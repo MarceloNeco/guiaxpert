@@ -12,7 +12,7 @@
 (function () {
   'use strict';
   var d = document, $ = function (id) { return d.getElementById(id); };
-  var VERSAO_APP = '1.5.50';
+  var VERSAO_APP = '1.5.51';
 
   /* ------------------------------------------------------------------
      1. UTILIDADES
@@ -434,6 +434,16 @@
   var BARRA_EXPLORAR = ['explorar', 'salvos', 'viagens'];
   var ICONE_ROTA = { inicio: 'hoje', roteiro: 'roteiro', mapa: 'mapa', reservas: 'reservas', familia: 'quem', explorar: 'mapa', salvos: 'salvos', viagens: 'viagens' };
   function emViagem() { return !!(window.Contexto && Contexto.emViagem()); }
+  var voltando = false;
+  function voltarParaViagem(rota) {
+    if (voltando) return; voltando = true;
+    Banco.listar('viagens').then(function (vs) {
+      vs.sort(function (a, b) { return a.inicio < b.inicio ? -1 : 1; });
+      var v = vs.filter(function (x) { return x.fim >= hojeIso(); })[0] || vs[vs.length - 1];
+      if (!v) { voltando = false; return; }
+      return Contexto.definir('viagem', v.id).then(recarregarContexto).then(function () { voltando = false; Nav.ir(rota); });
+    }).catch(function () { voltando = false; });
+  }
 
   function montarBarra() {
     var b = $('barra'); b.textContent = '';
@@ -626,7 +636,9 @@
     if (!lib && rota !== 'config') rota = 'entrar';
     if (lib && rota === 'entrar') rota = 'inicio';
     if (rota === 'lugares') rota = emViagem() ? 'mapa' : 'explorar';
-    if (lib && !emViagem() && (rota === 'inicio' || rota === 'roteiro' || rota === 'mapa' || rota === 'reservas')) rota = 'explorar';
+    /* no Explorar e pediu uma tela de viagem (Hoje, Roteiro, Mapa, Reservas, logo, 🏠): volta para a viagem (a próxima ou a última).
+       Sem nenhuma viagem, fica no Explorar. */
+    if (lib && !emViagem() && (rota === 'inicio' || rota === 'roteiro' || rota === 'mapa' || rota === 'reservas')) { voltarParaViagem(rota); rota = 'explorar'; }
     if (lib && emViagem() && (rota === 'explorar' || rota === 'salvos')) { /* permitido: explorar de dentro da viagem */ }
     estado.rota = rota;
     /* telas de mapa: a página não rola; só o mapa e a lista */
@@ -4737,10 +4749,10 @@
     $('bt-menu').addEventListener('click', abrirGaveta);
     $('fundo-gaveta').addEventListener('click', function () { Nav.fecharCamada(); });
     d.addEventListener('keydown', function (e) { if (e.key === 'Escape' && !$('gaveta').hidden) Nav.fecharCamada(); });
-    $('marca').addEventListener('click', function () { Nav.ir(emViagem() ? 'inicio' : 'explorar'); });
-    $('marca').addEventListener('keydown', function (e) { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); Nav.ir(emViagem() ? 'inicio' : 'explorar'); } });
+    $('marca').addEventListener('click', function () { Nav.ir('inicio'); });
+    $('marca').addEventListener('keydown', function (e) { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); Nav.ir('inicio'); } });
     $('chip').addEventListener('click', janelaContexto);
-    $('bt-inicio').addEventListener('click', function () { Nav.ir(emViagem() ? 'inicio' : 'explorar'); });
+    $('bt-inicio').addEventListener('click', function () { Nav.ir('inicio'); });
     $('bt-config').addEventListener('click', function () { Nav.ir('config'); });
     $('bt-conta').addEventListener('click', function () { Nav.ir(estado.acesso && estado.acesso.liberado ? 'conta' : 'entrar'); });
     $('bt-busca').addEventListener('click', abrirBusca);
