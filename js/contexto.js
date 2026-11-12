@@ -41,7 +41,9 @@
       var mes = viagem.inicio ? ({ pt: ['jan', 'fev', 'mar', 'abr', 'mai', 'jun', 'jul', 'ago', 'set', 'out', 'nov', 'dez'], en: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'] }[lg === 'en' ? 'en' : 'pt'][+viagem.inicio.slice(5, 7) - 1]) : '';
       var curto = nome.split(/,|\(/)[0].trim();
       if (curto.length > 18) curto = curto.slice(0, 17).trim() + '…';
-      return (viagem.tipo === 'passeio' ? '🚶 ' : '🧳 ') + curto + (mes && viagem.tipo !== 'passeio' ? ', ' + mes : '');
+      /* mês com o ano curto (nov/26): a próxima viagem pode ser no ano que vem; se o nome já tem o ano, não repete */
+      var ano = viagem.inicio ? viagem.inicio.slice(0, 4) : '', comAno = mes && ano && curto.indexOf(ano) < 0 ? mes + '/' + ano.slice(2) : mes;
+      return (viagem.tipo === 'passeio' ? '🚶 ' : '🧳 ') + curto + (comAno && viagem.tipo !== 'passeio' ? ', ' + comAno : '');
     }
   };
 

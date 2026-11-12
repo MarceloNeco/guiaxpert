@@ -71,7 +71,10 @@
 
       function filtrados() {
         var q = GX.normalizar(estado.busca).trim(), f = estado.filtro, soma = GX.somaGostos();
+        var doDia = {};
+        if (estado.soDia && op.itensDoDia) op.itensDoDia().forEach(function (it) { doDia[it.lugarId] = 1; });
         var itens = op.lugares().filter(function (l) {
+          if (estado.soDia && op.itensDoDia && !doDia[l.id]) return false;   /* "Só o dia": a lista também mostra só os do dia */
           if (f === 'favoritos' && !estado.favoritos['lugar:' + l.id]) return false;
           if (f === 'paraVoces' && window.Gostos && Gostos.combina(l, soma) <= 0) return false;
           if (f === 'gratis' && !l.gratis) return false;
@@ -153,6 +156,11 @@
             }).catch(function () { bf.disabled = false; bf.textContent = T('osmErro'); });
           });
           lista.insertBefore(bf, lista.firstChild);
+          /* nada achado: os próximos passos ficam à vista já no resumo (sem precisar abrir a lista) */
+          if (!itens.length) {
+            if (op.irPara) resumo.appendChild(h('button', { class: 'bt sec', type: 'button', style: 'min-height:2.5rem', texto: '🗺 ' + T('irParaNoMapa', { q: q }), onclick: function () { op.irPara(q); } }));
+            resumo.appendChild(h('button', { class: 'bt leve', type: 'button', style: 'min-height:2.5rem', texto: '🔎 ' + T('buscarNaInternetCurto', { q: q }), onclick: function () { estadoPainel('lista'); bf.click(); } }));
+          }
         }
         if (op.rodape) lista.appendChild(op.rodape());
         corpo.appendChild(lista);

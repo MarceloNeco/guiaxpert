@@ -9,14 +9,16 @@
    ===================================================================== */
 (function () {
   'use strict';
-  var estadoEx = { centro: null, nome: '', descobertas: [] };
+  var estadoEx = { centro: null, nome: '', descobertas: [], zoom: null };
 
   function GX() { return window.GX; }
 
   function geocodificar(texto, lg) {
     return fetch('https://nominatim.openstreetmap.org/search?format=jsonv2&limit=1&q=' + encodeURIComponent(texto), { headers: { 'Accept-Language': lg === 'en' ? 'en' : 'pt-BR' } })
       .then(function (r) { return r.ok ? r.json() : []; }).then(function (j) {
-        return j && j[0] ? { lat: +(+j[0].lat).toFixed(4), lng: +(+j[0].lon).toFixed(4), nome: (j[0].display_name || texto).split(',')[0] } : null;
+        if (!j || !j[0]) return null;
+        var bb = (j[0].boundingbox || []).map(Number);   /* [sul, norte, oeste, leste] */
+        return { lat: +(+j[0].lat).toFixed(4), lng: +(+j[0].lon).toFixed(4), nome: (j[0].display_name || texto).split(',')[0], bbox: bb.length === 4 ? bb : null };
       });
   }
 
@@ -39,7 +41,9 @@
       var centro = estadoEx.centro || estado.pos;
       Mapa.tela(tela, {
         lugares: Explorar.lugares,
-        centro: centro, zoom: centro ? 13 : 4,
+        centro: centro, zoom: estadoEx.zoom || (centro ? 13 : 4),
+        /* busca sem resultado ("Europa", "Bonito", "Lisboa"): leva o mapa até lá */
+        irPara: function (q) { var c = $cidade(); if (c) c.value = q; irParaTexto(q); },
         filtros: ['todos', 'favoritos', 'perto', 'comer', 'atracao', 'gratis', 'bebidas', 'doces'],
         buscarFora: function (q) { return Descobrir.buscarNome(q, estadoEx.centro || estado.pos, g.idioma()); },
         acharJuntos: function (q, aoCriar) { g.acharJuntos(q, aoCriar); },
@@ -50,16 +54,7 @@
           var aqui = h('button', { class: 'bt leve', type: 'button', texto: '📍', 'aria-label': T('ondeEstou') });
           var linha = h('div', { class: 'linha', style: 'flex-wrap:nowrap' }, [cidade, aqui, ir]);
           topo.appendChild(linha);
-          function irPara() {
-            var q = cidade.value.trim(); if (!q) return;
-            ir.disabled = true;
-            geocodificar(q, g.idioma()).then(function (c) {
-              ir.disabled = false;
-              if (!c) { g.avisar(T('cidadeNaoAchada')); return; }
-              estadoEx.centro = c; estadoEx.nome = c.nome; estadoEx.descobertas = [];
-              descobrir();
-            }).catch(function () { ir.disabled = false; g.avisar(navigator.onLine ? T('osmErro') : T('semInternet')); });
-          }
+          function irPara() { irParaTexto(cidade.value.trim(), ir); }
           ir.addEventListener('click', irPara);
           cidade.addEventListener('keydown', function (e) { if (e.key === 'Enter') irPara(); });
           aqui.addEventListener('click', function () {
@@ -77,7 +72,23 @@
           ]);
         }
       });
+      function $cidade() { return document.getElementById('gx-ex-cidade'); }
+      /* cidade: centra e procura lugares em volta; país ou continente (área grande): só mostra a região no mapa */
+      function irParaTexto(q, bt) {
+        if (!q) return;
+        if (bt) bt.disabled = true;
+        geocodificar(q, g.idioma()).then(function (c) {
+          if (bt) bt.disabled = false;
+          if (!c) { g.avisar(T('cidadeNaoAchada')); return; }
+          var bb = c.bbox, tam = bb ? Math.max(bb[1] - bb[0], bb[3] - bb[2]) : 0;
+          estadoEx.centro = { lat: c.lat, lng: c.lng }; estadoEx.nome = c.nome; estadoEx.descobertas = []; estado.busca = '';
+          estadoEx.zoom = tam > 20 ? 3 : tam > 8 ? 5 : tam > 2 ? 7 : tam > .5 ? 10 : 13;
+          if (tam > .5) { g.avisar(T('regiaoNoMapa', { nome: c.nome })); g.mostrar('explorar'); return; }
+          descobrir();
+        }).catch(function () { if (bt) bt.disabled = false; g.avisar(navigator.onLine ? T('osmErro') : T('semInternet')); });
+      }
       function descobrir() {
+        if (estadoEx.zoom && estadoEx.zoom < 12) estadoEx.zoom = 14;
         var c = estadoEx.centro || estado.pos;
         if (!c) { g.pegarPosicao().then(function (p) { estadoEx.centro = { lat: p.lat, lng: p.lng }; descobrir(); }).catch(function () {}); return; }
         g.avisar(T('carregando'));

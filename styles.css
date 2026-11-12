@@ -745,3 +745,48 @@ table.comparar .bom { color: var(--rodovia); margin-top: .25rem; }
 .campo-alt input { margin-top: .3rem; width: 1.2rem; height: 1.2rem; }
 
 .item .h .ate { display: block; font-size: .78rem; font-weight: 600; color: var(--suave); }
+
+/* ícones de reserva (traço fino, cor do texto) */
+.ic-res { display: inline-flex; flex: none; width: 1.1em; height: 1.1em; vertical-align: -.17em; margin-right: .35em; color: var(--rodovia); }
+.ic-res svg { width: 100%; height: 100%; stroke: currentColor; fill: none; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+.rot-res { display: inline-flex; align-items: center; }
+.chip[aria-selected="true"] .ic-res, .chip[aria-pressed="true"] .ic-res, .bt:not(.sec):not(.leve):not(.perigo) .ic-res { color: inherit; }
+.dia-resumo .ic-res { margin-right: .3em; color: var(--suave); }
+.etq .ic-res { color: inherit; }
+/* dias da lista de Reservas: uma "plaquinha" sólida, legível em cima da foto do fundo */
+.dia-cab { background: color-mix(in srgb, var(--sup) 92%, transparent); border-radius: 14px; padding: .55rem .8rem; color: var(--tinta);
+  box-shadow: 0 1px 0 color-mix(in srgb, var(--linha) 70%, transparent); }
+.dia-cab .dia-titulo { color: var(--tinta); font-weight: 800; }
+.dia-cab .chev { color: var(--rodovia); }
+.dia-titulo.dia-fixo { display: inline-block; background: color-mix(in srgb, var(--sup) 92%, transparent); color: var(--tinta); border-radius: 14px; padding: .45rem .8rem; margin: .8rem 0 .3rem; }
+
+/* viagem que já passou: faixa clara no topo, com atalho para a próxima */
+.aviso-passada { display: flex; flex-wrap: wrap; align-items: center; gap: .5rem .8rem; background: var(--faixa-claro); color: var(--faixa-tinta); border-radius: 14px; padding: .65rem .9rem; font-weight: 600; }
+.aviso-passada .bt { min-height: 2.4rem; padding: .3rem .9rem; }
+.aviso-passada.no-mapa { position: absolute; z-index: 420; left: .5rem; right: .5rem; bottom: calc(var(--barra) + 5.5rem); box-shadow: var(--sombra-flutua); }
+
+/* 🎤 ditar no campo */
+.campo-voz { position: relative; display: block; }
+.campo-voz > .campo, .campo-voz > input { width: 100%; padding-right: 3rem; }
+.bt-voz { position: absolute; right: .35rem; top: 50%; transform: translateY(-50%); width: 2.4rem; height: 2.4rem; border-radius: 50%; border: 0;
+  background: transparent; color: var(--rodovia); display: grid; place-items: center; cursor: pointer; }
+.campo-voz.area .bt-voz { top: .4rem; transform: none; }
+.bt-voz svg { width: 1.25rem; height: 1.25rem; stroke: currentColor; fill: none; stroke-width: 1.9; stroke-linecap: round; stroke-linejoin: round; }
+.bt-voz:hover { background: var(--sup2); }
+.bt-voz:focus-visible { outline: 3px solid var(--faixa); outline-offset: 1px; }
+.bt-voz.ouvindo { background: var(--evita); color: #fff; animation: gx-ouvindo 1.2s ease-in-out infinite; }
+@keyframes gx-ouvindo { 50% { box-shadow: 0 0 0 6px color-mix(in srgb, var(--evita) 25%, transparent); } }
+@media (prefers-reduced-motion: reduce) { .bt-voz.ouvindo { animation: none; } }
+.linha > .campo-voz, .dois .campo-voz { flex: 1 1 auto; min-width: 0; }
+.busca-caixa .campo-voz > input { padding-right: 3rem; }
+@media (max-width: 430px) { .chip-contexto { max-width: 62vw; font-size: .9rem; gap: .2rem; } .chip-contexto .chip-ico { display: none; } }
+
+/* busca 🔍 no computador: nomes longos quebram linha dentro do botão */
+.janela .grade .bt { white-space: normal; text-align: left; justify-content: flex-start; height: auto; min-height: 2.75rem; line-height: 1.3; }
+/* opções de roteiro no celular: todas à vista (quebram linha) em vez de rolar de lado escondidas */
+.tela[data-rota="roteiro"] > .chips.rolar { flex-wrap: wrap; overflow: visible; margin: 0; padding: 0; }
+@media (max-width: 699px) {
+  .bt-assistente { transition: opacity .2s ease, transform .2s ease; }
+  body.rolando .bt-assistente { opacity: 0; transform: translateY(1rem); pointer-events: none; }
+}
+.etq.no-roteiro { background: var(--rodovia-claro); color: var(--rodovia); }

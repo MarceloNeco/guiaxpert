@@ -24,3 +24,7 @@ OpenStreetMap são para uso leve; uso pesado (muitos usuários) exige provedor p
 
 Wikimedia Commons, licenças CC BY-SA 4.0, CC BY-SA 3.0, CC BY 3.0 br e CC0; autores e links em `img/fundos/creditos.json`
 e no botão 📷 do app. Recortadas em 16:10 e convertidas para WebP (640 e 1280 px). Sem pessoas.
+
+## Ícones de reserva (voo, hospedagem, carro, ingresso…)
+
+Desenhos do [Lucide](https://lucide.dev) — licença ISC (uso livre, com aviso de copyright: © Lucide Contributors).

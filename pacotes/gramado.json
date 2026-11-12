@@ -847,20 +847,26 @@
    "nome": "Alpen Park (Canela)",
    "categoria": "atracao",
    "subcategoria": null,
-   "descricao": "Parque de aventura; trenó; Alpen Kids de 0,80 a 1,29 m",
+   "descricao": "Parque de aventura com trenó de montanha e brinquedos. Entrada grátis: paga-se cada brinquedo (passaporte ou avulso). Dentro dele fica a Arena Big Land.",
    "endereco": "Rodovia Arnaldo Oppitz, 901, Canela",
    "site": "https://www.alpenpark.com.br",
    "telefone": "(54) 3282-9752",
    "horario": "9h–17h (site oficial); novo trenó em obras em 2026, confira fechamento",
-   "reserva": "Online com desconto",
-   "preco": "Passaporte R$ 168; Kids R$ 75 (set/2026). Estacionamento R$ 30",
-   "criancas": "Ótimo com Kids; 3 a 4h",
-   "confianca": "guia",
+   "reserva": "Mais barato online e pode esgotar. Sem reembolso por chuva; troca de data por e-mail.",
+   "preco": "Entrada grátis; estacionamento R$ 30. Passaporte (acima de 1,30 m) a partir de R$ 158,90 no site ou R$ 168 na bilheteria; Alpen Kids (0,80 a 1,29 m) a partir de R$ 76,50. Meia para 60+ só no avulso (site oficial, 12/11/2026)",
+   "criancas": "Alpen Kids de 0,80 a 1,29 m; maioria dos brinquedos a partir de 1,30 m; arvorismo 1,50 m. 3 a 4 h.",
+   "confianca": "oficial",
    "gratis": false,
    "lat": -29.36155,
    "lng": -50.78546,
    "geoFonte": "nome",
-   "tempo": "aberto"
+   "tempo": "aberto",
+   "chuva": "Funciona com chuva, mas algumas atrações param.",
+   "compra": "https://www.alpenpark.com.br/",
+   "apelidos": [
+    "Alpes Park",
+    "Alpen"
+   ]
   },
   {
    "id": "parque-do-caracol-cascata-canela",
@@ -889,7 +895,11 @@
     "https://www.dstourgramado.com.br/post/parque-do-caracol-canela-ingresso-com-desconto-cupom-dstour",
     "https://www.melhoresdestinos.com.br/cascata-caracol.html"
    ],
-   "tempo": "vista"
+   "tempo": "vista",
+   "chuva": "Ao ar livre: com chuva a trilha escorrega e com neblina a cascata pode sumir.",
+   "apelidos": [
+    "Cascata do Caracol"
+   ]
   },
   {
    "id": "catedral-de-pedra-canela",
@@ -937,18 +947,18 @@
   },
   {
    "id": "bondinhos-aereos-canela",
-   "nome": "Bondinhos Aéreos (Canela)",
+   "nome": "Parque Bondinhos Canela (Bondinhos Aéreos)",
    "categoria": "atracao",
    "subcategoria": null,
-   "descricao": "12 bondinhos sobre a cascata, 840 m (Parque da Serra)",
+   "descricao": "Bondinho com 3 estações: Central, Animal e Cascata (dá para descer nas duas últimas), trilha e \"Esculturas que Falam\", com vista da Cascata do Caracol. Fica ao lado do Parque do Caracol. No mesmo parque: Aerozuum e Eagle Tirolesa (pagos à parte).",
    "endereco": "R. Constante Félix Orsolin, 699, Caracol, Canela",
    "site": "https://parquesdaserra.com.br",
    "telefone": "(54) 3878-3250",
    "horario": "Todos os dias, 9h às 17h (site oficial)",
-   "reserva": "Online evita fila",
+   "reserva": "Pico das 9h às 12h: compre antes. Sem reembolso por clima; cancela em até 7 dias da compra; remarcação só antes da data.",
    "preco": "Bondinho ida e volta: inteira (10 a 59 anos) R$ 120 a R$ 130; infantil (4 a 9) e sênior (60+) R$ 60 a R$ 65. Combo Bondinho + Eagle + Aerozuum R$ 200 a R$ 210 (loja oficial, consultado em 12/11/2026; valor muda conforme a data)",
-   "criancas": "A loja não mostra preço para menores de 4 anos (confirmar)",
-   "confianca": "baixa",
+   "criancas": "Bondinho sem restrição de idade; aceita carrinho de bebê. Aerozuum: a partir de 1,10 m com adulto. Eagle: a partir de 1,20 m.",
+   "confianca": "oficial",
    "gratis": false,
    "lat": -29.30797,
    "lng": -50.84898,
@@ -960,9 +970,15 @@
    ],
    "apelidos": [
     "bondinho",
-    "teleférico"
+    "teleférico",
+    "Bondinhos Aéreos",
+    "Parque Bondinhos",
+    "Parques da Serra",
+    "parque com bondinho"
    ],
-   "tempo": "vista"
+   "tempo": "vista",
+   "chuva": "Funciona com chuva moderada; para com vento forte ou raios. Aerozuum e Eagle param com chuva. Com neblina a vista da cascata some e o parque não reembolsa.",
+   "compra": "https://loja.parquesdaserra.com.br/"
   },
   {
    "id": "parque-knorr-aldeia-do-papai-noel",
@@ -1982,7 +1998,7 @@
    "nome": "Big Land Canela",
    "categoria": "atracao",
    "subcategoria": "parque",
-   "descricao": "Parque coberto com brinquedos gigantes dos anos 80 e 90, como Genius e Tamagotchi. Pais e filhos brincam juntos. Bom para dia de chuva.",
+   "descricao": "Parque coberto com brinquedos gigantes dos anos 80 e 90, como Genius e Tamagotchi. Pais e filhos brincam juntos. Bom para dia de chuva. Não confundir com a Arena Big Land, que fica dentro do Alpen Park.",
    "endereco": "R. Ernesto Urbani, 7, salas 14 e 15, Estação Campos de Canella, Centro, Canela",
    "cidade": "Canela",
    "site": "https://big.land",

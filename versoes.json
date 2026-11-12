@@ -15,7 +15,18 @@
           "Distância e tempo do hotel em cada lugar (o app acha o hotel pelo endereço da reserva).",
           "Ideias da viagem: \"🔗 Ideia por link\" — cole o link do Instagram, WhatsApp ou de um site; o app acha o lugar e guarda como ⭐ ideia com o link junto.",
           "Roteiro: campo \"Até\" (hora de fim) para eventos como a oficina das 16h às 17h; botão 📅 Calendário põe o roteiro e os compromissos no calendário do celular, com aviso 1 h antes (sem códigos de reserva).",
-          "Hoje: \"🧳 O que levar\", lista pela previsão (frio, calor, chuva, vento, nº de dias) para ir marcando o que já foi para a mala."
+          "Hoje: \"🧳 O que levar\", lista pela previsão (frio, calor, chuva, vento, nº de dias) para ir marcando o que já foi para a mala.",
+          "Ícones de voo, hospedagem, carro, ingresso, traslado e ônibus redesenhados: traço fino e elegante, no lugar dos emojis coloridos.",
+          "Reservas: os dias viram uma plaquinha sólida, fácil de ler em cima da foto do fundo.",
+          "Seletor de viagem no topo mostra mês e ano (ex.: \"Gramado, nov/26\"), para não confundir com a viagem do ano que vem.",
+          "🎤 Em cada campo de texto (aviso da viagem, item do roteiro, lugar, busca…) dá para falar em vez de digitar. Usa o reconhecimento de voz do próprio celular ou navegador, sem IA.",
+          "Fundo e fotos por destino: São Paulo, Rio, Foz e outros têm fotos próprias; outras viagens pelo Brasil usam cartões-postais do Brasil e as do exterior, os do mundo.",
+          "Viagem que já passou: aparece um aviso no topo (\"você está vendo o arquivo\") com o botão \"Abrir a próxima\". Ideias da viagem mostra de qual viagem são.",
+          "Explorar: escreva \"Europa\", \"Portugal\" ou uma cidade e o mapa vai até lá; quando a busca não acha nada, aparecem os botões \"Ir para … no mapa\" e \"Procurar na internet\".",
+          "Parque Bondinhos Canela com as 3 estações (Central, Animal e Cascata), regras de chuva e neblina e botão \"Comprar ingresso\" na loja oficial; Alpen Park com entrada grátis e preços do site; aviso de chuva em cada ficha.",
+          "Mapa do dia: alternativas ainda não decididas não ganham número nem trajeto; \"Só o dia\" filtra também a lista.",
+          "Editar item: \"Já comprei: guardar o ingresso\" abre Reservas com dia, hora e lugar preenchidos (vira compromisso fixo 🔒). Ideias mostram quando o lugar já está no roteiro.",
+          "Pôr no dia já sugere a hora de eventos com horário fixo (ex.: Parada de Natal às 15h); no celular o botão ✦ IA some enquanto você rola; opções de roteiro todas à vista; \"🔄 Procurar atualização\" no fim do menu ☰."
         ],
         "en": [
           "Alternatives: mark an outing as an alternative; options at the same time show together with Compare and Pick this (with Undo).",
@@ -26,7 +37,18 @@
           "Distance and drive time from the hotel on every place.",
           "Trip ideas: Idea from a link (Instagram, WhatsApp, websites).",
           "Itinerary: end time for events; Calendar button exports the itinerary with 1 h reminders (no booking codes).",
-          "Today: What to pack, from the forecast, with tick boxes."
+          "Today: What to pack, from the forecast, with tick boxes.",
+          "Elegant line icons for bookings.",
+          "Day plates easier to read.",
+          "Trip selector shows month and year.",
+          "🎤 Dictation in every text field (device speech recognition, no AI).",
+          "Background photos by destination.",
+          "Past trip banner with Open the next one.",
+          "Explore goes to a region or city typed in search.",
+          "Richer park details and Buy tickets link.",
+          "Day map ignores undecided alternatives.",
+          "Bought it: save the ticket from an itinerary item.",
+          "Smaller fixes from the user test."
         ]
       }
     },

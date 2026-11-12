@@ -32,6 +32,19 @@ QR/código para outro celular, e-mail → reserva, família (membros, convites, 
 7. Barra de baixo configurável (favoritos, diretriz) e AssistONE com ajuda por tela.
 8. Mais pacotes (Bonito, Foz, Serra Gaúcha vinícolas…), cada um com data de verificação.
 
+## Feito na 1.5.50 (12/Nov/2026, sem IA)
+
+E33 alternativas (caixa "escolha uma", Comparar, Escolher esta, lembrete na véspera .ics) · E34 tempo por passeio
+(manhã/tarde/noite, neblina × vista, chuva × ao ar livre, melhor dia, plano B coberto; Open-Meteo com MET Norway de
+reserva) · E27 em parte (fora do horário, sobreposição, deslocamento, dia cheio) · E28 distância do hotel · E20 hora de
+sair para o voo de volta · E30 ideia por link · E25 em parte (hora de fim) · E18 calendário do roteiro · E17 o que levar ·
+ícones de reserva em traço fino · 🎤 ditado em todo campo de texto (reconhecimento de voz do navegador) · fotos por
+destino · aviso de viagem passada · Explorar vai até a região digitada.
+
+**Ainda falta:** E29 preço para a família (precisa da idade de cada pessoa em "Quem viaja" e de preços estruturados no
+catálogo) · E26 passeio com paradas · E31 PDF com texto · E32 ficha em tela cheia · pacote mínimo automático para destino
+novo (dados abertos: OpenStreetMap, Wikidata, Wikivoyage), a avaliar com o teste "viagem nova".
+
 ## Teste da jornada do roteiro (Claude in Chrome, 12/Nov/2026)
 
 Lista da Roberta (bloco de notas) refeita dentro do app. **Feito na 1.5.47:** desfazer ao tirar item; mudar item de dia;
