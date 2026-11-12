@@ -32,6 +32,28 @@ QR/código para outro celular, e-mail → reserva, família (membros, convites, 
 7. Barra de baixo configurável (favoritos, diretriz) e AssistONE com ajuda por tela.
 8. Mais pacotes (Bonito, Foz, Serra Gaúcha vinícolas…), cada um com data de verificação.
 
+## Teste da jornada do roteiro (Claude in Chrome, 12/Nov/2026)
+
+Lista da Roberta (bloco de notas) refeita dentro do app. **Feito na 1.5.47:** desfazer ao tirar item; mudar item de dia;
+nome, cópia e apagar da opção ("✎ Esta opção"); opção nova pede nome e abre; hora 24h; links clicáveis na observação
+(app, página e PDF); busca tolerante a erro e apelidos; busca na internet presa à região da viagem ("ver longe" sob
+pedido); cadastro de lugar sem cair em Portugal, com marcar no mapa, site e editar; "Ideias da viagem" (⭐ + guardados,
+filtros tipo e cidade); botão do compromisso fixo por tipo, abrindo a reserva certa destacada; voo e hotel da família e
+da avó juntos; roteiro pronto sem repetir o que já foi comprado; catálogo com 6 lugares novos, endereços, preços e regras
+do Caracol; Florybal único; recarregar fica no Roteiro; Explorar no destino. Computador: coluna única + fotos lentas.
+
+**Depois da viagem (sem depender de IA):**
+- E25 Item **Evento** (início/fim, local, grátis/pago) e agenda do Natal Luz importada do site oficial.
+- E26 **Passeio com paradas** (um item, várias paradas, rota a pé no mapa do dia com números 1, 2, 3).
+- E27 **Regras de conflito**: horários sobrepostos, Gramado↔Canela sem deslocamento (25–30 min), parque fechado na hora,
+  dia pesado (muitos itens + evento à noite), chuva > 60% em atração ao ar livre; clima por período (manhã/tarde).
+- E28 **Distância e tempo do hotel** em toda ficha (precisa do ponto do hotel; usar a reserva de hospedagem).
+- E29 **Preço por perfil** (inteira, meia por idade, grátis até X, 60+) e "família: R$ …"; comparar nº de ingressos × pessoas.
+- E30 **"+ Ideia por link"**: colar o link (ex.: parksnet), reconhecer o lugar do catálogo e guardar em "Onde comprar";
+  "Já comprei" vira compromisso fixo 🔒.
+- E31 **PDF com texto de verdade** (pesquisável, links ativos, mais leve) em vez de imagem.
+- E32 Ficha do lugar em tela cheia no celular, com "Pôr no dia" fixo embaixo; "Acrescentar ao dia" com um campo só de busca.
+
 ## Entrevista com o dono — 03/Nov/2026 (fonte desta lista)
 
 Contexto: Gramado e Canela, 18–22/Nov/2026 (quarta a domingo), com a esposa, a sogra e as filhas de 4 e 7 anos.

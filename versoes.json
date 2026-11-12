@@ -2,6 +2,39 @@
   "app": "guiaxpert",
   "versoes": [
     {
+      "versao": "1.5.47",
+      "data": "2026-11-12",
+      "substitui": "1.5.46",
+      "itens": {
+        "pt": [
+          "Computador: volta a ser uma coluna só, centralizada (sem duas colunas), e as fotos da viagem passam devagar no fundo, sem recomeçar quando você troca de tela. No celular nada muda; com \"reduzir movimento\" a foto fica parada.",
+          "Roteiro: o botão do compromisso fixo agora diz o que é (\"Ver voo e localizador\", \"Ver reserva do carro\", \"Ver reserva do hotel\", \"Ver os ingressos\") e abre Reservas já na reserva certa, aberta e destacada.",
+          "Roteiro: o hotel e o voo da família e da avó, no mesmo horário, aparecem numa linha só (\"2 reservas\"); o roteiro pronto não repete mais voo, carro, check-in e Desfile que você já comprou.",
+          "Roteiro: ao tirar um item (✕) aparece \"Desfazer\"; no \"Editar item\" dá para mudar o dia; \"✎ Esta opção\" dá nome à opção, faz uma cópia de um roteiro pronto para ajustar ou apaga; a opção nova já pede o nome e abre na hora.",
+          "Roteiro: hora sempre em 24h (dá para digitar 930 ou 21h); links colados na observação viram link clicável, também na página e no PDF.",
+          "Busca: aceita erro de digitação (pastaciuta, floribal, sabor da nona) e apelidos (Igreja Matriz, Aldeia do Papai Noel, Aerozum, Eagle).",
+          "Busca na internet: fica perto da viagem; resultados de outra cidade ou país só aparecem se você tocar em \"Ver resultados longe\". No mapa, o achado na internet aparece numa seção própria, sem apagar a busca.",
+          "Lugar cadastrado à mão: não cai mais em Portugal; o tipo escolhido não muda sozinho; dá para marcar no mapa, pôr site ou onde comprar e editar depois.",
+          "Ideias da viagem: as ⭐ e os lugares guardados ficam juntos, sem dia, com filtros de tipo (comer, passeios) e cidade (Gramado, Canela). No Roteiro, \"⭐ Ideias guardadas\".",
+          "Catálogo de Gramado e Canela: entram Casa Matos, Big Land, Aerozuum, Eagle Tirolesa e Pé da Cascata (com o balanço infinito); endereço e preço do Sabor da Nonna, Campo & Vinho, Skyglass e Aldeia do Papai Noel; regras do Parque do Caracol (meia 4 a 12 anos e 60+, grátis até 3); Florybal com um endereço só; mais lugares no mapa.",
+          "Recarregar a página no Roteiro volta para o Roteiro (não para Hoje); Explorar, de dentro da viagem, abre no destino."
+        ],
+        "en": [
+          "Computer: back to a single centred column, with the trip photos slowly drifting in the background (they don't restart when you change screens). Phones unchanged; with \"reduce motion\" the photo stays still.",
+          "Itinerary: the button on a fixed booking now says what it is (flight, car, hotel, tickets) and opens Bookings on that exact booking, expanded and highlighted.",
+          "Itinerary: family and grandma's hotel and flight at the same time show as one line (\"2 bookings\"); ready-made itineraries no longer repeat flight, car, check-in or parade you already booked.",
+          "Itinerary: removing an item offers Undo; Edit item lets you change the day; \"✎ This option\" renames, copies a ready-made itinerary to adjust, or deletes; new options ask for a name and open right away.",
+          "Itinerary: times always in 24h; links pasted in notes become clickable, also in the page and PDF.",
+          "Search tolerates typos and nicknames.",
+          "Online search stays near the trip; far-away results only on request. On the map, online results show in their own section without clearing the search.",
+          "Hand-added places no longer land in Portugal; the type you pick stays; mark on map, add website and edit later.",
+          "Trip ideas: starred and saved places together, no day yet, with type and city filters.",
+          "Gramado & Canela catalogue: new places, addresses, prices and park rules; Florybal de-duplicated; more places on the map.",
+          "Reloading on the Itinerary keeps you there; Explore opens at the trip destination."
+        ]
+      }
+    },
+    {
       "versao": "1.5.46",
       "data": "2026-11-12",
       "substitui": "1.5.45",

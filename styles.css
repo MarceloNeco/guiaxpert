@@ -639,7 +639,7 @@ body.travado #app, body.travado .janela-fundo.na-trava, body.travado #fundo-foto
 
 /* =====================================================================
    Computador (notebook e monitor grande): aproveitar a tela.
-   Foto da viagem de verdade no fundo, conteúdo mais largo e em grade,
+   Foto da viagem de verdade no fundo, conteúdo numa coluna só, centralizada,
    barra de atalhos flutuante no centro, janelas como diálogo.
    O celular não muda (tudo aqui só vale de 1024px para cima).
    ===================================================================== */
@@ -657,38 +657,16 @@ body.travado #app, body.travado .janela-fundo.na-trava, body.travado #fundo-foto
   @media (prefers-color-scheme: dark) { :root:not([data-tema="claro"]) body.com-fundo #fundo-foto { opacity: 1; } }
   body.com-fundo .topo { background: color-mix(in srgb, var(--fundo) 72%, transparent); }
 
-  /* telas de conteúdo mais largas */
+  /* uma coluna só, centralizada e um pouco mais larga que no celular:
+     o olho segue de cima para baixo, sem ter de escolher entre duas colunas */
   .tela[data-rota="inicio"], .tela[data-rota="roteiro"], .tela[data-rota="reservas"], .tela[data-rota="viagens"],
-  .tela[data-rota="familia"], .tela[data-rota="entrar"], .tela[data-rota="salvos"] { max-width: 78rem; padding-left: 2rem; padding-right: 2rem; }
-
-  /* Hoje: banner largo e cartões em duas colunas */
-  .tela[data-rota="inicio"] { display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); column-gap: 1.4rem; row-gap: 1.2rem; align-items: start; grid-auto-flow: row dense; }
-  .tela[data-rota="inicio"] > * { grid-column: span 7; min-width: 0; }
-  .tela[data-rota="inicio"] > .hero, .tela[data-rota="inicio"] > div:first-child, .tela[data-rota="inicio"] > .pequeno { grid-column: 1 / -1; }
-  .tela[data-rota="inicio"] > .hero { height: 52vh; min-height: 20rem; max-height: 30rem; margin: .4rem 0 .2rem; }
-  .tela[data-rota="inicio"] > .cartao-clima { grid-column: 8 / -1; grid-row: span 4; }
-  .tela[data-rota="inicio"] > .grade { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-  .tela[data-rota="inicio"] .hero-titulo { font-size: 2.8rem; }
-  .tela[data-rota="inicio"] .hero-sub { font-size: 1.15rem; }
-  .tela[data-rota="inicio"] .hero-texto { left: 2.2rem; bottom: 2rem; }
-
-  /* Reservas: dias lado a lado (abertos por padrão no computador) */
-  .tela[data-rota="reservas"] > .viagem-atual { max-width: 40rem; }
-  .tela[data-rota="reservas"] > .acoes-res { max-width: 40rem; }
-  .tela[data-rota="reservas"] > input.campo { max-width: 40rem; }
-  .res-dias { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .4rem 1.6rem; align-items: start; }
-  .res-dias > .dia-sec { margin: 0; min-width: 0; }
-
-  /* Roteiro: dia em cartão largo, itens em duas colunas quando cabem */
+  .tela[data-rota="familia"], .tela[data-rota="entrar"], .tela[data-rota="salvos"], .tela[data-rota="config"], .tela[data-rota="conta"] {
+    max-width: 50rem; padding-left: 2rem; padding-right: 2rem; }
+  .tela[data-rota="inicio"] > .hero { height: 44vh; min-height: 18rem; max-height: 26rem; margin: .4rem 0 .2rem; }
+  .tela[data-rota="inicio"] .hero-titulo { font-size: 2.5rem; }
+  .tela[data-rota="inicio"] .hero-texto { left: 2rem; bottom: 1.8rem; }
   .tela[data-rota="roteiro"] .tempo { padding: 1.2rem 1.6rem; }
-
-  /* Entrar: foto grande à esquerda, formulário à direita */
-  .tela[data-rota="entrar"] { display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr); column-gap: 2.2rem; row-gap: 1.1rem; align-items: start; grid-auto-flow: row dense; }
-  .tela[data-rota="entrar"] > * { grid-column: 2; min-width: 0; }
-  .tela[data-rota="entrar"] > .hero { grid-column: 1; grid-row: 1 / span 20; position: sticky; top: calc(var(--topo) + .8rem);
-    height: calc(100vh - var(--topo) - var(--barra) - 3rem); max-height: 46rem; min-height: 28rem; margin: .4rem 0 0; }
-  .tela[data-rota="entrar"] .hero-titulo { font-size: 2.6rem; }
-  .tela[data-rota="entrar"] .hero-texto { left: 2rem; bottom: 2rem; }
+  .tela[data-rota="entrar"] > .hero { height: 40vh; min-height: 16rem; max-height: 24rem; }
 
   /* barra de atalhos: flutuante, no centro, em vez de faixa de ponta a ponta */
   .barra { left: 50%; right: auto; transform: translateX(-50%); bottom: .9rem; width: min(40rem, calc(100% - 2rem));
@@ -702,4 +680,26 @@ body.travado #app, body.travado .janela-fundo.na-trava, body.travado #fundo-foto
   .janela::before { display: none; }
   .janela-fundo { -webkit-backdrop-filter: blur(3px); backdrop-filter: blur(3px); }
 }
+/* fundo que passa devagar no computador (a camada vem do app.js; o véu body::after fica por cima) */
+@media (min-width: 1024px) {
+  #fundo-anim { position: fixed; inset: 0; z-index: -1; pointer-events: none; overflow: hidden; opacity: 0; transition: opacity .6s ease; }
+  body.com-fundo #fundo-anim, body.na-entrar #fundo-anim { opacity: 1; }
+  body.fundo-anim.com-fundo #fundo-foto, body.fundo-anim.na-entrar #fundo-foto { opacity: 0; }
+  body.travado #fundo-anim { visibility: hidden; }
+  #fundo-anim img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; opacity: 0; transition: opacity 3.5s ease;
+    transform-origin: 50% 50%; will-change: opacity, transform; filter: saturate(1.05); }
+  #fundo-anim img.ativa { opacity: 1; animation: gx-zoom-lento 26s linear forwards; }
+  #fundo-anim img.ativa.kb2 { transform-origin: 70% 40%; }
+  @keyframes gx-zoom-lento { from { transform: scale(1); } to { transform: scale(1.09); } }
+}
 @media (min-width: 1024px) and (prefers-reduced-motion: reduce) { .janela-fundo { -webkit-backdrop-filter: none; backdrop-filter: none; } }
+
+/* roteiro → reserva: a reserva aberta pisca de leve para a pessoa achar */
+[data-res].destaque { outline: 3px solid var(--faixa, #f2b705); outline-offset: 3px; border-radius: 16px; animation: gx-destaque 1.2s ease 2; }
+@keyframes gx-destaque { 50% { outline-color: transparent; } }
+@media (prefers-reduced-motion: reduce) { [data-res].destaque { animation: none; } }
+.item.fixo .bt-reserva { align-self: flex-start; margin-top: .3rem; min-height: 2.5rem; padding: .35rem .9rem; font-size: .95rem; }
+.perigo-txt { color: var(--evita); }
+.hora24 { font-variant-numeric: tabular-nums; max-width: 9rem; }
+/* o botão ✦ IA não cobre o ✓/✕ do último item: sobra espaço para rolar */
+.tela[data-rota="roteiro"] { padding-bottom: 6.5rem; }

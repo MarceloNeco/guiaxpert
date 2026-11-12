@@ -33,6 +33,9 @@
 
     tela: function (tela) {
       var g = GX(), h = g.h, T = g.T, estado = g.estado;
+      /* de dentro de uma viagem, o Explorar começa no destino dela (não no mapa do continente) */
+      if (!estadoEx.centro && g.emViagem() && g.centroViagem()) { estadoEx.centro = g.centroViagem(); estadoEx.nome = (estado.viagem && (estado.viagem.destinoTexto || estado.viagem.nome)) || ''; }
+      if (estado.filtro && ['todos', 'favoritos', 'perto', 'comer', 'atracao', 'gratis', 'bebidas', 'doces'].indexOf(estado.filtro) < 0) estado.filtro = 'todos';
       var centro = estadoEx.centro || estado.pos;
       Mapa.tela(tela, {
         lugares: Explorar.lugares,

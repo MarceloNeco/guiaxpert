@@ -77,12 +77,14 @@
           if (f === 'gratis' && !l.gratis) return false;
           if (['comer', 'atracao', 'bebidas', 'doces', 'logistica'].indexOf(f) > -1 && l.categoria !== f) return false;
           if (f === 'perto' && l.lat == null) return false;
-          if (q && GX.normalizar([l.nome, l.descricao, l.endereco, l.subcategoria, T('cat_' + l.categoria)].join(' ')).indexOf(q) < 0) return false;
+          if (q) { l._nb = GX.notaBusca(l, q) || (GX.normalizar(T('cat_' + l.categoria)).indexOf(q) > -1 ? .5 : 0); if (!l._nb) return false; }
           return true;
         });
         var pos = estado.pos;
         if (pos) itens.forEach(function (l) { l._km = Geo.distancia(pos, l); });
-        if (f === 'paraVoces' && window.Gostos) itens.sort(function (a, b) { return Gostos.combina(b, soma) - Gostos.combina(a, soma); });
+        /* com busca: o nome mais parecido primeiro (Rua Coberta antes de quem só fica perto dela) */
+        if (q && f !== 'perto') itens.sort(function (a, b) { return (b._nb - a._nb) || ((a._km == null ? 1e9 : a._km) - (b._km == null ? 1e9 : b._km)); });
+        else if (f === 'paraVoces' && window.Gostos) itens.sort(function (a, b) { return Gostos.combina(b, soma) - Gostos.combina(a, soma); });
         else if (f === 'perto' || pos) itens.sort(function (a, b) { return (a._km == null ? 1e9 : a._km) - (b._km == null ? 1e9 : b._km); });
         return itens;
       }
@@ -101,7 +103,7 @@
       function mostrarLista() {
         var itens = filtrados();
         resumo.textContent = '';
-        resumo.appendChild(h('b', { texto: T('nLugares', { n: itens.length }) }));
+        resumo.appendChild(h('b', { texto: itens.length === 1 ? T('nLugar') : T('nLugares', { n: itens.length }) }));
         if (estado.pos) resumo.appendChild(h('span', { class: 'pequeno', texto: ' · ' + T('ordemDistancia') }));
         resumo.appendChild(h('button', { class: 'bt leve', type: 'button', style: 'margin-left:auto;min-height:2.5rem', onclick: function () { estadoPainel('lista'); } }, T('lista')));
         corpo.textContent = '';
@@ -123,21 +125,31 @@
             if (!navigator.onLine) { GX.avisar(T('semInternet')); return; }
             bf.disabled = true; bf.textContent = T('carregando');
             op.buscarFora(q).then(function (achados) {
-              if (!achados.length) {
-                bf.disabled = false; bf.textContent = T('nadaNaInternet');
-                if (op.acharJuntos) {
-                  var aj = h('button', { class: 'bt', type: 'button', style: 'margin:.25rem 1rem', texto: '🤝 ' + T('acharJuntos') });
-                  aj.addEventListener('click', function () { op.acharJuntos(q, function (n) { estado.busca = ''; campo.value = ''; redesenhar(); abrirLugar(n); if (mapa) mapa.setView([n.lat, n.lng], 16); }); });
-                  bf.insertAdjacentElement('afterend', aj);
-                }
-                return;
+              /* os achados da internet aparecem numa seção própria, embaixo da busca (não se misturam com o catálogo,
+                 a busca não se apaga e o mapa não pula para longe). Tocar num deles abre o cartão e marca no mapa. */
+              var longe = achados.longe || [];
+              var sec = h('div', { class: 'net-sec' }, [h('p', { class: 'sub', style: 'margin:.6rem 1rem .2rem', texto: '🌐 ' + T('naInternetPerto', { q: q }) })]);
+              function linhaNet(l) {
+                return h('button', { class: 'linha-lugar', type: 'button', onclick: function () {
+                  op.acrescentar([l]); desenharMapa(); abrirLugar(l);
+                  if (mapa && l.lat != null) mapa.setView([l.lat, l.lng], 16);
+                } }, [h('span', { class: 'bolinha', style: 'background:' + CORES.outro }),
+                  h('span', { class: 'txt' }, [h('b', { texto: l.nome }), h('span', { class: 'pequeno', texto: [l.endereco, l.longe ? '📍 ' + T('bscLonge') : null, l.fonte || 'OpenStreetMap'].filter(Boolean).join(' · ') })])]);
               }
-              op.acrescentar(achados);
-              if (achados.some(function (l) { return l.confianca === 'foursquare'; })) GX.avisar('Powered by Foursquare · OpenStreetMap');
-              estado.busca = ''; campo.value = '';
-              redesenhar(); estadoPainel('lista');
-              if (mapa && achados[0].lat != null) mapa.setView([achados[0].lat, achados[0].lng], achados.length === 1 ? 16 : 13);
-              if (achados.length === 1) abrirLugar(achados[0]); else GX.avisar(T('descobertos', { n: achados.length }));
+              achados.forEach(function (l) { sec.appendChild(linhaNet(l)); });
+              if (!achados.length) sec.appendChild(h('p', { class: 'pequeno', style: 'margin:0 1rem', texto: T('nadaPertoDaViagem') }));
+              if (longe.length) {
+                var vl = h('button', { class: 'lk', type: 'button', style: 'margin:.3rem 1rem', texto: '🌎 ' + T('verLonge', { n: longe.length }) });
+                vl.addEventListener('click', function () { vl.remove(); longe.forEach(function (l) { sec.appendChild(linhaNet(l)); }); });
+                sec.appendChild(vl);
+              }
+              if (op.acharJuntos) {
+                var aj = h('button', { class: achados.length ? 'bt leve' : 'bt', type: 'button', style: 'margin:.4rem 1rem', texto: '🤝 ' + T(achados.length ? 'naoEnenhum' : 'acharJuntos') });
+                aj.addEventListener('click', function () { op.acharJuntos(q, function (n) { estado.busca = ''; campo.value = ''; redesenhar(); abrirLugar(n); if (mapa && n.lat != null) mapa.setView([n.lat, n.lng], 16); }); });
+                sec.appendChild(aj);
+              }
+              if (achados.some(function (l) { return l.confianca === 'foursquare'; })) sec.appendChild(h('p', { class: 'pequeno', style: 'margin:0 1rem', texto: 'Powered by Foursquare · OpenStreetMap' }));
+              bf.replaceWith(sec);
             }).catch(function () { bf.disabled = false; bf.textContent = T('osmErro'); });
           });
           lista.insertBefore(bf, lista.firstChild);

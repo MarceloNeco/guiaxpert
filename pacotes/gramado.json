@@ -11,7 +11,7 @@
   "lat": -29.3789,
   "lng": -50.8744
  },
- "atualizadoEm": "2026-11-03",
+ "atualizadoEm": "2026-11-12",
  "fonte": "Pesquisa GuiaXpert (blogs, guias e sites oficiais, out/2026)",
  "aviso": {
   "pt": "Horários e preços podem ter mudado. Itens com confiança baixa: confirme antes de ir.",
@@ -862,17 +862,27 @@
    "categoria": "atracao",
    "subcategoria": null,
    "descricao": "Cascata de 131 m, mirante e trilha",
-   "endereco": "Rodovia RS-466, km 0, Caracol, Canela",
+   "endereco": "Rodovia RS-466, km 0, s/n, Caracol, Canela",
    "site": "https://parquecaracol.com.br",
-   "telefone": "(54) 3699-9695",
-   "horario": "Seg a sex 9h–17h (última entrada 16h30); fim de semana e feriado 9h–18h (última 17h30)",
+   "telefone": "SAC (54) 3699-9695; WhatsApp (54) 99976-9063 e (54) 99628-7340",
+   "horario": "Seg a sex 9h às 17h (entrada até 16h30); fim de semana, feriado e emenda 9h às 18h (entrada até 17h30) (site oficial, nov/2026)",
    "reserva": "Online",
-   "preco": "R$ 75 a R$ 114 (fontes divergem)",
-   "criancas": "Mirante fácil; a descida cansa; 2 a 3h",
+   "preco": "Preço de 2026 não confirmado: o site oficial só mostra o valor na hora da compra. Meia-entrada: 4 a 12 anos e 60+; grátis até 3 anos e para moradores de Gramado e Canela.",
+   "criancas": "Até 3 anos não paga; 4 a 12 anos e 60+ pagam meia. Corajoso e Ousado (pagos à parte): só a partir de 8 anos e 1,40 m. Menor de 18 só com responsável. Mirante fácil; a descida cansa; 2 a 3 h.",
    "confianca": "oficial",
    "gratis": false,
-   "lat": null,
-   "lng": null
+   "lat": -29.31295,
+   "lng": -50.85197,
+   "geoFonte": "osm-nome",
+   "fontes": [
+    "https://parquecaracol.com.br/pt/ingressos",
+    "https://parquecaracol.com.br/pt/comprar-ingresso",
+    "https://parquecaracol.com.br/pt/corajoso",
+    "https://parquecaracol.com.br/pt/ousado",
+    "https://viajepragramado.com.br/parque-do-caracol-em-canela-2026/",
+    "https://www.dstourgramado.com.br/post/parque-do-caracol-canela-ingresso-com-desconto-cupom-dstour",
+    "https://www.melhoresdestinos.com.br/cascata-caracol.html"
+   ]
   },
   {
    "id": "catedral-de-pedra-canela",
@@ -899,18 +909,22 @@
    "categoria": "atracao",
    "subcategoria": null,
    "descricao": "Mirante com plataforma de vidro",
-   "endereco": null,
-   "site": null,
-   "telefone": null,
-   "horario": null,
-   "reserva": null,
-   "preco": "R$ 100 (2022)",
-   "criancas": "Regular (altura)",
-   "confianca": "baixa",
+   "endereco": "R. Constante Félix Orsolin, 9800, Caracol, Canela (no OSM aparece como Estrada Municipal CNL 350, 9800)",
+   "site": "https://skyglasscanela.com.br",
+   "telefone": "(54) 3699-9200",
+   "horario": "Todos os dias, 9h30 às 18h (site oficial, nov/2026)",
+   "reserva": "Online até 1 dia antes sai mais barato que na bilheteria",
+   "preco": "Plataforma, preço de bilheteria: adulto R$ 165; criança 6 a 12 anos e sênior 60+ R$ 82,50. Compra antecipada tem desconto. Abusado é pago à parte (loja oficial, consultado em 12/11/2026)",
+   "criancas": "Plataforma liberada para todas as idades. Menores de 12 anos só com responsável. Abusado: altura mínima 1,20 m. A loja não diz a idade de entrada grátis",
+   "confianca": "oficial",
    "gratis": false,
    "lat": -29.27019,
    "lng": -50.84418,
-   "geoFonte": "endereco"
+   "geoFonte": "endereco",
+   "fontes": [
+    "https://skyglasscanela.com.br",
+    "https://lojaskyglasscanela.com.br/produto/vitrine/plataforma"
+   ]
   },
   {
    "id": "bondinhos-aereos-canela",
@@ -918,36 +932,54 @@
    "categoria": "atracao",
    "subcategoria": null,
    "descricao": "12 bondinhos sobre a cascata, 840 m (Parque da Serra)",
-   "endereco": "Estrada da Ferradura, 699, Canela (500 m depois do Parque do Caracol)",
-   "site": null,
-   "telefone": null,
-   "horario": "9h–17h ou 17h30 (fontes divergem)",
+   "endereco": "R. Constante Félix Orsolin, 699, Caracol, Canela",
+   "site": "https://parquesdaserra.com.br",
+   "telefone": "(54) 3878-3250",
+   "horario": "Todos os dias, 9h às 17h (site oficial)",
    "reserva": "Online evita fila",
-   "preco": "R$ 70 (valor antigo)",
-   "criancas": null,
+   "preco": "Bondinho ida e volta: inteira (10 a 59 anos) R$ 120 a R$ 130; infantil (4 a 9) e sênior (60+) R$ 60 a R$ 65. Combo Bondinho + Eagle + Aerozuum R$ 200 a R$ 210 (loja oficial, consultado em 12/11/2026; valor muda conforme a data)",
+   "criancas": "A loja não mostra preço para menores de 4 anos (confirmar)",
    "confianca": "baixa",
    "gratis": false,
    "lat": -29.30797,
    "lng": -50.84898,
-   "geoFonte": "endereco"
+   "geoFonte": "endereco",
+   "fontes": [
+    "https://parquesdaserra.com.br/",
+    "https://loja.parquesdaserra.com.br/produto/vitrine/ingressos",
+    "https://loja.parquesdaserra.com.br/produto/vitrine/Combo_3_atracoes"
+   ],
+   "apelidos": [
+    "bondinho",
+    "teleférico"
+   ]
   },
   {
    "id": "parque-knorr-aldeia-do-papai-noel",
-   "nome": "Parque Knorr / Aldeia do Papai Noel",
+   "nome": "Aldeia do Papai Noel",
    "categoria": "atracao",
    "subcategoria": null,
    "descricao": "Parque temático natalino",
-   "endereco": null,
-   "site": null,
-   "telefone": null,
-   "horario": null,
+   "endereco": "Av. Borges de Medeiros, 2300, Centro, Gramado (saiu do Parque Knorr; novo endereço desde fev/2024)",
+   "site": "https://www.papainoel.com",
+   "telefone": "(54) 99129-3431",
+   "horario": "Todos os dias 9h30 às 18h; em novembro, dezembro e janeiro 9h30 às 19h (site oficial)",
    "reserva": null,
    "preco": "Valores antigos",
-   "criancas": "Ótimo no Natal; operação em 2026 a confirmar",
+   "criancas": "Para todas as idades (site oficial). Aberto o ano todo",
    "confianca": "baixa",
    "gratis": false,
    "lat": null,
-   "lng": null
+   "lng": null,
+   "fontes": [
+    "https://www.papainoel.com",
+    "https://guia.melhoresdestinos.com.br/aldeia-do-papai-noel-em-gramado.html",
+    "https://saopauloparacriancas.com.br/?p=160270"
+   ],
+   "apelidos": [
+    "Parque Knorr",
+    "Papai Noel"
+   ]
   },
   {
    "id": "lago-negro",
@@ -964,8 +996,9 @@
    "criancas": "Bom; avó fácil; 1 a 1h30",
    "confianca": "guia",
    "gratis": true,
-   "lat": null,
-   "lng": null
+   "lat": -29.39496,
+   "lng": -50.87561,
+   "geoFonte": "osm-nome"
   },
   {
    "id": "rua-coberta",
@@ -982,8 +1015,9 @@
    "criancas": "Bom; avó fácil; 1h",
    "confianca": "guia",
    "gratis": true,
-   "lat": null,
-   "lng": null
+   "lat": -29.37859,
+   "lng": -50.8732,
+   "geoFonte": "osm-nome"
   },
   {
    "id": "praca-das-etnias-vila-de-natal",
@@ -1000,8 +1034,9 @@
    "criancas": "Ótimo; avó fácil; 1h30 a 2h",
    "confianca": "guia",
    "gratis": true,
-   "lat": null,
-   "lng": null
+   "lat": -29.38304,
+   "lng": -50.87172,
+   "geoFonte": "osm-endereco"
   },
   {
    "id": "igreja-sao-pedro",
@@ -1018,8 +1053,13 @@
    "criancas": "Visita curta",
    "confianca": "baixa",
    "gratis": true,
-   "lat": null,
-   "lng": null
+   "lat": -29.37946,
+   "lng": -50.87412,
+   "geoFonte": "osm-nome",
+   "apelidos": [
+    "Igreja Matriz",
+    "Matriz São Pedro"
+   ]
   },
   {
    "id": "parada-de-natal",
@@ -1036,8 +1076,9 @@
    "criancas": "Ótimo para crianças",
    "confianca": "guia",
    "gratis": true,
-   "lat": null,
-   "lng": null
+   "lat": -29.37723,
+   "lng": -50.87466,
+   "geoFonte": "osm-endereco"
   },
   {
    "id": "acendimento-das-luzes",
@@ -1054,8 +1095,9 @@
    "criancas": "Livre",
    "confianca": "guia",
    "gratis": true,
-   "lat": null,
-   "lng": null
+   "lat": -29.37889,
+   "lng": -50.87384,
+   "geoFonte": "osm-endereco"
   },
   {
    "id": "grande-desfile-de-natal",
@@ -1072,8 +1114,9 @@
    "criancas": "Até 4 anos grátis no colo (regra mais citada)",
    "confianca": "guia",
    "gratis": false,
-   "lat": null,
-   "lng": null
+   "lat": -29.3693,
+   "lng": -50.8811,
+   "geoFonte": "osm-endereco"
   },
   {
    "id": "nativitaten-show-do-lago",
@@ -1090,8 +1133,9 @@
    "criancas": "Até 4 anos grátis no colo; noite fria",
    "confianca": "guia",
    "gratis": false,
-   "lat": null,
-   "lng": null
+   "lat": -29.4018,
+   "lng": -50.86519,
+   "geoFonte": "osm-endereco"
   },
   {
    "id": "o-brilho-do-natal",
@@ -1108,26 +1152,9 @@
    "criancas": "Duração e idade não confirmadas",
    "confianca": "guia",
    "gratis": false,
-   "lat": null,
-   "lng": null
-  },
-  {
-   "id": "terra-magica-florybal-canela",
-   "nome": "Terra Mágica Florybal (Canela)",
-   "categoria": "atracao",
-   "subcategoria": null,
-   "descricao": "Parque temático infantil",
-   "endereco": "RS-466, km 5, Canela",
-   "site": null,
-   "telefone": null,
-   "horario": "9h–16h30 (guia)",
-   "reserva": "Online evita fila",
-   "preco": "Adulto cerca de R$ 160; 4 a 15 anos cerca de R$ 80 (sem data)",
-   "criancas": null,
-   "confianca": "baixa",
-   "gratis": false,
-   "lat": null,
-   "lng": null
+   "lat": -29.37889,
+   "lng": -50.87384,
+   "geoFonte": "osm-endereco"
   },
   {
    "id": "fonte-do-amor-eterno",
@@ -1144,8 +1171,9 @@
    "criancas": null,
    "confianca": "guia",
    "gratis": true,
-   "lat": null,
-   "lng": null
+   "lat": -29.37948,
+   "lng": -50.87437,
+   "geoFonte": "osm-nome"
   },
   {
    "id": "rua-torta",
@@ -1162,8 +1190,9 @@
    "criancas": null,
    "confianca": "baixa",
    "gratis": true,
-   "lat": null,
-   "lng": null
+   "lat": -29.38247,
+   "lng": -50.87234,
+   "geoFonte": "osm-nome"
   },
   {
    "id": "avenida-borges-de-medeiros",
@@ -1180,8 +1209,9 @@
    "criancas": null,
    "confianca": "guia",
    "gratis": true,
-   "lat": null,
-   "lng": null
+   "lat": -29.37723,
+   "lng": -50.87466,
+   "geoFonte": "osm-endereco"
   },
   {
    "id": "pao-com-linguica",
@@ -1198,8 +1228,9 @@
    "criancas": null,
    "confianca": "baixa",
    "gratis": false,
-   "lat": null,
-   "lng": null
+   "lat": -29.38304,
+   "lng": -50.87172,
+   "geoFonte": "osm-endereco"
   },
   {
    "id": "garden-park",
@@ -1216,8 +1247,9 @@
    "criancas": null,
    "confianca": "baixa",
    "gratis": false,
-   "lat": null,
-   "lng": null
+   "lat": -29.37374,
+   "lng": -50.85276,
+   "geoFonte": "osm-nome"
   },
   {
    "id": "vinicola-jolimont",
@@ -1234,8 +1266,9 @@
    "criancas": null,
    "confianca": "baixa",
    "gratis": false,
-   "lat": null,
-   "lng": null
+   "lat": -29.36561,
+   "lng": -50.76848,
+   "geoFonte": "osm-nome"
   },
   {
    "id": "mundo-a-vapor-canela",
@@ -1252,8 +1285,9 @@
    "criancas": null,
    "confianca": "baixa",
    "gratis": false,
-   "lat": null,
-   "lng": null
+   "lat": -29.36168,
+   "lng": -50.83486,
+   "geoFonte": "osm-nome"
   },
   {
    "id": "roda-gigante-roda-canela",
@@ -1279,17 +1313,21 @@
    "categoria": "comer",
    "subcategoria": "restaurante",
    "descricao": "Buffet com comida caseira e italiana, barato",
-   "endereco": "Gramado (endereço não encontrado)",
-   "site": null,
-   "telefone": null,
-   "horario": null,
+   "endereco": "Av. das Hortênsias, 709, Centro, Gramado",
+   "site": "https://restaurantesabordanonna.com.br",
+   "telefone": "(54) 3286-2757; WhatsApp (54) 99987-8659",
+   "horario": "Todos os dias, 11h30 às 15h",
    "reserva": null,
-   "preco": "Barato (sem valor)",
-   "criancas": null,
-   "confianca": "baixa",
+   "preco": "Buffet livre: R$ 54,90 de segunda a sexta; R$ 58,90 sábado, domingo e feriado. Bebida à parte (site oficial, consultado em 12/11/2026)",
+   "criancas": "Criança paga pelo peso do prato ou o buffet inteiro. Não tem meia-entrada",
+   "confianca": "oficial",
    "gratis": false,
    "lat": null,
-   "lng": null
+   "lng": null,
+   "fontes": [
+    "https://restaurantesabordanonna.com.br",
+    "https://wanderlog.com/place/details/3562781"
+   ]
   },
   {
    "id": "sabor-de-casa",
@@ -1311,21 +1349,31 @@
   },
   {
    "id": "campo-e-vinho",
-   "nome": "Campo e Vinho",
+   "nome": "Campo & Vinho",
    "categoria": "comer",
    "subcategoria": "restaurante",
-   "descricao": "Self-service",
-   "endereco": null,
-   "site": null,
+   "descricao": "Buffet livre com parrilla no almoço e rodízio de pizza à noite, na Rua Coberta",
+   "endereco": "R. Madre Verônica, 41 (Rua Coberta), Centro, Gramado",
+   "site": "https://www.restaurantecampoevinho.com.br",
    "telefone": null,
-   "horario": null,
+   "horario": "Almoço: seg a sex 11h às 15h; sáb e dom 11h às 16h. Jantar com rodízio de pizza a partir das 18h (fontes divergem nos minutos)",
    "reserva": null,
-   "preco": null,
-   "criancas": null,
+   "preco": "Buffet livre adulto R$ 119,90 (preço cheio citado em oferta válida até 30/06/2027; consultado nov/2026)",
+   "criancas": "Até 3 anos não paga; 4 a 10 anos R$ 59,50. Tem espaço kids",
    "confianca": "baixa",
    "gratis": false,
-   "lat": null,
-   "lng": null
+   "lat": -29.37859,
+   "lng": -50.8732,
+   "geoFonte": "osm-endereco",
+   "cidade": "Gramado",
+   "fontes": [
+    "https://www.lacadordeofertas.com.br/oferta/gramado-canela/campo-e-vinho/buffet-desconto-rua-coberta",
+    "https://www.jornalnovaepoca.com.br/campo-vinho-o-novo-restaurante-da-rua-coberta-de-gramado/",
+    "https://chapeudeviagem.com.br/restaurantes-com-espaco-kids-gramado-canela/"
+   ],
+   "apelidos": [
+    "buffet livre"
+   ]
   },
   {
    "id": "serra-grill",
@@ -1342,8 +1390,9 @@
    "criancas": null,
    "confianca": "baixa",
    "gratis": false,
-   "lat": null,
-   "lng": null
+   "lat": -29.37718,
+   "lng": -50.87675,
+   "geoFonte": "osm-nome"
   },
   {
    "id": "hotel-fioreze-centro",
@@ -1378,8 +1427,9 @@
    "criancas": null,
    "confianca": "guia",
    "gratis": false,
-   "lat": null,
-   "lng": null
+   "lat": -29.99527,
+   "lng": -51.1664,
+   "geoFonte": "osm-nome"
   },
   {
    "id": "localiza-retirada-e-devolucao",
@@ -1422,18 +1472,24 @@
    "nome": "Casa Figueira",
    "categoria": "comer",
    "subcategoria": "restaurante",
-   "descricao": "Buffet livre com vista panorâmica",
-   "endereco": "Gramado (endereço não encontrado)",
-   "site": null,
-   "telefone": null,
-   "horario": "Seg a sáb 11h–13h30",
+   "descricao": "Buffet livre de comida caseira, com vista para o vale e mesas embaixo de uma figueira",
+   "endereco": "Estrada Serra Grande, 3945, Várzea Grande, Gramado (o Facebook cita R. Primeiro de Maio, 2003; o OSM marca o lugar na Av. Primeiro de Maio)",
+   "site": "https://www.instagram.com/restaurantecasafigueira/",
+   "telefone": "(54) 99990-5760",
+   "horario": "Seg a sáb, 11h às 13h30; fecha domingo (TripAdvisor)",
    "reserva": null,
    "preco": "R$ 57 no buffet livre; desconto para crianças",
    "criancas": null,
    "confianca": "baixa",
    "gratis": false,
-   "lat": null,
-   "lng": null
+   "lat": -29.42569,
+   "lng": -50.88633,
+   "geoFonte": "osm-nome",
+   "fontes": [
+    "https://omelhordaserragaucha.com.br/anuncio/restaurante-casa-figueira-em-gramado-rs/",
+    "https://www.tripadvisor.com/Restaurant_Review-g303536-d18154501-Reviews-or60-Restaurante_Casa_Figueira-Gramado_State_of_Rio_Grande_do_Sul.html",
+    "https://www.facebook.com/restaurantecasafigueira/"
+   ]
   },
   {
    "id": "terra-magica-florybal",
@@ -1441,19 +1497,27 @@
    "categoria": "atracao",
    "subcategoria": "parque",
    "descricao": "Parque temático com dinossauros, trilhas e mundo do chocolate.",
-   "endereco": "Rodovia Guilherme Wasem, 1630, Caracol, Canela",
-   "site": null,
-   "telefone": null,
-   "horario": null,
+   "endereco": "RS-466, 1630, km 5, Caracol, Canela",
+   "site": "https://parqueflorybal.com.br",
+   "telefone": "(54) 3282-5050",
+   "horario": "Todos os dias, 9h30 às 16h30",
    "reserva": null,
-   "preco": null,
-   "criancas": "Ótimo para crianças; reserve o dia (ingresso comprado com antecedência)",
-   "confianca": "baixa",
+   "preco": "Bilheteria: adulto R$ 190; 4 a 15 anos, idoso e estudante R$ 95. Antecipado no site: R$ 180 e R$ 90. Cinema 7D, Voo do Pterodáctilo e Velociráptor são pagos à parte (site oficial, consultado em 12/11/2026)",
+   "criancas": "0 a 3 anos não paga; 4 a 15 anos paga meia",
+   "confianca": "oficial",
    "gratis": false,
    "lat": -29.34446,
    "lng": -50.83555,
    "geoFonte": "nome",
-   "cidade": "Canela"
+   "cidade": "Canela",
+   "fontes": [
+    "https://parqueflorybal.com.br/",
+    "https://www.florybal.com.br"
+   ],
+   "apelidos": [
+    "Terra Mágica",
+    "Parque Florybal"
+   ]
   },
   {
    "id": "taberna-mf",
@@ -1854,6 +1918,150 @@
    "lng": null,
    "geoFonte": null,
    "cidade": "Bento Gonçalves"
+  },
+  {
+   "nome": "Casa Matos",
+   "categoria": "comer",
+   "subcategoria": "restaurante",
+   "descricao": "Buffet livre com grelhado no centro de Canela, perto da rodoviária. Aceita pets.",
+   "endereco": "R. Ernesto Urbani, 7, Estação Campos de Canella, em frente à rodoviária, Centro, Canela",
+   "cidade": "Canela",
+   "site": null,
+   "telefone": null,
+   "horario": "Buffet todos os dias, 11h30 às 14h30 (site de cupons, 2026)",
+   "reserva": null,
+   "preco": "Buffet livre com grelhado: R$ 59,90 seg a sex; R$ 69,90 sáb e dom (preço cheio em oferta válida até 31/01/2027; consultado em 12/11/2026). Bebida à parte; pode ter 10% de serviço",
+   "criancas": "Sem idade mínima. O site de cupons cita buffet a quilo pago no local; preço para criança não informado",
+   "confianca": "guia",
+   "gratis": false,
+   "lat": -29.3646048,
+   "lng": -50.8139155,
+   "id": "casa-matos-canela",
+   "fontes": [
+    "https://www.lacadordeofertas.com.br/oferta/canela/casa-agridoce/buffet-livre-desconto-casa-matos"
+   ],
+   "geoFonte": "osm",
+   "apelidos": [
+    "Casa Matos"
+   ]
+  },
+  {
+   "nome": "Big Land Canela",
+   "categoria": "atracao",
+   "subcategoria": "parque",
+   "descricao": "Parque coberto com brinquedos gigantes dos anos 80 e 90, como Genius e Tamagotchi. Pais e filhos brincam juntos. Bom para dia de chuva.",
+   "endereco": "R. Ernesto Urbani, 7, salas 14 e 15, Estação Campos de Canella, Centro, Canela",
+   "cidade": "Canela",
+   "site": "https://big.land",
+   "telefone": "(54) 2137-5050 (fonte: Buser; site oficial só mostra WhatsApp)",
+   "horario": "Seg a sex 13h às 19h; sáb, dom e feriados 11h às 19h; entrada até 18h (site oficial)",
+   "reserva": null,
+   "preco": "Adulto R$ 99,90; criança R$ 79,90 (Melhores Destinos, junho de 2026). Ingresso único, todos os brinquedos incluídos",
+   "criancas": "Para todas as idades. Até 2 anos não paga (Grupo Dicas, 2026, confirmar)",
+   "confianca": "guia",
+   "gratis": false,
+   "lat": -29.3643793,
+   "lng": -50.8134909,
+   "id": "big-land-canela",
+   "fontes": [
+    "https://big.land",
+    "https://www.melhoresdestinos.com.br/skyglass-big-land-parceria-canela.html",
+    "https://www.grupodicas.com/big-land-canela-como-funciona-o-parque-dos-brinquedos-gigantes/",
+    "https://www.buser.com.br/destinos/pontos-turisticos/rs/canela/big-land-parque-tematico"
+   ],
+   "geoFonte": "osm",
+   "apelidos": [
+    "Big Land"
+   ]
+  },
+  {
+   "nome": "Aerozuum (Parque Bondinhos Aéreos)",
+   "categoria": "atracao",
+   "subcategoria": "parque",
+   "descricao": "Montanha-russa suspensa de 457 m, a até 30 m de altura, com vista da Cascata do Caracol. Vai sozinho ou em dupla. Fica no mesmo parque dos Bondinhos Aéreos.",
+   "endereco": "R. Constante Félix Orsolin, 699, Caracol, Canela",
+   "cidade": "Canela",
+   "site": "https://parquesdaserra.com.br",
+   "telefone": "(54) 3878-3250",
+   "horario": "Todos os dias, 9h às 17h. Para com chuva",
+   "reserva": null,
+   "preco": "Individual R$ 80 a R$ 85; dupla R$ 120 a R$ 130 (loja oficial, consultado em 12/11/2026; valor muda conforme a data)",
+   "criancas": "Mínimo 4 anos e 1,10 m. Menores de 8 anos ou abaixo de 1,30 m só com adulto. Altura máxima 2 m",
+   "confianca": "guia",
+   "gratis": false,
+   "lat": -29.3079745,
+   "lng": -50.8489814,
+   "id": "aerozuum-parques-da-serra",
+   "fontes": [
+    "https://parquesdaserra.com.br/",
+    "https://loja.parquesdaserra.com.br/produto/vitrine/aerozuum",
+    "https://pontospravoar.com/aerozuum-nova-atracao-canela/"
+   ],
+   "geoFonte": "osm",
+   "apelidos": [
+    "Aerozum",
+    "Aerozoom",
+    "montanha-russa"
+   ]
+  },
+  {
+   "nome": "Eagle Tirolesa (Parque Bondinhos Aéreos)",
+   "categoria": "atracao",
+   "subcategoria": "parque",
+   "descricao": "Cadeira presa em cabos de aço que 'voa' 180 m até uma torre de 22 m e volta, a até 45 km/h, com vista da Cascata do Caracol. Sozinho ou em dupla.",
+   "endereco": "R. Constante Félix Orsolin, 699, Caracol, Canela",
+   "cidade": "Canela",
+   "site": "https://parquesdaserra.com.br",
+   "telefone": "(54) 3878-3250",
+   "horario": "Todos os dias, 9h às 17h. Para com chuva",
+   "reserva": null,
+   "preco": "Individual R$ 55; dupla R$ 85 (loja oficial, consultado em 12/11/2026)",
+   "criancas": "Altura mínima 1,20 m. Menores de 13 anos só com adulto. Proibido para gestantes",
+   "confianca": "guia",
+   "gratis": false,
+   "lat": -29.3079745,
+   "lng": -50.8489814,
+   "id": "eagle-tirolesa-parques-da-serra",
+   "fontes": [
+    "https://loja.parquesdaserra.com.br/produto/vitrine/eagle",
+    "https://parquesdaserra.com.br/",
+    "https://pontospravoar.com/aerozuum-nova-atracao-canela/"
+   ],
+   "geoFonte": "osm",
+   "apelidos": [
+    "Eagle",
+    "tirolesa"
+   ]
+  },
+  {
+   "nome": "Pé da Cascata Explorer (Brocker Turismo)",
+   "categoria": "atracao",
+   "subcategoria": null,
+   "descricao": "Passeio guiado até a base da Cascata do Caracol. Um veículo off-road leva até a mata e depois tem trilha leve de cerca de 1 km (ida e volta). Inclui uma vez no Balanço Infinito, se o tempo deixar.",
+   "endereco": "Saída da Casa da Vó Ivonne, Estrada da Lageana, 285, Caracol, Canela (também há saída da loja Bustour em Canela e da Brocker em Gramado)",
+   "cidade": "Canela",
+   "site": "https://www.brockerturismo.com.br",
+   "telefone": null,
+   "horario": "Saídas em horários fixos (anúncios citam 10h e 12h50). Duração de 2h30 a 4h. Chegar 20 min antes",
+   "reserva": null,
+   "preco": "R$ 198 (2h30, sem brunch) e R$ 278 (4h, com brunch), valores de jan/2024. Revendas em 2026 a partir de cerca de US$ 54. Confirmar no site da Brocker",
+   "criancas": "Sem idade mínima publicada. Bebê vai no colo. Precisa de calçado fechado. Não indicado para quem tem problema no coração ou na coluna",
+   "confianca": "baixa",
+   "gratis": false,
+   "lat": null,
+   "lng": null,
+   "id": "pe-da-cascata-explorer",
+   "fontes": [
+    "https://www.melhoresdestinos.com.br/cascata-caracol.html",
+    "https://pelago.com/en/activity/prlju2iqv-foot-of-cascata-explorer-by-brocker-turismo-gramado",
+    "https://www.civitatis.com/br/canela/trilha-4x4-cascata-caracol/",
+    "https://www.panrotas.com.br/mercado/receptivos/2021/11/pe-da-cascata-explorer-brocker-lanca-passeio-na-serra-gaucha_185429.html"
+   ],
+   "apelidos": [
+    "Pé da Cascata",
+    "balanço infinito",
+    "trilha da cascata"
+   ]
   }
  ],
  "roteiros": [
@@ -1986,7 +2194,7 @@
        "titulo": "Terra Mágica Florybal",
        "nota": "Canela, RS-466 km 5. Até ~14:30, almoço lá.",
        "tipo": "ingresso",
-       "lugarId": "terra-magica-florybal-canela"
+       "lugarId": "terra-magica-florybal"
       },
       {
        "hora": "15:00",
@@ -2197,7 +2405,7 @@
        "titulo": "Terra Mágica Florybal",
        "nota": "Canela, RS-466 km 5. Até ~14:30, almoço lá.",
        "tipo": "ingresso",
-       "lugarId": "terra-magica-florybal-canela"
+       "lugarId": "terra-magica-florybal"
       },
       {
        "hora": "15:30",
@@ -2387,7 +2595,7 @@
        "titulo": "Terra Mágica Florybal",
        "nota": "Canela, RS-466 km 5. Até ~14:30, almoço lá.",
        "tipo": "ingresso",
-       "lugarId": "terra-magica-florybal-canela"
+       "lugarId": "terra-magica-florybal"
       },
       {
        "hora": "15:30",
@@ -2584,7 +2792,7 @@
        "titulo": "Terra Mágica Florybal",
        "nota": "Canela, RS-466 km 5. Até ~14:30, almoço lá.",
        "tipo": "ingresso",
-       "lugarId": "terra-magica-florybal-canela"
+       "lugarId": "terra-magica-florybal"
       },
       {
        "hora": "16:00",
@@ -2788,7 +2996,7 @@
        "titulo": "Terra Mágica Florybal",
        "nota": "Canela, RS-466 km 5. Até ~14:30, almoço lá.",
        "tipo": "ingresso",
-       "lugarId": "terra-magica-florybal-canela"
+       "lugarId": "terra-magica-florybal"
       },
       {
        "hora": "15:30",
@@ -2992,7 +3200,7 @@
        "titulo": "Terra Mágica Florybal",
        "nota": "Canela, RS-466 km 5. Até ~14:30, almoço lá.",
        "tipo": "ingresso",
-       "lugarId": "terra-magica-florybal-canela"
+       "lugarId": "terra-magica-florybal"
       },
       {
        "hora": "15:00",

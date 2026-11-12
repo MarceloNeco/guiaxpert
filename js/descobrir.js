@@ -96,9 +96,12 @@
       var q = String(texto || '').trim().replace(/^(o|a|os|as|the)\s+/i, '');
       if (q.length < 3) return Promise.resolve([]);
       var lg = idioma === 'en' ? 'en' : 'pt-BR';
-      function deNominatim() {
+      /* uma fonte lenta não segura as outras: cada uma tem até 8 s */
+      function noMaximo(pr, ms) { return Promise.race([pr, new Promise(function (ok) { setTimeout(function () { ok([]); }, ms); })]); }
+      function deNominatim(soPerto) {
         var u = 'https://nominatim.openstreetmap.org/search?format=jsonv2&limit=8&addressdetails=1&extratags=1&dedupe=1&q=' + encodeURIComponent(q);
-        if (centro && centro.lat != null) u += '&viewbox=' + (centro.lng - 0.35).toFixed(3) + ',' + (centro.lat + 0.3).toFixed(3) + ',' + (centro.lng + 0.35).toFixed(3) + ',' + (centro.lat - 0.3).toFixed(3) + '&bounded=0';
+        if (centro && centro.lat != null) u += '&viewbox=' + (centro.lng - 0.35).toFixed(3) + ',' + (centro.lat + 0.3).toFixed(3) + ',' + (centro.lng + 0.35).toFixed(3) + ',' + (centro.lat - 0.3).toFixed(3) + '&bounded=' + (soPerto ? 1 : 0);
+        else if (soPerto) return Promise.resolve([]);
         return fetch(u, { headers: { 'Accept-Language': lg } }).then(function (r) { if (!r.ok) throw new Error('osm-' + r.status); return r.json(); })
           .then(function (lista) {
             return (lista || []).map(function (x) {
@@ -153,18 +156,23 @@
             });
         }).catch(function () { return []; });
       }
-      return Promise.all([doServidor(), deNominatim().catch(function () { return []; }), dePhoton().catch(function () { return []; })]).then(function (rs) {
+      /* com viagem, o Nominatim procura só dentro da região dela (acha o "Big Land" de Canela); o que é longe vem do Photon.
+         Uma chamada por busca ao Nominatim (regra de uso: no máximo 1 por segundo) */
+      var pega = function (f) { return noMaximo(f.catch(function () { return []; }), 8000); };
+      var regiao = !!(centro && centro.lat != null);
+      return Promise.all([pega(doServidor()), pega(deNominatim(regiao)), pega(dePhoton())]).then(function (rs) {
         var vistos = {}, todos = [];
         rs[0].concat(rs[1], rs[2]).forEach(function (l) { if (!vistos[l.id]) { vistos[l.id] = 1; todos.push(l); } });
         if (!todos.length && !navigator.onLine) throw new Error('offline');
-        /* com um centro conhecido, o que está a mais de 200 km só entra se faltar resultado perto,
-           MAS o lugar com o nome procurado fica sempre (marcado "longe"): procurar o bar de São Paulo
-           de dentro da viagem a Gramado tem que achar o bar de São Paulo */
-        var qb = semAcento(q);
+        /* com um centro conhecido (a viagem), o que está a mais de ~150 km fica de fora da lista principal:
+           vai para "lista.longe" e a tela oferece "ver resultados longe da viagem" (procurar o bar de São Paulo
+           de dentro da viagem a Gramado continua possível, mas Portugal e Peru não aparecem misturados) */
+        var qb = semAcento(q), longe = [];
         if (centro && centro.lat != null) {
-          todos.forEach(function (l) { l.longe = dist(l, centro) >= 1.8 * 1.8; });   /* ~200 km em graus */
-          var perto = todos.filter(function (l) { return !l.longe || nomeBate(l.nome, qb); });
-          if (todos.filter(function (l) { return !l.longe; }).length >= 3) todos = perto;
+          todos.forEach(function (l) { l.longe = dist(l, centro) >= 1.35 * 1.35; });
+          longe = todos.filter(function (l) { return l.longe; });
+          todos = todos.filter(function (l) { return !l.longe; });
+          longe.sort(function (a, b) { return (nomeBate(b.nome, qb) ? 1 : 0) - (nomeBate(a.nome, qb) ? 1 : 0); });
         }
         var qn = q.toLowerCase();
         todos.forEach(function (l) { l._nota = notaGuia(l, qn); });
@@ -173,7 +181,10 @@
           if (centro && centro.lat != null) return dist(a, centro) - dist(b, centro);
           return 0;
         });
-        return todos.map(function (l) { delete l._nota; delete l._classe; delete l._tipo; delete l._peso; return l; }).slice(0, 10);
+        var limpa = function (l) { delete l._nota; delete l._classe; delete l._tipo; delete l._peso; return l; };
+        var saida = todos.map(limpa).slice(0, 10);
+        saida.longe = longe.map(limpa).slice(0, 6);
+        return saida;
       });
       function dist(l, c) { var dx = (l.lng - c.lng) * Math.cos(c.lat * Math.PI / 180), dy = l.lat - c.lat; return dx * dx + dy * dy; }
       function semAcento(t) { return String(t || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9]+/g, ' ').trim(); }
