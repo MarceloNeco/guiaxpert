@@ -40,10 +40,10 @@ fundo neutro · cartão do país (hora, câmbio BCE, tomada, emergência, docume
 lembrete 7/3/1 dias · busca local inclui o "Buscar perto" · categoria/horário/duplicados do OSM · país no Explorar.
 
 **Depois:**
-- E35 **"O que tem em X"** automático com dados abertos: Wikivoyage (Ver/Fazer/Comer) + Wikidata (atrações com artigo) +
+- ✅ (1.5.54) E35 **"O que tem em X"** automático com dados abertos: Wikivoyage (Ver/Fazer/Comer) + Wikidata (atrações com artigo) +
   OSM `tourism=attraction` com `wikidata`, ordenado por relevância; cache por destino ao criar a viagem.
-- E36 **Passeios vendidos por agência** (Bonito): lista curada por destino com "precisa voucher", início/fim e link.
-- E37 Calendário próprio dd/mm (hoje: data por extenso embaixo do campo); locomoção com várias escolhas.
+- ✅ (1.5.54, guia de Bonito) E36 **Passeios vendidos por agência** (Bonito): lista curada por destino com "precisa voucher", início/fim e link.
+- ✅ (1.5.54) E37 Calendário próprio dd/mm (hoje: data por extenso embaixo do campo); locomoção com várias escolhas.
 
 ## Feito na 1.5.50 (12/Nov/2026, sem IA)
 

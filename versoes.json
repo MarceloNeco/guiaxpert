@@ -2,6 +2,31 @@
   "app": "guiaxpert",
   "versoes": [
     {
+      "versao": "1.5.54",
+      "data": "2026-11-12",
+      "substitui": "1.5.53",
+      "itens": {
+        "pt": [
+          "Novo: \"📖 O que tem em X\" para destino sem guia pronto: o que ver, fazer, comer e beber, de guias abertos feitos por viajantes (Wikivoyage) e das atrações mais conhecidas da região (Wikidata). Cada item tem ⭐, \"Pôr no dia\" e aparece no mapa; fica guardado no aparelho por 7 dias.",
+          "Novo guia pronto de Bonito (MS): 28 lugares (flutuações, grutas, cachoeiras, restaurantes) com regras de idade dos sites oficiais, aviso de voucher e da taxa TCA, e 2 roteiros de 4 dias para família com crianças pequenas. Viagens a Bonito já criadas passam a usar o guia sozinhas.",
+          "Ficha do lugar mostra \"Só com voucher\" e a duração do passeio quando o guia sabe.",
+          "Datas em dia/mês/ano: digite 05092027 ou 5/9/27, ou toque no 📅 para escolher no calendário do aparelho. \"Como vão se locomover\" aceita mais de uma escolha.",
+          "PDF do roteiro agora tem texto de verdade por baixo da imagem: dá para pesquisar e copiar.",
+          "\"Pôr no dia\" numa viagem nova sem roteiro cria \"Meu roteiro\" sozinho; \"O que levar\" aparece mesmo quando a previsão não carrega.",
+          "Busca de lugares comerciais (Foursquare e Tripadvisor): quando o Foursquare recusa, a busca não cai mais; vem o que o Tripadvisor achar."
+        ],
+        "en": [
+          "New: What is in X for destinations without a guide (Wikivoyage + Wikidata).",
+          "New Bonito (MS) guide with official age rules, voucher info and 2 family itineraries.",
+          "Voucher and duration on place cards.",
+          "Dates in day/month/year with a calendar button; multiple transport choices.",
+          "Trip PDF now has real, searchable text.",
+          "Add to day creates the first itinerary; What to pack shows without forecast.",
+          "Commercial search survives Foursquare errors."
+        ]
+      }
+    },
+    {
       "versao": "1.5.53",
       "data": "2026-11-12",
       "substitui": "1.5.52",

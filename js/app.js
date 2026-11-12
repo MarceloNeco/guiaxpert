@@ -12,7 +12,7 @@
 (function () {
   'use strict';
   var d = document, $ = function (id) { return d.getElementById(id); };
-  var VERSAO_APP = '1.5.53';
+  var VERSAO_APP = '1.5.54';
 
   /* ------------------------------------------------------------------
      1. UTILIDADES
@@ -2472,7 +2472,8 @@
     det.appendChild(h('summary', {}, [h('span', { class: 'nome', texto: l.nome }), bfav, meta]));
     var corpo = h('div', { class: 'corpo' });
     if (l.descricao) corpo.appendChild(h('p', { class: 'sub' }, comLinks(l.descricao)));
-    [['endereco', l.endereco], ['horario', l.horario], ['reserva', l.reserva], ['preco', l.preco], ['criancas', l.criancas], ['comChuva', l.chuva], ['telefone', l.telefone]].forEach(function (kv) {
+    if (l.voucher) corpo.appendChild(h('p', { class: 'alerta pequeno', texto: '🎫 ' + T('soVoucher') }));
+    [['endereco', l.endereco], ['horario', l.horario], ['duracao', l.duracao], ['reserva', l.reserva], ['preco', l.preco], ['criancas', l.criancas], ['comChuva', l.chuva], ['telefone', l.telefone]].forEach(function (kv) {
       if (kv[1]) corpo.appendChild(h('div', { class: 'kv' }, [h('span', { texto: T(kv[0]) }), h('span', { texto: kv[1] })]));
     });
     if (l.categoria === 'comer' && restr.length) corpo.appendChild(h('div', { class: 'alerta' }, [h('b', { texto: T('restricoesGrupo') }), restr.join(', ') + '. ' + T('pergunteAntes')]));

@@ -135,6 +135,7 @@ window.TEXTOS = (function () {
     nadaPertoDaViagem: ['Nada perto da viagem.', 'Nothing near the trip.'], marqueNoMapaDica: ['Não achei perto da viagem. Use "Marcar no mapa" e toque no lugar.', 'Not found near the trip. Use "Mark on map" and tap the spot.'],
     editarLugar: ['Editar lugar', 'Edit place'], siteOndeComprar: ['Site ou onde comprar (opcional)', 'Website or where to buy (optional)'], pontoMarcado: ['ponto marcado', 'spot marked'],
     nLugar: ['1 lugar', '1 place'],
+    duracao: ['Duração', 'Duration'], soVoucher: ['Só com voucher de agência credenciada, com vagas limitadas por dia: reserve antes.', 'Only with a voucher from an accredited agency; limited daily slots.'],
     abrirCalendario: ['Escolher no calendário', 'Pick on calendar'], podeVarios: ['pode marcar mais de um', 'pick any'],
     rota_oquetem: ['O que tem lá', 'What is there'], oqtTitulo: ['O que tem em {nome}', 'What is in {nome}'],
     oqtCarregando: ['Procurando no Wikivoyage e no Wikidata (guias abertos, feitos por viajantes)…', 'Looking in Wikivoyage and Wikidata…'],

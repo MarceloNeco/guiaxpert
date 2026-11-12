@@ -1,0 +1,1312 @@
+{
+ "formato": 1,
+ "id": "bonito",
+ "nome": {
+  "pt": "Bonito",
+  "en": "Bonito"
+ },
+ "uf": "MS",
+ "pais": "BR",
+ "centro": {
+  "lat": -21.127,
+  "lng": -56.482
+ },
+ "atualizadoEm": "2026-11-12",
+ "fonte": "Pesquisa GuiaXpert (sites oficiais dos atrativos, Sectur/Prefeitura de Bonito, agência Ygarapé, guias Viagens e Caminhos e Viaje na Viagem, OpenStreetMap; nov/2026)",
+ "aviso": {
+  "pt": "Em Bonito quase todo passeio só entra com voucher de agência credenciada, com vagas limitadas por dia: reserve antes. Desde 20/12/2025 cada visitante paga a Taxa de Conservação Ambiental (TCA) de R$ 15 por dia, online (menores de 7 anos isentos). Alta temporada 2026 (Sectur): feriados, 11/07 a 02/08 e 19 a 31/12. Lagoa Misteriosa fecha a flutuação de meados de outubro a meados de abril. Preços e regras mudam: confirme com a agência.",
+  "en": "In Bonito almost every tour needs a voucher from an accredited local agency, with limited daily slots: book ahead. Since 20 Dec 2025 each visitor pays an Environmental Conservation Fee (TCA) of R$ 15 per day, online (under 7 exempt). High season 2026 (Sectur): holidays, 11 Jul–2 Aug and 19–31 Dec. Lagoa Misteriosa floating is closed from mid-October to mid-April. Prices and rules change: check with the agency."
+ },
+ "eventos": [],
+ "lugares": [
+  {
+   "id": "rio-da-prata",
+   "nome": "Recanto Ecológico Rio da Prata",
+   "categoria": "atracao",
+   "subcategoria": "flutuação",
+   "descricao": "Flutuação longa em rio de nascente, com trilha na mata antes. Muitos peixes. Almoço incluso.",
+   "endereco": "Rodovia BR-267, Km 512, Zona Rural, Jardim (cerca de 45 km de Bonito, estrada asfaltada)",
+   "cidade": "Jardim",
+   "site": "https://riodaprata.eco.br",
+   "compra": "https://riodaprata.eco.br/onde-comprar",
+   "telefone": "WhatsApp (67) 99616-3082 (Grupo Rio da Prata)",
+   "horario": "Aberto todos os dias do ano, inclusive feriados. Horário marcado pela agência. Almoço das 11h30 às 15h30 (site oficial).",
+   "reserva": "Só com voucher de agência credenciada; vagas limitadas por dia. Só por agência de Bonito ou Jardim (site oficial). Compre com antecedência; na alta temporada as vagas acabam.",
+   "preco": "Baixa temporada R$ 470 / alta R$ 570 por adulto, com almoço (guia Viagens e Caminhos, out/2026). Pago à agência.",
+   "criancas": "Idade mínima 5 anos; menores de 12 com pais ou responsável (site oficial). O de 4 anos não pode. Não há babá no local; agências têm cadastro de babás. Avó: trilha na mata e flutuação longa; o site lista restrições (AVC, infarto, marca-passo, cirurgia recente).",
+   "chuva": "Água a 24 °C o ano todo (site oficial). Chuva fraca não impede. Chuva forte pode cancelar ou interromper (regra do mesmo grupo na Lagoa Misteriosa). Confirme com a agência.",
+   "tempo": "aberto",
+   "duracao": "Cerca de 3 h + almoço; sair de Bonito pelo menos 45 min antes do horário (site oficial).",
+   "voucher": true,
+   "confianca": "oficial",
+   "gratis": false,
+   "lat": -21.46124,
+   "lng": -56.43899,
+   "geoFonte": "osm-nome",
+   "fontes": [
+    "https://riodaprata.eco.br/perguntas-frequentes/",
+    "https://www.turismo.bonito.ms.gov.br/rio-da-prata-em-bonito",
+    "https://www.viagensecaminhos.com/o-que-faze-em-bonito-ms/",
+    "https://agenciaygarape.com.br/passeio-em-bonito-ms/recanto-ecologico-rio-da-prata-flutuacao/"
+   ],
+   "apelidos": [
+    "Rio da Prata",
+    "flutuação Rio da Prata",
+    "Recanto Rio da Prata"
+   ]
+  },
+  {
+   "id": "gruta-do-lago-azul",
+   "nome": "Gruta do Lago Azul",
+   "categoria": "atracao",
+   "subcategoria": "gruta",
+   "descricao": "Caverna com lago azul (Monumento Natural). Só para olhar, não pode entrar na água. Desce e sobe cerca de 300 degraus.",
+   "endereco": "Zona rural, Bonito (cerca de 20 km do centro)",
+   "cidade": "Bonito",
+   "site": null,
+   "compra": null,
+   "telefone": null,
+   "horario": "Visitas entre 7h e 14h (operadora/catálogo, sem fonte oficial). Sem dia de folga (agência).",
+   "reserva": "Só com voucher de agência credenciada; vagas limitadas por dia. Tem limite diário de visitantes.",
+   "preco": "Baixa temporada R$ 120 / alta R$ 180 por pessoa, sem transporte (site da agência Ygarapé e Viagens e Caminhos, 2026).",
+   "criancas": "Idade mínima 6 anos (agência Ygarapé; o mesmo texto cita também 1,30 m de altura, confirmar). O de 4 anos não entra. Cerca de 300 degraus: pesado para a avó de 72 anos e para quem tem problema nos joelhos. Capacete e tênis obrigatórios.",
+   "chuva": "Dentro da caverna não chove, mas a trilha e a escadaria ficam ao ar livre e podem escorregar.",
+   "tempo": "coberto",
+   "duracao": "1h30 a 2h no local (agência); meio período com a estrada.",
+   "voucher": true,
+   "confianca": "guia",
+   "gratis": false,
+   "lat": -21.14471,
+   "lng": -56.59151,
+   "geoFonte": "osm-nome",
+   "fontes": [
+    "https://www.turismo.bonito.ms.gov.br/gruta-do-lago-azul-em-bonito",
+    "https://agenciaygarape.com.br/passeio-em-bonito-ms/gruta-do-lago-azul-contemplacao/",
+    "https://www.grutadolagoazul.com.br/",
+    "https://www.viagensecaminhos.com/o-que-faze-em-bonito-ms/"
+   ],
+   "apelidos": [
+    "Lago Azul",
+    "Gruta Lago Azul"
+   ]
+  },
+  {
+   "id": "buraco-das-araras",
+   "nome": "Buraco das Araras",
+   "categoria": "atracao",
+   "subcategoria": "mirante",
+   "descricao": "Dolina enorme (cerca de 100 m de fundo) com araras-vermelhas. Trilha leve de 970 m com 2 mirantes.",
+   "endereco": "Zona rural, Jardim (cerca de 55 km de Bonito)",
+   "cidade": "Jardim",
+   "site": "https://www.buracodasararas.com.br",
+   "compra": "https://www.buracodasararas.com.br/reservas",
+   "telefone": "(67) 3255-4344 / WhatsApp (67) 99995-2586",
+   "horario": "Diariamente 7h às 16h (guia travel.com.br, sem data).",
+   "reserva": "Só com voucher de agência credenciada; vagas limitadas por dia.",
+   "preco": "R$ 185 por adulto, igual na baixa e na alta (Viagens e Caminhos, out/2026). Agência Ygarapé mostra \"a partir de R$ 117\" (nov/2026). Criança de 0 a 7 anos grátis (agência Ygarapé).",
+   "criancas": "Todas as idades: \"caminhada suave para todas as idades\" (site oficial). Grupos de até 15 com guia. Bom para a avó e para o de 4 anos.",
+   "chuva": "Ao ar livre: com chuva a trilha molha e a vista do buraco piora.",
+   "tempo": "vista",
+   "duracao": "Cerca de 1h20 de trilha (agência); meio período com a estrada (1h de carro).",
+   "voucher": true,
+   "confianca": "oficial",
+   "gratis": false,
+   "lat": -21.49186,
+   "lng": -56.40308,
+   "geoFonte": "osm-nome",
+   "fontes": [
+    "https://www.buracodasararas.com.br",
+    "https://www.turismo.bonito.ms.gov.br/buraco-das-araras-em-bonito",
+    "https://agenciaygarape.com.br/passeio-em-bonito-ms/buraco-das-araras-contemplacao/",
+    "https://www.viagensecaminhos.com/o-que-faze-em-bonito-ms/"
+   ],
+   "apelidos": [
+    "Buraco das Araras",
+    "araras"
+   ]
+  },
+  {
+   "id": "estancia-mimosa",
+   "nome": "Estância Mimosa",
+   "categoria": "atracao",
+   "subcategoria": "cachoeiras",
+   "descricao": "Trilha na mata com 10 quedas d'água e 9 pontos de banho. Trecho de barco solar. Almoço no fogão a lenha incluso.",
+   "endereco": "Rodovia MS-178 (Bonito–Bodoquena), Km 18, Zona Rural, Bonito (24 km; 6 km de cascalho)",
+   "cidade": "Bonito",
+   "site": "https://www.estanciamimosa.eco.br",
+   "compra": "https://www.estanciamimosa.eco.br/onde-comprar",
+   "telefone": null,
+   "horario": "Turnos de manhã e de tarde. Almoço a partir das 11h30. Sem dia de folga (site oficial e agência).",
+   "reserva": "Só com voucher de agência credenciada; vagas limitadas por dia. Reservar 1 mês antes em julho, janeiro e feriados (site oficial).",
+   "preco": "Baixa temporada R$ 340 / alta R$ 410 por adulto, com almoço (Viagens e Caminhos, out/2026). Criança de 3 a 5 anos não paga; 6 a 11 anos tarifa infantil (agência Ygarapé).",
+   "criancas": "Idade mínima 2 anos; menores de 12 com pais (site oficial). Trilha de 2.450 m ida e volta, com escadas. Avó: dá para fazer com calma. Calçado fechado obrigatório; emprestam botas de neoprene.",
+   "chuva": "Trilha ao ar livre. O site diz que vale o ano todo, até em dias frios.",
+   "tempo": "aberto",
+   "duracao": "Cerca de 4 h + almoço (site oficial).",
+   "voucher": true,
+   "confianca": "oficial",
+   "gratis": false,
+   "lat": -20.98226,
+   "lng": -56.51571,
+   "geoFonte": "osm-nome",
+   "fontes": [
+    "https://www.estanciamimosa.eco.br/perguntas-frequentes/",
+    "https://www.turismo.bonito.ms.gov.br/estancia-mimosa-em-bonito",
+    "https://agenciaygarape.com.br/passeio-em-bonito-ms/estancia-mimosa-trilha-cachoeiras-almoco/",
+    "https://www.viagensecaminhos.com/o-que-faze-em-bonito-ms/"
+   ],
+   "apelidos": [
+    "Mimosa",
+    "cachoeiras da Mimosa"
+   ]
+  },
+  {
+   "id": "rio-sucuri",
+   "nome": "Rio Sucuri",
+   "categoria": "atracao",
+   "subcategoria": "flutuação",
+   "descricao": "Flutuação de cerca de 1.800 m em água muito transparente, com guia e barco de apoio.",
+   "endereco": "Rodovia Bonito/São Geraldo, Km 18, Zona Rural, Bonito",
+   "cidade": "Bonito",
+   "site": "https://www.riosucuri.com.br",
+   "compra": "https://www.riosucuri.com.br/agencias",
+   "telefone": null,
+   "horario": "Fecha um dia por semana para folga (site oficial, sem dizer o dia). A agência diz que não tem folga: confirme.",
+   "reserva": "Só com voucher de agência credenciada; vagas limitadas por dia.",
+   "preco": "Baixa temporada R$ 349 / alta R$ 438 por adulto; só passeio de barco R$ 130 (Viagens e Caminhos, out/2026). Tarifa infantil de 6 a 12 anos (agência Ygarapé).",
+   "criancas": "Idade mínima 4 anos, com pais ou responsável (site oficial). Barco de apoio o tempo todo. Não pode protetor solar nem repelente. Avó: existe o passeio de barco e trilha, indicado para idosos (agência).",
+   "chuva": "Água de nascente a 23 °C o ano todo (site oficial). Com tempestade, confirme com a agência.",
+   "tempo": "aberto",
+   "duracao": "Meio período (Sectur).",
+   "voucher": true,
+   "confianca": "oficial",
+   "gratis": false,
+   "lat": -21.23677,
+   "lng": -56.51094,
+   "geoFonte": "osm-nome",
+   "fontes": [
+    "https://www.riosucuri.com.br/o",
+    "https://www.riosucuri.com.br/passeio-de-barco",
+    "https://www.turismo.bonito.ms.gov.br/rio-sucuri-em-bonito",
+    "https://agenciaygarape.com.br/passeio-em-bonito-ms/rio-sucuri-flutuacao/",
+    "https://www.viagensecaminhos.com/o-que-faze-em-bonito-ms/"
+   ],
+   "apelidos": [
+    "Sucuri",
+    "flutuação Rio Sucuri"
+   ]
+  },
+  {
+   "id": "boca-da-onca",
+   "nome": "Boca da Onça Ecotour",
+   "categoria": "atracao",
+   "subcategoria": "cachoeiras",
+   "descricao": "Trilhas com muitas cachoeiras, incluindo a Boca da Onça (156 m), e rapel de 90 m. Café e almoço inclusos.",
+   "endereco": "Zona rural, Bodoquena (cerca de 60 km de Bonito)",
+   "cidade": "Bodoquena",
+   "site": "https://www.bocadaonca.com.br",
+   "compra": null,
+   "telefone": "(67) 99856-2953",
+   "horario": "Folga às segundas na baixa temporada (agência).",
+   "reserva": "Só com voucher de agência credenciada; vagas limitadas por dia.",
+   "preco": "Baixa temporada R$ 555 / alta R$ 665 por adulto, dia inteiro com almoço (Viagens e Caminhos, out/2026; não diz qual trilha). Trilha Adventure: criança até 6 anos grátis, 7 a 11 anos tarifa infantil (agência Ygarapé).",
+   "criancas": "Trilha Adventure 4,5 km com escadas; Discovery 6,5 km, não recomendada para menores de 6 anos (agência). Meia Trilha Buraco do Macaco: 2,1 km com volta de carro, feita para famílias com crianças pequenas e quem anda com dificuldade (site oficial). Melhor opção para a avó e o de 4 anos. Idade mínima do rapel não confirmada.",
+   "chuva": "Trilha ao ar livre com escadas; chuva forte deixa o piso escorregadio.",
+   "tempo": "aberto",
+   "duracao": "Dia inteiro; sair cedo (60 km).",
+   "voucher": true,
+   "confianca": "oficial",
+   "gratis": false,
+   "lat": -20.76083,
+   "lng": -56.71362,
+   "geoFonte": "osm-nome",
+   "fontes": [
+    "https://www.bocadaonca.com.br/passeios/",
+    "https://www.turismo.bonito.ms.gov.br/boca-da-onca-em-bonito",
+    "https://agenciaygarape.com.br/passeio-em-bonito-ms/boca-da-onca-trilha-adventure-almoco/",
+    "https://agenciaygarape.com.br/passeio-em-bonito-ms/boca-da-onca-trilha-discovery-almoco/",
+    "https://www.viagensecaminhos.com/o-que-faze-em-bonito-ms/"
+   ],
+   "apelidos": [
+    "Boca da Onça",
+    "rapel Boca da Onça",
+    "Buraco do Macaco"
+   ]
+  },
+  {
+   "id": "abismo-anhumas",
+   "nome": "Abismo Anhumas",
+   "categoria": "atracao",
+   "subcategoria": "caverna",
+   "descricao": "Caverna com lago gigante. Desce 72 m em rapel elétrico e passeia de bote; opção de flutuar ou mergulhar.",
+   "endereco": "Zona rural, Bonito (23 km). Central de reservas e checkpoint: Rua General Osório, 681, Centro",
+   "cidade": "Bonito",
+   "site": "https://abismoanhumas.com.br",
+   "compra": "https://abismoanhumas.com.br/loja/",
+   "telefone": "(67) 3255-3313",
+   "horario": "Horário definido no checkpoint, no dia anterior (site oficial). Folga aos domingos na baixa temporada (agência).",
+   "reserva": "Voucher de agência ou loja online oficial (vendida pela Natural Experiences Viagens). Vagas muito limitadas. Obrigatório ir ao checkpoint no centro no dia anterior.",
+   "preco": "Contemplação R$ 997; flutuação R$ 1.598; mergulho batismo R$ 1.898 (loja oficial, nov/2026). Desconto de 50% até 12 anos foi anunciado \"por tempo limitado\" em 2022: confirmar.",
+   "criancas": "Idade mínima 5 anos, com avaliação da criança no checkpoint (blog oficial, mar/2022). O de 4 anos não pode. Sem idade máxima: a avó pode ir se não tiver restrição médica (blog oficial). Uma agência citou 10 anos para mergulho.",
+   "chuva": "Passeio dentro da caverna. Com tempo ruim, confirme com a operadora.",
+   "tempo": "coberto",
+   "duracao": "Cerca de 3 h no local + checkpoint no dia anterior.",
+   "voucher": true,
+   "confianca": "oficial",
+   "gratis": false,
+   "lat": -21.15311,
+   "lng": -56.59883,
+   "geoFonte": "osm-nome",
+   "fontes": [
+    "https://abismoanhumas.com.br/visite/",
+    "https://abismoanhumas.com.br/criancas-no-abismo-anhumas/",
+    "https://abismoanhumas.com.br/viagem-com-criancas-e-idosos/",
+    "https://abismoanhumas.com.br/loja/",
+    "https://www.turismo.bonito.ms.gov.br/abismo-anhumas-em-bonito"
+   ],
+   "apelidos": [
+    "Anhumas",
+    "Abismo",
+    "rapel no abismo"
+   ]
+  },
+  {
+   "id": "aquario-natural",
+   "nome": "Aquário Natural (Baía Bonita)",
+   "categoria": "atracao",
+   "subcategoria": "flutuação",
+   "descricao": "Flutuação curta (cerca de 900 m) desde a nascente, água muito clara, com barco de apoio. Boa para iniciantes.",
+   "endereco": "Rodovia Bonito–Guia Lopes da Laguna, Km 7, Zona Rural, Bonito",
+   "cidade": "Bonito",
+   "site": "https://www.aquarionatural.com.br",
+   "compra": null,
+   "telefone": "(67) 3255-2296 / WhatsApp (67) 98112-7927",
+   "horario": "Grupos a cada 30 min, das 8h às 15h (agência). Pode ter folga aos domingos na baixa temporada (agência).",
+   "reserva": "Só com voucher de agência credenciada; vagas limitadas por dia.",
+   "preco": "Baixa temporada R$ 352 / alta R$ 436 por adulto (Viagens e Caminhos, out/2026). Valor infantil: agência diz grátis até 5 anos e também cita tarifa de 0 a 7 anos; confirmar.",
+   "criancas": "Sem idade mínima rígida: crianças pequenas vão no barco de apoio com os pais (agência Ygarapé). Outro guia diz 4 a 5 anos para flutuar. Bom para a avó: percurso curto e barco de apoio. Peso máximo 150 kg (agência).",
+   "chuva": "Água de nascente. Com tempestade, confirme com a agência.",
+   "tempo": "aberto",
+   "duracao": "Meio período (Sectur).",
+   "voucher": true,
+   "confianca": "guia",
+   "gratis": false,
+   "lat": -21.16599,
+   "lng": -56.44222,
+   "geoFonte": "osm-nome",
+   "fontes": [
+    "https://www.aquarionatural.com.br",
+    "https://www.turismo.bonito.ms.gov.br/aquario-natural-em-bonito-ms",
+    "https://agenciaygarape.com.br/passeio-em-bonito-ms/aquario-natural-flutuacao/",
+    "https://www.grupodicas.com/o-que-fazer-com-criancas-em-bonito/",
+    "https://www.viagensecaminhos.com/o-que-faze-em-bonito-ms/"
+   ],
+   "apelidos": [
+    "Aquário Natural",
+    "Baía Bonita",
+    "Reserva Baía Bonita"
+   ]
+  },
+  {
+   "id": "balneario-municipal",
+   "nome": "Balneário Municipal de Bonito",
+   "categoria": "atracao",
+   "subcategoria": "balneário",
+   "descricao": "Trecho do Rio Formoso com muitos peixes e partes rasas. Macacos-prego nas árvores. Estrutura simples e preço baixo.",
+   "endereco": "Rodovia MS-178/MS-382, cerca de 7 km do centro, Bonito",
+   "cidade": "Bonito",
+   "site": "https://www.turismo.bonito.ms.gov.br/balneario-municipal-em-bonito",
+   "compra": null,
+   "telefone": null,
+   "horario": "8h às 17h; sem dia de folga (agência Ygarapé).",
+   "reserva": "Vendido por agências credenciadas. Não confirmamos se vende na entrada.",
+   "preco": "Baixa temporada R$ 70 / alta R$ 98 por adulto (Viagens e Caminhos, out/2026). Tarifa infantil a partir de 6 anos (agência). Desconto para moradores de MS na baixa temporada (agência).",
+   "criancas": "Todas as idades (agência). Partes rasas para crianças. Bom para a avó. Lota nos fins de semana e feriados.",
+   "chuva": "Ao ar livre: com chuva perde a graça.",
+   "tempo": "aberto",
+   "duracao": "Dia livre.",
+   "voucher": true,
+   "confianca": "guia",
+   "gratis": false,
+   "lat": -21.17427,
+   "lng": -56.44781,
+   "geoFonte": "osm-nome",
+   "fontes": [
+    "https://www.turismo.bonito.ms.gov.br/balneario-municipal-em-bonito",
+    "https://agenciaygarape.com.br/passeio-em-bonito-ms/balneario-municipal-balneario/",
+    "https://www.viagensecaminhos.com/o-que-faze-em-bonito-ms/"
+   ],
+   "apelidos": [
+    "Balneário Municipal",
+    "balneário da prefeitura"
+   ]
+  },
+  {
+   "id": "balneario-do-sol",
+   "nome": "Balneário do Sol",
+   "categoria": "atracao",
+   "subcategoria": "balneário",
+   "descricao": "Piscinas e banho no Rio Formoso com peixes e pequenas cachoeiras. Restaurante e parque infantil.",
+   "endereco": "Rodovia do Turismo, Km 08, Bonito",
+   "cidade": "Bonito",
+   "site": "https://www.balneariodosol.com.br",
+   "compra": null,
+   "telefone": "(67) 3255-3500",
+   "horario": "8h às 17h (site oficial). Folga às segundas (agência).",
+   "reserva": "Só com voucher de agência credenciada; vagas limitadas por dia.",
+   "preco": "R$ 120 por adulto, igual na baixa e na alta (Viagens e Caminhos, out/2026). Criança até 5 anos não paga (agência).",
+   "criancas": "Para adultos e crianças (site oficial). Parque infantil (Sectur). Bom para a avó.",
+   "chuva": "Ao ar livre: com chuva perde a graça.",
+   "tempo": "aberto",
+   "duracao": "Dia livre.",
+   "voucher": true,
+   "confianca": "oficial",
+   "gratis": false,
+   "lat": -21.14204,
+   "lng": -56.40564,
+   "geoFonte": "osm-nome",
+   "fontes": [
+    "https://www.balneariodosol.com.br",
+    "https://www.turismo.bonito.ms.gov.br/balneario-do-sol-em-bonito",
+    "https://agenciaygarape.com.br/passeio-em-bonito-ms/balneario-do-sol-balneario/",
+    "https://www.viagensecaminhos.com/o-que-faze-em-bonito-ms/"
+   ],
+   "apelidos": [
+    "Balneário do Sol"
+   ]
+  },
+  {
+   "id": "eco-park-porto-da-ilha",
+   "nome": "Eco Park Porto da Ilha (bote e boia cross no Rio Formoso)",
+   "categoria": "atracao",
+   "subcategoria": "bote",
+   "descricao": "Passeio de bote de cerca de 5 km no Rio Formoso, com 3 cachoeiras e 1 corredeira. Também tem boia cross, stand up e espaço kids.",
+   "endereco": "Rodovia do Turismo, Km 13, Bonito (último trecho de terra)",
+   "cidade": "Bonito",
+   "site": "https://www.portodailha.eco.br",
+   "compra": null,
+   "telefone": "(67) 98466-5878",
+   "horario": "Folga às segundas na baixa temporada (agência).",
+   "reserva": "Só com voucher de agência credenciada; vagas limitadas por dia.",
+   "preco": "Passeios a partir de R$ 75, muda com a temporada (site oficial, 2026). Bote: agência mostra \"a partir de R$ 160\" (nov/2026).",
+   "criancas": "Bote e boia cross: idade mínima 5 anos, com pais (agência Ygarapé). O de 4 anos não faz. Bote pode ser feito por idosos com boa saúde (agência). Peso máximo: bote 140 kg, boia 115 a 120 kg (agência).",
+   "chuva": "Ao ar livre, no rio. Com tempestade, confirme com a agência.",
+   "tempo": "aberto",
+   "duracao": "Meio período.",
+   "voucher": true,
+   "confianca": "guia",
+   "gratis": false,
+   "lat": -21.12138,
+   "lng": -56.38556,
+   "geoFonte": "osm-nome",
+   "fontes": [
+    "https://www.portodailha.eco.br",
+    "https://www.turismo.bonito.ms.gov.br/bote-rio-formoso-em-bonito",
+    "https://www.turismo.bonito.ms.gov.br/eco-park-porto-da-ilha-em-bonito",
+    "https://agenciaygarape.com.br/passeio-em-bonito-ms/eco-park-porto-da-ilha-bote-no-rio-formoso/",
+    "https://agenciaygarape.com.br/passeio-em-bonito-ms/eco-park-porto-da-ilha-boia-cross/"
+   ],
+   "apelidos": [
+    "Porto da Ilha",
+    "Ilha do Padre",
+    "bote no Rio Formoso",
+    "bóia cross",
+    "boia cross"
+   ]
+  },
+  {
+   "id": "parque-ecologico-rio-formoso",
+   "nome": "Parque Ecológico Rio Formoso",
+   "categoria": "atracao",
+   "subcategoria": "boia cross",
+   "descricao": "Boia cross no Rio Formoso, perto da cidade. Quem compra uma atividade fica o dia na Lagoa Formosa (caiaque, stand up, tirolesas).",
+   "endereco": "Rodovia MS-178/MS-382, cerca de 7 km do centro, Bonito",
+   "cidade": "Bonito",
+   "site": "https://www.parquerioformoso.com.br",
+   "compra": null,
+   "telefone": "WhatsApp (67) 99223-6111",
+   "horario": "Folga às quartas na baixa temporada (agência).",
+   "reserva": "Só com voucher de agência credenciada; vagas limitadas por dia.",
+   "preco": "Boia cross: agência mostra \"a partir de R$ 198\" (nov/2026). Day use na Lagoa Formosa incluso com a atividade (site oficial).",
+   "criancas": "Boia cross: a partir de 7 anos ou acima de 1,15 m; peso máximo 120 kg (site oficial). O de 7 anos pode; o de 4 anos não. Lagoa Formosa: atividades para crianças de 3 a 8 anos só com autorização e supervisão dos pais (site oficial). Caminhada de 900 m até o rio e 300 m na volta.",
+   "chuva": "Ao ar livre, no rio. Com tempestade, confirme com o parque.",
+   "tempo": "aberto",
+   "duracao": "Boia cross 1h40 (site oficial) + day use na lagoa.",
+   "voucher": true,
+   "confianca": "oficial",
+   "gratis": false,
+   "lat": -21.17645,
+   "lng": -56.4497,
+   "geoFonte": "osm-nome",
+   "fontes": [
+    "https://www.parquerioformoso.com.br/atividades/boia-cross",
+    "https://www.parquerioformoso.com.br/atividades/lagoa-formosa",
+    "https://agenciaygarape.com.br/passeio-em-bonito-ms/parque-ecologico-rio-formoso-boia-cross/"
+   ],
+   "apelidos": [
+    "Parque Ecológico",
+    "boia cross Rio Formoso",
+    "Lagoa Formosa"
+   ]
+  },
+  {
+   "id": "gruta-catedral",
+   "nome": "Gruta Catedral (antiga Gruta de São Mateus)",
+   "categoria": "atracao",
+   "subcategoria": "gruta",
+   "descricao": "Caverna com iluminação, 60 degraus dentro, entrada e saída diferentes. Tem museu com objetos antigos e animais empalhados.",
+   "endereco": "Rodovia do Turismo, Km 02, Zona Rural, Bonito (cerca de 4 km)",
+   "cidade": "Bonito",
+   "site": "https://www.grutacatedral.com.br",
+   "compra": null,
+   "telefone": "(67) 3255-1302",
+   "horario": null,
+   "reserva": "Só com voucher de agência credenciada; vagas limitadas por dia.",
+   "preco": "Baixa temporada R$ 103 / alta R$ 139 por adulto (Viagens e Caminhos, out/2026).",
+   "criancas": "Crianças acima de 5 anos (site oficial). O de 4 anos não entra. Trilha suspensa, 280 m de mata e 60 degraus dentro da gruta (Sectur): possível para a avó com calma.",
+   "chuva": "Dentro da caverna; a trilha de acesso é ao ar livre.",
+   "tempo": "coberto",
+   "duracao": "Cerca de 1h30 (agência).",
+   "voucher": true,
+   "confianca": "oficial",
+   "gratis": false,
+   "lat": -21.13343,
+   "lng": -56.45533,
+   "geoFonte": "osm-nome",
+   "fontes": [
+    "https://www.grutacatedral.com.br",
+    "https://www.turismo.bonito.ms.gov.br/grutas-de-sao-mateus-em-bonito",
+    "https://agenciaygarape.com.br/passeio-em-bonito-ms/gruta-catedral-sao-mateus-contemplacao/",
+    "https://www.viagensecaminhos.com/o-que-faze-em-bonito-ms/"
+   ],
+   "apelidos": [
+    "Gruta São Mateus",
+    "Grutas de São Mateus",
+    "Gruta de São Mateus",
+    "Catedral"
+   ]
+  },
+  {
+   "id": "lagoa-misteriosa",
+   "nome": "Lagoa Misteriosa",
+   "categoria": "atracao",
+   "subcategoria": "flutuação",
+   "descricao": "Lagoa azul no fundo de uma dolina de 75 m, com visibilidade de mais de 40 m. Flutuação e mergulho.",
+   "endereco": "Rodovia BR-267, Km 512, Zona Rural, Jardim (mesmo local do Rio da Prata)",
+   "cidade": "Jardim",
+   "site": "https://www.lagoamisteriosa.eco.br",
+   "compra": "https://www.lagoamisteriosa.eco.br/onde-comprar",
+   "telefone": null,
+   "horario": "Flutuação e mergulho raso ficam SUSPENSOS de meados de outubro a meados de abril por causa das algas (site oficial). Confirme antes de planejar.",
+   "reserva": "Só com voucher de agência credenciada; vagas limitadas por dia. Só por agência de Bonito ou Jardim (site oficial).",
+   "preco": "Flutuação: baixa temporada R$ 270 / alta R$ 298 por adulto (Viagens e Caminhos, out/2026).",
+   "criancas": "Flutuação: 5 anos; mergulho com cilindro: 10 anos (site oficial). O de 4 anos não pode. Escadaria até a lagoa. Não empresta neoprene, só colete. Proibido protetor solar e repelente.",
+   "chuva": "Chuva intensa pode cancelar ou interromper (site oficial).",
+   "tempo": "aberto",
+   "duracao": "Meio período; sair de Bonito 1h30 antes do horário (site oficial).",
+   "voucher": true,
+   "confianca": "oficial",
+   "gratis": false,
+   "lat": -21.45858,
+   "lng": -56.45345,
+   "geoFonte": "osm-nome",
+   "fontes": [
+    "https://www.lagoamisteriosa.eco.br/perguntas-frequentes/",
+    "https://www.turismo.bonito.ms.gov.br/lagoa-misteriosa-em-bonito",
+    "https://www.viagensecaminhos.com/o-que-faze-em-bonito-ms/"
+   ],
+   "apelidos": [
+    "Lagoa Misteriosa"
+   ]
+  },
+  {
+   "id": "nascente-azul",
+   "nome": "Nascente Azul",
+   "categoria": "atracao",
+   "subcategoria": "flutuação",
+   "descricao": "Flutuação calma desde uma nascente azul de 7 m, mais balneário com praia, infláveis e tirolesa. Muito acessível.",
+   "endereco": "Rodovia Bonito–Bodoquena, Km 22, Bonito (cerca de 30 km; a página do balneário diz Km 29)",
+   "cidade": "Bonito",
+   "site": "https://nascenteazul.com.br",
+   "compra": "https://nascenteazul.com.br/agencias/",
+   "telefone": null,
+   "horario": "Folga às terças na baixa temporada (agência).",
+   "reserva": "Só com voucher de agência credenciada; vagas limitadas por dia. Por norma municipal, todo passeio é comprado em agência local (site oficial).",
+   "preco": "Flutuação com day use: baixa temporada R$ 498 / alta R$ 598 por adulto. Só balneário: R$ 126 / R$ 139 (Viagens e Caminhos, out/2026). Criança de 0 a 6 anos não paga o balneário (agência).",
+   "criancas": "Flutuação a partir de 4 anos (site oficial). Grupos de até 10 com guia. Rampas, trilhas adaptadas e cadeira anfíbia: ótimo para a avó (site oficial). Circuito inflável a partir de 4 anos, com colete ajustado.",
+   "chuva": "Com chuva e raios as atividades podem ser canceladas ou interrompidas (site oficial).",
+   "tempo": "aberto",
+   "duracao": "Flutuação cerca de 2h30; dá para ficar o dia no balneário (site oficial).",
+   "voucher": true,
+   "confianca": "oficial",
+   "gratis": false,
+   "lat": -20.89335,
+   "lng": -56.53063,
+   "geoFonte": "osm-nome",
+   "fontes": [
+    "https://nascenteazul.com.br",
+    "https://nascenteazul.com.br/flutuacao-em-bonito-ms/",
+    "https://nascenteazul.com.br/balneario-em-bonito-ms/",
+    "https://www.turismo.bonito.ms.gov.br/nascente-azul-em-bonito",
+    "https://www.viagensecaminhos.com/o-que-faze-em-bonito-ms/"
+   ],
+   "apelidos": [
+    "Nascente Azul",
+    "flutuação Nascente Azul"
+   ]
+  },
+  {
+   "id": "ceita-core",
+   "nome": "Fazenda Ceita Corê",
+   "categoria": "atracao",
+   "subcategoria": "cachoeiras",
+   "descricao": "Trilha de 4 km com 6 cachoeiras e a nascente do Rio Chapena numa caverna. Almoço de fazenda.",
+   "endereco": "Rodovia MS-178, Km 30, s/n, Zona Rural, Bonito (cerca de 36 km)",
+   "cidade": "Bonito",
+   "site": "https://fazendaceitacore.com.br",
+   "compra": null,
+   "telefone": null,
+   "horario": "8h às 17h, todos os dias (site oficial).",
+   "reserva": "Só com voucher de agência credenciada; vagas limitadas por dia. Grupos pequenos (site oficial).",
+   "preco": "Baixa temporada R$ 516 / alta R$ 580 por adulto, dia inteiro com almoço (Viagens e Caminhos, out/2026).",
+   "criancas": "Idade mínima oficial não encontrada; agência diz \"sem restrições\". Trilha de 4 km, cerca de 3 h. Guia sugere crianças a partir de uns 6 anos. Cansativo para o de 4 anos e para a avó. Gestantes com 20 semanas ou mais não fazem (agência).",
+   "chuva": "Trilha ao ar livre; chuva forte deixa o piso escorregadio.",
+   "tempo": "aberto",
+   "duracao": "Dia inteiro (trilha cerca de 3 h + almoço).",
+   "voucher": true,
+   "confianca": "guia",
+   "gratis": false,
+   "lat": -20.84204,
+   "lng": -56.58994,
+   "geoFonte": "osm-nome",
+   "fontes": [
+    "https://fazendaceitacore.com.br",
+    "https://www.turismo.bonito.ms.gov.br/ceita-core-em-bonito",
+    "https://agenciaygarape.com.br/passeio-em-bonito-ms/ceita-core-trilha-cachoeira-almoco/",
+    "https://www.grupodicas.com/o-que-fazer-com-criancas-em-bonito/",
+    "https://www.viagensecaminhos.com/o-que-faze-em-bonito-ms/"
+   ],
+   "apelidos": [
+    "Ceita Corê",
+    "Ceita Core"
+   ]
+  },
+  {
+   "id": "projeto-jiboia",
+   "nome": "Projeto Jiboia",
+   "categoria": "atracao",
+   "subcategoria": "palestra",
+   "descricao": "Palestra divertida à noite sobre serpentes. Dá para tocar nas jiboias. Fica na cidade.",
+   "endereco": "Rua Nestor Fernandes, 610, Bonito (guia)",
+   "cidade": "Bonito",
+   "site": "http://www.projetojiboia.com.br",
+   "compra": null,
+   "telefone": "(67) 98419-0313 (guia)",
+   "horario": "Todas as noites às 19h (guia antigo; confirmar).",
+   "reserva": "Vendido por agências; um guia antigo diz que dá para comprar na entrada, sem cartão. Confirmar.",
+   "preco": "Agência Ygarapé mostra \"a partir de R$ 80\" (nov/2026). Crianças até 4 anos não pagam (agência).",
+   "criancas": "Sem idade mínima (agência). Bom para toda a família, inclusive a avó.",
+   "chuva": null,
+   "tempo": null,
+   "duracao": "Cerca de 1h30.",
+   "voucher": true,
+   "confianca": "guia",
+   "gratis": false,
+   "lat": -21.12173,
+   "lng": -56.49729,
+   "geoFonte": "osm-nome",
+   "fontes": [
+    "https://www.turismo.bonito.ms.gov.br/projeto-jiboia-em-bonito",
+    "https://agenciaygarape.com.br/passeio-em-bonito-ms/projeto-jiboia-visitacao/",
+    "https://www.viajenaviagem.com/destino/bonito/projeto-jiboia"
+   ],
+   "apelidos": [
+    "Jiboia",
+    "Projeto Jibóia",
+    "palestra das cobras"
+   ]
+  },
+  {
+   "id": "praia-da-figueira",
+   "nome": "Praia da Figueira",
+   "categoria": "atracao",
+   "subcategoria": "balneário",
+   "descricao": "Lagoa com areia branca, jacaré inflável, toboágua, área kids e flutuação de ~1.400 m no Rio Formoso.",
+   "endereco": "Zona rural, Bonito (16 km do centro)",
+   "cidade": "Bonito",
+   "site": "https://praiadafigueira.com.br",
+   "compra": "https://praiadafigueira.com.br",
+   "telefone": "WhatsApp (67) 99289-1376",
+   "horario": "Todos os dias 8h às 17h; quartas de manutenção na baixa temporada (site oficial).",
+   "reserva": "Reserva e voucher pelo WhatsApp do próprio atrativo (site oficial) ou por agência.",
+   "preco": "Flutuação + balneário: R$ 250 adulto, R$ 175 criança de 6 a 11, grátis até 5 anos. Só balneário: R$ 119 adulto, R$ 95 criança de 6 a 11 (site oficial, válido até 20/12/2026).",
+   "criancas": "Água rasa, salva-vidas, playground, área kids, sombra e redário (site oficial). Flutuação: idade mínima 4 anos segundo a agência (o site não diz). Bom para a avó.",
+   "chuva": "Ao ar livre: com chuva perde a graça.",
+   "tempo": "aberto",
+   "duracao": "Flutuação meio período; balneário dia todo.",
+   "voucher": true,
+   "confianca": "oficial",
+   "gratis": false,
+   "lat": -21.25188,
+   "lng": -56.53475,
+   "geoFonte": "osm-nome",
+   "fontes": [
+    "https://praiadafigueira.com.br",
+    "https://www.turismo.bonito.ms.gov.br/praia-da-figueira-em-bonito",
+    "https://agenciaygarape.com.br/passeio-em-bonito-ms/praia-da-figueira-flutuacao/"
+   ],
+   "apelidos": [
+    "Praia da Figueira",
+    "Figueira",
+    "jacaré inflável"
+   ]
+  },
+  {
+   "id": "fazenda-san-francisco",
+   "nome": "Fazenda San Francisco (Pantanal de Miranda)",
+   "categoria": "atracao",
+   "subcategoria": "pantanal",
+   "descricao": "Fazenda no Pantanal, FORA de Bonito, em Miranda: safári fotográfico, chalana com pesca de piranha e focagem noturna.",
+   "endereco": "BR-262, Km 583 (algumas fontes dizem 586), Miranda – Pantanal do Rio Miranda",
+   "cidade": "Miranda",
+   "site": "https://fazendasanfrancisco.tur.br",
+   "compra": null,
+   "telefone": "(67) 9964-3929 (como aparece no site; parece faltar um dígito)",
+   "horario": null,
+   "reserva": "Por agência de Bonito (passeio do dia ou pacote).",
+   "preco": "Focagem noturna: agência mostra \"a partir de R$ 346\" (nov/2026). Day use: preço não encontrado.",
+   "criancas": "Sem regra de idade encontrada. Fica a cerca de 146 a 164 km de Bonito (2h a 2h30 de estrada): dia longo para crianças pequenas e para a avó.",
+   "chuva": "Passeios ao ar livre no Pantanal.",
+   "tempo": "aberto",
+   "duracao": "Dia inteiro saindo de Bonito.",
+   "voucher": true,
+   "confianca": "guia",
+   "gratis": false,
+   "lat": null,
+   "lng": null,
+   "geoFonte": null,
+   "fontes": [
+    "https://fazendasanfrancisco.tur.br",
+    "https://agenciaygarape.com.br/passeio-em-bonito-ms/fazenda-san-francisco-focagem-noturna/",
+    "https://www.viagensecaminhos.com/fazenda-san-francisco-pantanal/"
+   ],
+   "apelidos": [
+    "San Francisco",
+    "safári Pantanal",
+    "Pantanal"
+   ]
+  },
+  {
+   "id": "casa-do-joao",
+   "nome": "Casa do João",
+   "categoria": "comer",
+   "subcategoria": "regional",
+   "descricao": "Restaurante regional mais conhecido de Bonito. Prato famoso: traíra frita com pirão, salada e arroz. Tem caldo de piranha.",
+   "endereco": "Rua Nelson Felício dos Santos, 664 (um guia diz 664-A), Centro, Bonito",
+   "cidade": "Bonito",
+   "site": null,
+   "compra": null,
+   "telefone": "(67) 3255-1212",
+   "horario": null,
+   "reserva": "Costuma lotar na alta temporada (guia travel.com.br).",
+   "preco": null,
+   "criancas": "Leitor de guia conta que foi com crianças e elas gostaram.",
+   "chuva": null,
+   "tempo": "coberto",
+   "duracao": null,
+   "voucher": false,
+   "confianca": "guia",
+   "gratis": false,
+   "lat": -21.12778,
+   "lng": -56.48238,
+   "geoFonte": "osm-nome",
+   "fontes": [
+    "https://www.viajenaviagem.com/destino/bonito/onde-comer/",
+    "https://guia.melhoresdestinos.com.br/casa-do-joao-100-1777-l.html",
+    "https://travel.com.br/bonito/comer-beber/"
+   ],
+   "apelidos": [
+    "João",
+    "traíra"
+   ]
+  },
+  {
+   "id": "juanita",
+   "nome": "Juanita",
+   "categoria": "comer",
+   "subcategoria": "regional",
+   "descricao": "Restaurante familiar e simples. Prato famoso: banda de pacu na brasa, serve 2 a 3 pessoas.",
+   "endereco": "Rua Nossa Senhora da Penha, 854, Bonito",
+   "cidade": "Bonito",
+   "site": null,
+   "compra": null,
+   "telefone": "(67) 3255-1239",
+   "horario": null,
+   "reserva": "Costuma lotar na alta temporada (guia travel.com.br).",
+   "preco": null,
+   "criancas": null,
+   "chuva": null,
+   "tempo": "coberto",
+   "duracao": null,
+   "voucher": false,
+   "confianca": "guia",
+   "gratis": false,
+   "lat": -21.12766,
+   "lng": -56.49012,
+   "geoFonte": "osm-nome",
+   "fontes": [
+    "https://www.viajenaviagem.com/destino/bonito/onde-comer/",
+    "https://travel.com.br/bonito/comer-beber/"
+   ],
+   "apelidos": [
+    "Juanita",
+    "pacu"
+   ]
+  },
+  {
+   "id": "cantinho-da-vovo",
+   "nome": "Restaurante Cantinho da Vovó",
+   "categoria": "comer",
+   "subcategoria": "buffet caseiro",
+   "descricao": "Buffet de comida caseira feita no fogão a lenha (segundo avaliações online).",
+   "endereco": "Rua Senador Filinto Müller, 570, Centro, Bonito (OpenStreetMap)",
+   "cidade": "Bonito",
+   "site": null,
+   "compra": null,
+   "telefone": "(67) 99636-9191 (OpenStreetMap)",
+   "horario": "Almoço, 11h às 15h30 (OpenStreetMap, conferido em 09/2025).",
+   "reserva": null,
+   "preco": null,
+   "criancas": null,
+   "chuva": null,
+   "tempo": "coberto",
+   "duracao": null,
+   "voucher": false,
+   "confianca": "baixa",
+   "gratis": false,
+   "lat": -21.12791,
+   "lng": -56.4852,
+   "geoFonte": "osm-nome",
+   "fontes": [
+    "https://www.openstreetmap.org/search?query=Cantinho%20da%20Vov%C3%B3%20Bonito",
+    "https://wanderlog.com/place/details/2829685"
+   ],
+   "apelidos": [
+    "Vovó",
+    "fogão a lenha"
+   ]
+  },
+  {
+   "id": "pastel-bonito",
+   "nome": "Pastel Bonito",
+   "categoria": "comer",
+   "subcategoria": "pastel",
+   "descricao": "Pastelaria famosa pelo pastel de carne de jacaré.",
+   "endereco": "Rua Coronel Pilad Rebuá, 1975, Centro, Bonito",
+   "cidade": "Bonito",
+   "site": null,
+   "compra": null,
+   "telefone": "(67) 3255-2848 / WhatsApp (67) 98437-7073",
+   "horario": "Seg a qui 16h–23h; sex e sáb 16h–23h30 (OpenStreetMap, 09/2025).",
+   "reserva": null,
+   "preco": null,
+   "criancas": "Lanche rápido, bom com crianças.",
+   "chuva": null,
+   "tempo": "coberto",
+   "duracao": null,
+   "voucher": false,
+   "confianca": "guia",
+   "gratis": false,
+   "lat": -21.1287,
+   "lng": -56.48442,
+   "geoFonte": "osm-nome",
+   "fontes": [
+    "https://www.viajenaviagem.com/destino/bonito/onde-comer/"
+   ],
+   "apelidos": [
+    "pastel de jacaré"
+   ]
+  },
+  {
+   "id": "taboa",
+   "nome": "Taboa Bar",
+   "categoria": "bebidas",
+   "subcategoria": "cachaçaria",
+   "descricao": "Cachaçaria mais famosa de Bonito, com música ao vivo.",
+   "endereco": "Rua Coronel Pilad Rebuá, 1834, Centro, Bonito",
+   "cidade": "Bonito",
+   "site": "http://www.taboa.com.br",
+   "compra": null,
+   "telefone": "(67) 3255-3598 / (67) 98142-9565",
+   "horario": "Dom a sex 18h–23h; sáb 18h–24h (OpenStreetMap, 09/2025).",
+   "reserva": null,
+   "preco": null,
+   "criancas": "Bar à noite; mais para adultos.",
+   "chuva": null,
+   "tempo": "coberto",
+   "duracao": null,
+   "voucher": false,
+   "confianca": "guia",
+   "gratis": false,
+   "lat": -21.12783,
+   "lng": -56.48606,
+   "geoFonte": "osm-nome",
+   "fontes": [
+    "https://www.viajenaviagem.com/destino/bonito/onde-comer/"
+   ],
+   "apelidos": [
+    "Taboa",
+    "cachaça Taboa"
+   ]
+  },
+  {
+   "id": "delicias-do-cerrado",
+   "nome": "Delícias do Cerrado",
+   "categoria": "doces",
+   "subcategoria": "sorvete",
+   "descricao": "Picolés e sorvetes de frutas do cerrado: mangaba, mutamba, jabuticaba, caju, tamarindo e outros. Preço bom.",
+   "endereco": "Rua Coronel Pilad Rebuá, 1828, Centro, Bonito",
+   "cidade": "Bonito",
+   "site": null,
+   "compra": null,
+   "telefone": null,
+   "horario": "Todos os dias 13h–23h (OpenStreetMap).",
+   "reserva": null,
+   "preco": null,
+   "criancas": "Ótimo para crianças.",
+   "chuva": null,
+   "tempo": "coberto",
+   "duracao": null,
+   "voucher": false,
+   "confianca": "guia",
+   "gratis": false,
+   "lat": -21.12789,
+   "lng": -56.48648,
+   "geoFonte": "osm-nome",
+   "fontes": [
+    "https://guia.melhoresdestinos.com.br/delicias-cerrado-bonito-100-1781-l.html"
+   ],
+   "apelidos": [
+    "sorveteria",
+    "picolé"
+   ]
+  },
+  {
+   "id": "allegra-gelato",
+   "nome": "Allegra Gelato & Café",
+   "categoria": "doces",
+   "subcategoria": "sorvete",
+   "descricao": "Gelato artesanal com frutas do cerrado e cafés.",
+   "endereco": "Rua Coronel Pilad Rebuá, 2070, Centro, Bonito (OpenStreetMap; outro diretório diz 2010)",
+   "cidade": "Bonito",
+   "site": null,
+   "compra": null,
+   "telefone": "(67) 3255-1750 (OpenStreetMap)",
+   "horario": "Todos os dias 15h–23h (OpenStreetMap).",
+   "reserva": null,
+   "preco": null,
+   "criancas": "Bom para crianças.",
+   "chuva": null,
+   "tempo": "coberto",
+   "duracao": null,
+   "voucher": false,
+   "confianca": "guia",
+   "gratis": false,
+   "lat": -21.12924,
+   "lng": -56.48371,
+   "geoFonte": "osm-nome",
+   "fontes": [
+    "https://travel.com.br/bonito/comer-beber/"
+   ],
+   "apelidos": [
+    "Allegra",
+    "gelato"
+   ]
+  },
+  {
+   "id": "central-abismo-anhumas",
+   "nome": "Central do Abismo Anhumas (checkpoint)",
+   "categoria": "logistica",
+   "subcategoria": "checkpoint",
+   "descricao": "Escritório no centro. Quem vai ao Abismo Anhumas precisa passar aqui no dia anterior para provar a roupa e assinar os termos.",
+   "endereco": "Rua General Osório, 681, Centro, Bonito",
+   "cidade": "Bonito",
+   "site": "https://abismoanhumas.com.br/visite/",
+   "compra": null,
+   "telefone": "(67) 3255-3313",
+   "horario": null,
+   "reserva": null,
+   "preco": null,
+   "criancas": "Criança é avaliada aqui (blog oficial).",
+   "chuva": null,
+   "tempo": "coberto",
+   "duracao": null,
+   "voucher": false,
+   "confianca": "oficial",
+   "gratis": false,
+   "lat": -21.1292,
+   "lng": -56.48181,
+   "geoFonte": "osm-rua (aproximado, centro da rua)",
+   "fontes": [
+    "https://abismoanhumas.com.br/experiencia/a-descida/"
+   ],
+   "apelidos": [
+    "checkpoint Anhumas"
+   ]
+  },
+  {
+   "id": "centro-atendimento-turista",
+   "nome": "Centro de Atendimento ao Turista (CAT)",
+   "categoria": "logistica",
+   "subcategoria": "informação",
+   "descricao": "Posto oficial de informação turística da Prefeitura, na entrada da cidade.",
+   "endereco": "Entrada da cidade, Rodovia MS-382, Bonito",
+   "cidade": "Bonito",
+   "site": "https://www.turismo.bonito.ms.gov.br/centro-de-atendimento-em-bonito",
+   "compra": null,
+   "telefone": "(67) 3255-1850 / (67) 3255-1449",
+   "horario": "Segunda a sexta, 7h às 13h (Sectur).",
+   "reserva": null,
+   "preco": null,
+   "criancas": null,
+   "chuva": null,
+   "tempo": "coberto",
+   "duracao": null,
+   "voucher": false,
+   "confianca": "oficial",
+   "gratis": true,
+   "lat": null,
+   "lng": null,
+   "geoFonte": null,
+   "fontes": [
+    "https://www.turismo.bonito.ms.gov.br/centro-de-atendimento-em-bonito",
+    "https://www.turismo.bonito.ms.gov.br/calendario-de-temporada-bonito-ms"
+   ],
+   "apelidos": [
+    "CAT",
+    "informação turística"
+   ]
+  }
+ ],
+ "roteiros": [
+  {
+   "id": "familia-todas-as-idades",
+   "nome": "Família com 4 e 7 anos: só passeios liberados para os dois",
+   "dias": [
+    {
+     "ordem": 1,
+     "titulo": "Chegada e noite das jiboias",
+     "itens": [
+      {
+       "hora": "15:00",
+       "titulo": "Chegada e check-in",
+       "nota": "Antes: pagar a TCA online (R$ 15 por pessoa por dia; menores de 7 anos isentos).",
+       "tipo": null,
+       "lugarId": null
+      },
+      {
+       "hora": "16:30",
+       "titulo": "Sorvete de frutas do cerrado",
+       "nota": null,
+       "tipo": null,
+       "lugarId": "delicias-do-cerrado"
+      },
+      {
+       "hora": "17:30",
+       "titulo": "Conferir os vouchers com a agência",
+       "nota": "Os horários de cada passeio vêm no voucher.",
+       "tipo": null,
+       "lugarId": null
+      },
+      {
+       "hora": "19:00",
+       "titulo": "Projeto Jiboia",
+       "nota": "Sem idade mínima. Cerca de 1h30.",
+       "tipo": "ingresso",
+       "lugarId": "projeto-jiboia"
+      },
+      {
+       "hora": "20:45",
+       "titulo": "Jantar no Juanita",
+       "nota": "Banda de pacu na brasa serve 2 a 3.",
+       "tipo": null,
+       "lugarId": "juanita"
+      }
+     ]
+    },
+    {
+     "ordem": 2,
+     "titulo": "Nascente Azul",
+     "itens": [
+      {
+       "hora": "07:30",
+       "titulo": "Sair para a Nascente Azul",
+       "nota": "Cerca de 30 km. Sem protetor solar na flutuação.",
+       "tipo": null,
+       "lugarId": null
+      },
+      {
+       "hora": "08:30",
+       "titulo": "Flutuação + balneário",
+       "nota": "Flutuação a partir de 4 anos. Avó: trilha acessível e cadeira anfíbia.",
+       "tipo": "ingresso",
+       "lugarId": "nascente-azul"
+      },
+      {
+       "hora": "12:30",
+       "titulo": "Almoço no restaurante do atrativo",
+       "nota": "Depois: infláveis, praia e descanso.",
+       "tipo": null,
+       "lugarId": "nascente-azul"
+      },
+      {
+       "hora": "16:00",
+       "titulo": "Voltar e descansar",
+       "nota": null,
+       "tipo": null,
+       "lugarId": null
+      },
+      {
+       "hora": "19:30",
+       "titulo": "Jantar no Pastel Bonito",
+       "nota": "Pastel de jacaré.",
+       "tipo": null,
+       "lugarId": "pastel-bonito"
+      }
+     ]
+    },
+    {
+     "ordem": 3,
+     "titulo": "Araras e rio perto da cidade",
+     "itens": [
+      {
+       "hora": "07:00",
+       "titulo": "Sair para Jardim",
+       "nota": "Cerca de 55 km, 1 h de carro.",
+       "tipo": null,
+       "lugarId": null
+      },
+      {
+       "hora": "08:00",
+       "titulo": "Buraco das Araras",
+       "nota": "Trilha leve de 970 m, todas as idades.",
+       "tipo": "ingresso",
+       "lugarId": "buraco-das-araras"
+      },
+      {
+       "hora": "12:30",
+       "titulo": "Almoço no Cantinho da Vovó",
+       "nota": "Buffet no almoço; fecha às 15h30.",
+       "tipo": null,
+       "lugarId": "cantinho-da-vovo"
+      },
+      {
+       "hora": "15:00",
+       "titulo": "Balneário Municipal",
+       "nota": "Rio raso com peixes; fecha às 17h.",
+       "tipo": "ingresso",
+       "lugarId": "balneario-municipal"
+      },
+      {
+       "hora": "19:30",
+       "titulo": "Jantar na Casa do João",
+       "nota": "Traíra frita. Chegar cedo na alta temporada.",
+       "tipo": null,
+       "lugarId": "casa-do-joao"
+      }
+     ]
+    },
+    {
+     "ordem": 4,
+     "titulo": "Rio Sucuri e volta",
+     "itens": [
+      {
+       "hora": "08:00",
+       "titulo": "Sair para o Rio Sucuri",
+       "nota": "Cerca de 18 km.",
+       "tipo": null,
+       "lugarId": null
+      },
+      {
+       "hora": "08:30",
+       "titulo": "Flutuação no Rio Sucuri",
+       "nota": "A partir de 4 anos. Sem protetor nem repelente. A avó pode fazer só o barco.",
+       "tipo": "ingresso",
+       "lugarId": "rio-sucuri"
+      },
+      {
+       "hora": "12:30",
+       "titulo": "Almoço",
+       "nota": "Perto do atrativo ou na cidade.",
+       "tipo": null,
+       "lugarId": null
+      },
+      {
+       "hora": "14:30",
+       "titulo": "Gelato",
+       "nota": null,
+       "tipo": null,
+       "lugarId": "allegra-gelato"
+      },
+      {
+       "hora": "15:30",
+       "titulo": "Saída para o aeroporto ou estrada",
+       "nota": null,
+       "tipo": null,
+       "lugarId": null
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "aventura-leve",
+   "nome": "Aventura leve: o de 7 anos faz boia cross",
+   "dias": [
+    {
+     "ordem": 1,
+     "titulo": "Cachoeiras da Mimosa",
+     "itens": [
+      {
+       "hora": "07:45",
+       "titulo": "Sair para a Estância Mimosa",
+       "nota": "24 km; os últimos 6 km são de cascalho.",
+       "tipo": null,
+       "lugarId": null
+      },
+      {
+       "hora": "08:30",
+       "titulo": "Trilha e cachoeiras",
+       "nota": "A partir de 2 anos. 2,45 km com escadas e 9 pontos de banho. Calçado fechado.",
+       "tipo": "ingresso",
+       "lugarId": "estancia-mimosa"
+      },
+      {
+       "hora": "12:30",
+       "titulo": "Almoço no fogão a lenha",
+       "nota": "Incluso no passeio.",
+       "tipo": null,
+       "lugarId": "estancia-mimosa"
+      },
+      {
+       "hora": "19:00",
+       "titulo": "Projeto Jiboia",
+       "nota": null,
+       "tipo": "ingresso",
+       "lugarId": "projeto-jiboia"
+      },
+      {
+       "hora": "20:45",
+       "titulo": "Jantar na Casa do João",
+       "nota": null,
+       "tipo": null,
+       "lugarId": "casa-do-joao"
+      }
+     ]
+    },
+    {
+     "ordem": 2,
+     "titulo": "Aquário Natural e Rio Formoso",
+     "itens": [
+      {
+       "hora": "08:00",
+       "titulo": "Flutuação no Aquário Natural",
+       "nota": "Percurso curto. O de 4 anos vai no barco de apoio com um adulto (regra da agência; confirmar).",
+       "tipo": "ingresso",
+       "lugarId": "aquario-natural"
+      },
+      {
+       "hora": "11:30",
+       "titulo": "Almoço",
+       "nota": "Na cidade ou no atrativo.",
+       "tipo": null,
+       "lugarId": null
+      },
+      {
+       "hora": "13:30",
+       "titulo": "Parque Ecológico Rio Formoso",
+       "nota": "Boia cross só para o de 7 anos (7+ ou 1,15 m) com um adulto. Avó e o de 4 anos ficam na Lagoa Formosa (day use incluso).",
+       "tipo": "ingresso",
+       "lugarId": "parque-ecologico-rio-formoso"
+      },
+      {
+       "hora": "19:30",
+       "titulo": "Jantar no Juanita",
+       "nota": null,
+       "tipo": null,
+       "lugarId": "juanita"
+      }
+     ]
+    },
+    {
+     "ordem": 3,
+     "titulo": "Boca da Onça (dia inteiro)",
+     "itens": [
+      {
+       "hora": "06:45",
+       "titulo": "Sair para Bodoquena",
+       "nota": "Cerca de 60 km. Café da manhã incluso no passeio.",
+       "tipo": null,
+       "lugarId": null
+      },
+      {
+       "hora": "08:00",
+       "titulo": "Meia Trilha Buraco do Macaco",
+       "nota": "2,1 km, volta de carro. Feita para famílias com crianças pequenas e quem anda com dificuldade. Almoço incluso.",
+       "tipo": "ingresso",
+       "lugarId": "boca-da-onca"
+      },
+      {
+       "hora": "15:30",
+       "titulo": "Voltar para Bonito",
+       "nota": null,
+       "tipo": null,
+       "lugarId": null
+      },
+      {
+       "hora": "19:30",
+       "titulo": "Jantar leve no Pastel Bonito",
+       "nota": null,
+       "tipo": null,
+       "lugarId": "pastel-bonito"
+      }
+     ]
+    },
+    {
+     "ordem": 4,
+     "titulo": "Praia da Figueira e volta",
+     "itens": [
+      {
+       "hora": "08:30",
+       "titulo": "Flutuação + balneário",
+       "nota": "Até 5 anos grátis. Água rasa, salva-vidas e área kids. Reserva pelo WhatsApp do atrativo.",
+       "tipo": "ingresso",
+       "lugarId": "praia-da-figueira"
+      },
+      {
+       "hora": "13:00",
+       "titulo": "Almoço no atrativo",
+       "nota": null,
+       "tipo": null,
+       "lugarId": "praia-da-figueira"
+      },
+      {
+       "hora": "15:30",
+       "titulo": "Picolé de fruta do cerrado",
+       "nota": null,
+       "tipo": null,
+       "lugarId": "delicias-do-cerrado"
+      },
+      {
+       "hora": "16:30",
+       "titulo": "Saída para o aeroporto ou estrada",
+       "nota": null,
+       "tipo": null,
+       "lugarId": null
+      }
+     ]
+    }
+   ]
+  }
+ ]
+}

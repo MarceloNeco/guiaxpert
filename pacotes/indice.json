@@ -1,8 +1,41 @@
 {
  "formato": 1,
  "pacotes": [
-  { "id": "gramado", "nome": { "pt": "Gramado e Canela", "en": "Gramado and Canela" }, "uf": "RS", "pais": "BR",
-    "centro": { "lat": -29.3789, "lng": -50.8744 }, "atualizadoEm": "2026-11-12",
-    "resumo": { "pt": "Natal Luz, parques, fondue, chocolate e cerveja artesanal na Serra Gaúcha.", "en": "Christmas lights, parks, fondue, chocolate and craft beer in the Serra Gaúcha." } }
+  {
+   "id": "gramado",
+   "nome": {
+    "pt": "Gramado e Canela",
+    "en": "Gramado and Canela"
+   },
+   "uf": "RS",
+   "pais": "BR",
+   "centro": {
+    "lat": -29.3789,
+    "lng": -50.8744
+   },
+   "atualizadoEm": "2026-11-12",
+   "resumo": {
+    "pt": "Natal Luz, parques, fondue, chocolate e cerveja artesanal na Serra Gaúcha.",
+    "en": "Christmas lights, parks, fondue, chocolate and craft beer in the Serra Gaúcha."
+   }
+  },
+  {
+   "id": "bonito",
+   "nome": {
+    "pt": "Bonito",
+    "en": "Bonito"
+   },
+   "uf": "MS",
+   "pais": "BR",
+   "centro": {
+    "lat": -21.127,
+    "lng": -56.482
+   },
+   "atualizadoEm": "2026-11-12",
+   "resumo": {
+    "pt": "Flutuação em rios cristalinos, grutas e cachoeiras. Quase tudo com voucher de agência e vagas limitadas.",
+    "en": "Snorkelling in crystal rivers, caves and waterfalls. Most tours need an agency voucher."
+   }
+  }
  ]
 }
