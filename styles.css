@@ -657,12 +657,13 @@ body.travado #app, body.travado .janela-fundo.na-trava, body.travado #fundo-foto
   @media (prefers-color-scheme: dark) { :root:not([data-tema="claro"]) body.com-fundo #fundo-foto { opacity: 1; } }
   body.com-fundo .topo { background: color-mix(in srgb, var(--fundo) 72%, transparent); }
 
-  /* uma coluna só, centralizada e um pouco mais larga que no celular:
-     o olho segue de cima para baixo, sem ter de escolher entre duas colunas */
-  .tela[data-rota="inicio"], .tela[data-rota="roteiro"], .tela[data-rota="reservas"], .tela[data-rota="viagens"],
-  .tela[data-rota="familia"], .tela[data-rota="entrar"], .tela[data-rota="salvos"], .tela[data-rota="config"], .tela[data-rota="conta"] {
-    max-width: 50rem; padding-left: 2rem; padding-right: 2rem; }
-  .tela[data-rota="inicio"] > .hero { height: 44vh; min-height: 18rem; max-height: 26rem; margin: .4rem 0 .2rem; }
+  /* uma coluna só (o olho segue de cima para baixo), mas larga: acompanha o tamanho da tela.
+     Notebook ~68rem; monitor grande ~76rem e letra um pouco maior (ver abaixo). Mapa e Explorar usam a tela toda. */
+  .tela:not([data-rota="mapa"]):not([data-rota="explorar"]) { max-width: min(68rem, calc(100% - 4rem)); padding-left: 2rem; padding-right: 2rem; }
+  .tela[data-rota="inicio"] > .hero { height: 36vh; min-height: 15rem; max-height: 24rem; margin: .4rem 0 .2rem; }
+  /* previsão: os dias ocupam a largura toda, em vez de quatro cartõezinhos à esquerda */
+  .clima { display: grid; grid-template-columns: repeat(auto-fit, minmax(6.5rem, 1fr)); overflow: visible; }
+  .clima .d { min-width: 0; padding: .7rem .5rem; font-size: .95rem; }
   .tela[data-rota="inicio"] .hero-titulo { font-size: 2.5rem; }
   .tela[data-rota="inicio"] .hero-texto { left: 2rem; bottom: 1.8rem; }
   .tela[data-rota="roteiro"] .tempo { padding: 1.2rem 1.6rem; }
@@ -676,10 +677,18 @@ body.travado #app, body.travado .janela-fundo.na-trava, body.travado #fundo-foto
   body { padding-bottom: calc(var(--barra) + 1.6rem); }
 
   /* janelas: diálogo centralizado com respiro */
-  .janela { width: min(100%, 40rem); max-height: 86vh; padding: .6rem 1.6rem 1.6rem; box-shadow: 0 30px 80px -20px rgba(0, 0, 0, .45); }
+  .janela { width: min(calc(100% - 4rem), 54rem); max-height: 86vh; padding: .6rem 1.6rem 1.6rem; box-shadow: 0 30px 80px -20px rgba(0, 0, 0, .45); }
   .janela::before { display: none; }
   .janela-fundo { -webkit-backdrop-filter: blur(3px); backdrop-filter: blur(3px); }
 }
+/* monitor grande: coluna e janelas mais largas, letra um pouco maior (a barra de atalhos continua compacta) */
+@media (min-width: 1440px) {
+  html { font-size: 106.25%; }
+  .tela:not([data-rota="mapa"]):not([data-rota="explorar"]) { max-width: 76rem; }
+  .janela { width: min(calc(100% - 6rem), 60rem); }
+  .barra { width: min(38rem, calc(100% - 2rem)); }
+}
+@media (min-width: 1920px) { html { font-size: 112.5%; } .tela:not([data-rota="mapa"]):not([data-rota="explorar"]) { max-width: 82rem; } }
 /* fundo que passa devagar no computador (a camada vem do app.js; o véu body::after fica por cima) */
 @media (min-width: 1024px) {
   #fundo-anim { position: fixed; inset: 0; z-index: -1; pointer-events: none; overflow: hidden; opacity: 0; transition: opacity .6s ease; }

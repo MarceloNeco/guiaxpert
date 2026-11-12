@@ -2,6 +2,21 @@
   "app": "guiaxpert",
   "versoes": [
     {
+      "versao": "1.5.48",
+      "data": "2026-11-12",
+      "substitui": "1.5.47",
+      "itens": {
+        "pt": [
+          "Computador: a coluna única ficou larga e acompanha o tamanho da tela (notebook e monitor grande); em monitor grande a letra fica um pouco maior.",
+          "Janelas (como estas Novidades) mais largas no computador; a previsão do tempo ocupa a largura toda; a barra de atalhos continua compacta. No celular nada muda."
+        ],
+        "en": [
+          "Computer: the single column is now wide and grows with the screen; slightly larger text on big monitors.",
+          "Wider dialogs on a computer; the forecast fills the width; the shortcut bar stays compact. Phones unchanged."
+        ]
+      }
+    },
+    {
       "versao": "1.5.47",
       "data": "2026-11-12",
       "substitui": "1.5.46",
