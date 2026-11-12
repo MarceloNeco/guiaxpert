@@ -12,7 +12,7 @@
 (function () {
   'use strict';
   var d = document, $ = function (id) { return d.getElementById(id); };
-  var VERSAO_APP = '1.5.51';
+  var VERSAO_APP = '1.5.52';
 
   /* ------------------------------------------------------------------
      1. UTILIDADES
@@ -376,6 +376,17 @@
   /* 🎤 falar em vez de digitar: reconhecimento de voz do próprio navegador (Chrome/Android e Safari/iPhone; sem chave de IA).
      No Chrome precisa de internet; no iPhone funciona também sem. Põe o botão em cada campo de texto da área. */
   var SR_VOZ = window.SpeechRecognition || window.webkitSpeechRecognition;
+  /* "teste um dois teste um dois" → "teste um dois" (alguns Android devolvem a frase dobrada) */
+  function semRepeticao(t) {
+    var w = t.split(/\s+/);
+    for (var n = Math.floor(w.length / 2); n >= 1; n--) {
+      if (w.length % n) continue;
+      var bloco = w.slice(0, n).join(' ').toLowerCase(), ok = true;
+      for (var i = n; i < w.length; i += n) if (w.slice(i, i + n).join(' ').toLowerCase() !== bloco) { ok = false; break; }
+      if (ok && w.length > n) return w.slice(0, n).join(' ');
+    }
+    return t;
+  }
   function comVoz(raiz) {
     if (!SR_VOZ || !raiz) return;
     [].forEach.call(raiz.querySelectorAll('input:not([type]), input[type="text"], input[type="search"], textarea'), function (c) {
@@ -387,18 +398,21 @@
       var rec = null;
       bt.addEventListener('click', function () {
         if (rec) { try { rec.stop(); } catch (e) {} return; }
-        rec = new SR_VOZ(); rec.lang = idioma() === 'en' ? 'en-US' : 'pt-BR'; rec.interimResults = true; rec.maxAlternatives = 1;
-        var base = c.value ? c.value.replace(/\s+$/, '') + ' ' : '';
-        bt.classList.add('ouvindo'); bt.setAttribute('aria-pressed', 'true');
+        /* só o resultado final: o Chrome do Android repete a frase inteira a cada pedaço quando há resultados parciais */
+        rec = new SR_VOZ(); rec.lang = idioma() === 'en' ? 'en-US' : 'pt-BR'; rec.interimResults = false; rec.continuous = false; rec.maxAlternatives = 1;
+        var base = c.value ? c.value.replace(/\s+$/, '') + ' ' : '', dica = c.placeholder;
+        bt.classList.add('ouvindo'); bt.setAttribute('aria-pressed', 'true'); c.placeholder = T('faleAgora');
         rec.onresult = function (e) {
-          var t = ''; for (var i = 0; i < e.results.length; i++) t += e.results[i][0].transcript;
+          var r = e.results[e.results.length - 1]; if (!r || r.isFinal === false) return;
+          var t = semRepeticao(String(r[0].transcript || '').trim());
+          if (!t) return;
           c.value = (base + t).slice(0, +(c.getAttribute('maxlength') || 1000));
           c.dispatchEvent(new Event('input', { bubbles: true }));
         };
         rec.onerror = function (e) {
           avisar(T(e.error === 'not-allowed' || e.error === 'service-not-allowed' ? 'vozPermitir' : e.error === 'network' ? 'vozSemInternet' : e.error === 'no-speech' ? 'naoOuvi' : 'vozErro'));
         };
-        rec.onend = function () { rec = null; bt.classList.remove('ouvindo'); bt.setAttribute('aria-pressed', 'false'); c.focus(); };
+        rec.onend = function () { rec = null; c.placeholder = dica; bt.classList.remove('ouvindo'); bt.setAttribute('aria-pressed', 'false'); c.focus(); };
         try { rec.start(); } catch (e) { rec = null; bt.classList.remove('ouvindo'); }
       });
     });
@@ -551,7 +565,7 @@
   /* busca 🔍: funções do app + lugares */
   function abrirBusca() {
     var campo = h('input', { class: 'campo', type: 'search', placeholder: T('buscarDica'), 'aria-label': T('buscar'), autocomplete: 'off' });
-    var lista = h('div', { class: 'grade' });
+    var lista = h('div', { class: 'grade busca-lista' });
     var corpo = h('div', { class: 'linha', style: 'flex-direction:column;align-items:stretch;gap:.75rem' }, [campo, lista]);
     var j = janela(T('buscar'), corpo);
     function atualizar() {
@@ -568,7 +582,7 @@
         } }, [placa(l.categoria), ' ', l.nome]));
       });
       /* lugares fora do app (OpenStreetMap, Foursquare, Tripadvisor): procura sozinho quando a pessoa para de digitar */
-      var naNet = h('div', { class: 'linha', style: 'flex-direction:column;align-items:stretch;gap:.4rem' });
+      var naNet = h('div', { class: 'busca-net' });
       lista.appendChild(naNet);
       clearTimeout(espera);
       if (q.length < 3) { if (lista.childNodes.length === 1) naNet.appendChild(h('p', { class: 'sub', texto: T('nadaAchado') })); return; }

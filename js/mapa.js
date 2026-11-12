@@ -158,8 +158,10 @@
           lista.insertBefore(bf, lista.firstChild);
           /* nada achado: os próximos passos ficam à vista já no resumo (sem precisar abrir a lista) */
           if (!itens.length) {
-            if (op.irPara) resumo.appendChild(h('button', { class: 'bt sec', type: 'button', style: 'min-height:2.5rem', texto: '🗺 ' + T('irParaNoMapa', { q: q }), onclick: function () { op.irPara(q); } }));
-            resumo.appendChild(h('button', { class: 'bt leve', type: 'button', style: 'min-height:2.5rem', texto: '🔎 ' + T('buscarNaInternetCurto', { q: q }), onclick: function () { estadoPainel('lista'); bf.click(); } }));
+            var acoes = h('div', { class: 'painel-acoes' });
+            if (op.irPara) acoes.appendChild(h('button', { class: 'bt sec', type: 'button', texto: '🗺 ' + T('irAteLa'), title: T('irParaNoMapa', { q: q }), onclick: function () { op.irPara(q); } }));
+            acoes.appendChild(h('button', { class: 'bt leve', type: 'button', texto: '🔎 ' + T('procurarNaInternet'), title: T('buscarNaInternetCurto', { q: q }), onclick: function () { estadoPainel('lista'); bf.click(); } }));
+            resumo.appendChild(acoes);
           }
         }
         if (op.rodape) lista.appendChild(op.rodape());

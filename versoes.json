@@ -2,6 +2,23 @@
   "app": "guiaxpert",
   "versoes": [
     {
+      "versao": "1.5.52",
+      "data": "2026-11-12",
+      "substitui": "1.5.51",
+      "itens": {
+        "pt": [
+          "Ditado por voz no Android: não repete mais a frase (\"teste teste um dois três teste teste…\"); o campo mostra \"Fale agora…\" enquanto escuta.",
+          "Mapa: quando a busca não acha nada, \"Ir até lá no mapa\" e \"Procurar na internet\" aparecem numa linha própria, com texto curto (antes ficavam espremidos ao lado de \"0 lugares\").",
+          "Busca 🔍 no computador: os resultados ocupam a janela toda, em colunas."
+        ],
+        "en": [
+          "Android dictation no longer repeats the phrase; the field shows \"Speak now…\" while listening.",
+          "Map: when nothing is found, the next steps show on their own row with short labels.",
+          "Search on a computer: results fill the whole dialog, in columns."
+        ]
+      }
+    },
+    {
       "versao": "1.5.51",
       "data": "2026-11-12",
       "substitui": "1.5.50",

@@ -791,3 +791,13 @@ table.comparar .bom { color: var(--rodovia); margin-top: .25rem; }
 }
 .etq.no-roteiro { background: var(--rodovia-claro); color: var(--rodovia); }
 .busca-caixa > svg { z-index: 2; pointer-events: none; }
+/* mapa: quando a busca não acha nada, as ações ficam numa linha própria, embaixo do "0 lugares" */
+.painel-resumo { flex-wrap: wrap; }
+.painel-acoes { flex-basis: 100%; display: flex; flex-wrap: wrap; gap: .4rem; }
+.painel-acoes .bt { min-height: 2.5rem; padding: .3rem .9rem; max-width: 100%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+/* busca 🔍: resultados usam a largura toda (várias colunas no computador, uma no celular) */
+.busca-lista > .busca-net { grid-column: 1 / -1; display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 17rem), 1fr)); gap: .5rem; align-items: stretch; }
+.busca-net > p, .busca-net > div, .busca-net > .bt.leve { grid-column: 1 / -1; }
+.busca-net > .bt-grande { height: 100%; }
+.painel[data-estado="resumo"]:has(.painel-acoes) { height: auto; }

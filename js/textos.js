@@ -135,6 +135,7 @@ window.TEXTOS = (function () {
     nadaPertoDaViagem: ['Nada perto da viagem.', 'Nothing near the trip.'], marqueNoMapaDica: ['Não achei perto da viagem. Use "Marcar no mapa" e toque no lugar.', 'Not found near the trip. Use "Mark on map" and tap the spot.'],
     editarLugar: ['Editar lugar', 'Edit place'], siteOndeComprar: ['Site ou onde comprar (opcional)', 'Website or where to buy (optional)'], pontoMarcado: ['ponto marcado', 'spot marked'],
     nLugar: ['1 lugar', '1 place'],
+    faleAgora: ['Fale agora…', 'Speak now…'], irAteLa: ['Ir até lá no mapa', 'Go there on the map'], procurarNaInternet: ['Procurar na internet', 'Search online'],
     jaComprei: ['Já comprei: guardar o ingresso', 'Bought it: save the ticket'], jaCompreiDica: ['Comprou? Guarde o ingresso (QR ou código): ele vira compromisso fixo 🔒 do dia e a família vê em Reservas.', 'Bought it? Save the ticket (QR or code): it becomes a fixed 🔒 plan and the family sees it in Bookings.'],
     noRoteiro: ['No roteiro: {dia}', 'In itinerary: {dia}'],
     comChuva: ['Com chuva', 'If it rains'], comprarIngresso: ['Comprar ingresso', 'Buy tickets'], siteOficial: ['Site oficial', 'Official site'],
