@@ -52,6 +52,10 @@ do Caracol; Florybal único; recarregar fica no Roteiro; Explorar no destino. Co
 - E30 **"+ Ideia por link"**: colar o link (ex.: parksnet), reconhecer o lugar do catálogo e guardar em "Onde comprar";
   "Já comprei" vira compromisso fixo 🔒.
 - E31 **PDF com texto de verdade** (pesquisável, links ativos, mais leve) em vez de imagem.
+- E33 **Alternativas não confirmadas** no mesmo horário (ex.: sexta de manhã: Parque do Caracol × Bondinhos Aéreos × Alpen Park),
+  comparação lado a lado (preço da família, idade/altura, tempo do hotel, depende do tempo?) e "decidir na véspera" com lembrete.
+- E34 **Aviso de tempo por passeio**: neblina, nuvem baixa e chuva por hora (Open-Meteo: visibilidade, nebulosidade) ligados a
+  passeios de vista (bondinho, mirante, Skyglass, cascata) × cobertos; sugere trocar de dia ou plano B coberto.
 - E32 Ficha do lugar em tela cheia no celular, com "Pôr no dia" fixo embaixo; "Acrescentar ao dia" com um campo só de busca.
 
 ## Entrevista com o dono — 03/Nov/2026 (fonte desta lista)

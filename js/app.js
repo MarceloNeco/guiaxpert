@@ -12,7 +12,7 @@
 (function () {
   'use strict';
   var d = document, $ = function (id) { return d.getElementById(id); };
-  var VERSAO_APP = '1.5.48';
+  var VERSAO_APP = '1.5.49';
 
   /* ------------------------------------------------------------------
      1. UTILIDADES
@@ -573,7 +573,12 @@
     d.body.classList.toggle('com-fundo', rota !== 'mapa' && rota !== 'explorar' && rota !== 'entrar');
     d.body.classList.toggle('na-entrar', rota === 'entrar');
     if (window.Mapa) Mapa.destruir();
-    var m = $('conteudo'); m.textContent = '';
+    var m = $('conteudo');
+    /* redesenho da mesma tela: segura a altura enquanto a tela nova monta (as partes que chegam depois, como
+       compromissos fixos e clima, não deixam a página "encolher" e pular para o topo) */
+    clearTimeout(relogioAltura);
+    if (mesmaTela) m.style.minHeight = m.offsetHeight + 'px'; else m.style.minHeight = '';
+    m.textContent = '';
     var tela = h('section', { class: 'tela' + (rota === 'mapa' || rota === 'explorar' ? ' larga' : ''), 'data-rota': rota });
     m.appendChild(tela);
     fundoDaTela();
@@ -581,8 +586,18 @@
     montarBarra(); desenharChip(); if (lib) botaoAssistente();
     try { TELAS[rota](tela); } catch (e) { console.error(e); tela.appendChild(h('div', { class: 'alerta' }, [h('b', { texto: T('erroTela') }), String(e.message || e)])); }
     /* redesenho da mesma tela (marcou uma opção) fica onde estava; tela nova começa no topo */
-    window.scrollTo(0, mesmaTela && !estado.irAoTopo ? rolagem : 0); estado.irAoTopo = false;
+    var alvoY = mesmaTela && !estado.irAoTopo ? rolagem : 0;
+    /* trocou o dia no Roteiro: se a pessoa já tinha rolado para baixo dos dias, mostra o começo do dia novo
+       com a fileira de dias no alto; se estava acima, fica exatamente onde estava */
+    if (mesmaTela && estado.manterDias) {
+      var dz = tela.querySelector('.dias');
+      if (dz) { var topoDias = dz.getBoundingClientRect().top + window.scrollY - (parseFloat(getComputedStyle(d.documentElement).fontSize) * 4.4); alvoY = Math.max(0, Math.min(rolagem, topoDias)); }
+    }
+    estado.manterDias = false;
+    window.scrollTo(0, alvoY); estado.irAoTopo = false;
+    if (mesmaTela) relogioAltura = setTimeout(function () { m.style.minHeight = ''; }, 1500);
   }
+  var relogioAltura = null;
 
   /* computador: a foto de fundo vira foto de verdade (a da viagem, nítida); no celular continua a discreta e leve */
   var MQ_LARGO = window.matchMedia ? matchMedia('(min-width: 1024px)') : { matches: false };
@@ -896,7 +911,7 @@
     var dias = diasDaViagem(v);
     var tabs = h('div', { class: 'dias', role: 'tablist', 'aria-label': T('diasDaViagem') });
     dias.forEach(function (dt, i) {
-      tabs.appendChild(h('button', { class: 'dia', role: 'tab', type: 'button', 'aria-selected': i === estado.dia ? 'true' : 'false', onclick: function () { estado.dia = i; mostrar('roteiro'); } },
+      tabs.appendChild(h('button', { class: 'dia', role: 'tab', type: 'button', 'aria-selected': i === estado.dia ? 'true' : 'false', onclick: function () { estado.dia = i; estado.manterDias = true; mostrar('roteiro'); } },
         [h('span', { texto: semana(dt) }), h('small', { texto: fData(dt, true) })]));
     });
     tela.appendChild(tabs);

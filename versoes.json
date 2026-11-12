@@ -2,6 +2,19 @@
   "app": "guiaxpert",
   "versoes": [
     {
+      "versao": "1.5.49",
+      "data": "2026-11-12",
+      "substitui": "1.5.48",
+      "itens": {
+        "pt": [
+          "Roteiro: trocar de dia (Qua, Qui, Sex…) não joga mais a tela para o topo. A fileira de dias fica presa no alto enquanto você rola, e o dia novo aparece logo abaixo dela. Vale no celular e no computador."
+        ],
+        "en": [
+          "Itinerary: switching days no longer jumps to the top. The day row stays pinned while you scroll, and the new day shows right below it. Phone and computer."
+        ]
+      }
+    },
+    {
       "versao": "1.5.48",
       "data": "2026-11-12",
       "substitui": "1.5.47",

@@ -58,7 +58,10 @@
 * { box-sizing: border-box; }
 html { -webkit-text-size-adjust: 100%; scroll-padding-top: calc(var(--topo) + 1rem); overflow-x: clip; }
 /* toque duplo não dá zoom (a pinça continua); nada passa da borda da tela */
-body { touch-action: manipulation; overflow-x: clip; }
+body { touch-action: manipulation; }
+/* quem impede a página de passar da borda é o html (overflow-x: clip). No body, "hidden" (que o diretrizes.js põe no
+   celular) transforma o body em caixa de rolagem e quebra o position: sticky (fileira de dias do Roteiro) */
+@media (max-width: 640px) { body:not(.sem-rolagem) { overflow-x: visible !important; } }
 body {
   margin: 0; background: var(--fundo); color: var(--tinta);
   font: 400 1.0625rem/1.5 var(--fonte); font-feature-settings: "tnum" 0;
@@ -712,3 +715,7 @@ body.travado #app, body.travado .janela-fundo.na-trava, body.travado #fundo-foto
 .hora24 { font-variant-numeric: tabular-nums; max-width: 9rem; }
 /* o botão ✦ IA não cobre o ✓/✕ do último item: sobra espaço para rolar */
 .tela[data-rota="roteiro"] { padding-bottom: 6.5rem; }
+
+/* Roteiro: a fileira de dias fica presa no alto ao rolar (troca de dia sem voltar ao topo) */
+.tela[data-rota="roteiro"] > .dias { position: sticky; top: calc(var(--topo) + env(safe-area-inset-top, 0px)); z-index: 6; margin: 0 -.4rem; padding: .35rem .4rem;
+  background: color-mix(in srgb, var(--fundo) 88%, transparent); -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px); border-radius: 0 0 18px 18px; }
