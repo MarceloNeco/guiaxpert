@@ -32,6 +32,12 @@ QR/código para outro celular, e-mail → reserva, família (membros, convites, 
 7. Barra de baixo configurável (favoritos, diretriz) e AssistONE com ajuda por tela.
 8. Mais pacotes (Bonito, Foz, Serra Gaúcha vinícolas…), cada um com data de verificação.
 
+## Testes pendentes para retomar (13/Nov/2026)
+- **Microfone (ditado) ainda falha:** no teste pelo Claude in Chrome, tocar no 🎤 não trouxe o texto. Retomar com o relatório da regressão (texto exato do aviso, tempo, se destravou) e testar também no celular Android real.
+- **Regressão completa 1.5.54** (prompt-regressao-completa-1.5.54-v2): em andamento; analisar o zip quando chegar.
+- **Foursquare recusa as buscas:** ler o motivo nos logs da função `lugares` ("foursquare recusou") depois do Passo 2 da regressão e corrigir.
+- **Google Places:** chave ainda não criada; a tela de faturamento do Google Maps ficou em loop (tentar pela página de faturamento direta ou em janela anônima). Depois, cadastrar em Configurações → Chaves do serviço → Google e usar Testar.
+
 ## Teste "viagem nova sem pacote" (Bonito e Lisboa, 12/Nov/2026) → 1.5.53
 
 Feito: Comece por aqui · Overpass com 3 servidores, 20 s e erro honesto · ⭐ = ideia (lugar guardado junto) · ideia por
