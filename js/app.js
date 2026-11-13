@@ -12,7 +12,7 @@
 (function () {
   'use strict';
   var d = document, $ = function (id) { return d.getElementById(id); };
-  var VERSAO_APP = '1.5.64';
+  var VERSAO_APP = '1.5.65';
 
   /* ------------------------------------------------------------------
      1. UTILIDADES
@@ -884,7 +884,8 @@
   }
   /* Voz do app (Whisper aberto, no próprio aparelho): para o computador em que o serviço de voz do navegador não
      responde. Baixa o modelo uma vez (≈77 MB) e transcreve num worker; o áudio não sai do aparelho. */
-  var VOZ_MOTOR = 'guiaxpert.voz.motor';
+  var VOZ_MOTOR = 'guiaxpert.voz.motor', VOZ_MODELO = 'guiaxpert.voz.modelo';
+  function modeloVoz() { try { return localStorage.getItem(VOZ_MODELO) === 'preciso' ? 'preciso' : 'normal'; } catch (e) { return 'normal'; } }
   var VozApp = (function () {
     var w = null, pct = 0, mb = 0, mbTotal = 77, estadoV = 'nada', esperando = {}, n = 0, ouvintes = [], barra = null;
     function avisarEstado() { ouvintes.forEach(function (f) { f(estadoV, pct); }); desenharBarra(); d.documentElement.style.setProperty('--voz-pct', String(pct)); d.body.classList.toggle('voz-baixando', estadoV === 'baixando'); }
@@ -912,12 +913,13 @@
       return w;
     }
     return {
-      carregar: function () { if (estadoV === 'pronta' || estadoV === 'baixando' || estadoV === 'preparando') return; estadoV = 'preparando'; avisarEstado(); worker().postMessage({ tipo: 'carregar' }); },
+      carregar: function () { if (estadoV === 'pronta' || estadoV === 'baixando' || estadoV === 'preparando') return; estadoV = 'preparando'; avisarEstado(); worker().postMessage({ tipo: 'carregar', modelo: modeloVoz() }); },
+      trocarModelo: function () { if (w) { w.terminate(); w = null; } estadoV = 'nada'; pct = 0; avisarEstado(); },
       estado: function () { return estadoV; }, pct: function () { return pct; },
       pronto: function () { return estadoV === 'pronta'; },
       ouvir: function (f) { ouvintes.push(f); return function () { ouvintes = ouvintes.filter(function (x) { return x !== f; }); }; },
       transcrever: function (audio, lingua) {
-        return new Promise(function (ok, erro) { var id = ++n; esperando[id] = { ok: ok, erro: erro }; worker().postMessage({ tipo: 'transcrever', id: id, audio: audio, lingua: lingua }, [audio.buffer]); });
+        return new Promise(function (ok, erro) { var id = ++n; esperando[id] = { ok: ok, erro: erro }; worker().postMessage({ tipo: 'transcrever', id: id, audio: audio, lingua: lingua, modelo: modeloVoz() }, [audio.buffer]); });
       }
     };
   })();
@@ -966,6 +968,7 @@
       return ctx.decodeAudioData(ab).then(function (buf) { var dados = new Float32Array(buf.getChannelData(0)); try { ctx.close(); } catch (e) {} return dados; });
     });
   }
+  function semReticencias(t) { return String(t || '').replace(/(…|\.\.\.)\s*$/, ''); }
   function comVoz(raiz) {
     if (!SR_VOZ || !raiz) return;
     [].forEach.call(raiz.querySelectorAll('input:not([type]), input[type="text"], input[type="search"], textarea'), function (c) {
@@ -975,7 +978,7 @@
       var caixa = h('span', { class: 'campo-voz' + (c.tagName === 'TEXTAREA' ? ' area' : '') });
       c.parentNode.insertBefore(caixa, c); caixa.appendChild(c); caixa.appendChild(bt);
       /* "Fale agora…" aparece numa etiqueta própria: o tradutor automático da plataforma reescreve o placeholder */
-      var fale = h('span', { class: 'voz-fale', 'aria-hidden': 'true', 'data-dgo-ignorar': '', texto: T('faleAgora') });
+      var fale = h('span', { class: 'voz-fale', 'aria-hidden': 'true', 'data-dgo-ignorar': '', texto: semReticencias(T('faleAgora')) });
       caixa.appendChild(fale);
       function alinharFale() { try { var cs = getComputedStyle(c); fale.style.left = (parseFloat(cs.paddingLeft) || 14) + (parseFloat(cs.borderLeftWidth) || 0) + 'px'; } catch (e) {} }
       var nivelAtual = 0, grav = null, usarLocal = false, rec = null, relogio = null, ouviu = false, local = false, somRec = false, somApp = false, medidor = null, trilha = null, t0 = 0;
@@ -1045,10 +1048,10 @@
         iniciar(false);
       });
       function fimApp(msg) {
-        bt.classList.remove('escrevendo'); bt.setAttribute('aria-label', T('falarNoCampo'));
+        bt.classList.remove('escrevendo'); caixa.classList.remove('escrevendo'); bt.disabled = false; c.readOnly = false; bt.setAttribute('aria-label', T('falarNoCampo'));
         if (trilha) { passo('fim', msg || ''); enviarDiagVoz({ origem: 'app', passos: trilha }); trilha = null; }
         pararMedidor();
-        caixa.classList.remove('ouvindo'); bt.classList.remove('ouvindo'); bt.setAttribute('aria-pressed', 'false'); fale.textContent = T('faleAgora');
+        caixa.classList.remove('ouvindo'); bt.classList.remove('ouvindo'); bt.setAttribute('aria-pressed', 'false'); fale.textContent = semReticencias(T('faleAgora'));
         if (msg) avisar(T(msg), T('vozTesteTitulo'), janelaTesteVoz, 9000);
       }
       /* voz do app: só grava quando está pronta; enquanto baixa, o 🎤 mostra o progresso e tocar explica quanto falta */
@@ -1062,10 +1065,10 @@
         var base = c.value ? c.value.replace(/\s+$/, '') + ' ' : '';
         trilha = []; t0 = Date.now(); passo('inicio', 'app');
         alinharFale();
-        caixa.classList.add('ouvindo'); bt.classList.add('ouvindo'); bt.setAttribute('aria-pressed', 'true'); fale.textContent = T('faleAgora');
+        caixa.classList.add('ouvindo'); bt.classList.add('ouvindo'); bt.setAttribute('aria-pressed', 'true'); fale.textContent = semReticencias(T('faleAgora'));
         var ctl = ouvirNoAparelho({ lingua: idioma() === 'en' ? 'english' : 'portuguese',
           aoNivel: function (n) { caixa.style.setProperty('--nivel', n.toFixed(2)); },
-          aoEstado: function (e) { passo(e); if (e === 'escrevendo') { fale.textContent = T('vozEscrevendo'); bt.classList.add('escrevendo'); bt.setAttribute('aria-label', T('vozEscrevendo')); } } });
+          aoEstado: function (e) { passo(e); if (e === 'escrevendo') { fale.textContent = semReticencias(T('vozEscrevendo')); bt.classList.add('escrevendo'); caixa.classList.add('escrevendo'); bt.disabled = true; c.readOnly = true; bt.setAttribute('aria-label', T('vozEscrevendo')); } } });
         grav = ctl;
         ctl.fim.then(function (r) {
           grav = null; caixa.style.removeProperty('--nivel');
@@ -5510,8 +5513,17 @@
   TELAS.config = function (tela) {
     tela.appendChild(h('h1', { texto: T('rota_config') }));
     tela.appendChild(cartaoProntoSemInternet());
-    tela.appendChild(h('div', { class: 'cartao' }, [h('h3', { texto: T('vozTesteTitulo') }), h('p', { class: 'sub', texto: T('vozTesteCartao') }),
-      h('button', { class: 'bt sec', type: 'button', style: 'align-self:flex-start', texto: T('vozTesteAbrir'), onclick: janelaTesteVoz })]));
+    var cVoz = h('div', { class: 'cartao' }, [h('h3', { texto: T('vozTesteTitulo') }), h('p', { class: 'sub', texto: T('vozTesteCartao') }),
+      h('button', { class: 'bt sec', type: 'button', style: 'align-self:flex-start', texto: T('vozTesteAbrir'), onclick: janelaTesteVoz })]);
+    if (!/Android|iPhone|iPad|iPod/i.test(navigator.userAgent || '')) {
+      var mod = modeloVoz();
+      cVoz.appendChild(h('fieldset', {}, [h('legend', { texto: T('vozModeloTit') }), h('div', { class: 'chips' }, [['normal', 'vozModeloNormal'], ['preciso', 'vozModeloPreciso']].map(function (o) {
+        return h('button', { class: 'chip', type: 'button', 'aria-pressed': mod === o[0] ? 'true' : 'false', onclick: function () {
+          try { localStorage.setItem(VOZ_MODELO, o[0]); localStorage.setItem(VOZ_MOTOR, 'app'); } catch (e) {}
+          d.body.classList.add('voz-app'); VozApp.trocarModelo(); VozApp.carregar(); mostrar('config'); } }, T(o[1]));
+      })), h('p', { class: 'pequeno', texto: T('vozModeloDica') })]));
+    }
+    tela.appendChild(cVoz);
     var tema = (function () { try { return localStorage.getItem('dgo:guiaxpert:tema') || 'auto'; } catch (e) { return 'auto'; } })();
     tela.appendChild(h('fieldset', {}, [h('legend', { texto: T('tema') }), h('div', { class: 'chips' }, ['auto', 'claro', 'escuro'].map(function (t) {
       return h('button', { class: 'chip', type: 'button', 'aria-pressed': tema === t ? 'true' : 'false', onclick: function () { aplicarTema(t); mostrar('config'); } }, T('tema_' + t));

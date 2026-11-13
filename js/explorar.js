@@ -44,7 +44,7 @@
         lugares: Explorar.lugares,
         centro: centro, zoom: estadoEx.zoom || (centro ? 13 : 4),
         /* busca sem resultado ("Europa", "Bonito", "Lisboa"): leva o mapa até lá */
-        irPara: function (q) { var c = $cidade(); if (c) c.value = q; irParaTexto(q); },
+        irPara: function (q, seNaoForLugar) { var c = $cidade(); if (c) c.value = q; irParaTexto(q, null, seNaoForLugar); },
         filtros: ['todos', 'favoritos', 'perto', 'comer', 'atracao', 'gratis', 'bebidas', 'doces'],
         buscarFora: function (q) { return Descobrir.buscarNome(q, estadoEx.centro || estado.pos, g.idioma()); },
         acharJuntos: function (q, aoCriar) { g.acharJuntos(q, aoCriar); },
@@ -75,13 +75,15 @@
       });
       function $cidade() { return document.getElementById('gx-ex-cidade'); }
       /* cidade: centra e procura lugares em volta; país ou continente (área grande): só mostra a região no mapa */
-      function irParaTexto(q, bt) {
+      /* nomes de área (país, estado, cidade): o mapa vai até lá; outra coisa (um prato, uma loja) segue para a busca na internet */
+      var AREAS = /^(continent|country|state|region|province|state_district|county|municipality|city|town|village|suburb|city_district|island|archipelago)$/;
+      function irParaTexto(q, bt, seNaoForLugar) {
         if (!q) return;
         if (bt) { bt.disabled = true; bt.textContent = '…'; }
         g.avisar(T('procurandoLugar', { q: q }), null, null, 12000);
         geocodificar(q, g.idioma()).then(function (c) {
           if (bt) { bt.disabled = false; bt.textContent = T('ir'); }
-          if (!c) { g.avisar(T('cidadeNaoAchada')); return; }
+          if (!c || (seNaoForLugar && !AREAS.test(String(c.tipo || '')))) { if (seNaoForLugar) { var cx = $cidade(); if (cx && cx.value === q) cx.value = estadoEx.nome || ''; seNaoForLugar(); } else g.avisar(T('cidadeNaoAchada')); return; }
           var bb = c.bbox, tam = bb ? Math.max(bb[1] - bb[0], bb[3] - bb[2]) : 0;
           estadoEx.centro = { lat: c.lat, lng: c.lng }; estadoEx.nome = c.nome; estadoEx.descobertas = []; estado.busca = '';
           /* continente bem longe; país pelo ponto principal (Portugal sem puxar Açores e Madeira); estado; cidade */

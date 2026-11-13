@@ -53,6 +53,7 @@
       /* busca + filtros (os mesmos da lista antiga) */
       var FILTROS = op.filtros || ['todos', 'paraVoces', 'favoritos', 'perto', 'comer', 'atracao', 'gratis', 'bebidas', 'doces', 'logistica'];
       var caixaBusca = h('div', { class: 'busca-caixa', svg: GX.ICONES.lupa });
+      var ultimoBf = null;
       var campo = h('input', { type: 'search', id: 'gx-busca-lugares', placeholder: T('buscarLugarDica'), 'aria-label': T('buscar'), value: estado.busca || '', autocomplete: 'off' });
       caixaBusca.appendChild(campo); topo.appendChild(caixaBusca);
       var chips = h('div', { class: 'chips rolar', role: 'group', 'aria-label': T('filtrar') });
@@ -129,6 +130,7 @@
         var q = (estado.busca || '').trim();
         if (q.length >= 3 && op.buscarFora) {
           var bf = h('button', { class: 'bt sec', type: 'button', style: 'margin:.5rem 1rem', texto: '🔎 ' + T('buscarNaInternet', { q: q }) });
+          ultimoBf = bf;
           bf.addEventListener('click', function () {
             if (!navigator.onLine) { GX.avisar(T('semInternet')); return; }
             bf.disabled = true; bf.textContent = T('carregando');
@@ -227,6 +229,16 @@
       function redesenhar() { desenharChips(); desenharMapa(); if (painel.getAttribute('data-estado') !== 'cartao') mostrarLista(); }
       function centrarEmMim() { if (mapa && estado.pos) mapa.setView([estado.pos.lat, estado.pos.lng], Math.max(mapa.getZoom(), 14)); }
       campo.addEventListener('input', function () { estado.busca = campo.value; redesenhar(); if (campo.value) estadoPainel('lista'); });
+      /* Enter: com algo no mapa, abre a lista; sem nada, vai até o lugar (cidade, estado, país) no Explorar ou procura na internet */
+      function procurarFora() { if (!ultimoBf) return; ultimoBf.hidden = false; estadoPainel('lista'); if (!ultimoBf.disabled) ultimoBf.click(); }
+      campo.addEventListener('keydown', function (e) {
+        if (e.key !== 'Enter') return;
+        e.preventDefault();
+        var q = campo.value.trim(); if (q.length < 2) return;
+        estado.busca = campo.value; redesenhar();
+        if (filtrados().length) { estadoPainel('lista'); return; }
+        if (op.irPara) op.irPara(q, procurarFora); else procurarFora();
+      });
 
       /* botão "onde estou" flutuante */
       var btEu = h('button', { class: 'bt-mapa', type: 'button', 'aria-label': T('ondeEstou'), svg: GX.ICONES.alvo, onclick: function () {

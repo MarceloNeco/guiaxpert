@@ -969,3 +969,11 @@ body.voz-app.voz-baixando .bt-voz { opacity: .75; }
 .bt-voz.escrevendo::after { content: ""; position: absolute; inset: 2px; border-radius: 50%; border: 3px solid transparent; border-top-color: var(--rodovia); animation: gx-gira .8s linear infinite; }
 @keyframes gx-gira { to { transform: rotate(360deg); } }
 @media (prefers-reduced-motion: reduce) { .bt-voz.escrevendo::after { animation-duration: 2.4s; } }
+/* "Fale agora" e "Escrevendo" em itálico, com os três pontinhos aparecendo um a um; nada clicável enquanto escreve */
+.voz-fale { font-style: italic; }
+.voz-fale::after { content: "..."; display: inline-block; width: 0; overflow: hidden; vertical-align: bottom; animation: gx-pontos 1.4s steps(4, jump-none) infinite; }
+@keyframes gx-pontos { from { width: 0; } to { width: 1.1em; } }
+@media (prefers-reduced-motion: reduce) { .voz-fale::after { animation: none; width: 1.1em; } }
+.campo-voz.escrevendo > input::placeholder { color: transparent; }
+.campo-voz.escrevendo .bt-voz { pointer-events: none; }
+.busca-caixa:has(.campo-voz.escrevendo) > svg, .busca-caixa:has(.campo-voz.escrevendo) button { pointer-events: none; opacity: .45; }

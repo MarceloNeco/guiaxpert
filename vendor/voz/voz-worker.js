@@ -9,13 +9,14 @@ env.useBrowserCache = true;
 env.backends.onnx.wasm.wasmPaths = new URL('./', import.meta.url).href;   /* runtime guardado no próprio app */
 env.backends.onnx.wasm.numThreads = 1;                                      /* GitHub Pages não libera várias threads */
 
-const MODELO = 'onnx-community/whisper-base';
-let pronto = null;
+const MODELOS = { normal: 'onnx-community/whisper-base', preciso: 'onnx-community/whisper-small' };
+let pronto = null, modeloAtual = 'normal';
 const arquivos = {};
 
-function carregar() {
+function carregar(modelo) {
+  if (modelo && MODELOS[modelo] && modelo !== modeloAtual) { modeloAtual = modelo; pronto = null; }
   if (pronto) return pronto;
-  pronto = pipeline('automatic-speech-recognition', MODELO, {
+  pronto = pipeline('automatic-speech-recognition', MODELOS[modeloAtual], {
     dtype: { encoder_model: 'q8', decoder_model_merged: 'q8' },
     device: 'wasm',
     progress_callback: (p) => {
@@ -32,9 +33,9 @@ function carregar() {
 self.onmessage = async (ev) => {
   const m = ev.data || {};
   try {
-    if (m.tipo === 'carregar') { await carregar().catch(() => {}); return; }
+    if (m.tipo === 'carregar') { await carregar(m.modelo).catch(() => {}); return; }
     if (m.tipo === 'transcrever') {
-      const asr = await carregar();
+      const asr = await carregar(m.modelo);
       const r = await asr(m.audio, { language: m.lingua || 'portuguese', task: 'transcribe', chunk_length_s: 30 });
       self.postMessage({ tipo: 'texto', id: m.id, texto: String((r && r.text) || '').trim() });
     }

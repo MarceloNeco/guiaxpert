@@ -191,6 +191,8 @@ window.TEXTOS = (function () {
     vozAindaBaixando: ['A voz do ditado ainda está baixando ({p}%). Quando terminar, um aviso aparece; enquanto isso, digite.', 'The dictation voice is still downloading ({p}%). A notice appears when done; type meanwhile.'],
     vozPreparando: ['Preparando a voz do ditado… toque no 🎤 de novo em alguns segundos.', 'Preparing the dictation voice… tap 🎤 again in a few seconds.'],
     vozAppFalhou: ['Não deu para baixar a voz do ditado. Tente de novo mais tarde.', 'Couldn’t download the dictation voice. Try again later.'],
+    vozModeloTit: ['Ditado no computador', 'Dictation on this computer'], vozModeloNormal: ['Rápido (77 MB)', 'Fast (77 MB)'], vozModeloPreciso: ['Mais preciso (250 MB)', 'More accurate (250 MB)'],
+    vozModeloDica: ['O mais preciso acerta melhor nomes de lugares, mas baixa mais e demora um pouco mais para escrever.', 'The more accurate one gets place names better, but downloads more and takes a bit longer to write.'],
     vozTesteTitulo: ['Testar o microfone', 'Test the microphone'], vozTesteAbrir: ['Abrir o teste', 'Open the test'],
     vozTesteCartao: ['Se o ditado (🎤) não escreve o que você fala, este teste mostra em que passo ele para.', 'If dictation (🎤) does not type what you say, this test shows where it stops.'],
     vozTesteExplica: ['Toque num dos testes e fale uma frase curta. A lista mostra cada passo do navegador. Faça os dois testes e copie o resultado.', 'Tap a test and say a short sentence. The list shows each browser step. Run both tests and copy the result.'],

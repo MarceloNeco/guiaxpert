@@ -2,6 +2,23 @@
   "app": "guiaxpert",
   "versoes": [
     {
+      "versao": "1.5.65",
+      "data": "2026-11-13",
+      "substitui": "1.5.64",
+      "itens": {
+        "pt": [
+          "Melhorias na busca do mapa com Enter.",
+          "Novo: ditado mais preciso no computador.",
+          "Melhorias no visual do ditado."
+        ],
+        "en": [
+          "Improvements to map search with Enter.",
+          "New: more accurate dictation on computers.",
+          "Improvements to the dictation look."
+        ]
+      }
+    },
+    {
       "versao": "1.5.64",
       "data": "2026-11-13",
       "substitui": "1.5.63",
