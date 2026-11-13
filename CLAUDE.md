@@ -15,4 +15,5 @@ A Definition of done da plataforma SolverONE passa a ter 12 pontos: manual e ori
 - Chaves de serviço só no Supabase Vault (tela Configurações → Chaves do serviço); nunca no chat, no código ou no Drive.
 - Outras famílias não gastam as chaves do dono; nomes de pessoas nunca vão para a IA; ACESSO 'obrigatorio'.
 - Não abrir PR; publicar em main (e no branch de trabalho). Versão em js/app.js (VERSAO_APP), sw.js (VERSAO), versoes.json (copiado para solverone-dados/versoes/guiaxpert.json).
+- **Novidades (versoes.json) curtas, sem explicar:** cada item é uma frase de 3 a 8 palavras dizendo só se é novo, melhoria ou correção e onde. Ex.: "Melhorias no ditado por voz.", "Correção na voz do computador.", "Novo: guia pronto de Bonito." Sem causa, sem detalhe técnico, sem nome de serviço, sem parênteses; 1 a 3 itens por versão (pedido do dono em 13/Nov/2026, igual ao Radar Judicial).
 - Pendências e testes: docs/ROADMAP.md e a planilha "0-SolverONE DIRETRIZES E BACKLOG" (aba GuiaXpert).
