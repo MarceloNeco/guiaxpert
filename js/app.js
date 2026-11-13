@@ -12,7 +12,7 @@
 (function () {
   'use strict';
   var d = document, $ = function (id) { return d.getElementById(id); };
-  var VERSAO_APP = '1.5.59';
+  var VERSAO_APP = '1.5.60';
 
   /* ------------------------------------------------------------------
      1. UTILIDADES
@@ -949,12 +949,30 @@
       }
       bt.addEventListener('click', function () {
         if (rec) { soltar(); c.focus(); return; }          /* 2º toque: para e destrava sempre */
+        iniciar(false);
+      });
+      /* o serviço de voz do Google não responde neste aparelho (erro de rede na hora): troca sozinho para a voz do
+         próprio aparelho, se o navegador tiver; se precisar baixar, oferece o botão (baixar pede um toque) */
+      function semRede(lang) {
+        soltar(null);
+        vozLocalEstado(lang).then(function (st) {
+          if (st === 'available') { avisar(T('vozUsandoLocal'), null, null, 5000); iniciar(true); }
+          else if (st === 'downloadable' || st === 'downloading') avisar(T('vozLocalOferta'), T('vozLocalBaixar'), function () {
+            vozLocalInstalar(lang).then(function (ok) {
+              if (ok) avisar(T('vozLocalInstalada'), T('vozTentar'), function () { iniciar(true); }, 12000);
+              else avisar(T('vozLocalNao'), null, null, 9000);
+            }, function () { avisar(T('vozLocalNao'), null, null, 9000); });
+          }, 15000);
+          else avisar(T('vozSemRedeGoogle'), T('vozTesteTitulo'), janelaTesteVoz, 12000);
+        });
+      }
+      function iniciar(forcaLocal) {
         var lang = idioma() === 'en' ? 'en-US' : 'pt-BR';
         /* só o resultado final: o Chrome do Android repete a frase inteira a cada pedaço quando há resultados parciais */
         rec = new SR_VOZ(); rec.lang = lang; rec.interimResults = false; rec.continuous = false; rec.maxAlternatives = 1;
         /* se o serviço do Google já falhou neste aparelho e a voz local está instalada, usa a local */
         local = false;
-        if (usarLocal || lerVoz(VOZ_LOCAL) === 'funciona') {
+        if (forcaLocal || usarLocal || lerVoz(VOZ_LOCAL) === 'funciona') {
           try { if ('processLocally' in rec) { rec.processLocally = true; local = true; } else if ('mode' in rec) { rec.mode = 'ondevice-only'; local = true; } } catch (e) {}
         }
         usarLocal = false;
@@ -983,6 +1001,7 @@
         rec.onerror = function (e) {
           passo('erro', e.error + (e.message ? ' ' + String(e.message).slice(0, 80) : ''));
           if (e.error === 'aborted') { soltar(); return; }
+          if (e.error === 'network' && !local) { semRede(lang); return; }
           if (e.error === 'network' || (e.error === 'service-not-allowed' && ouviu)) { semTexto(lang); return; }
           if (e.error === 'language-not-supported' && local) { gravarVoz(VOZ_LOCAL, null); soltar('vozErro'); return; }
           soltar(e.error === 'not-allowed' || e.error === 'service-not-allowed' ? 'vozPermitir' : e.error === 'no-speech' ? 'naoOuvi' : e.error === 'audio-capture' ? 'vozSemMicrofone' : 'vozErro');
@@ -997,7 +1016,7 @@
         }
         /* só no computador: no celular o ditado já funciona e abrir o microfone duas vezes pode atrapalhar */
         var celular = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent || '');
-        if (!celular && navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+        if (!celular && !local && navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
           navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: true } }).then(function (st) {
             if (rec !== esteRec) { st.getTracks().forEach(function (t) { t.stop(); }); return; }
             passo('microfone-site', (st.getAudioTracks()[0] || {}).label ? 'com-nome' : 'ok');
@@ -1010,7 +1029,7 @@
             comecar(null);
           });
         } else comecar(null);
-      });
+      }
     });
   }
   /* janela (folha que sobe): é uma camada do Voltar */

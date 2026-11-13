@@ -2,6 +2,21 @@
   "app": "guiaxpert",
   "versoes": [
     {
+      "versao": "1.5.60",
+      "data": "2026-11-13",
+      "substitui": "1.5.59",
+      "itens": {
+        "pt": [
+          "Ditado no computador: quando o serviço de voz do Google não responde (erro de rede na hora), o app troca sozinho para a voz instalada no próprio computador e começa a ouvir de novo; depois que ela funciona uma vez, já começa por ela.",
+          "A voz do computador não é mais interrompida na hora (o app entregava a ela o microfone do site, e ela não aceita)."
+        ],
+        "en": [
+          "Desktop dictation: when Google's speech service doesn't answer, the app switches to the on-device voice by itself and keeps it once it works.",
+          "The on-device voice is no longer aborted right away."
+        ]
+      }
+    },
+    {
       "versao": "1.5.59",
       "data": "2026-11-13",
       "substitui": "1.5.58",
