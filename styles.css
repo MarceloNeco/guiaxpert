@@ -784,7 +784,8 @@ table.comparar .bom { color: var(--rodovia); margin-top: .25rem; }
 /* busca 🔍 no computador: nomes longos quebram linha dentro do botão */
 .janela .grade .bt { white-space: normal; text-align: left; justify-content: flex-start; height: auto; min-height: 2.75rem; line-height: 1.3; }
 /* opções de roteiro no celular: todas à vista (quebram linha) em vez de rolar de lado escondidas */
-.tela[data-rota="roteiro"] > .chips.rolar { flex-wrap: wrap; overflow: visible; margin: 0; padding: 0; }
+.tela[data-rota="roteiro"] > .chips.rolar { -webkit-mask-image: linear-gradient(90deg, #000 85%, transparent); mask-image: linear-gradient(90deg, #000 85%, transparent); }
+@media (min-width: 700px) { .tela[data-rota="roteiro"] > .chips.rolar { -webkit-mask-image: none; mask-image: none; } }
 @media (max-width: 699px) {
   .bt-assistente { transition: opacity .2s ease, transform .2s ease; }
   body.rolando .bt-assistente { opacity: 0; transform: translateY(1rem); pointer-events: none; }
@@ -909,3 +910,31 @@ details.lugar[open] summary .resumo-desc { display: none; }
 .bt-ida-volta { display: inline-flex; align-items: center; gap: .4rem; align-self: flex-start; }
 .bt-cal .sl-ic { width: 1.2rem; height: 1.2rem; }
 .hora24[readonly] { cursor: pointer; }
+
+/* Roteiro no celular: hora e botões numa linha só em cima, o texto do programa na largura toda embaixo
+   (antes ✓ e ✕ ficavam numa coluna à direita e o texto virava uma tira estreita) */
+@media (max-width: 640px) {
+  .item { grid-template-columns: 1fr auto; grid-template-areas: "h acoes" "x x"; row-gap: .15rem; padding: .7rem 1rem; }
+  .item > .h { grid-area: h; display: flex; align-items: baseline; gap: .35rem; align-self: center; }
+  .item > .h .ate { display: inline; }
+  .item > .x { grid-area: x; }
+  .item > .acoes-item { grid-area: acoes; align-self: center; }
+  .item + .item::before { left: 1rem; }
+  .item > .x > .linha { flex-wrap: wrap; row-gap: .25rem; }
+  .item .x .lk { font-size: 1.12rem; font-weight: 700; text-align: left; }
+  .tela[data-rota="roteiro"] > .chips.rolar .chip { padding: .45rem .85rem; min-height: 2.4rem; font-size: .95rem; }
+  .alternativas .item.alt { padding: .6rem .9rem; }
+}
+.item .nota.curta:not(.aberta) { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; line-clamp: 2; overflow: hidden; }
+.nota-mais { align-self: flex-start; font-size: .88rem; padding: 0; min-height: 0; }
+
+/* barra da opção do roteiro: ícones de traço numa linha só */
+.barra-opcao { flex-wrap: nowrap; gap: .35rem; }
+.barra-opcao .bt-ic { white-space: nowrap; display: inline-flex; align-items: center; gap: .4rem; min-height: 2.6rem; padding: .35rem .75rem; flex: none; }
+.barra-opcao .bt-ic:first-child { flex: 1 1 auto; justify-content: center; min-width: 0; }
+.barra-opcao .bt-ic .sl-ic { width: 1.15rem; height: 1.15rem; }
+.barra-opcao .bt-fav[aria-pressed="true"] { color: var(--faixa-tinta, #6b4f00); }
+.barra-opcao .bt-fav[aria-pressed="true"] .sl-ic { fill: var(--faixa); stroke: var(--faixa); }
+@media (min-width: 700px) { .barra-opcao .bt-ic:first-child { flex: none; } }
+/* etiqueta do tipo numa linha própria no celular: o título fica inteiro embaixo */
+@media (max-width: 640px) { .item > .x > .linha > .placa + .lk { flex: 1 1 100%; } }

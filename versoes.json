@@ -2,6 +2,25 @@
   "app": "guiaxpert",
   "versoes": [
     {
+      "versao": "1.5.61",
+      "data": "2026-11-13",
+      "substitui": "1.5.60",
+      "itens": {
+        "pt": [
+          "Roteiro no celular: a hora e os botões ✓ ✕ ficam numa linha em cima e o programa usa a largura toda da tela (antes o texto virava uma tira estreita).",
+          "As opções de roteiro ficam numa fileira só, que rola de lado, em vez de ocupar a tela inteira.",
+          "A barra da opção (outra opção, editar, preferida, compartilhar, calendário) cabe numa linha, com ícones de traço.",
+          "Observações compridas mostram 2 linhas e \"ler tudo\"."
+        ],
+        "en": [
+          "Itinerary on phones: time and ✓ ✕ on top, the activity uses the full width.",
+          "Itinerary options in a single scrolling row.",
+          "Option bar fits one line with line icons.",
+          "Long notes show 2 lines and \"read all\"."
+        ]
+      }
+    },
+    {
       "versao": "1.5.60",
       "data": "2026-11-13",
       "substitui": "1.5.59",

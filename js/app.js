@@ -12,7 +12,7 @@
 (function () {
   'use strict';
   var d = document, $ = function (id) { return d.getElementById(id); };
-  var VERSAO_APP = '1.5.60';
+  var VERSAO_APP = '1.5.61';
 
   /* ------------------------------------------------------------------
      1. UTILIDADES
@@ -129,6 +129,10 @@
       tarde: '<path d="M17 18a5 5 0 0 0-10 0M12 3v6M4.2 10.2l1.4 1.4M1.5 18h2M20.5 18h2M18.4 11.6l1.4-1.4M22.5 21.5h-21M15.5 6.5 12 3 8.5 6.5"/>',
       lua: '<path d="M20.5 14.5A8.5 8.5 0 1 1 9.5 3.5a6.5 6.5 0 0 0 11 11Z"/>',
       duracao: '<circle cx="12" cy="13.5" r="8"/><path d="M10 2.5h4M12 13.5l3-3"/>',
+      estrela: '<path d="M12 2.8l2.85 5.78 6.38.93-4.62 4.5 1.09 6.35L12 17.36l-5.7 3 1.09-6.35-4.62-4.5 6.38-.93z"/>',
+      lapis: '<path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7.5 18.5 3 20l1.5-4.5z"/>',
+      compartilhar: '<path d="M4 12v7a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-7"/><path d="M16 6l-4-4-4 4"/><path d="M12 2v13"/>',
+      mais: '<path d="M12 5v14M5 12h14"/>',
       esq: '<path d="m15 18-6-6 6-6"/>', dir: '<path d="m9 18 6-6-6-6"/>', baixo: '<path d="m6 9 6 6 6-6"/>'
     };
     function icone(n) { var e = d.createElementNS(NS, 'svg'); e.setAttribute('viewBox', '0 0 24 24'); e.setAttribute('class', 'sl-ic'); e.setAttribute('aria-hidden', 'true'); e.innerHTML = ICO[n] || ''; return e; }
@@ -1697,15 +1701,21 @@
     /* a opção escolhida fica sempre à vista (com muitas opções, os chips rolam de lado) */
     setTimeout(function () { var sel = ops.querySelector('[aria-selected="true"]'); if (sel && ops.scrollWidth > ops.clientWidth) ops.scrollLeft = Math.max(0, sel.offsetLeft - ops.clientWidth / 2 + sel.offsetWidth / 2); }, 0);
     var o = estado.opcao;
-    var barra = h('div', { class: 'linha' }, [
-      h('button', { class: 'fav', type: 'button', 'aria-pressed': o.favorito ? 'true' : 'false', 'aria-label': T('favoritarRoteiro'), texto: o.favorito ? '★' : '☆',
-        onclick: function () { o.favorito = !o.favorito; Banco.gravar('roteiros', o).then(function () { return recarregar(); }); } }),
-      h('button', { class: 'bt leve', type: 'button', onclick: function () { janelaNovaOpcao(); } }, '＋ ' + T('outraOpcao')),
-      h('button', { class: 'bt leve', type: 'button', onclick: function () { janelaEstaOpcao(o); } }, '✎ ' + T('estaOpcao'))
+    /* barra da opção numa linha só: no celular só os ícones (de traço), no computador com o nome ao lado */
+    function btIcone(ic, rotulo, fn, extra) {
+      var b = h('button', Object.assign({ class: 'bt leve bt-ic', type: 'button', 'aria-label': rotulo, title: rotulo, onclick: fn }, extra || {}));
+      b.appendChild(Seletor.icone(ic)); b.appendChild(h('span', { class: 'so-largo', texto: rotulo })); return b;
+    }
+    var btFav = btIcone('estrela', T('favoritarRoteiro'), function () { o.favorito = !o.favorito; Banco.gravar('roteiros', o).then(function () { return recarregar(); }); }, { 'aria-pressed': o.favorito ? 'true' : 'false' });
+    btFav.classList.add('bt-fav');
+    var barra = h('div', { class: 'linha barra-opcao' }, [
+      btIcone('mais', T('outraOpcao'), function () { janelaNovaOpcao(); }),
+      btIcone('lapis', T('estaOpcao'), function () { janelaEstaOpcao(o); }),
+      btFav,
+      btIcone('compartilhar', T('cmp_botao'), function () { janelaCompartilharRoteiro(v); }),
+      btIcone('cal', T('calBotao'), function () { exportarCalendario(v, o); }, { title: T('calDica') })
     ]);
-    /* no celular, Compartilhar e Calendário ficam só com o ícone (a barra cabe numa linha e sobra tela para o dia) */
-    barra.appendChild(h('button', { class: 'bt leve', type: 'button', 'aria-label': T('cmp_botao'), title: T('cmp_botao'), onclick: function () { janelaCompartilharRoteiro(v); } }, ['📤', h('span', { class: 'so-largo', texto: ' ' + T('cmp_botao') })]));
-    barra.appendChild(h('button', { class: 'bt leve', type: 'button', 'aria-label': T('calBotao'), title: T('calDica'), onclick: function () { exportarCalendario(v, o); } }, ['📅', h('span', { class: 'so-largo', texto: ' ' + T('calBotao') })]));
+    barra.firstChild.querySelector('.so-largo').className = '';
     tela.appendChild(barra);
     if (o.origem === 'ia') tela.appendChild(h('div', { class: 'alerta' }, [h('b', { texto: T('iaConfira') }), T('iaConfiraTexto')]));
 
@@ -1789,7 +1799,7 @@
       var rm = o.origem !== 'pacote' ? h('button', { class: 'fav tirar', type: 'button', 'aria-label': T('tirarItem') + ': ' + it.titulo, texto: '✕', onclick: function () {
         tirarComDesfazer(o, o.dias.indexOf(dmod), idx); } }) : null;
       var el = h('div', { class: 'item' + (agora ? ' agora' : '') + (conf ? ' confirmado' : '') + (it.alt ? ' alt' : ''), 'data-tit': normalizar(it.titulo || ''), 'data-lugar': it.lugarId || '', 'data-hora': it.hora || '', 'data-idx': String(idx) },
-        [h('span', { class: 'h' }, it.alt ? '' : [it.hora || '—', it.fim ? h('small', { class: 'ate', texto: '–' + it.fim }) : null]), x, h('span', { class: 'linha', style: 'flex-wrap:' + (it.alt ? 'wrap' : 'nowrap') + ';gap:0;justify-content:flex-end' }, [btConf, rm])]);
+        [h('span', { class: 'h' }, it.alt ? '' : [it.hora || '—', it.fim ? h('small', { class: 'ate', texto: '–' + it.fim }) : null]), x, h('span', { class: 'linha acoes-item', style: 'flex-wrap:' + (it.alt ? 'wrap' : 'nowrap') + ';gap:0;justify-content:flex-end' }, [btConf, rm])]);
       if (!it.alt) { bloco.appendChild(el); return; }
       /* alternativas (ainda não decidido) no mesmo horário: uma caixa só, "escolha uma" */
       var k = it.hora || Clima.periodoDaHora(it.hora) || 'sem';
@@ -1809,6 +1819,7 @@
     });
     /* tempo por passeio (neblina × vista, chuva × ao ar livre), avisos de deslocamento e de dia cheio */
     if (c) avisosDoDia(bloco, cab, dmod, data, dias, c);
+    encurtarNotas(bloco);
     bloco.appendChild(fixos);
     if (!(dmod.itens || []).length) bloco.appendChild(h('p', { class: 'sub', style: 'padding:1rem', texto: T('diaVazio') }));
     tela.appendChild(bloco);
@@ -1817,6 +1828,16 @@
       h('button', { class: 'bt leve', type: 'button', onclick: function () { Nav.ir('salvos'); } }, '⭐ ' + T('ideiasGuardadas', { n: ideiasDaViagem().length }))]));
     else tela.appendChild(h('p', { class: 'pequeno', texto: T('soVe') }));
   };
+  /* nota comprida no roteiro: mostra 2 linhas e um "mais"; tocar abre o resto (o celular não vira uma coluna de texto) */
+  function encurtarNotas(bloco) {
+    [].forEach.call(bloco.querySelectorAll('.item .x > .nota'), function (n) {
+      if ((n.textContent || '').length < 110 || n.querySelector('a') && (n.textContent || '').length < 160) return;
+      n.classList.add('curta');
+      var mais = h('button', { class: 'lk nota-mais', type: 'button', texto: T('notaMais'), 'aria-expanded': 'false' });
+      mais.addEventListener('click', function () { var ab = n.classList.toggle('aberta'); mais.textContent = T(ab ? 'notaMenos' : 'notaMais'); mais.setAttribute('aria-expanded', ab ? 'true' : 'false'); });
+      n.after(mais);
+    });
+  }
   function recarregar() { return carregarViagem(estado.viagem && estado.viagem.id).then(function () { mostrar(estado.rota); }); }
   function recarregarTela() { return recarregar(); }
   /* o roteiro pronto do guia diz "Chegada no aeroporto", "Pegar o carro", "Check-in", "Grande Desfile"…

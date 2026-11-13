@@ -179,6 +179,7 @@ window.TEXTOS = (function () {
     selQuando: ['Quando é a viagem?', 'When is the trip?'], selIda: ['Ida', 'Departure'], selVolta: ['Volta', 'Return'], selUmaNoite: ['1 noite', '1 night'], selNoites: ['{n} noites', '{n} nights'],
     selToqueIda: ['Toque no dia da ida.', 'Tap the departure day.'], selAgoraVolta: ['Agora toque no dia da volta.', 'Now tap the return day.'], selUsarDatas: ['Usar estas datas', 'Use these dates'], selRecomecar: ['Pronto. Para mudar, toque em outro dia de ida.', 'Done. To change, tap another departure day.'],
     selEscolherIdaVolta: ['Escolher ida e volta no calendário', 'Pick departure and return on the calendar'],
+    notaMais: ['ler tudo', 'read all'], notaMenos: ['ler menos', 'show less'],
     vozTesteTitulo: ['Testar o microfone', 'Test the microphone'], vozTesteAbrir: ['Abrir o teste', 'Open the test'],
     vozTesteCartao: ['Se o ditado (🎤) não escreve o que você fala, este teste mostra em que passo ele para.', 'If dictation (🎤) does not type what you say, this test shows where it stops.'],
     vozTesteExplica: ['Toque num dos testes e fale uma frase curta. A lista mostra cada passo do navegador. Faça os dois testes e copie o resultado.', 'Tap a test and say a short sentence. The list shows each browser step. Run both tests and copy the result.'],
