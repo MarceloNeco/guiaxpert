@@ -109,7 +109,11 @@ Deno.serve(async (req: Request) => {
   }
   if (teste === "foursquare") {
     if (!key) return json({ ok: false, motivo: "sem-chave" });
-    const r = await fetch("https://places-api.foursquare.com/places/search?query=" + encodeURIComponent(q) + "&limit=3", { headers: { Authorization: "Bearer " + key, "X-Places-Api-Version": "2025-06-17" } });
+    // a mesma chamada da busca de verdade (com os campos), para o "Testar" não dizer que funcionou quando a busca falha
+    const leg = key.startsWith("fsq3");
+    const cps = leg ? "fsq_id,name,geocodes,categories,location,tel,website" : "fsq_place_id,name,latitude,longitude,categories,location,tel,website";
+    const r = await fetch((leg ? "https://api.foursquare.com/v3" : "https://places-api.foursquare.com") + "/places/search?query=" + encodeURIComponent(q) + "&limit=3&fields=" + cps + "&ll=-29.3746,-50.8764&radius=50000",
+      { headers: leg ? { Authorization: key } : { Authorization: "Bearer " + key, "X-Places-Api-Version": "2025-06-17" } });
     const corpo = await r.text();
     let n = 0; try { n = (JSON.parse(corpo).results || []).length; } catch (_) { /* resposta sem JSON */ }
     return json({ ok: r.ok, status: r.status, resultados: n, detalhe: r.ok ? null : corpo.slice(0, 200) });
@@ -126,7 +130,8 @@ Deno.serve(async (req: Request) => {
 
   const legado = key.startsWith("fsq3");
   // só campos "Pro" (os "Premium": hours, rating, price, photos são cobrados à parte e sem faixa grátis)
-  const campos = "fsq_id,fsq_place_id,name,latitude,longitude,geocodes,categories,location,tel,website";
+  // a API nova (places-api) recusa a busca inteira (400 "Unexpected field(s)") se vier campo do formato antigo
+  const campos = legado ? "fsq_id,name,geocodes,categories,location,tel,website" : "fsq_place_id,name,latitude,longitude,categories,location,tel,website";
   const api = legado
     ? `https://api.foursquare.com/v3/places/search?query=${encodeURIComponent(q)}&limit=10&fields=${campos}${temCentro ? `&ll=${lat},${lng}&radius=50000` : ""}`
     : `https://places-api.foursquare.com/places/search?query=${encodeURIComponent(q)}&limit=10&fields=${campos}${temCentro ? `&ll=${lat},${lng}&radius=50000` : ""}`;
