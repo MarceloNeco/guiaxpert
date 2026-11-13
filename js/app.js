@@ -12,7 +12,7 @@
 (function () {
   'use strict';
   var d = document, $ = function (id) { return d.getElementById(id); };
-  var VERSAO_APP = '1.5.56';
+  var VERSAO_APP = '1.5.57';
 
   /* ------------------------------------------------------------------
      1. UTILIDADES
@@ -472,6 +472,56 @@
     } catch (e) { return Promise.reject(e); }
     return Promise.resolve(false);
   }
+  /* 🎤 Teste do microfone: mostra, passo a passo, o que o reconhecimento de voz do navegador faz.
+     "Jeito do app" usa as mesmas opções do ditado dos campos; "Teste mínimo" usa o reconhecimento puro, com parciais.
+     Se o mínimo funciona e o do app não, o defeito é do app; se nenhum funciona, é do navegador ou do serviço de voz. */
+  function janelaTesteVoz() {
+    var log = h('ol', { class: 'voz-log', 'aria-live': 'polite' }), texto = h('p', { class: 'voz-texto' }), rec = null, t0 = 0, linhas = [];
+    function anotar(msg) {
+      var s = ((Date.now() - t0) / 1000).toFixed(1).replace('.', ',') + ' s · ' + msg;
+      linhas.push(s); log.appendChild(h('li', { texto: s }));
+    }
+    function parar() { if (rec) { var r = rec; rec = null; try { r.abort(); } catch (e) {} } }
+    function comecar(minimo) {
+      parar(); log.textContent = ''; texto.textContent = ''; linhas = []; t0 = Date.now();
+      if (!SR_VOZ) { anotar(T('vozTesteSemApi')); return; }
+      var r = new SR_VOZ(); rec = r;
+      r.lang = idioma() === 'en' ? 'en-US' : 'pt-BR';
+      if (minimo) { r.interimResults = true; } else { r.interimResults = false; r.continuous = false; r.maxAlternatives = 1; }
+      anotar((minimo ? T('vozTesteMinimo') : T('vozTesteApp')) + ' · ' + r.lang);
+      ['audiostart', 'soundstart', 'speechstart', 'speechend', 'soundend', 'audioend', 'nomatch'].forEach(function (ev) {
+        r['on' + ev] = function () { if (rec === r) anotar(ev); };
+      });
+      r.onresult = function (e) {
+        if (rec !== r) return;
+        for (var i = e.resultIndex || 0; i < e.results.length; i++) {
+          var x = e.results[i]; anotar((x.isFinal ? 'result final: "' : 'result parcial: "') + String(x[0] && x[0].transcript || '') + '"');
+          if (x.isFinal) texto.textContent = x[0].transcript;
+        }
+      };
+      r.onerror = function (e) { if (rec === r) anotar('error: ' + (e.error || '?') + (e.message ? ' (' + e.message + ')' : '')); };
+      r.onend = function () { if (rec === r) { anotar('end'); rec = null; } };
+      try { r.start(); anotar('start()'); } catch (e) { anotar('start() falhou: ' + (e && e.name) + ' ' + (e && e.message)); }
+    }
+    var info = h('p', { class: 'pequeno', texto: [
+      (navigator.userAgent || '').replace(/^Mozilla\/5\.0 /, '').slice(0, 160),
+      'SpeechRecognition: ' + (window.SpeechRecognition ? 'sim' : window.webkitSpeechRecognition ? 'webkit' : 'não'),
+      'online: ' + (navigator.onLine ? 'sim' : 'não'),
+      'versão ' + VERSAO_APP].join(' · ') });
+    if (navigator.permissions && navigator.permissions.query) navigator.permissions.query({ name: 'microphone' }).then(function (p) { info.textContent += ' · microfone: ' + p.state; }, function () {});
+    var btApp = h('button', { class: 'bt', type: 'button', texto: T('vozTesteApp'), onclick: function () { comecar(false); } });
+    var btMin = h('button', { class: 'bt sec', type: 'button', texto: T('vozTesteMinimo'), onclick: function () { comecar(true); } });
+    var btPar = h('button', { class: 'bt leve', type: 'button', texto: T('vozTesteParar'), onclick: function () { if (rec) { anotar('stop()'); try { rec.stop(); } catch (e) {} } } });
+    var btCop = h('button', { class: 'bt leve', type: 'button', texto: T('copiar'), onclick: function () {
+      var txt = info.textContent + '\n' + linhas.join('\n');
+      (navigator.clipboard ? navigator.clipboard.writeText(txt) : Promise.reject()).then(function () { avisar(T('cmp_copiado')); }, function () { avisar(T('vozTesteCopieAMao')); });
+    } });
+    janela(T('vozTesteTitulo'), h('div', { class: 'linha', style: 'flex-direction:column;align-items:stretch;gap:.6rem' }, [
+      h('p', { class: 'sub', texto: T('vozTesteExplica') }),
+      h('div', { class: 'acoes', style: 'flex-wrap:wrap' }, [btApp, btMin, btPar]),
+      texto, log, info, btCop
+    ]), parar);
+  }
   function comVoz(raiz) {
     if (!SR_VOZ || !raiz) return;
     [].forEach.call(raiz.querySelectorAll('input:not([type]), input[type="text"], input[type="search"], textarea'), function (c) {
@@ -519,7 +569,7 @@
         if (rec) { var r = rec; rec = null; r.onresult = r.onerror = r.onend = r.onspeechend = r.onspeechstart = r.onaudiostart = r.onsoundstart = null; try { r.abort(); } catch (e) {} }
         pararMedidor();
         caixa.classList.remove('ouvindo'); bt.classList.remove('ouvindo'); bt.setAttribute('aria-pressed', 'false');
-        if (msg && estava) avisar(T(msg), botao, acao, botao ? 12000 : 7000);
+        if (msg && estava) avisar(T(msg), botao || T('vozTesteTitulo'), acao || janelaTesteVoz, 12000);
       }
       /* o serviço do navegador ouviu a fala e não devolveu o texto: oferece a voz no próprio aparelho, se houver */
       function semTexto(lang) {
@@ -4892,6 +4942,8 @@
   TELAS.config = function (tela) {
     tela.appendChild(h('h1', { texto: T('rota_config') }));
     tela.appendChild(cartaoProntoSemInternet());
+    tela.appendChild(h('div', { class: 'cartao' }, [h('h3', { texto: T('vozTesteTitulo') }), h('p', { class: 'sub', texto: T('vozTesteCartao') }),
+      h('button', { class: 'bt sec', type: 'button', style: 'align-self:flex-start', texto: T('vozTesteAbrir'), onclick: janelaTesteVoz })]));
     var tema = (function () { try { return localStorage.getItem('dgo:guiaxpert:tema') || 'auto'; } catch (e) { return 'auto'; } })();
     tela.appendChild(h('fieldset', {}, [h('legend', { texto: T('tema') }), h('div', { class: 'chips' }, ['auto', 'claro', 'escuro'].map(function (t) {
       return h('button', { class: 'chip', type: 'button', 'aria-pressed': tema === t ? 'true' : 'false', onclick: function () { aplicarTema(t); mostrar('config'); } }, T('tema_' + t));

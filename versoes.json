@@ -2,6 +2,19 @@
   "app": "guiaxpert",
   "versoes": [
     {
+      "versao": "1.5.57",
+      "data": "2026-11-13",
+      "substitui": "1.5.56",
+      "itens": {
+        "pt": [
+          "Novo: Configurações › Testar o microfone. Mostra cada passo do reconhecimento de voz do navegador, compara o jeito do app com um teste mínimo e copia o resultado. Quando o ditado falha, o aviso leva direto para esse teste."
+        ],
+        "en": [
+          "New: Settings › Test the microphone. Shows each speech-recognition step, compares the app mode with a minimal test and copies the result. When dictation fails, the notice links to it."
+        ]
+      }
+    },
+    {
       "versao": "1.5.56",
       "data": "2026-11-13",
       "substitui": "1.5.55",
