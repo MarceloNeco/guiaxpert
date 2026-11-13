@@ -12,7 +12,7 @@
 (function () {
   'use strict';
   var d = document, $ = function (id) { return d.getElementById(id); };
-  var VERSAO_APP = '1.5.62';
+  var VERSAO_APP = '1.5.63';
 
   /* ------------------------------------------------------------------
      1. UTILIDADES
@@ -882,6 +882,42 @@
       texto, log, info, btCop
     ]), parar);
   }
+  /* Voz do app (Whisper aberto, no próprio aparelho): para o computador em que o serviço de voz do navegador não
+     responde. Baixa o modelo uma vez (≈77 MB) e transcreve num worker; o áudio não sai do aparelho. */
+  var VOZ_MOTOR = 'guiaxpert.voz.motor';
+  var VozApp = (function () {
+    var w = null, pct = 0, pronto = false, esperando = {}, n = 0, ouvintes = [];
+    function worker() {
+      if (w) return w;
+      w = new Worker('vendor/voz/voz-worker.js', { type: 'module' });
+      w.onmessage = function (e) {
+        var m = e.data || {};
+        if (m.tipo === 'progresso') { pct = m.pct; ouvintes.forEach(function (f) { f(pct); }); }
+        else if (m.tipo === 'pronto') pronto = true;
+        else if ((m.tipo === 'texto' || m.tipo === 'erro') && esperando[m.id]) {
+          var p = esperando[m.id]; delete esperando[m.id];
+          if (m.tipo === 'texto') p.ok(m.texto); else p.erro(new Error(m.erro));
+        }
+      };
+      w.onerror = function () { Object.keys(esperando).forEach(function (k) { esperando[k].erro(new Error('worker')); delete esperando[k]; }); w = null; };
+      return w;
+    }
+    return {
+      carregar: function () { worker().postMessage({ tipo: 'carregar' }); },
+      pronto: function () { return pronto; },
+      ouvir: function (f) { ouvintes.push(f); return function () { ouvintes = ouvintes.filter(function (x) { return x !== f; }); }; },
+      transcrever: function (audio, lingua) {
+        return new Promise(function (ok, erro) { var id = ++n; esperando[id] = { ok: ok, erro: erro }; worker().postMessage({ tipo: 'transcrever', id: id, audio: audio, lingua: lingua }, [audio.buffer]); });
+      }
+    };
+  })();
+  /* áudio gravado (webm/ogg) → amostras de 16 kHz, como o Whisper pede */
+  function audioPara16k(blob) {
+    return blob.arrayBuffer().then(function (ab) {
+      var Ctx = window.AudioContext || window.webkitAudioContext, ctx = new Ctx({ sampleRate: 16000 });
+      return ctx.decodeAudioData(ab).then(function (buf) { var dados = new Float32Array(buf.getChannelData(0)); try { ctx.close(); } catch (e) {} return dados; });
+    });
+  }
   function comVoz(raiz) {
     if (!SR_VOZ || !raiz) return;
     [].forEach.call(raiz.querySelectorAll('input:not([type]), input[type="text"], input[type="search"], textarea'), function (c) {
@@ -893,7 +929,7 @@
       /* "Fale agora…" aparece numa etiqueta própria: o tradutor automático da plataforma reescreve o placeholder */
       var fale = h('span', { class: 'voz-fale', 'aria-hidden': 'true', 'data-dgo-ignorar': '', texto: T('faleAgora') });
       caixa.appendChild(fale);
-      var usarLocal = false, rec = null, relogio = null, ouviu = false, local = false, somRec = false, somApp = false, medidor = null, trilha = null, t0 = 0;
+      var nivelAtual = 0, grav = null, usarLocal = false, rec = null, relogio = null, ouviu = false, local = false, somRec = false, somApp = false, medidor = null, trilha = null, t0 = 0;
       function passo(nome, extra) { if (trilha && trilha.length < 60) trilha.push(Math.round(Date.now() - t0) + ' ' + nome + (extra ? ' ' + extra : '')); }
       /* medidor do volume pelo microfone do site (o mesmo que o Claude e o Meet usam): mostra que o app está ouvindo
          e separa "o Chrome ouve outro microfone" de "o Google não devolveu o texto" */
@@ -918,6 +954,7 @@
             var soma = 0; for (var i = 0; i < buf.length; i++) { var v = (buf[i] - 128) / 128; soma += v * v; }
             var rms = Math.sqrt(soma / buf.length), nivel = Math.min(1, rms * 6);
             if (nivel > .18) somApp = true;
+            nivelAtual = nivel;
             caixa.style.setProperty('--nivel', nivel.toFixed(2));
             m.q = requestAnimationFrame(passo);
           })();
@@ -937,7 +974,7 @@
       function semTexto(lang) {
         /* o app ouviu som, mas o reconhecimento do Chrome não ouviu nada: ele está no microfone padrão do sistema, que é outro */
         if (somApp && !somRec && !ouviu) { soltar('vozOutroMic'); return; }
-        if (local) { gravarVoz(VOZ_LOCAL, null); soltar('vozLocalSemTexto'); return; }
+        if (local) { gravarVoz(VOZ_LOCAL, null); if (!celular && window.MediaRecorder && window.Worker) { soltar(null); oferecerVozApp(); return; } soltar('vozLocalSemTexto'); return; }
         gravarVoz(VOZ_FALHOU, '1');
         soltar(null);
         vozLocalEstado(lang).then(function (st) {
@@ -951,14 +988,68 @@
           else avisar(T(ouviu ? 'vozOuviuSemTexto' : 'vozSemResposta'), null, null, 9000);
         });
       }
+      var celular = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent || '');
       bt.addEventListener('click', function () {
+        if (grav) { grav.parar(true); return; }            /* voz do app: 2º toque termina e escreve */
         if (rec) { soltar(); c.focus(); return; }          /* 2º toque: para e destrava sempre */
+        if (!celular && lerVoz(VOZ_MOTOR) === 'app') { gravarApp(); return; }
         iniciar(false);
       });
+      function fimApp(msg) {
+        if (trilha) { passo('fim', msg || ''); enviarDiagVoz({ origem: 'app', passos: trilha }); trilha = null; }
+        pararMedidor();
+        caixa.classList.remove('ouvindo'); bt.classList.remove('ouvindo'); bt.setAttribute('aria-pressed', 'false'); fale.textContent = T('faleAgora');
+        if (msg) avisar(T(msg), T('vozTesteTitulo'), janelaTesteVoz, 9000);
+      }
+      /* grava pelo microfone do site e transcreve no próprio aparelho; termina sozinho depois de 1,4 s de silêncio */
+      function gravarApp() {
+        if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia || !window.MediaRecorder) { avisar(T('vozErro')); return; }
+        var lingua = idioma() === 'en' ? 'english' : 'portuguese', base = c.value ? c.value.replace(/\s+$/, '') + ' ' : '';
+        trilha = []; t0 = Date.now(); passo('inicio', 'app ' + (VozApp.pronto() ? 'pronta' : 'baixando'));
+        caixa.classList.add('ouvindo'); bt.classList.add('ouvindo'); bt.setAttribute('aria-pressed', 'true'); fale.textContent = T('faleAgora');
+        VozApp.carregar();
+        navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: true, channelCount: 1 } }).then(function (st) {
+          passo('microfone');
+          var partes = [], mr = new MediaRecorder(st), falou = false, ultimo = Date.now(), comeco = Date.now(), acabou = false, iv = null;
+          ligarMedidor(st);
+          grav = { usar: true, parar: function (usar) { if (acabou) return; acabou = true; clearInterval(iv); grav.usar = usar; try { mr.stop(); } catch (e) {} } };
+          mr.ondataavailable = function (e) { if (e.data && e.data.size) partes.push(e.data); };
+          mr.onstop = function () {
+            st.getTracks().forEach(function (t) { t.stop(); });
+            var g = grav; grav = null; pararMedidor();
+            if (!g || !g.usar) { fimApp(null); return; }
+            if (!falou) { fimApp('naoOuvi'); return; }
+            passo('gravado', ((Date.now() - comeco) / 1000).toFixed(1) + 's');
+            fale.textContent = VozApp.pronto() ? T('vozEscrevendo') : T('vozBaixando', { p: 0 });
+            var tirar = VozApp.ouvir(function (p) { fale.textContent = T('vozBaixando', { p: p }); });
+            audioPara16k(new Blob(partes, { type: mr.mimeType || 'audio/webm' })).then(function (f32) { return VozApp.transcrever(f32, lingua); }).then(function (txt) {
+              tirar(); passo('texto', 'letras=' + txt.length);
+              if (txt && !/^[\[(].*[\])]$/.test(txt)) {
+                c.value = (base + semRepeticao(txt)).slice(0, +(c.getAttribute('maxlength') || 1000));
+                c.dispatchEvent(new Event('input', { bubbles: true })); fimApp(null); c.focus();
+              } else fimApp('naoOuvi');
+            }, function (e) { tirar(); passo('erro', String((e && e.message) || e).slice(0, 80)); fimApp(navigator.onLine || VozApp.pronto() ? 'vozErro' : 'vozAppSemInternet'); });
+          };
+          mr.start(250);
+          iv = setInterval(function () {
+            var agora = Date.now();
+            if (nivelAtual > .12) { falou = true; ultimo = agora; }
+            if ((falou && agora - ultimo > 1400) || agora - comeco > 20000 || (!falou && agora - comeco > 9000)) grav.parar(true);
+          }, 100);
+        }, function (err) { passo('microfone-erro', err && err.name); fimApp(err && err.name === 'NotAllowedError' ? 'vozPermitir' : 'vozSemMicrofone'); });
+      }
+      /* primeira vez no computador sem o serviço do Google: explica e oferece a voz do app */
+      function oferecerVozApp() {
+        var sim = h('button', { class: 'bt', type: 'button', texto: T('vozAppBaixar') }), nao = h('button', { class: 'bt leve', type: 'button', texto: T('agoraNao') });
+        var j = janela(T('vozAppTitulo'), h('div', { class: 'linha', style: 'flex-direction:column;align-items:stretch' }, [h('p', { class: 'sub', texto: T('vozAppTexto') }), h('div', { class: 'acoes' }, [nao, sim])]));
+        nao.addEventListener('click', function () { j.fechar(); });
+        sim.addEventListener('click', function () { gravarVoz(VOZ_MOTOR, 'app'); j.fechar(function () { gravarApp(); }); });
+      }
       /* o serviço de voz do Google não responde neste aparelho (erro de rede na hora): troca sozinho para a voz do
          próprio aparelho, se o navegador tiver; se precisar baixar, oferece o botão (baixar pede um toque) */
       function semRede(lang) {
         soltar(null);
+        if (!celular && window.MediaRecorder && window.Worker) { if (lerVoz(VOZ_MOTOR) === 'app') gravarApp(); else oferecerVozApp(); return; }
         vozLocalEstado(lang).then(function (st) {
           if (st === 'available') { avisar(T('vozUsandoLocal'), null, null, 5000); iniciar(true); }
           else if (st === 'downloadable' || st === 'downloading') avisar(T('vozLocalOferta'), T('vozLocalBaixar'), function () {

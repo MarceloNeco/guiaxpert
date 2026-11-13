@@ -2,6 +2,19 @@
   "app": "guiaxpert",
   "versoes": [
     {
+      "versao": "1.5.63",
+      "data": "2026-11-13",
+      "substitui": "1.5.62",
+      "itens": {
+        "pt": [
+          "Novo: ditado no computador sem depender do Google."
+        ],
+        "en": [
+          "New: dictation on computers without Google."
+        ]
+      }
+    },
+    {
       "versao": "1.5.62",
       "data": "2026-11-13",
       "substitui": "1.5.61",

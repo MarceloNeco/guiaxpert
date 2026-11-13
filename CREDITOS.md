@@ -28,3 +28,7 @@ e no botão 📷 do app. Recortadas em 16:10 e convertidas para WebP (640 e 1280
 ## Ícones de reserva (voo, hospedagem, carro, ingresso…)
 
 Desenhos do [Lucide](https://lucide.dev) — licença ISC (uso livre, com aviso de copyright: © Lucide Contributors).
+
+## Ditado no computador (1.5.63)
+- Transformers.js 3.7.6 (Hugging Face) e ONNX Runtime Web — Apache 2.0 (vendor/voz/, licença em vendor/voz/LICENSE-transformers.txt).
+- Modelo Whisper base (OpenAI), convertido para ONNX por onnx-community — MIT. Baixado do Hugging Face na primeira vez e guardado no navegador.
