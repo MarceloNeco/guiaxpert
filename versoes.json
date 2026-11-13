@@ -7,16 +7,12 @@
       "substitui": "1.5.60",
       "itens": {
         "pt": [
-          "Roteiro no celular: a hora e os botões ✓ ✕ ficam numa linha em cima e o programa usa a largura toda da tela (antes o texto virava uma tira estreita).",
-          "As opções de roteiro ficam numa fileira só, que rola de lado, em vez de ocupar a tela inteira.",
-          "A barra da opção (outra opção, editar, preferida, compartilhar, calendário) cabe numa linha, com ícones de traço.",
-          "Observações compridas mostram 2 linhas e \"ler tudo\"."
+          "Melhorias no Roteiro no celular.",
+          "Melhorias nas opções de roteiro."
         ],
         "en": [
-          "Itinerary on phones: time and ✓ ✕ on top, the activity uses the full width.",
-          "Itinerary options in a single scrolling row.",
-          "Option bar fits one line with line icons.",
-          "Long notes show 2 lines and \"read all\"."
+          "Improvements to the Itinerary on phones.",
+          "Improvements to itinerary options."
         ]
       }
     },
@@ -26,12 +22,12 @@
       "substitui": "1.5.59",
       "itens": {
         "pt": [
-          "Ditado no computador: quando o serviço de voz do Google não responde (erro de rede na hora), o app troca sozinho para a voz instalada no próprio computador e começa a ouvir de novo; depois que ela funciona uma vez, já começa por ela.",
-          "A voz do computador não é mais interrompida na hora (o app entregava a ela o microfone do site, e ela não aceita)."
+          "Melhorias no ditado por voz.",
+          "Correção na voz do computador."
         ],
         "en": [
-          "Desktop dictation: when Google's speech service doesn't answer, the app switches to the on-device voice by itself and keeps it once it works.",
-          "The on-device voice is no longer aborted right away."
+          "Improvements to voice dictation.",
+          "Fix in the computer voice."
         ]
       }
     },
@@ -41,12 +37,12 @@
       "substitui": "1.5.58",
       "itens": {
         "pt": [
-          "Microfone: cada tentativa de ditado manda ao servidor só os passos do reconhecimento de voz (nunca o que foi falado), para achar por que o texto não entra.",
-          "Microfone: o app não fica mais preso na voz do aparelho depois de uma falha; ela só é usada quando você escolhe e enquanto funcionar."
+          "Melhorias no diagnóstico do microfone.",
+          "Correção no ditado por voz."
         ],
         "en": [
-          "Microphone: each dictation attempt sends only the recognition steps to the server (never what was said), to find why text doesn't arrive.",
-          "Microphone: the app no longer gets stuck on the on-device voice after a failure."
+          "Improvements to microphone diagnostics.",
+          "Fix in voice dictation."
         ]
       }
     },
@@ -56,18 +52,14 @@
       "substitui": "1.5.57",
       "itens": {
         "pt": [
-          "Hora nova no celular: tocar no horário abre uma folha com atalhos (o horário mais provável, pelo fim do programa anterior e o tempo de carro; manhã, almoço, tarde e noite), a roda para rolar com o dedão e o relógio. O app lembra se você prefere roda ou relógio.",
-          "\"Até\": a duração em botões (30 min, 1 h, 2 h…), com a duração típica do passeio no guia em destaque.",
-          "No computador: continua dando para digitar (\"930\"), e aparece a lista de 15 em 15 minutos, com a duração ao lado no \"Até\".",
-          "Datas: o calendário do app pula direto para o ano e o mês (sem voltar mês a mês) e funciona com o teclado.",
-          "Nova viagem: \"Escolher ida e volta no calendário\", com o número de noites e os fins de semana à vista."
+          "Melhorias na escolha de horários.",
+          "Melhorias no calendário de datas.",
+          "Novo: ida e volta no calendário da Nova viagem."
         ],
         "en": [
-          "New time picker on phones: shortcuts (most likely time, morning, lunch, afternoon, evening), scroll wheel and clock; your preference is remembered.",
-          "\"Until\": duration buttons, with the guide's typical duration highlighted.",
-          "Desktop: type (\"930\") or pick from a 15-minute list showing the duration.",
-          "Dates: the app calendar jumps straight to year and month and works with the keyboard.",
-          "New trip: pick departure and return on one calendar, with the number of nights."
+          "Improvements to picking times.",
+          "Improvements to the date calendar.",
+          "New: round-trip dates on the New trip calendar."
         ]
       }
     },
@@ -77,10 +69,10 @@
       "substitui": "1.5.56",
       "itens": {
         "pt": [
-          "Novo: Configurações › Testar o microfone. Mostra cada passo do reconhecimento de voz do navegador, compara o jeito do app com um teste mínimo e copia o resultado. Quando o ditado falha, o aviso leva direto para esse teste."
+          "Novo: teste do microfone nas Configurações."
         ],
         "en": [
-          "New: Settings › Test the microphone. Shows each speech-recognition step, compares the app mode with a minimal test and copies the result. When dictation fails, the notice links to it."
+          "New: microphone test in Settings."
         ]
       }
     },
@@ -90,14 +82,12 @@
       "substitui": "1.5.55",
       "itens": {
         "pt": [
-          "Microfone no computador: o ditado passa a ouvir pelo mesmo microfone escolhido para o site (antes o Chrome podia usar o microfone padrão do Windows, que às vezes é outro).",
-          "Enquanto ouve, o anel do 🎤 cresce com a sua voz, mostrando que o som está chegando.",
-          "Se o app ouvir você e o reconhecimento do Chrome não, ele avisa em uns 7 segundos qual microfone ajustar."
+          "Correção no microfone do ditado no computador.",
+          "Melhorias nos avisos do ditado por voz."
         ],
         "en": [
-          "Desktop dictation now listens through the microphone chosen for the site.",
-          "The 🎤 ring grows with your voice while listening.",
-          "If the app hears you but Chrome's recognizer doesn't, it tells you which microphone to fix within ~7 seconds."
+          "Fix in the dictation microphone on computers.",
+          "Improvements to voice dictation alerts."
         ]
       }
     },
@@ -107,28 +97,16 @@
       "substitui": "1.5.54",
       "itens": {
         "pt": [
-          "Microfone no computador: quando o serviço de voz do Google ouve a fala e não devolve o texto, o app agora diz isso com clareza e, se o Chrome tiver, oferece instalar a voz em português no próprio computador (uma vez só; funciona até sem internet).",
-          "\"Fale agora…\" aparece de verdade enquanto o microfone ouve (antes sumia na hora).",
-          "Busca de lugares: o Foursquare volta a trazer resultados (a busca pedia campos que a versão nova dele recusa) e o botão \"Testar\" faz a mesma busca do app.",
-          "\"Sorveteria\" e outros tipos de lugar: perto da viagem agora é até uns 50 km; nome de lugar continua procurado até uns 150 km.",
-          "Café, doceria e padaria do guia aberto (ex.: Pastéis de Belém) aparecem como \"Doces, café ou sorvete\", não como bar.",
-          "Viagem ao exterior: o \"O que levar\" usa a mesma regra de documentos do cartão do país (Lisboa: passaporte válido por 3 meses além da volta).",
-          "\"O que levar\" só fala de enjoo de serra com curvas na serra gaúcha; nas outras viagens, remédio de enjoo de viagem.",
-          "Previsão: o mesmo prazo (15 dias) em todas as telas, e viagem que já terminou não fala mais de previsão. \"1 reserva\" no singular.",
-          "Datas e horas já preenchidas: tocar seleciona tudo, e digitar troca o valor.",
-          "Mapa sem resultado: um botão só de \"Procurar na internet\"."
+          "Melhorias no ditado por voz.",
+          "Correções na Busca de lugares.",
+          "Melhorias na lista O que levar.",
+          "Correções em previsão, datas e mapa."
         ],
         "en": [
-          "Desktop microphone: clearer message when Google's speech service returns nothing, and an offer to install the on-device voice when Chrome supports it.",
-          "\"Speak now…\" now stays visible while listening.",
-          "Place search: Foursquare results are back; \"Test\" runs the same search as the app.",
-          "Type searches (e.g. ice cream) count as nearby up to ~50 km.",
-          "Cafés and bakeries from the open guide are labelled as sweets/café.",
-          "Abroad: packing list uses the same document rule as the country card.",
-          "Motion-sickness note about mountain roads only for the Serra Gaúcha.",
-          "Forecast: same 15-day window everywhere; finished trips no longer mention it. Singular \"1 booking\".",
-          "Filled dates and times: tapping selects all so typing replaces.",
-          "Map with no results: a single \"Search online\" button."
+          "Improvements to voice dictation.",
+          "Fixes in Place search.",
+          "Improvements to the What to pack list.",
+          "Fixes in forecast, dates and map."
         ]
       }
     },
@@ -138,22 +116,16 @@
       "substitui": "1.5.53",
       "itens": {
         "pt": [
-          "Novo: \"📖 O que tem em X\" para destino sem guia pronto: o que ver, fazer, comer e beber, de guias abertos feitos por viajantes (Wikivoyage) e das atrações mais conhecidas da região (Wikidata). Cada item tem ⭐, \"Pôr no dia\" e aparece no mapa; fica guardado no aparelho por 7 dias.",
-          "Novo guia pronto de Bonito (MS): 28 lugares (flutuações, grutas, cachoeiras, restaurantes) com regras de idade dos sites oficiais, aviso de voucher e da taxa TCA, e 2 roteiros de 4 dias para família com crianças pequenas. Viagens a Bonito já criadas passam a usar o guia sozinhas.",
-          "Ficha do lugar mostra \"Só com voucher\" e a duração do passeio quando o guia sabe.",
-          "Datas em dia/mês/ano: digite 05092027 ou 5/9/27, ou toque no 📅 para escolher no calendário do aparelho. \"Como vão se locomover\" aceita mais de uma escolha.",
-          "PDF do roteiro agora tem texto de verdade por baixo da imagem: dá para pesquisar e copiar.",
-          "\"Pôr no dia\" numa viagem nova sem roteiro cria \"Meu roteiro\" sozinho; \"O que levar\" aparece mesmo quando a previsão não carrega.",
-          "Busca de lugares comerciais (Foursquare e Tripadvisor): quando o Foursquare recusa, a busca não cai mais; vem o que o Tripadvisor achar."
+          "Novo: o que ver e fazer em destinos sem guia.",
+          "Novo: guia pronto de Bonito.",
+          "Melhorias em datas, PDF do roteiro e ficha do lugar.",
+          "Correção na Busca de lugares."
         ],
         "en": [
-          "New: What is in X for destinations without a guide (Wikivoyage + Wikidata).",
-          "New Bonito (MS) guide with official age rules, voucher info and 2 family itineraries.",
-          "Voucher and duration on place cards.",
-          "Dates in day/month/year with a calendar button; multiple transport choices.",
-          "Trip PDF now has real, searchable text.",
-          "Add to day creates the first itinerary; What to pack shows without forecast.",
-          "Commercial search survives Foursquare errors."
+          "New: what to see and do in places without a guide.",
+          "New: ready-made Bonito guide.",
+          "Improvements to dates, itinerary PDF and place card.",
+          "Fix in Place search."
         ]
       }
     },
@@ -163,28 +135,16 @@
       "substitui": "1.5.52",
       "itens": {
         "pt": [
-          "Viagem nova sem guia pronto: a tela Hoje mostra \"Comece por aqui\" (ver o que tem lá, guardar ideias, montar os dias) e a viagem abre no Hoje, não no Roteiro vazio.",
-          "\"Buscar lugares perto\": mais rápido, com três servidores do mapa aberto (se um cai, tenta o outro), aviso honesto quando estão fora do ar e botão \"Tentar de novo\" (antes dizia \"nada encontrado\"). Planejando de casa, busca em volta do destino, não de onde você está.",
-          "⭐ e \"Guardar nas ideias\" agora são a mesma coisa: tudo que tem ⭐ aparece em Ideias, mesmo lugares vindos da internet, e continua lá depois de fechar o app.",
-          "Ideia por link: procura também na internet pelo nome e, se não achar, guarda o nome com o link. A mensagem do Instagram só aparece para link do Instagram.",
-          "🎤 Ditado: se o reconhecimento de voz do navegador não devolve o texto (acontece no computador), o botão destrava sozinho em alguns segundos e explica; tocar de novo sempre para.",
-          "Fotos: destino sem fotos nossas busca a foto da cidade na Wikimedia Commons (com crédito); sem foto, fundo neutro. Nunca mais a foto de outra cidade.",
-          "Viagem ao exterior: cartão \"Lisboa em 1 minuto\" com hora local, moeda e câmbio do dia, idioma, tomada, emergência e documentos; \"O que levar\" inclui passaporte e adaptador e aparece mesmo antes da previsão.",
-          "Alternativas: \"Escolher esta\" manda as outras para ⭐ Ideias (plano B); o lembrete para decidir pode ser 1 semana, 3 dias ou na véspera.",
-          "Busca 🔍 acha também os lugares que o \"Buscar perto\" trouxe; restaurantes não aparecem mais como \"Passeio\"; horário do mapa aberto em português; sem resultados repetidos; endereço sem vírgula sobrando.",
-          "Explorar: país vai até o país (Portugal sem os Açores); \"Procurando…\" enquanto busca e \"Tentar de novo\" se falhar.",
-          "Acrescentar ao dia já tem Observação/link; Comparar mostra a observação e explica quando falta ligar ao lugar; datas da nova viagem aparecem por extenso; \"1 pessoa\"; no celular, Compartilhar e Calendário só com o ícone; Salvos passa a se chamar Ideias."
+          "Novo: Comece por aqui na viagem sem guia.",
+          "Novo: cartão do país em viagens ao exterior.",
+          "Melhorias em busca, Explorar e Ideias da viagem.",
+          "Correções no ditado por voz e nas fotos."
         ],
         "en": [
-          "New trip without a guide: Start here card; opens on Today.",
-          "Find nearby: multiple open-map servers, honest errors, retry; searches around the destination.",
-          "⭐ and Save to ideas are one thing; starred places persist.",
-          "Idea from link: web search and save name+link.",
-          "Dictation never gets stuck.",
-          "Destination photo from Wikimedia Commons or a neutral background.",
-          "Abroad: country card (time, currency and rate, plug, emergency, documents).",
-          "Alternatives: unpicked go to Ideas; reminder 7/3/1 days.",
-          "Search and Explore fixes."
+          "New: Start here for trips without a guide.",
+          "New: country card for trips abroad.",
+          "Improvements to search, Explore and Trip ideas.",
+          "Fixes in voice dictation and photos."
         ]
       }
     },
@@ -194,14 +154,12 @@
       "substitui": "1.5.51",
       "itens": {
         "pt": [
-          "Ditado por voz no Android: não repete mais a frase (\"teste teste um dois três teste teste…\"); o campo mostra \"Fale agora…\" enquanto escuta.",
-          "Mapa: quando a busca não acha nada, \"Ir até lá no mapa\" e \"Procurar na internet\" aparecem numa linha própria, com texto curto (antes ficavam espremidos ao lado de \"0 lugares\").",
-          "Busca 🔍 no computador: os resultados ocupam a janela toda, em colunas."
+          "Correção no ditado por voz no Android.",
+          "Melhorias no Mapa e na busca no computador."
         ],
         "en": [
-          "Android dictation no longer repeats the phrase; the field shows \"Speak now…\" while listening.",
-          "Map: when nothing is found, the next steps show on their own row with short labels.",
-          "Search on a computer: results fill the whole dialog, in columns."
+          "Fix in voice dictation on Android.",
+          "Improvements to the Map and search on computers."
         ]
       }
     },
@@ -211,12 +169,10 @@
       "substitui": "1.5.50",
       "itens": {
         "pt": [
-          "No Explorar, o logo do app, a casinha 🏠 e \"Hoje\" do menu voltam para a sua viagem (a próxima; se não houver, a última). Antes eles ficavam no Explorar e não dava para sair.",
-          "A lupa voltou a aparecer na busca do mapa."
+          "Correções no Explorar e na busca do mapa."
         ],
         "en": [
-          "In Explore, the app logo, 🏠 and Today take you back to your trip (the next one, or the last).",
-          "The search magnifier is back on the map."
+          "Fixes in Explore and map search."
         ]
       }
     },
@@ -226,48 +182,16 @@
       "substitui": "1.5.49",
       "itens": {
         "pt": [
-          "Alternativas: ao pôr um passeio no dia, marque \"É uma alternativa (ainda não decidi)\". As opções do mesmo horário aparecem juntas numa caixa \"Alternativas: escolha uma\", com ⚖ Comparar (onde fica, distância do hotel, preço, crianças, horário, comprar antes, como fica com o tempo) e \"Escolher esta\" (as outras saem, com Desfazer).",
-          "Lembrete para decidir: um toque cria no calendário do celular um aviso na véspera, às 19h, para olhar a previsão e só então comprar o ingresso.",
-          "Tempo por passeio: o dia mostra manhã, tarde e noite (chuva e neblina). Passeios de vista (bondinho, mirante, cascata, Skyglass) avisam neblina e chuva; ao ar livre avisam chuva; quando dá, sugere o melhor dia e um plano B coberto (Snowland, Mundo a Vapor, Big Land…).",
-          "Avisos do dia: fora do horário de funcionamento, um passeio que começa antes do outro terminar, tempo de carro entre Gramado e Canela, e dia cheio (sugere descanso para crianças pequenas e avós).",
-          "Voo de volta: diz a que horas sair do hotel para chegar 1h30 antes, já contando a estrada e a devolução do carro.",
-          "Distância e tempo do hotel em cada lugar (o app acha o hotel pelo endereço da reserva).",
-          "Ideias da viagem: \"🔗 Ideia por link\" — cole o link do Instagram, WhatsApp ou de um site; o app acha o lugar e guarda como ⭐ ideia com o link junto.",
-          "Roteiro: campo \"Até\" (hora de fim) para eventos como a oficina das 16h às 17h; botão 📅 Calendário põe o roteiro e os compromissos no calendário do celular, com aviso 1 h antes (sem códigos de reserva).",
-          "Hoje: \"🧳 O que levar\", lista pela previsão (frio, calor, chuva, vento, nº de dias) para ir marcando o que já foi para a mala.",
-          "Ícones de voo, hospedagem, carro, ingresso, traslado e ônibus redesenhados: traço fino e elegante, no lugar dos emojis coloridos.",
-          "Reservas: os dias viram uma plaquinha sólida, fácil de ler em cima da foto do fundo.",
-          "Seletor de viagem no topo mostra mês e ano (ex.: \"Gramado, nov/26\"), para não confundir com a viagem do ano que vem.",
-          "🎤 Em cada campo de texto (aviso da viagem, item do roteiro, lugar, busca…) dá para falar em vez de digitar. Usa o reconhecimento de voz do próprio celular ou navegador, sem IA.",
-          "Fundo e fotos por destino: São Paulo, Rio, Foz e outros têm fotos próprias; outras viagens pelo Brasil usam cartões-postais do Brasil e as do exterior, os do mundo.",
-          "Viagem que já passou: aparece um aviso no topo (\"você está vendo o arquivo\") com o botão \"Abrir a próxima\". Ideias da viagem mostra de qual viagem são.",
-          "Explorar: escreva \"Europa\", \"Portugal\" ou uma cidade e o mapa vai até lá; quando a busca não acha nada, aparecem os botões \"Ir para … no mapa\" e \"Procurar na internet\".",
-          "Parque Bondinhos Canela com as 3 estações (Central, Animal e Cascata), regras de chuva e neblina e botão \"Comprar ingresso\" na loja oficial; Alpen Park com entrada grátis e preços do site; aviso de chuva em cada ficha.",
-          "Mapa do dia: alternativas ainda não decididas não ganham número nem trajeto; \"Só o dia\" filtra também a lista.",
-          "Editar item: \"Já comprei: guardar o ingresso\" abre Reservas com dia, hora e lugar preenchidos (vira compromisso fixo 🔒). Ideias mostram quando o lugar já está no roteiro.",
-          "Pôr no dia já sugere a hora de eventos com horário fixo (ex.: Parada de Natal às 15h); no celular o botão ✦ IA some enquanto você rola; opções de roteiro todas à vista; \"🔄 Procurar atualização\" no fim do menu ☰."
+          "Novo: alternativas no roteiro e lembrete para decidir.",
+          "Novo: tempo por passeio e avisos do dia.",
+          "Novo: ditado por voz, O que levar e ideia por link.",
+          "Melhorias no Roteiro, Reservas, Mapa e visual."
         ],
         "en": [
-          "Alternatives: mark an outing as an alternative; options at the same time show together with Compare and Pick this (with Undo).",
-          "Reminder to decide: adds a calendar alert the evening before to check the forecast before buying.",
-          "Weather per outing: morning/afternoon/evening with rain and fog; view outings warn about fog, outdoor ones about rain; suggests a better day and an indoor plan B.",
-          "Day warnings: outside opening hours, overlaps, driving time between towns, busy day.",
-          "Return flight: when to leave the hotel, including the drive and car return.",
-          "Distance and drive time from the hotel on every place.",
-          "Trip ideas: Idea from a link (Instagram, WhatsApp, websites).",
-          "Itinerary: end time for events; Calendar button exports the itinerary with 1 h reminders (no booking codes).",
-          "Today: What to pack, from the forecast, with tick boxes.",
-          "Elegant line icons for bookings.",
-          "Day plates easier to read.",
-          "Trip selector shows month and year.",
-          "🎤 Dictation in every text field (device speech recognition, no AI).",
-          "Background photos by destination.",
-          "Past trip banner with Open the next one.",
-          "Explore goes to a region or city typed in search.",
-          "Richer park details and Buy tickets link.",
-          "Day map ignores undecided alternatives.",
-          "Bought it: save the ticket from an itinerary item.",
-          "Smaller fixes from the user test."
+          "New: itinerary alternatives and a reminder to decide.",
+          "New: weather per outing and daily alerts.",
+          "New: voice dictation, What to pack and idea by link.",
+          "Improvements to Itinerary, Bookings, Map and look."
         ]
       }
     },
@@ -277,10 +201,10 @@
       "substitui": "1.5.48",
       "itens": {
         "pt": [
-          "Roteiro: trocar de dia (Qua, Qui, Sex…) não joga mais a tela para o topo. A fileira de dias fica presa no alto enquanto você rola, e o dia novo aparece logo abaixo dela. Vale no celular e no computador."
+          "Correção na troca de dia do Roteiro."
         ],
         "en": [
-          "Itinerary: switching days no longer jumps to the top. The day row stays pinned while you scroll, and the new day shows right below it. Phone and computer."
+          "Fix in switching days in the Itinerary."
         ]
       }
     },
@@ -290,12 +214,10 @@
       "substitui": "1.5.47",
       "itens": {
         "pt": [
-          "Computador: a coluna única ficou larga e acompanha o tamanho da tela (notebook e monitor grande); em monitor grande a letra fica um pouco maior.",
-          "Janelas (como estas Novidades) mais largas no computador; a previsão do tempo ocupa a largura toda; a barra de atalhos continua compacta. No celular nada muda."
+          "Melhorias no visual no computador."
         ],
         "en": [
-          "Computer: the single column is now wide and grows with the screen; slightly larger text on big monitors.",
-          "Wider dialogs on a computer; the forecast fills the width; the shortcut bar stays compact. Phones unchanged."
+          "Improvements to the look on computers."
         ]
       }
     },
@@ -305,30 +227,16 @@
       "substitui": "1.5.46",
       "itens": {
         "pt": [
-          "Computador: volta a ser uma coluna só, centralizada (sem duas colunas), e as fotos da viagem passam devagar no fundo, sem recomeçar quando você troca de tela. No celular nada muda; com \"reduzir movimento\" a foto fica parada.",
-          "Roteiro: o botão do compromisso fixo agora diz o que é (\"Ver voo e localizador\", \"Ver reserva do carro\", \"Ver reserva do hotel\", \"Ver os ingressos\") e abre Reservas já na reserva certa, aberta e destacada.",
-          "Roteiro: o hotel e o voo da família e da avó, no mesmo horário, aparecem numa linha só (\"2 reservas\"); o roteiro pronto não repete mais voo, carro, check-in e Desfile que você já comprou.",
-          "Roteiro: ao tirar um item (✕) aparece \"Desfazer\"; no \"Editar item\" dá para mudar o dia; \"✎ Esta opção\" dá nome à opção, faz uma cópia de um roteiro pronto para ajustar ou apaga; a opção nova já pede o nome e abre na hora.",
-          "Roteiro: hora sempre em 24h (dá para digitar 930 ou 21h); links colados na observação viram link clicável, também na página e no PDF.",
-          "Busca: aceita erro de digitação (pastaciuta, floribal, sabor da nona) e apelidos (Igreja Matriz, Aldeia do Papai Noel, Aerozum, Eagle).",
-          "Busca na internet: fica perto da viagem; resultados de outra cidade ou país só aparecem se você tocar em \"Ver resultados longe\". No mapa, o achado na internet aparece numa seção própria, sem apagar a busca.",
-          "Lugar cadastrado à mão: não cai mais em Portugal; o tipo escolhido não muda sozinho; dá para marcar no mapa, pôr site ou onde comprar e editar depois.",
-          "Ideias da viagem: as ⭐ e os lugares guardados ficam juntos, sem dia, com filtros de tipo (comer, passeios) e cidade (Gramado, Canela). No Roteiro, \"⭐ Ideias guardadas\".",
-          "Catálogo de Gramado e Canela: entram Casa Matos, Big Land, Aerozuum, Eagle Tirolesa e Pé da Cascata (com o balanço infinito); endereço e preço do Sabor da Nonna, Campo & Vinho, Skyglass e Aldeia do Papai Noel; regras do Parque do Caracol (meia 4 a 12 anos e 60+, grátis até 3); Florybal com um endereço só; mais lugares no mapa.",
-          "Recarregar a página no Roteiro volta para o Roteiro (não para Hoje); Explorar, de dentro da viagem, abre no destino."
+          "Melhorias no Roteiro.",
+          "Melhorias na Busca de lugares e em Ideias da viagem.",
+          "Melhorias no guia de Gramado e Canela.",
+          "Correções no cadastro de lugar e no computador."
         ],
         "en": [
-          "Computer: back to a single centred column, with the trip photos slowly drifting in the background (they don't restart when you change screens). Phones unchanged; with \"reduce motion\" the photo stays still.",
-          "Itinerary: the button on a fixed booking now says what it is (flight, car, hotel, tickets) and opens Bookings on that exact booking, expanded and highlighted.",
-          "Itinerary: family and grandma's hotel and flight at the same time show as one line (\"2 bookings\"); ready-made itineraries no longer repeat flight, car, check-in or parade you already booked.",
-          "Itinerary: removing an item offers Undo; Edit item lets you change the day; \"✎ This option\" renames, copies a ready-made itinerary to adjust, or deletes; new options ask for a name and open right away.",
-          "Itinerary: times always in 24h; links pasted in notes become clickable, also in the page and PDF.",
-          "Search tolerates typos and nicknames.",
-          "Online search stays near the trip; far-away results only on request. On the map, online results show in their own section without clearing the search.",
-          "Hand-added places no longer land in Portugal; the type you pick stays; mark on map, add website and edit later.",
-          "Trip ideas: starred and saved places together, no day yet, with type and city filters.",
-          "Gramado & Canela catalogue: new places, addresses, prices and park rules; Florybal de-duplicated; more places on the map.",
-          "Reloading on the Itinerary keeps you there; Explore opens at the trip destination."
+          "Improvements to the Itinerary.",
+          "Improvements to Place search and Trip ideas.",
+          "Improvements to the Gramado and Canela guide.",
+          "Fixes in adding places and on computers."
         ]
       }
     },
@@ -338,18 +246,10 @@
       "substitui": "1.5.45",
       "itens": {
         "pt": [
-          "No computador (tela a partir de 1024 px), o app usa a tela toda: a foto da viagem aparece de verdade no fundo, com um véu claro (ou escuro) para ler bem.",
-          "Hoje no computador: foto grande como banner, contagem e cartões à esquerda, previsão do tempo à direita.",
-          "Reservas no computador: os dias ficam lado a lado em duas colunas, já abertos.",
-          "Barra de atalhos no computador vira uma barra flutuante no centro; a tela de entrar mostra a foto à esquerda e o formulário à direita; as janelas abrem como caixa no meio da tela.",
-          "No celular e no tablet nada muda."
+          "Novo: visual próprio para computador."
         ],
         "en": [
-          "On a computer (screens 1024 px and wider) the app uses the whole screen: the trip photo shows for real in the background, with a light (or dark) veil to keep text readable.",
-          "Today on a computer: big photo banner, countdown and cards on the left, weather on the right.",
-          "Bookings on a computer: days sit side by side in two columns, already open.",
-          "On a computer the shortcut bar becomes a floating bar in the middle; the sign-in screen shows the photo on the left and the form on the right; dialogs open as a box in the middle of the screen.",
-          "Nothing changes on phones and tablets."
+          "New: dedicated computer layout."
         ]
       }
     },
@@ -359,16 +259,12 @@
       "substitui": "1.5.44",
       "itens": {
         "pt": [
-          "Marca GuiaXpert com o X em destaque (negrito, laranja: \"o X marca o local\"), na abertura, na tela de entrar, no menu e no roteiro compartilhado.",
-          "Roteiro compartilhado: seção \"👨‍👩‍👧 Participantes da viagem\" (recolhível; aberta no PDF) com nomes, idades e contatos que houver (ex.: telefone do hotel, clicável).",
-          "Mais fácil de ler no celular: letra maior, dia em âmbar com 📅, horário com 🕒, todos os códigos em azul e negrito (localizador maior).",
-          "PDF sem página quase vazia: pode quebrar entre cartões de código; códigos de barras dois por linha; montado num quadro isolado (sem interferência do visual do app)."
+          "Melhorias na marca do app.",
+          "Melhorias no roteiro compartilhado e no PDF."
         ],
         "en": [
-          "GuiaXpert brand with the X highlighted (bold, orange: \"X marks the spot\"), on the opening screen, sign-in, menu and shared itinerary.",
-          "Shared itinerary: \"👨‍👩‍👧 Travelers\" section (collapsible; open in the PDF) with names, ages and any contacts (e.g. hotel phone, tappable).",
-          "Easier to read on the phone: larger text, day in amber with 📅, time with 🕒, all codes in bold blue (booking code larger).",
-          "No almost-empty PDF pages: it can break between code cards; barcodes two per row; built in an isolated frame (no interference from the app's styles)."
+          "Improvements to the app branding.",
+          "Improvements to the shared itinerary and PDF."
         ]
       }
     },
@@ -378,12 +274,10 @@
       "substitui": "1.5.43",
       "itens": {
         "pt": [
-          "Roteiro compartilhado: localizador maior, em azul e numa linha só, com botão \"📋 Copiar\" na página navegável (tocar no código também seleciona tudo).",
-          "No PDF, os códigos podem ser selecionados e copiados no leitor (Acrobat, leitor do celular)."
+          "Melhorias nos códigos do roteiro compartilhado."
         ],
         "en": [
-          "Shared itinerary: larger booking code, in blue and on one line, with a \"📋 Copy\" button in the browsable page (tapping the code also selects it).",
-          "In the PDF, codes can be selected and copied in the reader (Acrobat, phone viewer)."
+          "Improvements to codes in the shared itinerary."
         ]
       }
     },
@@ -393,16 +287,12 @@
       "substitui": "1.5.42",
       "itens": {
         "pt": [
-          "PDF de verdade, gerado no próprio app (sem passar pela impressora): no celular abre \"compartilhar/abrir com\" (Acrobat, Drive, WhatsApp…); no computador, baixa.",
-          "PDF sem páginas vazias: a capa divide a página com o 1º dia; quebra só entre itens, nunca no meio de um; o nome do dia vai sempre junto do 1º item; links \"ver no mapa\" clicáveis.",
-          "Códigos de barras e QR aparecem no PDF e são lidos pela câmera; na página navegável, os códigos ficam juntos em \"🎟 Mostrar códigos\", em cartõezinhos por pessoa.",
-          "Página navegável cabe na tela do celular: horário em cima do título, observação da reserva uma vez só (ou dentro do cartão quando muda por pessoa)."
+          "Novo: PDF do roteiro gerado no app.",
+          "Melhorias no roteiro compartilhado."
         ],
         "en": [
-          "A real PDF, built in the app (no printer): on the phone it opens \"share/open with\" (Acrobat, Drive, WhatsApp…); on the computer, it downloads.",
-          "No blank PDF pages: the cover shares the page with day 1; breaks only between items; the day name stays with its first item; \"see on map\" links are clickable.",
-          "Barcodes and QR codes show in the PDF and scan with a camera; in the browsable page, codes are grouped under \"🎟 Show codes\", one small card per person.",
-          "The browsable page fits the phone screen: time above the title, booking notes shown once (or inside each card when they differ)."
+          "New: itinerary PDF made in the app.",
+          "Improvements to the shared itinerary."
         ]
       }
     },
@@ -412,14 +302,10 @@
       "substitui": "1.5.41",
       "itens": {
         "pt": [
-          "Viagens passadas vão para o arquivo: o seletor mostra só as de hoje em diante (a mais próxima primeiro) e guarda as passadas em \"🗂 Viagens passadas\".",
-          "Minhas viagens: \"Próximas e em andamento\" e \"Arquivo: viagens passadas\", para consultar, compartilhar ou apagar.",
-          "Ao abrir o app, se a viagem aberta já passou, ele abre a próxima. Passeio de um dia com ícone 🚶."
+          "Novo: arquivo de viagens passadas."
         ],
         "en": [
-          "Past trips go to the archive: the selector shows only today onward (nearest first) and keeps past ones under \"🗂 Past trips\".",
-          "My trips: \"Upcoming and ongoing\" and \"Archive: past trips\", to look up, share or delete.",
-          "When the app opens, if the open trip is over, it opens the next one. One-day outings get the 🚶 icon."
+          "New: past trips archive."
         ]
       }
     },
@@ -429,12 +315,10 @@
       "substitui": "1.5.40",
       "itens": {
         "pt": [
-          "A tela de abertura do Android (ícone sobre fundo liso, desenhada pelo próprio sistema) passa a ter o mesmo azul-escuro da colagem de fotos, para emendar sem pulo.",
-          "Abre mais rápido com sinal fraco: a página espera a internet no máximo 2,5 s antes de usar a cópia guardada."
+          "Melhorias na abertura do app."
         ],
         "en": [
-          "The Android launch screen (icon on a plain background, drawn by the system) now uses the same dark blue as the photo collage, for a seamless transition.",
-          "Opens faster on weak signal: the page waits at most 2.5 s for the network before using the saved copy."
+          "Improvements to app startup."
         ]
       }
     },
@@ -444,14 +328,12 @@
       "substitui": "1.5.39",
       "itens": {
         "pt": [
-          "Compartilhar o roteiro com quem não tem o app: página navegável (.html, abre até sem internet) ou PDF, pelo botão 📤 no Roteiro ou em Quem → Quem fica em casa.",
-          "Escolha o que vai: roteiro dia a dia, links de mapa, hotel/voos/carro. Localizadores, códigos e QR ficam desligados por padrão (com aviso ao ligar).",
-          "No dia de chegada de voo, o check-in do hotel fecha o dia (depois do voo, do carro e da estrada), no Roteiro, nas Reservas e no arquivo."
+          "Novo: compartilhar o roteiro em página ou PDF.",
+          "Melhorias na ordem do dia de chegada."
         ],
         "en": [
-          "Share the itinerary with people without the app: browsable page (.html, opens even offline) or PDF, from the 📤 button in Itinerary or in People → Who stays home.",
-          "Choose what goes: day-by-day plan, map links, hotel/flights/car. Locators, codes and QR are off by default (with a warning when turned on).",
-          "On a flight arrival day, hotel check-in closes the day (after the flight, car and drive), in Itinerary, Bookings and the file."
+          "New: share the itinerary as a page or PDF.",
+          "Improvements to the arrival day order."
         ]
       }
     },
@@ -461,10 +343,10 @@
       "substitui": "1.5.38",
       "itens": {
         "pt": [
-          "Atualização proativa também no ícone instalado: confere versão nova ao abrir, quando a internet volta, quando o app volta para a frente e a cada 30 min."
+          "Melhorias na busca de atualizações."
         ],
         "en": [
-          "Proactive updates also on the installed icon: checks for a new version on open, when the internet returns, when the app comes to the front and every 30 min."
+          "Improvements to update checks."
         ]
       }
     },
@@ -474,12 +356,10 @@
       "substitui": "1.5.37",
       "itens": {
         "pt": [
-          "Tela de entrar: \"Continuar com o Google\" em destaque, com o logo, antes do e-mail e senha.",
-          "O app lembra como você entrou da última vez neste aparelho (\"Da última vez você entrou com o Google\")."
+          "Melhorias na tela de entrar."
         ],
         "en": [
-          "Sign-in screen: \"Continue with Google\" highlighted, with the logo, before email and password.",
-          "The app remembers how you signed in last time on this device (\"Last time you signed in with Google\")."
+          "Improvements to the sign-in screen."
         ]
       }
     },
@@ -489,10 +369,10 @@
       "substitui": "1.5.36",
       "itens": {
         "pt": [
-          "Nova tela de abertura: colagem do Cristo Redentor, Torre Eiffel, Coliseu e Machu Picchu, fundidos sem linha de divisão, com o ícone no centro. No celular as fotos ficam em cima e embaixo; no computador, lado a lado."
+          "Novo: tela de abertura."
         ],
         "en": [
-          "New opening screen: a collage of Christ the Redeemer, the Eiffel Tower, the Colosseum and Machu Picchu, blended with no dividing line, with the icon in the middle. On phones the photos sit above and below; on computers, side by side."
+          "New: splash screen."
         ]
       }
     },
@@ -502,14 +382,12 @@
       "substitui": "1.5.35",
       "itens": {
         "pt": [
-          "O app confere sozinho se há versão nova ao abrir (e quando a internet volta) e oferece \"Atualizar agora\".",
-          "Botão \"🔄 Procurar atualização\" em Configurações e na tela de entrar, com o número da versão à vista.",
-          "No iPhone, pelo ícone da tela de início: aviso de que o login é separado do Safari e dica do \"Sem senha\" (código por e-mail)."
+          "Novo: aviso de versão nova e Procurar atualização.",
+          "Melhorias no login pelo iPhone."
         ],
         "en": [
-          "The app checks for a new version when it opens (and when the internet returns) and offers \"Update now\".",
-          "\"🔄 Check for update\" button in Settings and on the sign-in screen, with the version number visible.",
-          "On iPhone, from the home screen icon: note that sign-in is separate from Safari, and the \"No password\" (email code) tip."
+          "New: new version alert and Check for update.",
+          "Improvements to sign-in on iPhone."
         ]
       }
     },
@@ -519,14 +397,12 @@
       "substitui": "1.5.34",
       "itens": {
         "pt": [
-          "Convite vale para a pessoa, não para o jeito de entrar: quem já é da viagem abre o convite e cai direto nela, sem erro.",
-          "Entrou pelo Google com outro e-mail? O app pede só o código do convite para confirmar que é você.",
-          "Na tela de entrar pelo convite, \"Continuar com o Google\" aparece em destaque, e a primeira vez com o e-mail do convite é código + senha."
+          "Correção na entrada pelo convite.",
+          "Melhorias na tela de entrar pelo convite."
         ],
         "en": [
-          "Invites are for the person, not the sign-in method: whoever is already on the trip opens the invite and goes straight in, no error.",
-          "Signed in with Google using another email? The app just asks for the invite code to confirm it's you.",
-          "On the invite sign-in screen, \"Continue with Google\" is highlighted, and first time with the invite email is code + password."
+          "Fix in joining by invitation.",
+          "Improvements to the invitation sign-in screen."
         ]
       }
     },
@@ -536,12 +412,12 @@
       "substitui": "1.5.33",
       "itens": {
         "pt": [
-          "Convite por e-mail: quem convida diz o e-mail da pessoa e recebe link + código de 6 números; quem chega digita o código e cria a senha, sem confirmar e-mail. Só aquele e-mail consegue usar o convite.",
-          "Botão ✦ IA só aparece quando há IA para a pessoa: chave própria no aparelho, ou chave guardada no servidor e a pessoa é da família (convidada numa viagem da equipe)."
+          "Novo: convite por e-mail com código.",
+          "Melhorias no botão IA."
         ],
         "en": [
-          "Email invites: the inviter types the person's email and gets a link + 6-digit code; the invitee types the code and creates a password, no email confirmation. Only that email can use the invite.",
-          "The ✦ AI button only shows when AI is available to that person: their own key on the device, or a key stored on the server and the person is family (invited to a team trip)."
+          "New: email invitation with code.",
+          "Improvements to the AI button."
         ]
       }
     },
@@ -551,14 +427,10 @@
       "substitui": "1.5.32",
       "itens": {
         "pt": [
-          "Convite de viagem já libera o app: quem cria a conta pelo convite não precisa de código de acesso.",
-          "A tela de entrar mostra \"Fulano convidou você para a viagem X\" quando a pessoa chega por um convite.",
-          "Mensagem do convite diz quem convidou e o que a pessoa pode fazer, sem termos técnicos."
+          "Melhorias no convite de viagem."
         ],
         "en": [
-          "A trip invite now unlocks the app: whoever signs up through an invite needs no access code.",
-          "The sign-in screen shows \"So-and-so invited you to trip X\" when arriving through an invite.",
-          "The invite message says who invited you and what you can do, without jargon."
+          "Improvements to trip invitations."
         ]
       }
     },
@@ -568,12 +440,12 @@
       "substitui": "1.5.31",
       "itens": {
         "pt": [
-          "Aviso \"GuiaXpert atualizado · ver novidades\" quando o app se atualiza sozinho; o número da versão (menu ☰ e Configurações) abre a lista de novidades.",
-          "Configurações começa com \"Pronto para usar sem internet?\": mostra o que já está guardado no aparelho (app, reservas com QR, mapa, roteiro) e oferece guardar o que falta."
+          "Novo: aviso de app atualizado e Novidades.",
+          "Novo: preparo para usar sem internet."
         ],
         "en": [
-          "\"GuiaXpert updated · what's new\" notice when the app updates itself; the version number (☰ menu and Settings) opens the list of changes.",
-          "Settings starts with \"Ready to use offline?\": shows what is already saved on the device (app, bookings with QR, map, itinerary) and offers to save what's missing."
+          "New: app updated notice and What's new.",
+          "New: get ready to use offline."
         ]
       }
     },
@@ -583,10 +455,10 @@
       "substitui": "1.5.30",
       "itens": {
         "pt": [
-          "Reservas só recolhem quando economiza espaço: um dia só ou até 3 reservas = tudo aberto, sem chevron; viagem com volume = dias e etapas recolhíveis."
+          "Melhorias nas Reservas."
         ],
         "en": [
-          "Bookings only collapse when it saves space: a single day or up to 3 bookings = all open, no chevron; bigger trips = collapsible days and steps."
+          "Improvements to Bookings."
         ]
       }
     },
@@ -596,12 +468,10 @@
       "substitui": "1.5.29",
       "itens": {
         "pt": [
-          "Reservas: botões do topo numa linha só (＋ Nova · 📷 Escanear · ✉ E-mail).",
-          "Passeio de um dia: sem chevron no dia (já vem aberto) e o cartão mostra \"Reservas do passeio · Sáb, 7/Nov\"."
+          "Melhorias nas Reservas."
         ],
         "en": [
-          "Bookings: top buttons in a single row (＋ New · 📷 Scan · ✉ Email).",
-          "One-day outing: no chevron on the day (already open), and the card shows \"Outing bookings · Sat, 7/Nov\"."
+          "Improvements to Bookings."
         ]
       }
     },
@@ -611,12 +481,12 @@
       "substitui": "1.5.28",
       "itens": {
         "pt": [
-          "Reservas agrupadas por dia: cada dia recolhe com o chevron e mostra um resumo (✈️ 🚗 🏨 · 3). O próximo dia já vem aberto.",
-          "＋ ao lado do dia: \"Reserva neste dia\" (já com a data) ou \"Atividade no roteiro deste dia\" (abre o Roteiro nesse dia)."
+          "Novo: Reservas agrupadas por dia.",
+          "Novo: atalho para adicionar em cada dia."
         ],
         "en": [
-          "Bookings grouped by day: each day collapses with the chevron and shows a summary (✈️ 🚗 🏨 · 3). The next day comes open.",
-          "＋ next to the day: \"Booking on this day\" (date filled in) or \"Activity in this day's itinerary\" (opens the Itinerary on that day)."
+          "New: Bookings grouped by day.",
+          "New: shortcut to add to each day."
         ]
       }
     },
@@ -626,12 +496,12 @@
       "substitui": "1.5.27",
       "itens": {
         "pt": [
-          "Reservas: a logística vira etapas recolhidas, uma linha cada (Voo de ida, Retirada do carro, Check-in no hotel… Check-out, Devolução do carro, Voo de volta). Toque no › para abrir os cartões de cada pessoa.",
-          "Novos tipos de reserva: 🚐 Traslado, 🚌 Ônibus/trem e 🗺 Passeio (além de 🍽 Restaurante)."
+          "Melhorias na lista de Reservas.",
+          "Novo: mais tipos de reserva."
         ],
         "en": [
-          "Bookings: logistics become collapsed steps, one line each (Outbound flight, Car pick-up, Hotel check-in… Check-out, Car drop-off, Return flight). Tap › to open each person's cards.",
-          "New booking types: 🚐 Transfer, 🚌 Bus/train and 🗺 Tour (besides 🍽 Restaurant)."
+          "Improvements to the Bookings list.",
+          "New: more booking types."
         ]
       }
     },
@@ -641,10 +511,10 @@
       "substitui": "1.5.26",
       "itens": {
         "pt": [
-          "Aviso quando a chegada (voo ou carro) acontece antes do horário de check-in: dá para deixar as malas na recepção."
+          "Novo: aviso de chegada antes do check-in."
         ],
         "en": [
-          "Notice when you arrive (flight or car) before check-in time: you can leave your bags at the front desk."
+          "New: alert for arrival before check-in."
         ]
       }
     },
@@ -654,12 +524,10 @@
       "substitui": "1.5.25",
       "itens": {
         "pt": [
-          "Reservas e Roteiro na ordem da vida real: no dia do voo de ida, voo → pegar o carro → entrar no hotel; no de volta, sair do hotel → devolver o carro → voo.",
-          "Hotel mostra \"a partir das 14:00\" na entrada e \"até as 11:00\" na saída; devolução do carro mostra \"até as\"."
+          "Melhorias na ordem e nos horários das Reservas."
         ],
         "en": [
-          "Bookings and Itinerary in real-life order: on the outbound day, flight → pick up car → hotel check-in; on the return day, hotel check-out → return car → flight.",
-          "Hotel shows \"from 14:00\" at check-in and \"by 11:00\" at check-out; car return shows \"by\"."
+          "Improvements to Bookings order and times."
         ]
       }
     },
@@ -669,10 +537,10 @@
       "substitui": "1.5.24",
       "itens": {
         "pt": [
-          "Link de reservas completa uma reserva já guardada sem data quando o mesmo código chega com data (sem duplicar)."
+          "Correção em reserva repetida pelo link."
         ],
         "en": [
-          "Booking links complete an already saved booking without a date when the same code arrives with a date (no duplicates)."
+          "Fix in duplicate bookings from links."
         ]
       }
     },
@@ -682,10 +550,10 @@
       "substitui": "1.5.23",
       "itens": {
         "pt": [
-          "Link de reservas escolhe a viagem pela data. Se não houver viagem naquele dia, cria um passeio de um dia sozinho."
+          "Melhorias nas reservas por link."
         ],
         "en": [
-          "Booking links pick the trip by date. If there's no trip that day, a one-day outing is created automatically."
+          "Improvements to bookings by link."
         ]
       }
     },
@@ -695,12 +563,10 @@
       "substitui": "1.5.22",
       "itens": {
         "pt": [
-          "Reservas da viagem abrem para toda a família convidada: entrou na conta, abriu Reservas, vê localizador, código de barras e QR Code. Sem PIN e sem QR de outro aparelho.",
-          "Reservas guardadas antes desta versão: abra as Reservas no celular onde foram guardadas e digite o PIN uma última vez para liberar para todos."
+          "Melhorias no acesso da família às Reservas."
         ],
         "en": [
-          "Trip bookings open for the whole invited family: signed in, open Bookings, see the locator, barcode and QR code. No PIN and no QR from another device.",
-          "Bookings saved before this version: open Bookings on the phone that saved them and type the PIN one last time to unlock them for everyone."
+          "Improvements to family access to Bookings."
         ]
       }
     },
@@ -710,12 +576,12 @@
       "substitui": "1.5.21",
       "itens": {
         "pt": [
-          "Reservas abrem sozinhas em qualquer aparelho onde você entrou na conta: sem PIN e sem QR. (No celular antigo, abra as Reservas uma última vez com o PIN para ligar isso.)",
-          "Reservas guardadas por outra pessoa da viagem aparecem como compromisso, sem os códigos, em vez de dar erro."
+          "Melhorias no acesso às Reservas em outros aparelhos.",
+          "Correção nas reservas de outra pessoa da viagem."
         ],
         "en": [
-          "Bookings open by themselves on any device where you are signed in: no PIN and no QR. (On your old phone, open Bookings one last time with the PIN to turn this on.)",
-          "Bookings saved by someone else on the trip show as a commitment, without the codes, instead of an error."
+          "Improvements to Bookings access on other devices.",
+          "Fix in bookings from other trip members."
         ]
       }
     },
@@ -725,10 +591,10 @@
       "substitui": "1.5.20",
       "itens": {
         "pt": [
-          "Campo do PIN mais claro ao trazer o cofre de outro aparelho (\"Digite 6 números\")."
+          "Melhorias no campo do PIN."
         ],
         "en": [
-          "Clearer PIN field when bringing the safe from another device (\"Type 6 digits\")."
+          "Improvements to the PIN field."
         ]
       }
     },
@@ -738,14 +604,12 @@
       "substitui": "1.5.19",
       "itens": {
         "pt": [
-          "Cofre das reservas: num aparelho novo, se a conta já tem reservas de outro aparelho, o app pede para trazer a chave pelo QR em vez de criar um cofre novo (que não abriria nada).",
-          "A chave de recuperação do cofre agora sobe para a conta (antes podia ficar só no aparelho).",
-          "Quem foi convidado para a viagem recebe as reservas dela (continuam embaralhadas; abre com a chave trazida pelo QR)."
+          "Correções no cofre das reservas.",
+          "Novo: reservas compartilhadas com convidados."
         ],
         "en": [
-          "Bookings safe: on a new device, if the account already has bookings from another device, the app asks you to bring the key by QR instead of creating a new safe (which would open nothing).",
-          "The safe's recovery key now goes up to the account (before it could stay only on the device).",
-          "People invited to the trip receive its bookings (still scrambled; they open with the key brought by QR)."
+          "Fixes in the bookings vault.",
+          "New: bookings shared with guests."
         ]
       }
     },
@@ -755,10 +619,10 @@
       "substitui": "1.5.18",
       "itens": {
         "pt": [
-          "Fotos do início: cada uma fica uns 8 segundos se mexendo devagar (zoom e passeio leves) e a troca esmaece suave, sem linha entre as fotos. Arrastar com o dedo continua trocando."
+          "Melhorias nas fotos do início."
         ],
         "en": [
-          "Home photos: each one stays about 8 seconds slowly moving (gentle zoom and pan) and fades smoothly into the next, with no line between photos. Swiping still works."
+          "Improvements to home photos."
         ]
       }
     },
@@ -768,12 +632,12 @@
       "substitui": "1.5.17",
       "itens": {
         "pt": [
-          "Viagem a Gramado abre com fotos do Natal Luz iluminado à noite (arcos de luz, Igreja São Pedro, ruas decoradas) e segue só com fotos de lá.",
-          "Previsão do tempo não mostra mais \"0° / 0°\" no dia em que ainda não há previsão."
+          "Novo: fotos do Natal Luz na viagem a Gramado.",
+          "Correção na Previsão do tempo."
         ],
         "en": [
-          "The Gramado trip opens with night photos of the Natal Luz lights (light arches, São Pedro church, decorated streets) and shows only photos from there.",
-          "The forecast no longer shows \"0° / 0°\" on days without a forecast yet."
+          "New: Natal Luz photos on Gramado trips.",
+          "Fix in the Weather forecast."
         ]
       }
     },
@@ -783,10 +647,10 @@
       "substitui": "1.5.16",
       "itens": {
         "pt": [
-          "Fotos do início deslizam para o lado, e dá para passar com o dedo."
+          "Melhorias nas fotos do início."
         ],
         "en": [
-          "Home photos slide sideways, and you can swipe through them."
+          "Improvements to home photos."
         ]
       }
     },
@@ -796,10 +660,10 @@
       "substitui": "1.5.15",
       "itens": {
         "pt": [
-          "Ingressos com código de barras (não só QR): o app desenha o código para mostrar na catraca, sem internet."
+          "Novo: ingressos com código de barras."
         ],
         "en": [
-          "Tickets with barcodes (not just QR): the app draws the code to show at the turnstile, offline."
+          "New: tickets with barcodes."
         ]
       }
     },
@@ -809,14 +673,12 @@
       "substitui": "1.5.14",
       "itens": {
         "pt": [
-          "Reservas mais claras: mostra de qual viagem são (e troca com um toque), separa por dia em ordem de horário, filtra por tipo (voo, hospedagem, carro, ingresso) e tem busca.",
-          "Ingressos do mesmo evento viram um cartão só: \"Mostrar os 4 QR\" passa um atrás do outro (arrastando ou com ‹ ›) e \"Editar o grupo\" muda todos de uma vez.",
-          "Novo: 📷 Escanear ingresso pela câmera."
+          "Melhorias nas Reservas.",
+          "Novo: escanear ingresso pela câmera."
         ],
         "en": [
-          "Clearer bookings: shows which trip they belong to (switch with one tap), groups by day in time order, filters by type (flight, stay, car, ticket) and has search.",
-          "Tickets for the same event become one card: \"Show all 4 QR\" goes one after another (swipe or ‹ ›) and \"Edit the group\" changes all at once.",
-          "New: 📷 Scan a ticket with the camera."
+          "Improvements to Bookings.",
+          "New: scan tickets with the camera."
         ]
       }
     },
@@ -826,14 +688,14 @@
       "substitui": "1.5.13",
       "itens": {
         "pt": [
-          "Compromissos fixos 🔒 no roteiro: ingressos e reservas com dia e hora aparecem no dia certo, na ordem do horário.",
-          "Reservas mostram para quem é cada ingresso e o setor, com o botão \"Mostrar QR para entrar\" em tela cheia.",
-          "Reservas podem chegar prontas por um link: o app mostra para conferir e guarda no cofre."
+          "Novo: compromissos fixos no Roteiro.",
+          "Melhorias nos ingressos das Reservas.",
+          "Novo: reservas recebidas por link."
         ],
         "en": [
-          "Fixed commitments 🔒 in the itinerary: tickets and bookings with date and time show on the right day, in time order.",
-          "Bookings show who each ticket is for and the section, with a full-screen \"Show QR to get in\" button.",
-          "Bookings can arrive ready through a link: the app shows them to check and saves them in the safe."
+          "New: fixed appointments in the Itinerary.",
+          "Improvements to tickets in Bookings.",
+          "New: bookings received by link."
         ]
       }
     },
@@ -843,10 +705,10 @@
       "substitui": "1.5.12",
       "itens": {
         "pt": [
-          "Gramado e Canela: 21 lugares novos no guia, com dicas de quem já foi (Parque Terra Mágica Florybal, Casa do Colono, Lavanda, Trattoria Boniatto, bate-volta de Nova Petrópolis e Caminhos de Pedra)."
+          "Melhorias no guia de Gramado e Canela."
         ],
         "en": [
-          "Gramado and Canela: 21 new places in the guide, with tips from people who have been there (Terra Mágica Florybal, Casa do Colono, Lavender park, Trattoria Boniatto, Nova Petrópolis and Caminhos de Pedra day trips)."
+          "Improvements to the Gramado and Canela guide."
         ]
       }
     },
@@ -855,10 +717,10 @@
       "data": "2026-11-03",
       "itens": {
         "pt": [
-          "Busca de lugar: o nome procurado sempre aparece, mesmo longe da viagem (ex.: um bar de São Paulo procurado de dentro da viagem a Gramado), marcado \"longe da viagem\". Acento não atrapalha mais (Legitimo = Legítimo)."
+          "Melhorias na Busca de lugares."
         ],
         "en": [
-          "Place search: the name you search always shows up, even far from the trip (e.g. a São Paulo bar searched from the Gramado trip), marked \"far from the trip\". Accents no longer matter (Legitimo = Legítimo)."
+          "Improvements to Place search."
         ]
       }
     },
@@ -868,10 +730,10 @@
       "substitui": "1.5.10",
       "itens": {
         "pt": [
-          "Fotos novas na abertura e no início: Cristo Redentor, Coliseu, Santorini, Torre Eiffel, Taj Mahal, MASP, comida e mais. A abertura mostra uma foto diferente a cada vez."
+          "Melhorias nas fotos da abertura."
         ],
         "en": [
-          "New photos on the opening screen and home: Christ the Redeemer, Colosseum, Santorini, Eiffel Tower, Taj Mahal, MASP, food and more. The opening screen shows a different photo each time."
+          "Improvements to splash photos."
         ]
       }
     },
@@ -881,12 +743,12 @@
       "substitui": "1.5.9",
       "itens": {
         "pt": [
-          "A lupa 🔍 do topo agora procura lugares na internet também: digite o nome (ex.: Legítimo), toque no resultado e ele aparece no mapa, pronto para guardar ou pôr no roteiro.",
-          "Cartão do lugar mostra o tipo certo (ex.: \"Bar\") para lugares vindos do Foursquare."
+          "Melhorias na busca pela lupa.",
+          "Correção no tipo do lugar."
         ],
         "en": [
-          "The 🔍 at the top now also searches places online: type the name (e.g.: Legítimo), tap the result and it shows on the map, ready to save or add to the itinerary.",
-          "Place card shows the right type (e.g.: \"Bar\") for places from Foursquare."
+          "Improvements to the search button.",
+          "Fix in place type."
         ]
       }
     },
@@ -896,10 +758,10 @@
       "substitui": "1.5.8",
       "itens": {
         "pt": [
-          "Chaves do serviço: confirme que é você com a digital deste celular, em vez da senha ou do código por e-mail. Quem confere é o servidor; a digital não sai do celular."
+          "Novo: digital para abrir as Chaves do serviço."
         ],
         "en": [
-          "Service keys: confirm it's you with this phone's fingerprint instead of a password or email code. The server checks it; your fingerprint never leaves the phone."
+          "New: fingerprint to open Service keys."
         ]
       }
     },
@@ -909,12 +771,12 @@
       "substitui": "1.5.7",
       "itens": {
         "pt": [
-          "Viagem para Gramado e Canela abre com fotos de lá (Lago Negro, Cascata do Caracol, hortênsias).",
-          "Nova opção em Configurações → Digital ou rosto: pedir a digital ao abrir o GuiaXpert depois de alguns minutos parado. Quem pegar o celular desbloqueado não vê a viagem nem as reservas."
+          "Novo: fotos de Gramado e Canela na viagem.",
+          "Novo: pedir a digital ao abrir o app."
         ],
         "en": [
-          "Trips to Gramado and Canela open with photos from there (Lago Negro, Caracol Falls, hydrangeas).",
-          "New option in Settings → Fingerprint or face: ask for your fingerprint when opening GuiaXpert after a few idle minutes. Someone holding the unlocked phone can't see the trip or bookings."
+          "New: Gramado and Canela photos on the trip.",
+          "New: ask for fingerprint when opening the app."
         ]
       }
     },
@@ -923,14 +785,12 @@
       "data": "2026-11-02",
       "itens": {
         "pt": [
-          "✦ IA mais firme: quando o Gemini está sobrecarregado, o servidor tenta outro modelo e mais uma vez antes de desistir; modelos aposentados pelo Google trocados.",
-          "Teste da chave diz o motivo real (demorou, sem cota no Google, recusou com o código do serviço).",
-          "Cabeçalho no celular com letra grande: o ícone do app não é mais espremido e o botão da conta não fica cortado; quem encolhe é o nome da viagem."
+          "Melhorias no assistente de IA.",
+          "Correção no cabeçalho no celular."
         ],
         "en": [
-          "✦ AI more reliable: when Gemini is overloaded, the server tries another model and once more before giving up; models retired by Google replaced.",
-          "Key test shows the real reason (too slow, no Google quota, rejected with the service's code).",
-          "Phone header with large text: the app icon is no longer squeezed and the account button is not cut off; the trip name shrinks instead."
+          "Improvements to the AI assistant.",
+          "Fix in the header on phones."
         ]
       },
       "substitui": "1.5.6"
@@ -940,10 +800,10 @@
       "data": "2026-11-02",
       "itens": {
         "pt": [
-          "Chaves do Google (Gemini e Places) aceitas em qualquer formato atual; o teste automático depois de salvar confirma se funciona."
+          "Melhorias no cadastro de chaves."
         ],
         "en": [
-          "Google keys (Gemini and Places) accepted in any current format; the automatic test after saving confirms they work."
+          "Improvements to adding keys."
         ]
       }
     },
@@ -952,10 +812,10 @@
       "data": "2026-11-02",
       "itens": {
         "pt": [
-          "Corrigido: entrar pelo link do e-mail agora troca de verdade para o login novo (antes o app apagava o login do link ao abrir e voltava para o antigo, criando um ciclo de 'confirme que é você'). Se a chave estava colada em outra janela, ela é salva sozinha."
+          "Correção na entrada pelo link do e-mail."
         ],
         "en": [
-          "Fixed: signing in via the email link now really switches to the new login (the app used to drop it on open and keep the old one, causing a 'confirm it is you' loop). If the key was pasted in another window, it saves by itself."
+          "Fix in signing in from the email link."
         ]
       }
     },
@@ -964,10 +824,10 @@
       "data": "2026-11-02",
       "itens": {
         "pt": [
-          "Confirmar identidade ficou claro: o e-mail de confirmação pode trazer só um link; ao tocar nele, o app abre já confirmado e reabre a tela da chave para colar de novo."
+          "Melhorias na confirmação de identidade."
         ],
         "en": [
-          "Identity confirmation is clearer: the email may only have a link; tapping it opens the app already confirmed and reopens the key screen to paste again."
+          "Improvements to identity confirmation."
         ]
       }
     },
@@ -976,10 +836,12 @@
       "data": "2026-11-01",
       "itens": {
         "pt": [
-          "Tripadvisor atualizado para a nova Terra API (terra.tripadvisor.com), com até 5 resultados por busca para controlar o custo. Passo a passo da chave corrigido no app."
+          "Melhorias na Busca de lugares.",
+          "Correção no passo a passo da chave."
         ],
         "en": [
-          "Tripadvisor updated to the new Terra API (terra.tripadvisor.com), with up to 5 results per search to control cost. In-app key steps corrected."
+          "Improvements to Place search.",
+          "Fix in the key step-by-step guide."
         ]
       }
     },
@@ -988,10 +850,10 @@
       "data": "2026-11-01",
       "itens": {
         "pt": [
-          "As chaves do serviço valem só para a equipe e para quem ela convidou para as viagens dela. Outras famílias usam a própria chave de IA; a busca aberta continua para todos."
+          "Melhorias no uso das chaves do serviço."
         ],
         "en": [
-          "Service keys now serve only the team and the people it invited to its trips. Other families use their own AI key; open search still works for everyone."
+          "Improvements to Service keys usage."
         ]
       }
     },
@@ -1000,10 +862,10 @@
       "data": "2026-11-01",
       "itens": {
         "pt": [
-          "Chaves do serviço pelo app: em Configurações, a equipe cadastra as chaves do Gemini, Tripadvisor, Foursquare e Google com passo a passo, teste automático e histórico. Ficam cifradas no servidor e valem em qualquer aparelho; para mexer, o app pede que você confirme que é você."
+          "Novo: chaves do serviço pelo app."
         ],
         "en": [
-          "Service keys in the app: in Settings, the team adds Gemini, Tripadvisor, Foursquare and Google keys with step-by-step help, automatic test and history. Stored encrypted on the server and valid on any device; changing them asks you to confirm it is you."
+          "New: Service keys in the app."
         ]
       }
     },
@@ -1012,10 +874,10 @@
       "data": "2026-10-31",
       "itens": {
         "pt": [
-          "Tripadvisor entra na busca pela lupa (quando a chave estiver cadastrada no servidor): nome, endereço e tipo ao vivo; o ponto no mapa vem da base aberta. Só o que você confirma fica guardado."
+          "Melhorias na Busca de lugares."
         ],
         "en": [
-          "Tripadvisor joins search (once the key is set on the server): name, address and type live; the map point comes from the open base. Only what you confirm is saved."
+          "Improvements to Place search."
         ]
       }
     },
@@ -1024,10 +886,10 @@
       "data": "2026-10-31",
       "itens": {
         "pt": [
-          "A busca ordena como um guia: restaurante, bar, museu, igreja, parque e atração primeiro; hotel, farmácia e posto no meio; prédio, condomínio e endereço solto no fim, marcados como 'Prédio ou endereço'."
+          "Melhorias na ordem da Busca de lugares."
         ],
         "en": [
-          "Search ranks like a guide: restaurants, bars, museums, churches, parks and attractions first; hotels, pharmacies and gas stations in the middle; buildings, condos and bare addresses last, labeled 'Building or address'."
+          "Improvements to Place search order."
         ]
       }
     },
@@ -1036,14 +898,12 @@
       "data": "2026-10-31",
       "itens": {
         "pt": [
-          "Abertura com a foto do dia e a marca enquanto o app carrega.",
-          "Fundo discreto com a foto do dia nas telas de leitura (Hoje, Roteiro, Reservas, Quem), mais forte no tema escuro; nunca no mapa.",
-          "Busca por nome não traz mais lugares a centenas de quilômetros quando há resultado perto."
+          "Novo: foto do dia na abertura e no fundo.",
+          "Correção na busca por nome."
         ],
         "en": [
-          "Opening screen with the photo of the day and the brand while the app loads.",
-          "Subtle photo-of-the-day background on reading screens (Today, Itinerary, Bookings, Who), stronger in dark theme; never on the map.",
-          "Name search no longer returns places hundreds of km away when there are nearby results."
+          "New: photo of the day on splash and background.",
+          "Fix in search by name."
         ]
       }
     },
@@ -1052,10 +912,10 @@
       "data": "2026-10-31",
       "itens": {
         "pt": [
-          "Fotos de lugares do mundo na home, na lista de viagens e na entrada: leves (WebP, dois tamanhos), troca suave a cada 8 s, foto do dia diferente a cada dia, créditos no botão 📷. Nada no roteiro, no mapa ou nas reservas."
+          "Novo: fotos de lugares do mundo no início."
         ],
         "en": [
-          "Photos of places around the world on the home, trips list and sign-in: lightweight (WebP, two sizes), gentle crossfade every 8 s, a different photo each day, credits behind the 📷 button. Nothing on the itinerary, map or bookings."
+          "New: world destination photos on home."
         ]
       }
     },
@@ -1064,10 +924,10 @@
       "data": "2026-10-31",
       "itens": {
         "pt": [
-          "O botão do assistente agora mostra ✦ IA (AI em inglês)."
+          "Melhorias no botão do assistente."
         ],
         "en": [
-          "The assistant button now reads ✦ AI (IA in Portuguese)."
+          "Improvements to the assistant button."
         ]
       }
     },
@@ -1076,12 +936,12 @@
       "data": "2026-10-31",
       "itens": {
         "pt": [
-          "Botão ✦ em toda tela: fale ou escreva o que quer. O assistente já sabe onde você está, a viagem, o dia e a previsão, e age: acha e salva lugar, põe no roteiro, mostra no mapa, replaneja o dia.",
-          "Funciona de fábrica, sem cadastrar chave de IA (cota diária por pessoa). Quem tem chave própria continua usando a sua."
+          "Novo: assistente de IA em toda tela.",
+          "Novo: assistente pronto para usar, sem chave."
         ],
         "en": [
-          "✦ button on every screen: speak or type what you want. The assistant already knows where you are, the trip, the day and the forecast, and acts: finds and saves places, adds to the plan, shows on the map, replans the day.",
-          "Works out of the box, no AI key needed (daily quota per person). Your own key still takes precedence."
+          "New: AI assistant on every screen.",
+          "New: assistant ready to use, no key needed."
         ]
       }
     },
@@ -1090,12 +950,12 @@
       "data": "2026-10-31",
       "itens": {
         "pt": [
-          "'Vamos achar juntos?': quando a busca não acha, três caminhos grandes e simples: pedir ao guia (IA com busca na internet), procurar no Google (lista ao vivo; só o que você confirma fica guardado) e marcar eu mesmo no mapa (funciona sem internet). Em todos, você confere e salva.",
-          "Atalho 'Abrir no Google Maps' com dica para voltar e compartilhar com o GuiaXpert."
+          "Novo: ajuda quando a busca não acha.",
+          "Novo: atalho para abrir no Google Maps."
         ],
         "en": [
-          "'Let's find it together?': when search finds nothing, three big simple paths: ask the guide (AI with web search), search on Google (live list; only what you confirm is saved) and mark it on the map yourself (works offline). You check and save in all of them.",
-          "'Open in Google Maps' shortcut with a tip to come back and share with GuiaXpert."
+          "New: help when search finds nothing.",
+          "New: shortcut to open in Google Maps."
         ]
       }
     },
@@ -1104,10 +964,10 @@
       "data": "2026-10-31",
       "itens": {
         "pt": [
-          "Busca de lugares com fonte comercial (Foursquare) pela função 'lugares' do Supabase, com a chave só no servidor. Acha bar e restaurante que não estão no OpenStreetMap. Liga ao cadastrar o segredo FOURSQUARE_KEY."
+          "Melhorias na Busca de lugares."
         ],
         "en": [
-          "Place search with a commercial source (Foursquare) via the 'lugares' Supabase function, key kept server-side. Finds bars and restaurants missing from OpenStreetMap. Enabled by setting the FOURSQUARE_KEY secret."
+          "Improvements to Place search."
         ]
       }
     },
@@ -1116,14 +976,12 @@
       "data": "2026-10-31",
       "itens": {
         "pt": [
-          "Toque duplo não dá mais zoom na página e nada passa da borda da tela.",
-          "Marcar uma opção (gostos, assistente de viagem) não faz mais a tela pular: ela fica onde estava.",
-          "Busca por nome com duas fontes (Nominatim e Photon), tolerante a erro de digitação, e restaurante, bar e loja vêm antes de prédio e rua."
+          "Correção no zoom e no pulo da tela.",
+          "Melhorias na Busca de lugares."
         ],
         "en": [
-          "Double tap no longer zooms the page and nothing overflows the screen edge.",
-          "Choosing an option (likes, trip wizard) no longer makes the screen jump.",
-          "Name search with two sources (Nominatim and Photon), typo tolerant; restaurants, bars and shops rank above buildings and streets."
+          "Fix in zoom and screen jumps.",
+          "Improvements to Place search."
         ]
       }
     },
@@ -1132,10 +990,10 @@
       "data": "2026-10-31",
       "itens": {
         "pt": [
-          "No item do roteiro (novo ou editando), o campo Lugar agora procura na internet: digite 'O Legítimo', toque na lupa e escolha. O restaurante vira lugar da viagem e fica ligado ao item."
+          "Novo: busca de lugar no item do roteiro."
         ],
         "en": [
-          "In an itinerary item (new or editing), the Place field now searches online: type the name, tap the magnifier and pick. The place is saved to the trip and linked to the item."
+          "New: place search in itinerary items."
         ]
       }
     },
@@ -1144,16 +1002,16 @@
       "data": "2026-10-31",
       "itens": {
         "pt": [
-          "Busca de lugares na internet: digite o nome ou endereço no mapa e toque em 'Buscar na internet'. Acha restaurante, atração, rua, em qualquer cidade.",
-          "Novo passeio ou viagem: a primeira pergunta é 'o que você quer planejar?'. Passeio de um dia escolhe só o dia (Hoje, Amanhã ou outro), sem hotel, e você dá o nome na hora.",
-          "Toque num item do roteiro para editar hora, nome, nota e lugar, ou tirar. Avisos da viagem (estacionamento pago, feriado) agora se criam na tela Hoje.",
-          "Cadastro manual de lugar com 'Achar no mapa' pelo endereço e tipos em palavras simples (Restaurante ou lanche, Passeio ou atração…)."
+          "Novo: Busca de lugares na internet.",
+          "Novo: passeio de um dia.",
+          "Novo: editar item do roteiro.",
+          "Melhorias no cadastro de lugar."
         ],
         "en": [
-          "Online place search: type a name or address on the map and tap 'Search online'. Finds restaurants, sights, streets, in any city.",
-          "New outing or trip: the first question is 'what do you want to plan?'. A one-day outing picks just the day (Today, Tomorrow or another), no hotel, and you name it right away.",
-          "Tap an itinerary item to edit time, name, note and place, or remove it. Trip notices (paid parking, holiday) can now be created on Today.",
-          "Manual place entry with 'Find on map' by address and plain-word types (Restaurant or snack, Outing or attraction…)."
+          "New: online Place search.",
+          "New: day trip.",
+          "New: edit itinerary items.",
+          "Improvements to adding places."
         ]
       }
     },
@@ -1162,10 +1020,10 @@
       "data": "2026-10-31",
       "itens": {
         "pt": [
-          "Convite para instalar na tela inicial depois de entrar: Instalar, Agora não (volta em 3 dias) ou Não mostrar mais. Botão fixo em Configurações. No iPhone, mostra o caminho (Compartilhar → Tela de Início)."
+          "Novo: convite para instalar na tela inicial."
         ],
         "en": [
-          "Prompt to install on the home screen after sign-in: Install, Not now (back in 3 days) or Don't show again. Fixed button in Settings. On iPhone, shows the way (Share → Home Screen)."
+          "New: prompt to install on the home screen."
         ]
       }
     },
@@ -1174,10 +1032,10 @@
       "data": "2026-10-31",
       "itens": {
         "pt": [
-          "Apagar mapa do celular: botão na tela Hoje e em Configurações (lista de mapas guardados, com tamanho). Apagar a última viagem de uma cidade apaga o mapa dela junto."
+          "Novo: apagar mapa guardado no celular."
         ],
         "en": [
-          "Delete map from phone: button on Today and in Settings (list of saved maps, with size). Deleting a city's last trip deletes its map too."
+          "New: delete maps saved on the phone."
         ]
       }
     },
@@ -1186,10 +1044,10 @@
       "data": "2026-10-31",
       "itens": {
         "pt": [
-          "Mapa: a página não rola mais junto com o mapa no celular; cabeçalho sem desfoque no celular (mais leve)."
+          "Correção no Mapa no celular."
         ],
         "en": [
-          "Map: the page no longer scrolls along with the map on phones; header without blur on phones (lighter)."
+          "Fix in the Map on phones."
         ]
       }
     },
@@ -1198,16 +1056,14 @@
       "data": "2026-10-31",
       "itens": {
         "pt": [
-          "Tela 'IA: seu guia' (menu ☰ e Configurações): explica, com exemplos da sua viagem, o que a chave de IA faz: montar opção de roteiro, replanejar hoje, perguntar ao guia e ler e-mail de reserva.",
-          "Replanejar hoje: a IA olha a previsão e o grupo e propõe trocas só no dia; voos, carro e itens confirmados não mudam. Você vê o que mudou e aplica numa opção nova, o original continua.",
-          "Perguntar ao guia (botão na tela Hoje): conversa presa aos lugares do guia; o nome do lugar vira link para o mapa.",
-          "Para a IA vão idades, cuidados, gostos, plano do dia, previsão e lista de lugares. Nunca nomes, reservas nem alergias."
+          "Novo: tela IA, seu guia.",
+          "Novo: replanejar hoje com IA.",
+          "Novo: perguntar ao guia."
         ],
         "en": [
-          "'AI: your guide' screen (☰ menu and Settings): explains, with examples from your trip, what the AI key does: build an itinerary option, replan today, ask the guide and read a booking email.",
-          "Replan today: the AI looks at the forecast and the group and proposes changes for today only; flights, car and confirmed items don’t change. You see what changed and apply it as a new option, the original stays.",
-          "Ask the guide (button on Today): a chat tied to the guide’s places; place names become links to the map.",
-          "The AI receives ages, care needs, likes, today’s plan, the forecast and the list of places. Never names, bookings or allergies."
+          "New: AI, your guide screen.",
+          "New: replan today with AI.",
+          "New: ask the guide."
         ]
       }
     },
@@ -1216,14 +1072,14 @@
       "data": "2026-10-31",
       "itens": {
         "pt": [
-          "Família na mesma viagem: em Quem viaja → Compartilhar a viagem, mande um link de convite pelo WhatsApp. Quem abre entra na viagem e vê (ou edita) roteiro, lugares e mapa. Reservas e alergias continuam só com você.",
-          "O dono muda quem só vê e quem edita, e pode tirar alguém. Quem foi convidado pode sair.",
-          "Para quem fica em casa: cartão de texto com hotel ou voos, sem códigos de reserva, para mandar pelo WhatsApp."
+          "Novo: família na mesma viagem.",
+          "Novo: escolher quem vê e quem edita.",
+          "Novo: cartão para quem fica em casa."
         ],
         "en": [
-          "Family on the same trip: in Travelers → Share the trip, send an invite link on WhatsApp. Whoever opens it joins the trip and views (or edits) the itinerary, places and map. Bookings and allergies stay with you.",
-          "The owner sets who views and who edits, and can remove someone. Invitees can leave.",
-          "For those staying home: a text card with hotel or flights, no booking codes, to send on WhatsApp."
+          "New: family on the same trip.",
+          "New: choose who views and who edits.",
+          "New: card for those staying home."
         ]
       }
     },
@@ -1232,14 +1088,12 @@
       "data": "2026-10-30",
       "itens": {
         "pt": [
-          "Reservas acompanham a sua conta: sobem sempre embaralhadas (o servidor nunca tem a chave) e aparecem no outro celular.",
-          "Para abrir no celular novo: Configurações → Mostrar QR no celular antigo e ler no novo, ou usar o código de recuperação. Cada celular tem o seu PIN.",
-          "E-mail de confirmação vira reserva: cole o texto em Reservas → Colar e-mail (ou, no Android, Compartilhar → GuiaXpert). Lê voo, hotel, carro, ingresso. Com chave de IA, lê qualquer e-mail. Você confirma antes de guardar."
+          "Novo: reservas na sua conta.",
+          "Novo: e-mail de confirmação vira reserva."
         ],
         "en": [
-          "Bookings follow your account: always uploaded scrambled (the server never has the key) and show up on your other phone.",
-          "To open on a new phone: Settings → Show QR on the old phone and scan on the new one, or use the recovery code. Each phone has its own PIN.",
-          "Confirmation emails become bookings: paste the text in Bookings → Paste email (or, on Android, Share → GuiaXpert). Reads flights, hotels, cars, tickets. With an AI key, any email. You confirm before saving."
+          "New: bookings in your account.",
+          "New: confirmation email becomes a booking."
         ]
       }
     },
@@ -1248,14 +1102,14 @@
       "data": "2026-10-30",
       "itens": {
         "pt": [
-          "Mapa sem internet de verdade: Gramado e Canela vêm num arquivo de 3,7 MB (recorte do OpenStreetMap, zoom até a rua) desenhado no próprio celular. Na primeira vez que o mapa abre, ele já fica guardado.",
-          "Botão 'Guardar (3,7 MB)' na tela Hoje e em Configurações: guarda mapa e guia da viagem de uma vez, com barra de progresso.",
-          "Mapa no tema escuro acompanha o app."
+          "Novo: mapa sem internet de Gramado e Canela.",
+          "Novo: guardar mapa e guia de uma vez.",
+          "Melhorias no Mapa no tema escuro."
         ],
         "en": [
-          "True offline map: Gramado and Canela ship as a 3.7 MB file (OpenStreetMap extract, street-level zoom) drawn on the phone itself. The first time the map opens, it's already saved.",
-          "'Save (3.7 MB)' button on Today and in Settings: saves the trip's map and guide at once, with a progress bar.",
-          "Dark theme map follows the app."
+          "New: offline map of Gramado and Canela.",
+          "New: save map and guide at once.",
+          "Improvements to the Map in dark theme."
         ]
       }
     },
@@ -1264,16 +1118,14 @@
       "data": "2026-10-30",
       "itens": {
         "pt": [
-          "Dois lugares para estar: dentro de uma VIAGEM (tudo é daquela viagem) ou em EXPLORAR (qualquer cidade, sem viagem). O chip no topo diz onde você está e troca em um toque.",
-          "Mapa novo: busca, filtros e a lista no mesmo lugar (painel que sobe). Toque num ponto para ver o cartão, pôr no dia ou traçar a rota. Os pontos do dia aparecem numerados e ligados por uma linha.",
-          "Explorar: busque uma cidade ou use o GPS, descubra lugares, salve ou ponha numa viagem. 'Planejar hoje aqui' cria uma viagem de 1 dia no lugar.",
-          "Roteiro: ✓ marca um item como confirmado (verde no mapa). Barra de baixo: Hoje · Roteiro · Mapa · Reservas · Quem."
+          "Novo: modos Viagem e Explorar.",
+          "Novo: Mapa com busca, filtros e rota.",
+          "Melhorias no Roteiro e na barra de baixo."
         ],
         "en": [
-          "Two places to be: inside a TRIP (everything belongs to that trip) or EXPLORE (any city, no trip). The chip at the top shows where you are and switches in one tap.",
-          "New map: search, filters and the list in one place (sliding panel). Tap a point for its card, add it to a day or get directions. The day's points are numbered and linked by a line.",
-          "Explore: search a city or use GPS, discover places, save them or add to a trip. 'Plan today here' creates a one-day trip on the spot.",
-          "Itinerary: ✓ marks an item as confirmed (green on the map). Bottom bar: Today · Itinerary · Map · Bookings · Who."
+          "New: Trip and Explore modes.",
+          "New: Map with search, filters and route.",
+          "Improvements to the Itinerary and bottom bar."
         ]
       }
     },
@@ -1282,10 +1134,10 @@
       "data": "2026-10-30",
       "itens": {
         "pt": [
-          "Mapa não passa mais por baixo da barra de baixo no Android."
+          "Correção no Mapa no Android."
         ],
         "en": [
-          "The map no longer slides under the bottom bar on Android."
+          "Fix in the Map on Android."
         ]
       }
     },
@@ -1294,16 +1146,14 @@
       "data": "2026-10-30",
       "itens": {
         "pt": [
-          "Sua conta guarda viagens, roteiros, pessoas, favoritos e lugares: entrou em outro celular, está tudo lá. Só você vê.",
-          "Reservas e comida/alergias continuam só no celular, embaralhadas (não vão para a conta).",
-          "Avisos da viagem (ex.: estacionamento pago, feriadão) aparecem na tela Hoje.",
-          "'Apagar tudo' apaga também o que está na conta. Correção: leitura de registro inexistente no banco do aparelho."
+          "Novo: viagens guardadas na sua conta.",
+          "Novo: avisos da viagem na tela Hoje.",
+          "Melhorias em Apagar tudo e correções."
         ],
         "en": [
-          "Your account keeps trips, itineraries, people, favorites and places: sign in on another phone and it's all there. Only you can see it.",
-          "Bookings and food/allergies stay on the phone, scrambled (they never go to the account).",
-          "Trip notices (e.g. paid parking, long weekend) show on Today.",
-          "'Delete everything' also deletes what's in your account. Fix: reading a missing record on the device database."
+          "New: trips saved in your account.",
+          "New: trip notices on the Today screen.",
+          "Improvements to Delete all and fixes."
         ]
       }
     },
@@ -1312,14 +1162,14 @@
       "data": "2026-10-30",
       "itens": {
         "pt": [
-          "Digital ou rosto: depois do primeiro login, o celular passa a reconhecer você. Entrar e abrir as reservas sem senha nem PIN.",
-          "Sair agora tem duas opções: 'Sair (volto com digital ou rosto)' ou 'Sair e desligar digital neste celular'.",
-          "Entrar sem senha: código de 6 números (ou link) por e-mail, para quem já tem conta."
+          "Novo: entrar com digital ou rosto.",
+          "Novo: opções de Sair.",
+          "Novo: entrar sem senha por e-mail."
         ],
         "en": [
-          "Fingerprint or face: after the first sign-in, your phone recognizes you. Sign in and open bookings with no password or PIN.",
-          "Signing out now has two options: 'Sign out (back with fingerprint or face)' or 'Sign out and turn off fingerprint here'.",
-          "Passwordless sign-in: a 6-digit code (or link) by email, for existing accounts."
+          "New: sign in with fingerprint or face.",
+          "New: Sign out options.",
+          "New: passwordless sign-in by email."
         ]
       }
     },
@@ -1328,10 +1178,10 @@
       "data": "2026-10-30",
       "itens": {
         "pt": [
-          "Textos mais curtos e diretos nas telas de boas-vindas, Quem viaja, gostos e ajuste da viagem."
+          "Melhorias nos textos das telas."
         ],
         "en": [
-          "Shorter, plainer text on the welcome, Travelers, likes and trip-adjustment screens."
+          "Improvements to screen texts."
         ]
       }
     },
@@ -1340,16 +1190,14 @@
       "data": "2026-10-30",
       "itens": {
         "pt": [
-          "Família fixa e convidados: em Quem viaja, cada pessoa é da 'Minha família' (já vem marcada em toda viagem nova), 'Convidado' (fica guardado e você escolhe quando vai) ou 'Só de uma viagem' (sai da lista quando a viagem é apagada).",
-          "No wizard, botão 'Convidado só desta viagem' para quem vai uma vez, como a sogra.",
-          "'Ajustar nesta viagem': muda para andar, calor, frio, soneca e gostos só naquela viagem; o perfil fixo continua igual. 'Voltar ao perfil fixo' desfaz.",
-          "A lista 'Para vocês', o roteiro com IA e os avisos do clima usam o perfil da viagem: quem sente calor ou frio faz o aviso aparecer antes; quem faz soneca ganha um lembrete na tela Hoje."
+          "Novo: família fixa e convidados.",
+          "Novo: ajustar o perfil só nesta viagem.",
+          "Melhorias nas sugestões pelo perfil da viagem."
         ],
         "en": [
-          "Fixed family and guests: in Travelers, each person is 'My family' (preselected on every new trip), 'Guest' (kept on file, you choose when) or 'One trip only' (removed when that trip is deleted).",
-          "In the new-trip wizard, a 'Guest for this trip only' button for one-off travelers like in-laws.",
-          "'Adjust for this trip': change mobility, heat, cold, naps and likes for that trip only; the fixed profile stays the same. 'Back to fixed profile' undoes it.",
-          "The 'For you' list, the AI itinerary and weather alerts use the trip profile: heat- or cold-sensitive travelers trigger alerts earlier; nappers get a reminder on Today."
+          "New: fixed family and guests.",
+          "New: adjust the profile for this trip only.",
+          "Improvements to suggestions from the trip profile."
         ]
       }
     },
@@ -1358,16 +1206,16 @@
       "data": "2026-10-30",
       "itens": {
         "pt": [
-          "Visual novo, inspirado nas placas de estrada: placa marrom com o próximo passeio, placa verde com a contagem até a viagem, amarelo da faixa marcando o 'agora'. Letra Overpass, cantos arredondados, tema escuro revisado.",
-          "Gostos de cada pessoa: 249 opções em 15 temas (jeito de passear, natureza, aventura, cultura, comer, doces, bebidas, crianças, compras, descanso, noite, esportes, fotos, eventos, onde ficar). Toque uma vez para 'curte', duas para 'ama', três para 'prefere evitar'; o que combina aparece na hora.",
-          "Lugares: novo filtro 'Para vocês' e a etiqueta '♥ combina' a partir dos gostos do grupo. O roteiro com IA também usa os gostos (sem nomes).",
-          "Filtros e opções de roteiro numa fileira que rola para o lado; cabeçalho com ícones desenhados; 'Falta 1 dia' com o plural certo."
+          "Novo: visual inspirado nas placas de estrada.",
+          "Novo: gostos de cada pessoa.",
+          "Novo: filtro Para vocês.",
+          "Melhorias nos filtros e no cabeçalho."
         ],
         "en": [
-          "New look inspired by road signs: a brown sign for what's next, a green sign counting down to the trip, lane-marking yellow for 'now'. Overpass typeface, rounded corners, refined dark theme.",
-          "What each person likes: 249 options in 15 themes (how you explore, nature, adventure, culture, food, sweets, drinks, kids, shopping, rest, night, sports, photos, events, where to stay). Tap once for 'likes', twice for 'loves', three times for 'rather avoid'; related options appear right away.",
-          "Places: new 'For you' filter and a '♥ a good fit' tag based on the group's likes. The AI itinerary also uses them (no names).",
-          "Filters and itinerary options in one scrolling row; drawn header icons; correct singular in '1 day to go'."
+          "New: look inspired by road signs.",
+          "New: each person's preferences.",
+          "New: For you filter.",
+          "Improvements to filters and header."
         ]
       }
     },
@@ -1377,24 +1225,16 @@
       "hora": "13:38:20",
       "itens": {
         "pt": [
-          "Primeira versão do GuiaXpert: perfil de quem viaja (idade, mobilidade, calor e frio, soneca), várias viagens, várias opções de roteiro por viagem e favoritos (★).",
-          "Guia de Gramado e Canela pronto: 76 lugares e 6 opções de roteiro, com filtros, busca, 'perto de mim' (GPS) e rota pelo Google Maps ou Waze.",
-          "Descobrir na região: busca restaurantes, cafés e atrações no OpenStreetMap, para qualquer cidade, sem IA.",
-          "Montar com a minha IA: usa a chave de IA da pessoa (o mesmo cofre de todos os apps SolverONE). Nomes nunca vão para a IA.",
-          "Previsão do tempo por dia da viagem, com avisos de chuva, frio, calor e vento; se um serviço falhar, usa outro (Open-Meteo, MET Norway, wttr.in) e há link para a previsão completa.",
-          "Reservas, comida e alergias guardadas embaralhadas no aparelho, com PIN de 6 números e código de recuperação. Cartão de alergia em PT e EN.",
-          "Entrada só para convidados: conta SolverONE liberada ou código de degustação com validade, controlados pelo RootifyONE.",
-          "Funciona sem internet depois da primeira abertura; mapa com os lugares e o GPS (o fundo do mapa precisa de internet nesta versão)."
+          "Primeira versão do GuiaXpert.",
+          "Novo: guia pronto de Gramado e Canela.",
+          "Novo: Previsão do tempo e descobrir na região.",
+          "Novo: reservas protegidas e uso sem internet."
         ],
         "en": [
-          "First GuiaXpert release: traveler profiles (age, mobility, heat and cold, naps), multiple trips, multiple itinerary options per trip and favorites (★).",
-          "Ready-made Gramado and Canela guide: 76 places and 6 itinerary options, with filters, search, 'near me' (GPS) and directions via Google Maps or Waze.",
-          "Discover nearby: finds restaurants, cafés and sights on OpenStreetMap, for any city, without AI.",
-          "Build with my AI: uses the person's own AI key (the same vault as every SolverONE app). Names never go to the AI.",
-          "Weather forecast per trip day, with rain, cold, heat and wind alerts; if one service fails it uses another (Open-Meteo, MET Norway, wttr.in), plus a link to the full forecast.",
-          "Bookings, food and allergies stored scrambled on the device, with a 6-digit PIN and a recovery code. Allergy card in PT and EN.",
-          "Invite-only access: unlocked SolverONE account or a trial code with an expiry, controlled by RootifyONE.",
-          "Works offline after the first visit; map with places and GPS (the map background needs internet in this version)."
+          "First version of GuiaXpert.",
+          "New: ready-made Gramado and Canela guide.",
+          "New: Weather forecast and discover nearby.",
+          "New: protected bookings and offline use."
         ]
       }
     }
