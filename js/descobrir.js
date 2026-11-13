@@ -196,7 +196,9 @@
            de dentro da viagem a Gramado continua possível, mas Portugal e Peru não aparecem misturados) */
         var qb = semAcento(q), longe = [];
         if (centro && centro.lat != null) {
-          todos.forEach(function (l) { l.longe = dist(l, centro) >= 1.35 * 1.35; });
+          /* procurou um tipo de lugar ("sorveteria")? perto é até ~50 km (Maracaju, a 120 km de Bonito, não é perto);
+             procurou um nome? até ~150 km, para achar o lugar certo um pouco mais longe */
+          todos.forEach(function (l) { var lim = nomeBate(l.nome, qb) ? 1.35 : 0.45; l.longe = dist(l, centro) >= lim * lim; });
           longe = todos.filter(function (l) { return l.longe; });
           todos = todos.filter(function (l) { return !l.longe; });
           longe.sort(function (a, b) { return (nomeBate(b.nome, qb) ? 1 : 0) - (nomeBate(a.nome, qb) ? 1 : 0); });

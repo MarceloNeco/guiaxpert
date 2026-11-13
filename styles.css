@@ -815,3 +815,8 @@ details.lugar[open] summary .resumo-desc { display: none; }
 .campo-data { position: relative; display: block; }
 .campo-data .data-nativa { position: absolute; right: .3rem; bottom: 0; width: 2.4rem; height: 1px; opacity: 0; pointer-events: none; border: 0; padding: 0; }
 .bt-cal { font-size: 1.1rem; }
+/* 🎤 "Fale agora…" numa etiqueta própria (o tradutor da plataforma reescreve o placeholder) */
+.voz-fale { display: none; position: absolute; left: .95rem; top: 50%; transform: translateY(-50%); pointer-events: none; color: var(--evita); font-weight: 700; }
+.campo-voz.area .voz-fale { top: .85rem; transform: none; }
+.campo-voz.ouvindo > input::placeholder, .campo-voz.ouvindo > textarea::placeholder { color: transparent; }
+.campo-voz.ouvindo > input:placeholder-shown ~ .voz-fale, .campo-voz.ouvindo > textarea:placeholder-shown ~ .voz-fale { display: block; }

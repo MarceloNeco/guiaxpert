@@ -2,6 +2,37 @@
   "app": "guiaxpert",
   "versoes": [
     {
+      "versao": "1.5.55",
+      "data": "2026-11-13",
+      "substitui": "1.5.54",
+      "itens": {
+        "pt": [
+          "Microfone no computador: quando o serviço de voz do Google ouve a fala e não devolve o texto, o app agora diz isso com clareza e, se o Chrome tiver, oferece instalar a voz em português no próprio computador (uma vez só; funciona até sem internet).",
+          "\"Fale agora…\" aparece de verdade enquanto o microfone ouve (antes sumia na hora).",
+          "Busca de lugares: o Foursquare volta a trazer resultados (a busca pedia campos que a versão nova dele recusa) e o botão \"Testar\" faz a mesma busca do app.",
+          "\"Sorveteria\" e outros tipos de lugar: perto da viagem agora é até uns 50 km; nome de lugar continua procurado até uns 150 km.",
+          "Café, doceria e padaria do guia aberto (ex.: Pastéis de Belém) aparecem como \"Doces, café ou sorvete\", não como bar.",
+          "Viagem ao exterior: o \"O que levar\" usa a mesma regra de documentos do cartão do país (Lisboa: passaporte válido por 3 meses além da volta).",
+          "\"O que levar\" só fala de enjoo de serra com curvas na serra gaúcha; nas outras viagens, remédio de enjoo de viagem.",
+          "Previsão: o mesmo prazo (15 dias) em todas as telas, e viagem que já terminou não fala mais de previsão. \"1 reserva\" no singular.",
+          "Datas e horas já preenchidas: tocar seleciona tudo, e digitar troca o valor.",
+          "Mapa sem resultado: um botão só de \"Procurar na internet\"."
+        ],
+        "en": [
+          "Desktop microphone: clearer message when Google's speech service returns nothing, and an offer to install the on-device voice when Chrome supports it.",
+          "\"Speak now…\" now stays visible while listening.",
+          "Place search: Foursquare results are back; \"Test\" runs the same search as the app.",
+          "Type searches (e.g. ice cream) count as nearby up to ~50 km.",
+          "Cafés and bakeries from the open guide are labelled as sweets/café.",
+          "Abroad: packing list uses the same document rule as the country card.",
+          "Motion-sickness note about mountain roads only for the Serra Gaúcha.",
+          "Forecast: same 15-day window everywhere; finished trips no longer mention it. Singular \"1 booking\".",
+          "Filled dates and times: tapping selects all so typing replaces.",
+          "Map with no results: a single \"Search online\" button."
+        ]
+      }
+    },
+    {
       "versao": "1.5.54",
       "data": "2026-11-12",
       "substitui": "1.5.53",

@@ -22,6 +22,8 @@
     drink: 'beber', beba: 'beber', beber: 'beber',
     buy: 'comprar', compre: 'comprar', comprar: 'comprar'
   };
+  var RE_DOCARIA = /\b(caf[eé]s?|coffee|pastel|past[eé]is|pastry|bakery|padaria|confeitaria|doceria|gelato|gelataria|sorvet\w*|ice cream|chocolat\w*|patisserie|p[aâ]tisserie|tea ?room|casa de ch[aá])\b/i;
+  function docaria(nome, p) { return RE_DOCARIA.test(nome + ' ' + String(p.content || p.conteudo || p.descricao || p.description || '').slice(0, 160)); }
   var CATEGORIA = { ver: 'atracao', fazer: 'atracao', comer: 'comer', beber: 'bebidas', comprar: 'atracao' };
 
   function semAcento(t) { return String(t || '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, ''); }
@@ -79,7 +81,8 @@
       var site = (p.url || p.site || '').trim();
       out.push({
         id: 'wv-' + slug(pagina) + '-' + slug(nome), nome: nome, secao: secao,
-        categoria: CATEGORIA[secao], subcategoria: secao === 'comer' ? 'restaurante' : null,
+        /* "beber" e "comer" que são café, doceria ou padaria (ex.: Pastéis de Belém) não viram bar nem restaurante */
+        categoria: docaria(nome, p) ? 'doces' : CATEGORIA[secao], subcategoria: docaria(nome, p) ? 'cafe' : secao === 'comer' ? 'restaurante' : null,
         descricao: limpar(p.content || p.conteudo || p.descricao || p.description).slice(0, 400) || null,
         endereco: limpar(p.address || p.endereco || p['endereço']) || null,
         horario: (function (hh) { return hh && lingua === 'en' && window.Descobrir && Descobrir.horarioPt ? Descobrir.horarioPt(hh) : hh; })(limpar(p.hours || p.horario || p['horário']) || null),

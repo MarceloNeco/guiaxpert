@@ -12,7 +12,7 @@
 (function () {
   'use strict';
   var d = document, $ = function (id) { return d.getElementById(id); };
-  var VERSAO_APP = '1.5.54';
+  var VERSAO_APP = '1.5.55';
 
   /* ------------------------------------------------------------------
      1. UTILIDADES
@@ -51,6 +51,12 @@
     if (botao) t.appendChild(h('button', { class: 'toast-bt', type: 'button', texto: botao, onclick: function () { t.hidden = true; acao(); } }));
     clearTimeout(relogioAviso); relogioAviso = setTimeout(function () { t.hidden = true; }, ms || 3500);
   }
+  function selecionarAoEntrar(c) {
+    var recem = false;
+    c.addEventListener('focus', function () { recem = true; setTimeout(function () { try { c.select(); } catch (e) {} }, 0); });
+    c.addEventListener('mouseup', function (e) { if (recem) { e.preventDefault(); recem = false; } });
+    c.addEventListener('blur', function () { recem = false; });
+  }
   /* hora sempre em 24h (o campo "time" do navegador às vezes mostra AM/PM): "930", "9h30", "21h" → "09:30", "21:00" */
   function normHora(s) {
     s = String(s || '').trim().toLowerCase().replace(/\s+/g, '');
@@ -79,6 +85,8 @@
       return aa + '-' + p2(mm) + '-' + p2(dd);
     }
     /* só números (05092027): põe as barras sozinho; quem digita com barra (5/9/27) escreve do seu jeito */
+    /* campo já preenchido: tocar seleciona tudo, e digitar troca a data (antes o limite de 10 letras bloqueava) */
+    selecionarAoEntrar(txt);
     txt.addEventListener('input', function () {
       if (/[\/.\-]/.test(txt.value)) { txt.value = txt.value.replace(/[^\d\/.\-]/g, ''); return; }
       var v = txt.value.replace(/\D/g, '').slice(0, 8);
@@ -94,6 +102,7 @@
   }
   function campoHora(id, valor) {
     var c = h('input', { class: 'campo hora24', type: 'text', id: id, inputmode: 'numeric', maxlength: '5', placeholder: '09:30', autocomplete: 'off', value: valor || '' });
+    selecionarAoEntrar(c);
     c.addEventListener('blur', function () { var n = normHora(c.value); if (n != null) c.value = n; });
     return c;
   }
@@ -443,6 +452,26 @@
     }
     return t;
   }
+  /* Reconhecimento no próprio aparelho (Chrome 139+): não depende do serviço de voz do Google, que no computador às
+     vezes ouve a fala e nunca devolve o texto. Aceita as duas formas da API (available/install e availableOnDevice/installOnDevice). */
+  var VOZ_LOCAL = 'guiaxpert.voz.local';      /* 'sim' depois que o aparelho instalou a voz em português */
+  var VOZ_FALHOU = 'guiaxpert.voz.servidorFalhou';
+  function lerVoz(k) { try { return localStorage.getItem(k); } catch (e) { return null; } }
+  function gravarVoz(k, v) { try { if (v == null) localStorage.removeItem(k); else localStorage.setItem(k, v); } catch (e) {} }
+  function vozLocalEstado(lang) {
+    try {
+      if (SR_VOZ && typeof SR_VOZ.available === 'function') return Promise.resolve(SR_VOZ.available({ langs: [lang], processLocally: true })).catch(function () { return 'unavailable'; });
+      if (SR_VOZ && typeof SR_VOZ.availableOnDevice === 'function') return Promise.resolve(SR_VOZ.availableOnDevice(lang)).catch(function () { return 'unavailable'; });
+    } catch (e) {}
+    return Promise.resolve('unavailable');
+  }
+  function vozLocalInstalar(lang) {
+    try {
+      if (typeof SR_VOZ.install === 'function') return Promise.resolve(SR_VOZ.install({ langs: [lang], processLocally: true }));
+      if (typeof SR_VOZ.installOnDevice === 'function') return Promise.resolve(SR_VOZ.installOnDevice(lang));
+    } catch (e) { return Promise.reject(e); }
+    return Promise.resolve(false);
+  }
   function comVoz(raiz) {
     if (!SR_VOZ || !raiz) return;
     [].forEach.call(raiz.querySelectorAll('input:not([type]), input[type="text"], input[type="search"], textarea'), function (c) {
@@ -451,33 +480,64 @@
       var bt = h('button', { class: 'bt-voz', type: 'button', 'aria-label': T('falarNoCampo'), title: T('falarNoCampo'), svg: '<svg viewBox="0 0 24 24"><rect x="9" y="2" width="6" height="12" rx="3"/><path d="M5 10v1a7 7 0 0 0 14 0v-1M12 18v4"/></svg>' });
       var caixa = h('span', { class: 'campo-voz' + (c.tagName === 'TEXTAREA' ? ' area' : '') });
       c.parentNode.insertBefore(caixa, c); caixa.appendChild(c); caixa.appendChild(bt);
-      var rec = null, dica = c.placeholder, relogio = null;
+      /* "Fale agora…" aparece numa etiqueta própria: o tradutor automático da plataforma reescreve o placeholder */
+      var fale = h('span', { class: 'voz-fale', 'aria-hidden': 'true', 'data-dgo-ignorar': '', texto: T('faleAgora') });
+      caixa.appendChild(fale);
+      var rec = null, relogio = null, ouviu = false, local = false;
       /* volta ao normal na hora (não espera o navegador avisar que terminou: no computador às vezes ele nunca avisa) */
-      function soltar(msg) {
+      function soltar(msg, botao, acao) {
+        var estava = !!rec;
         clearTimeout(relogio); relogio = null;
-        if (rec) { var r = rec; rec = null; r.onresult = r.onerror = r.onend = r.onspeechend = null; try { r.abort(); } catch (e) {} }
-        c.placeholder = dica; bt.classList.remove('ouvindo'); bt.setAttribute('aria-pressed', 'false');
-        if (msg) avisar(T(msg));
+        if (rec) { var r = rec; rec = null; r.onresult = r.onerror = r.onend = r.onspeechend = r.onspeechstart = r.onaudiostart = null; try { r.abort(); } catch (e) {} }
+        caixa.classList.remove('ouvindo'); bt.classList.remove('ouvindo'); bt.setAttribute('aria-pressed', 'false');
+        if (msg && estava) avisar(T(msg), botao, acao, botao ? 12000 : 7000);
+      }
+      /* o serviço do navegador ouviu a fala e não devolveu o texto: oferece a voz no próprio aparelho, se houver */
+      function semTexto(lang) {
+        if (local) { soltar('vozLocalSemTexto'); return; }
+        gravarVoz(VOZ_FALHOU, '1');
+        soltar(null);
+        vozLocalEstado(lang).then(function (st) {
+          if (st === 'available') { gravarVoz(VOZ_LOCAL, 'sim'); avisar(T('vozLocalPronta'), T('vozTentar'), function () { bt.click(); }, 12000); }
+          else if (st === 'downloadable' || st === 'downloading') avisar(T('vozLocalOferta'), T('vozLocalBaixar'), function () {
+            vozLocalInstalar(lang).then(function (ok) {
+              if (ok) { gravarVoz(VOZ_LOCAL, 'sim'); avisar(T('vozLocalInstalada'), T('vozTentar'), function () { bt.click(); }, 12000); }
+              else avisar(T('vozLocalNao'), null, null, 9000);
+            }, function () { avisar(T('vozLocalNao'), null, null, 9000); });
+          }, 15000);
+          else avisar(T(ouviu ? 'vozOuviuSemTexto' : 'vozSemResposta'), null, null, 9000);
+        });
       }
       bt.addEventListener('click', function () {
         if (rec) { soltar(); c.focus(); return; }          /* 2º toque: para e destrava sempre */
+        var lang = idioma() === 'en' ? 'en-US' : 'pt-BR';
         /* só o resultado final: o Chrome do Android repete a frase inteira a cada pedaço quando há resultados parciais */
-        rec = new SR_VOZ(); rec.lang = idioma() === 'en' ? 'en-US' : 'pt-BR'; rec.interimResults = false; rec.continuous = false; rec.maxAlternatives = 1;
+        rec = new SR_VOZ(); rec.lang = lang; rec.interimResults = false; rec.continuous = false; rec.maxAlternatives = 1;
+        /* se o serviço do Google já falhou neste aparelho e a voz local está instalada, usa a local */
+        local = false;
+        if (lerVoz(VOZ_LOCAL) === 'sim' && lerVoz(VOZ_FALHOU)) {
+          try { if ('processLocally' in rec) { rec.processLocally = true; local = true; } else if ('mode' in rec) { rec.mode = 'ondevice-only'; local = true; } } catch (e) {}
+        }
+        ouviu = false;
         var base = c.value ? c.value.replace(/\s+$/, '') + ' ' : '';
-        bt.classList.add('ouvindo'); bt.setAttribute('aria-pressed', 'true'); c.placeholder = T('faleAgora');
-        /* no máximo 15 s ouvindo; depois que a pessoa para de falar, até 8 s para o texto chegar */
-        relogio = setTimeout(function () { soltar('vozSemResposta'); }, 15000);
-        rec.onspeechend = function () { clearTimeout(relogio); relogio = setTimeout(function () { soltar('vozSemResposta'); }, 8000); };
+        caixa.classList.add('ouvindo'); bt.classList.add('ouvindo'); bt.setAttribute('aria-pressed', 'true');
+        /* no máximo 15 s ouvindo; depois que a pessoa para de falar, até 6 s para o texto chegar */
+        relogio = setTimeout(function () { if (ouviu) semTexto(lang); else soltar('naoOuvi'); }, 15000);
+        rec.onspeechstart = function () { ouviu = true; };
+        rec.onspeechend = function () { ouviu = true; clearTimeout(relogio); relogio = setTimeout(function () { semTexto(lang); }, 6000); };
         rec.onresult = function (e) {
           var r = e.results[e.results.length - 1]; if (!r || r.isFinal === false) return;
           var t = semRepeticao(String(r[0].transcript || '').trim());
-          if (t) { c.value = (base + t).slice(0, +(c.getAttribute('maxlength') || 1000)); c.dispatchEvent(new Event('input', { bubbles: true })); }
+          if (t) { c.value = (base + t).slice(0, +(c.getAttribute('maxlength') || 1000)); c.dispatchEvent(new Event('input', { bubbles: true })); if (!local) gravarVoz(VOZ_FALHOU, null); }
           soltar(); c.focus();
         };
         rec.onerror = function (e) {
-          soltar(e.error === 'not-allowed' || e.error === 'service-not-allowed' ? 'vozPermitir' : e.error === 'network' ? 'vozSemInternet' : e.error === 'no-speech' ? 'naoOuvi' : e.error === 'aborted' ? null : 'vozErro');
+          if (e.error === 'aborted') { soltar(); return; }
+          if (e.error === 'network' || (e.error === 'service-not-allowed' && ouviu)) { semTexto(lang); return; }
+          if (e.error === 'language-not-supported' && local) { gravarVoz(VOZ_LOCAL, null); soltar('vozErro'); return; }
+          soltar(e.error === 'not-allowed' || e.error === 'service-not-allowed' ? 'vozPermitir' : e.error === 'no-speech' ? 'naoOuvi' : e.error === 'audio-capture' ? 'vozSemMicrofone' : 'vozErro');
         };
-        rec.onend = function () { if (rec) soltar(); };
+        rec.onend = function () { if (!rec) return; if (ouviu) semTexto(lang); else soltar('naoOuvi'); };
         try { rec.start(); } catch (e) { soltar('vozErro'); }
       });
     });
@@ -1065,7 +1125,10 @@
     cx.appendChild(h('h3', { texto: T('climaTitulo') }));
     var ds = p.dias.filter(function (x) { return dias.indexOf(x.data) > -1; });
     if (!ds.length) {
-      cx.appendChild(h('p', { class: 'sub', texto: T('climaLonge', { n: p.dias.length }) }));
+      /* viagem que já terminou não fala de previsão; antes dela, o mesmo número em todo lugar (Hoje e O que levar) */
+      var acabou = estado.viagem && estado.viagem.fim && estado.viagem.fim < hojeIso();
+      if (acabou) { cx.remove(); return; }
+      cx.appendChild(h('p', { class: 'sub', texto: T('climaLonge', { n: 15 }) }));
       if (estado.viagem) cx.appendChild(h('button', { class: 'bt sec', type: 'button', style: 'align-self:flex-start', texto: '🧳 ' + T('malasBotao'), onclick: function () { janelaMalas(estado.viagem, []); } }));
       return;
     }
@@ -1098,8 +1161,11 @@
     if (chuva) { itens.push(T('malaChuva', { n: chuva })); itens.push(T('malaChuva2')); }
     if (vento) itens.push(T('malaVento'));
     if (!comPrev) itens.push(T('malaVerPrevisao'));
-    itens.push(T('malaCriancas'), T('malaRemedios'), T('malaCarregador'), T('malaDocs'));
-    var pais = paisDaViagem(v); if (pais && pais.cod !== 'BR') itens.push(T('malaExterior'), T('malaTomada', { t: pais.tomada }));
+    /* "enjoo de serra com curvas" só onde há serra (Gramado/Canela); no resto, o remédio de enjoo de viagem */
+    var serra = estado.pacote && estado.viagem === v && /gramado|canela|serra/.test(String(estado.pacote.id || ''));
+    itens.push(T('malaCriancas'), T(serra ? 'malaRemedios' : 'malaRemediosGeral'), T('malaCarregador'), T('malaDocs'));
+    /* documentos do país vêm da mesma tabela do cartão "X em 1 minuto" (antes as duas telas se contradiziam) */
+    var pais = paisDaViagem(v); if (pais && pais.cod !== 'BR') itens.push(pais.docs ? T('malaDocsPais', { d: pais.docs }) : T('malaExterior'), T('malaCartao'), T('malaTomada', { t: pais.tomada }));
     var chave = 'malas:' + v.id, lista = h('ul', { class: 'checagem' });
     Banco.meta(chave, {}).then(function (feitos) {
       itens.forEach(function (t, i) {
@@ -2743,7 +2809,7 @@
               sec.resumo.textContent = '';
               sec.icones.filter(function (x, i, a) { return a.indexOf(x) === i; }).forEach(function (t) { sec.resumo.appendChild(iconeRes(t)); });
               sec.resumo.appendChild(d.createTextNode(String(sec.icones.length)));
-              sec.resumo.setAttribute('aria-label', T('nReservas', { n: sec.icones.length }));
+              sec.resumo.setAttribute('aria-label', sec.icones.length === 1 ? T('umaReserva') : T('nReservas', { n: sec.icones.length }));
             }
             sec = null;
           }

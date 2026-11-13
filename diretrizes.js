@@ -932,8 +932,14 @@
       if (!Varredura.mapa) return valorAtual;
       var reg = Varredura.mapa.get(no);
       if (!reg) { reg = {}; Varredura.mapa.set(no, reg); }
-      if (reg[chave] === undefined) reg[chave] = valorAtual;
+      /* o app trocou o texto depois da última varredura (ex.: "Fale agora…" no lugar da dica): o novo vira o original,
+         em vez de a varredura desfazer a troca */
+      if (reg[chave] === undefined || (valorAtual !== reg[chave] && valorAtual !== reg[chave + '\u0000escrito'])) reg[chave] = valorAtual;
       return reg[chave];
+    },
+    escrito: function (no, chave, valor) {
+      if (!Varredura.mapa) return;
+      var reg = Varredura.mapa.get(no); if (reg) reg[chave + '\u0000escrito'] = valor;
     },
 
     textoNo: function (no) {
@@ -941,6 +947,7 @@
       if (!atual || !/\S/.test(atual)) return;
       var orig = Varredura.original(no, '#texto', atual);
       var novo = reescreverDatas(Idioma.traduzir(orig));
+      Varredura.escrito(no, '#texto', novo);
       if (novo !== atual) no.nodeValue = novo;
     },
 
@@ -953,11 +960,13 @@
         if (!atual || !/\S/.test(atual)) continue;
         orig = Varredura.original(e, a, atual);
         novo = reescreverDatas(Idioma.traduzir(orig));
+        Varredura.escrito(e, a, novo);
         if (novo !== atual) e.setAttribute(a, novo);
       }
       if (e.tagName === 'INPUT' && /^(button|submit|reset)$/i.test(e.type || '') && e.value) {
         orig = Varredura.original(e, '@value', e.value);
         novo = reescreverDatas(Idioma.traduzir(orig));
+        Varredura.escrito(e, '@value', novo);
         if (novo !== e.value) e.value = novo;
       }
       /* <time datetime="2026-09-17"> vira a data no formato do idioma */

@@ -163,9 +163,11 @@
           lista.insertBefore(bf, lista.firstChild);
           /* nada achado: os próximos passos ficam à vista já no resumo (sem precisar abrir a lista) */
           if (!itens.length) {
+            /* um botão só: o do resumo; o da lista fica escondido até ele ser usado (antes apareciam os dois juntos) */
+            bf.hidden = true;
             var acoes = h('div', { class: 'painel-acoes' });
             if (op.irPara) acoes.appendChild(h('button', { class: 'bt sec', type: 'button', texto: '🗺 ' + T('irAteLa'), title: T('irParaNoMapa', { q: q }), onclick: function () { op.irPara(q); } }));
-            acoes.appendChild(h('button', { class: 'bt leve', type: 'button', texto: '🔎 ' + T('procurarNaInternet'), title: T('buscarNaInternetCurto', { q: q }), onclick: function () { estadoPainel('lista'); bf.click(); } }));
+            acoes.appendChild(h('button', { class: 'bt leve', type: 'button', texto: '🔎 ' + T('procurarNaInternet'), title: T('buscarNaInternetCurto', { q: q }), onclick: function (e) { e.currentTarget.disabled = true; bf.hidden = false; estadoPainel('lista'); bf.click(); } }));
             resumo.appendChild(acoes);
           }
         }
