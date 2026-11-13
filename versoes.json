@@ -2,6 +2,23 @@
   "app": "guiaxpert",
   "versoes": [
     {
+      "versao": "1.5.62",
+      "data": "2026-11-13",
+      "substitui": "1.5.61",
+      "itens": {
+        "pt": [
+          "Novo: guardar o app no celular pelo Hoje.",
+          "Melhorias nas chaves de serviço no celular.",
+          "Correção no título da viagem no Hoje."
+        ],
+        "en": [
+          "New: keep the app on your phone from Today.",
+          "Improvements to service keys on phones.",
+          "Fix in the trip title on Today."
+        ]
+      }
+    },
+    {
       "versao": "1.5.61",
       "data": "2026-11-13",
       "substitui": "1.5.60",

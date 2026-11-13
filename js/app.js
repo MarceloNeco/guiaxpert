@@ -12,7 +12,7 @@
 (function () {
   'use strict';
   var d = document, $ = function (id) { return d.getElementById(id); };
-  var VERSAO_APP = '1.5.61';
+  var VERSAO_APP = '1.5.62';
 
   /* ------------------------------------------------------------------
      1. UTILIDADES
@@ -1507,6 +1507,7 @@
 
   TELAS.inicio = function (tela) {
     var v = estado.viagem;
+    var ci = cartaoInstalar(); if (ci) tela.appendChild(ci);
     if (!v) {
       tela.appendChild(faixaFotos(T('boasVindas'), T('boasVindasTexto')));
       tela.appendChild(h('button', { class: 'bt cheio', type: 'button', onclick: function () { estado.rascunho = null; Nav.ir('nova'); } }, '＋ ' + T('novoPasseioOuViagem')));
@@ -1518,9 +1519,10 @@
     }
     var dias = diasDaViagem(v), hj = hojeIso(), di = dias.indexOf(hj);
     var antes = di < 0 && dataDe(v.inicio) > dataDe(hj);
+    /* antes da viagem: a foto com o nome; durante e depois: só o nome (uma vez, nunca os dois) */
     if (antes) tela.appendChild(faixaFotos(v.nome, fData(v.inicio) + ' – ' + fData(v.fim), { destino: fotosDaViagem(v), neutro: !fotosDaViagem(v) }));
-    if (!fotosDaViagem(v)) buscarFotoCommons(v).then(function (ok) { if (ok && estado.rota === 'inicio') mostrar('inicio'); });
     else tela.appendChild(h('div', {}, [h('h1', { texto: v.nome }), h('p', { class: 'sub', texto: fData(v.inicio) + ' – ' + fData(v.fim) })]));
+    if (!fotosDaViagem(v)) buscarFotoCommons(v).then(function (ok) { if (ok && estado.rota === 'inicio') mostrar('inicio'); });
     if (estado.pacote && estado.pacote.offline) tela.appendChild(h('p', { class: 'pequeno', texto: T('usandoCopia') }));
     var cp = cartaoPais(v); if (cp) tela.appendChild(cp);
     /* destino sem guia pronto: um caminho claro para começar (sem IA) */
@@ -2803,7 +2805,7 @@
       }
     });
   };
-  TELAS.explorar = function (tela) { Explorar.tela(tela); };
+  TELAS.explorar = function (tela) { var ci = cartaoInstalar(); if (ci) tela.appendChild(ci); Explorar.tela(tela); };
   /* "O que tem em X": ponto de partida de um destino sem guia pronto (Wikivoyage + Wikidata, sem IA).
      Cada item é um lugar como os outros: ⭐ guarda nas ideias, "Pôr no dia" vai para o roteiro, aparece no mapa. */
   var filtroOqt = 'todos';
@@ -5485,7 +5487,6 @@
         var pedida = estado.rotaPedida; estado.rotaPedida = null;
         mostrar(estado.rota === 'entrar' ? (pedida && pedida !== 'entrar' ? pedida : (emViagem() ? 'inicio' : 'explorar')) : estado.rota);
         oferecerBio();
-        setTimeout(oferecerInstalar, 2500);
         aceitarConvitePendente().then(function (aceito) { if (!aceito) sincronizarNuvem(); });
         retomarPendente();
         setTimeout(oferecerReservasDoLink, 900);
@@ -5524,6 +5525,23 @@
       h('button', { class: 'bt', type: 'button', texto: T('entendi'), onclick: function () { j.fechar(); } })]));
     return Promise.resolve();
   }
+  /* "Guarde no celular": cartão no topo do Hoje (e do Explorar) enquanto o app não estiver instalado.
+     Fechar some só até a próxima vez que o app abrir. Instalado, ele reconhece e não mostra; e continua se atualizando
+     sozinho ao abrir com internet (o service worker traz a versão nova e o app avisa). */
+  function cartaoInstalar() {
+    if (jaInstalado() || !(estado.acesso && estado.acesso.liberado)) return null;
+    try { if (sessionStorage.getItem('guiaxpert.instalar.fechado')) return null; } catch (e) {}
+    var cel = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent || '');
+    var bt = h('button', { class: 'bt', type: 'button', texto: T('instGuardar') });
+    var x = h('button', { class: 'ic inst-fechar', type: 'button', 'aria-label': T('fechar'), texto: '✕' });
+    var ic = h('span', { class: 'inst-ic', 'aria-hidden': 'true', svg: '<svg viewBox="0 0 24 24"><path d="M12 3v12"/><path d="m7 10 5 5 5-5"/><path d="M5 21h14"/></svg>' });
+    var c = h('div', { class: 'cartao inst', role: 'region', 'aria-label': T(cel ? 'instTituloCel' : 'instTituloPc') }, [ic,
+      h('div', { class: 'inst-txt' }, [h('b', { texto: T(cel ? 'instTituloCel' : 'instTituloPc') }), h('span', { class: 'pequeno', texto: T('instTexto') })]), bt, x]);
+    bt.addEventListener('click', function () { instalarApp(); });
+    x.addEventListener('click', function () { try { sessionStorage.setItem('guiaxpert.instalar.fechado', '1'); } catch (e) {} c.remove(); });
+    return c;
+  }
+  window.addEventListener('appinstalled', function () { [].forEach.call(d.querySelectorAll('.cartao.inst'), function (e) { e.remove(); }); avisar(T('instalado')); });
   /* convite depois do login: Instalar / Agora não (volta em 3 dias) / Não mostrar mais */
   function oferecerInstalar() {
     if (jaInstalado() || !(estado.acesso && estado.acesso.liberado)) return;
