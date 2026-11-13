@@ -39,6 +39,7 @@ QR/código para outro celular, e-mail → reserva, família (membros, convites, 
 - 🎤 Microfone: falha também no celular (relato do dono, 13/Nov). 1.5.57 trouxe Configurações › Testar o microfone; aguardando o resultado do teste para achar a causa.
 
 ## Testes pendentes para retomar (13/Nov/2026)
+- **Novidades:** o dono vai mandar feedback (textos técnicos e compridos, como no Radar Judicial). Lembrete marcado para 13/Nov 19h.
 - **Microfone (ditado) ainda falha:** no teste pelo Claude in Chrome, tocar no 🎤 não trouxe o texto. Retomar com o relatório da regressão (texto exato do aviso, tempo, se destravou) e testar também no celular Android real.
 - **Regressão completa 1.5.54** (prompt-regressao-completa-1.5.54-v2): em andamento; analisar o zip quando chegar.
 - **Foursquare recusa as buscas:** ler o motivo nos logs da função `lugares` ("foursquare recusou") depois do Passo 2 da regressão e corrigir.
