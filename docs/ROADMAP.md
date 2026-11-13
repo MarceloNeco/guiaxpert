@@ -35,7 +35,8 @@ QR/código para outro celular, e-mail → reserva, família (membros, convites, 
 ## Regressão 1.5.54 (Claude in Chrome, 12/Nov) → 1.5.55
 - Feito na 1.5.55: Foursquare (campos da API nova; Testar = busca real), microfone (Fale agora visível; tradutor da plataforma desfazia o placeholder; oferta de voz no aparelho quando o Google não devolve texto), E2 passaporte 3×6 meses, E3 "perto" de 50 km para tipos de lugar, E4 café/doceria, E5 enjoo de serra só na serra, E8 botão duplicado, E9 data/hora por cima, E10 15 dias / viagem passada / "1 reserva".
 - Pendente: E7 descrições do Wikivoyage em inglês (avisar ou mostrar só o nome); E11 seletor de viagem às vezes precisa de 2 toques; aviso de Bonito fácil de não ver; Portugal enquadrado com muita Espanha; check-in do hotel sem hora no Natal Luz; crédito 📷 lista fotos de outras cidades.
-- Horário: protótipos (roda, relógio, arrastar, híbrido) em https://claude.ai/artifact/NtkHCbcZBF6Vu6zEpTiwL2 — aguardando a escolha do dono.
+- ✅ 1.5.58 Hora e data: híbrido (atalhos + roda + relógio; lista de 15 min no computador) e calendário que pula para o ano + ida e volta (docs/superpowers/specs/2026-11-13-hora-e-data-design.md).
+- 🎤 Microfone: falha também no celular (relato do dono, 13/Nov). 1.5.57 trouxe Configurações › Testar o microfone; aguardando o resultado do teste para achar a causa.
 
 ## Testes pendentes para retomar (13/Nov/2026)
 - **Microfone (ditado) ainda falha:** no teste pelo Claude in Chrome, tocar no 🎤 não trouxe o texto. Retomar com o relatório da regressão (texto exato do aviso, tempo, se destravou) e testar também no celular Android real.

@@ -12,7 +12,7 @@
 (function () {
   'use strict';
   var d = document, $ = function (id) { return d.getElementById(id); };
-  var VERSAO_APP = '1.5.57';
+  var VERSAO_APP = '1.5.58';
 
   /* ------------------------------------------------------------------
      1. UTILIDADES
@@ -74,7 +74,8 @@
     var paraBr = function (v) { return v ? v.slice(8, 10) + '/' + v.slice(5, 7) + '/' + v.slice(0, 4) : ''; };
     var txt = h('input', { class: 'campo data-br', type: 'text', id: id, inputmode: 'numeric', maxlength: '10', placeholder: 'dd/mm/aaaa', autocomplete: 'off', value: paraBr(valorIso) });
     var nat = h('input', { type: 'date', tabindex: '-1', 'aria-hidden': 'true', class: 'data-nativa', value: valorIso || '' });
-    var bt = h('button', { class: 'bt-voz bt-cal', type: 'button', 'aria-label': T('abrirCalendario'), title: T('abrirCalendario'), texto: '📅' });
+    var bt = h('button', { class: 'bt-voz bt-cal', type: 'button', 'aria-label': T('abrirCalendario'), title: T('abrirCalendario') });
+    bt.appendChild(Seletor.icone('cal'));
     function ler() {
       var t = txt.value.trim(); if (!t) return '';
       var m = /^(\d{1,2})\/?(\d{1,2})\/?(\d{2}|\d{4})$/.exec(t.replace(/[.\-\s]/g, '/').replace(/\/+/g, '/'));
@@ -94,18 +95,366 @@
     });
     txt.addEventListener('change', function () { var v = ler(); if (v) { txt.value = paraBr(v); nat.value = v; } if (aoMudar) aoMudar(v); });
     nat.addEventListener('change', function () { txt.value = paraBr(nat.value); if (aoMudar) aoMudar(nat.value); });
-    bt.addEventListener('click', function () { try { if (nat.showPicker) nat.showPicker(); else nat.click(); } catch (e) { nat.click(); } });
     var caixa = h('span', { class: 'campo-voz campo-data' }, [txt, bt, nat]);
     caixa.valor = ler; caixa.definir = function (v) { txt.value = paraBr(v); nat.value = v || ''; };
+    /* o calendário do app (pula para o ano; no nascimento já abre nos anos), igual no celular e no computador */
+    bt.addEventListener('click', function () { var o = caixa.opcCalendario || {}; Seletor.abrirData(caixa, { titulo: o.titulo, vista: o.vista, anoMin: o.anoMin, anoMax: o.anoMax, min: o.min, inicioEm: o.inicioEm, aoMudar: aoMudar }); });
     txt.dataset.voz = '1';
     return caixa;
   }
-  function campoHora(id, valor) {
+  function campoHora(id, valor, opc) {
     var c = h('input', { class: 'campo hora24', type: 'text', id: id, inputmode: 'numeric', maxlength: '5', placeholder: '09:30', autocomplete: 'off', value: valor || '' });
     selecionarAoEntrar(c);
     c.addEventListener('blur', function () { var n = normHora(c.value); if (n != null) c.value = n; });
+    Seletor.hora(c, opc || {});
     return c;
   }
+  /* ------------------------------------------------------------------
+     SELETOR DE HORA E DE DATA (padrão escolhido pelo dono em 13/Nov/2026, protótipo "Hora e data")
+     Hora: no celular, folha com atalhos (o mais provável primeiro), duração em botões, roda de rolar e relógio
+     (tocar nos números = roda; ícone de relógio = mostrador; a preferência fica guardada). No computador, digitar
+     ("930") ou escolher numa lista de 15 em 15 min, com a duração ao lado no "Até".
+     Data: digitar dd/mm/aaaa com conferência, e o ícone abre o calendário que pula para o ano (nascimento) ou,
+     na viagem, o calendário de ida e volta com as noites.
+     ------------------------------------------------------------------ */
+  var Seletor = (function () {
+    var NS = 'http://www.w3.org/2000/svg';
+    var ICO = {
+      relogio: '<circle cx="12" cy="12" r="9.5"/><path d="M12 6.5V12l3.5 2"/>',
+      rolar: '<path d="m7 15 5 5 5-5"/><path d="m7 9 5-5 5 5"/>',
+      cal: '<rect x="3" y="4.5" width="18" height="17" rx="3"/><path d="M16 2.5v4M8 2.5v4M3 10h18"/>',
+      alvo: '<circle cx="12" cy="12" r="9.5"/><circle cx="12" cy="12" r="5.5"/><circle cx="12" cy="12" r="1.5"/>',
+      sol: '<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M6.3 17.7l-1.4 1.4M19.1 4.9l-1.4 1.4"/>',
+      prato: '<path d="M4 2.5v6a2 2 0 0 0 2 2h2a2 2 0 0 0 2-2v-6M7 2.5v19M20 15V2.5a4.5 4.5 0 0 0-4.5 4.5v6a2 2 0 0 0 2 2H20Zm0 0v6.5"/>',
+      tarde: '<path d="M17 18a5 5 0 0 0-10 0M12 3v6M4.2 10.2l1.4 1.4M1.5 18h2M20.5 18h2M18.4 11.6l1.4-1.4M22.5 21.5h-21M15.5 6.5 12 3 8.5 6.5"/>',
+      lua: '<path d="M20.5 14.5A8.5 8.5 0 1 1 9.5 3.5a6.5 6.5 0 0 0 11 11Z"/>',
+      duracao: '<circle cx="12" cy="13.5" r="8"/><path d="M10 2.5h4M12 13.5l3-3"/>',
+      esq: '<path d="m15 18-6-6 6-6"/>', dir: '<path d="m9 18 6-6-6-6"/>', baixo: '<path d="m6 9 6 6 6-6"/>'
+    };
+    function icone(n) { var e = d.createElementNS(NS, 'svg'); e.setAttribute('viewBox', '0 0 24 24'); e.setAttribute('class', 'sl-ic'); e.setAttribute('aria-hidden', 'true'); e.innerHTML = ICO[n] || ''; return e; }
+    function chip(ic, texto, forte, dica) {
+      var b = h('button', { type: 'button', class: 'sl-chip' + (forte ? ' forte' : ''), title: dica || '' });
+      if (ic) b.appendChild(icone(ic)); b.appendChild(d.createTextNode(texto)); return b;
+    }
+    function toque() { try { return window.matchMedia && matchMedia('(pointer: coarse)').matches; } catch (e) { return false; } }
+    function vibrar() { try { if (navigator.vibrate) navigator.vibrate(6); } catch (e) {} }
+    function paraMin(v) { var n = normHora(v); if (!n) return null; return +n.slice(0, 2) * 60 + +n.slice(3, 5); }
+    function durTxt(m) { if (m <= 0) return ''; var hh = Math.floor(m / 60), mm = m % 60; return (hh ? hh + ' h' : '') + (hh && mm ? ' ' : '') + (mm ? mm + ' min' : ''); }
+    var PREF = 'guiaxpert.seletor.modoHora';
+    function modoGuardado() { try { return localStorage.getItem(PREF) === 'relogio' ? 'relogio' : 'roda'; } catch (e) { return 'roda'; } }
+    function guardarModo(m) { try { localStorage.setItem(PREF, m); } catch (e) {} }
+
+    /* ---------- roda (hora e minuto, minutos de 5 em 5) ---------- */
+    function roda(alvo, valor, aoMudar) {
+      var ALT = 44, caixa = h('div', { class: 'sl-rodas' }), cols = [];
+      function coluna(vals, rotulo) {
+        var c = h('div', { class: 'sl-coluna', tabindex: '0', role: 'listbox', 'aria-label': rotulo });
+        c.appendChild(h('div', { class: 'sl-esp' }));
+        vals.forEach(function (v) { c.appendChild(h('div', { class: 'sl-op', role: 'option', texto: (v < 10 ? '0' : '') + v })); });
+        c.appendChild(h('div', { class: 'sl-esp' }));
+        var col = { c: c, vals: vals, i: 0, t: null, q: false };
+        function estilo() {
+          var ops = c.querySelectorAll('.sl-op'), centro = c.scrollTop + 110;
+          for (var k = 0; k < ops.length; k++) {
+            var dist = Math.abs(88 + k * ALT + ALT / 2 - centro) / ALT;
+            ops[k].style.transform = 'scale(' + Math.max(.72, 1 - dist * .12) + ')';
+            ops[k].style.opacity = String(Math.max(.25, 1 - dist * .28));
+            ops[k].classList.toggle('sel', dist < .5);
+          }
+        }
+        col.estilo = estilo;
+        c.addEventListener('scroll', function () {
+          if (!col.q) { col.q = true; requestAnimationFrame(function () { col.q = false; estilo(); }); }
+          clearTimeout(col.t); col.t = setTimeout(function () {
+            var i = Math.max(0, Math.min(vals.length - 1, Math.round(c.scrollTop / ALT)));
+            if (i !== col.i) { col.i = i; vibrar(); aoMudar(cols[0].vals[cols[0].i] * 60 + cols[1].vals[cols[1].i]); }
+          }, 90);
+        }, { passive: true });
+        c.addEventListener('keydown', function (e) { if (e.key === 'ArrowDown' || e.key === 'ArrowUp') { e.preventDefault(); c.scrollBy({ top: e.key === 'ArrowDown' ? ALT : -ALT, behavior: 'smooth' }); } });
+        c.addEventListener('click', function (e) { var op = e.target.closest('.sl-op'); if (!op) return; var k = [].indexOf.call(c.querySelectorAll('.sl-op'), op); c.scrollTo({ top: k * ALT, behavior: 'smooth' }); });
+        cols.push(col); return c;
+      }
+      var hs = [], ms = []; for (var i = 0; i < 24; i++) hs.push(i); for (var j = 0; j < 60; j += 5) ms.push(j);
+      caixa.appendChild(coluna(hs, T('selHora'))); caixa.appendChild(h('div', { class: 'sl-dp', texto: ':' })); caixa.appendChild(coluna(ms, T('selMinuto')));
+      alvo.appendChild(caixa);
+      function ir(v, suave) {
+        var hh = Math.floor(v / 60), mi = Math.min(11, Math.round((v % 60) / 5));
+        cols[0].i = hh; cols[1].i = mi;
+        cols[0].c.scrollTo({ top: hh * ALT, behavior: suave ? 'smooth' : 'auto' }); cols[1].c.scrollTo({ top: mi * ALT, behavior: suave ? 'smooth' : 'auto' });
+        cols[0].estilo(); cols[1].estilo();
+      }
+      requestAnimationFrame(function () { ir(valor, false); });
+      return { ir: ir, el: caixa };
+    }
+
+    /* ---------- relógio (anel de fora 1–12, de dentro 13–00; pula sozinho da hora para os minutos) ---------- */
+    function relogio(alvo, valor, aoMudar) {
+      var modo = 'hora', v = valor, C = 130, RF = 102, RD = 66;
+      var cab = h('div', { class: 'sl-rel-cab' }), bH = h('button', { type: 'button', 'aria-label': T('selHora') }), bM = h('button', { type: 'button', 'aria-label': T('selMinuto') });
+      cab.appendChild(bH); cab.appendChild(h('span', { texto: ':' })); cab.appendChild(bM);
+      var svg = d.createElementNS(NS, 'svg'); svg.setAttribute('viewBox', '0 0 260 260'); svg.setAttribute('class', 'sl-mostrador'); svg.setAttribute('tabindex', '0'); svg.setAttribute('role', 'slider'); svg.setAttribute('aria-label', T('selRelogio'));
+      var caixa = h('div', { class: 'sl-relogio' }, [cab, svg]); alvo.appendChild(caixa);
+      function s(tag, at, txt) { var e = d.createElementNS(NS, tag); Object.keys(at).forEach(function (k) { e.setAttribute(k, at[k]); }); if (txt != null) e.textContent = txt; svg.appendChild(e); return e; }
+      function desenhar() {
+        while (svg.firstChild) svg.removeChild(svg.firstChild);
+        s('circle', { cx: C, cy: C, r: 126, class: 'fundo' });
+        var hh = Math.floor(v / 60), mi = v % 60, ang, raio;
+        if (modo === 'hora') { ang = (hh % 12) * 30; raio = hh >= 1 && hh <= 12 ? RF : RD; } else { ang = mi * 6; raio = RF; }
+        var r = (ang - 90) * Math.PI / 180, px = C + raio * Math.cos(r), py = C + raio * Math.sin(r);
+        s('line', { x1: C, y1: C, x2: px, y2: py, class: 'ponteiro' }); s('circle', { cx: C, cy: C, r: 5, class: 'centro' }); s('circle', { cx: px, cy: py, r: 20, class: 'centro' });
+        function num(txt, a, rr, sel, dentro) { var q = (a - 90) * Math.PI / 180; s('text', { x: C + rr * Math.cos(q), y: C + rr * Math.sin(q), class: (dentro ? 'dentro ' : '') + (sel ? 'sel' : '') }, txt); }
+        if (modo === 'hora') { for (var i = 1; i <= 12; i++) num(String(i), (i % 12) * 30, RF, i === hh); for (var k = 13; k <= 24; k++) { var hv = k % 24; num((hv < 10 ? '0' : '') + hv, (k % 12) * 30, RD, hv === hh, true); } }
+        else for (var m = 0; m < 60; m += 5) num((m < 10 ? '0' : '') + m, m * 6, RF, m === mi);
+        bH.textContent = (hh < 10 ? '0' : '') + hh; bM.textContent = (mi < 10 ? '0' : '') + mi;
+        bH.setAttribute('aria-pressed', modo === 'hora' ? 'true' : 'false'); bM.setAttribute('aria-pressed', modo === 'min' ? 'true' : 'false');
+        svg.setAttribute('aria-valuetext', hhmm(v));
+      }
+      function ponto(e) {
+        var r = svg.getBoundingClientRect(), x = (e.clientX - r.left) * 260 / r.width - C, y = (e.clientY - r.top) * 260 / r.height - C;
+        var ang = (Math.atan2(y, x) * 180 / Math.PI + 90 + 360) % 360, dist = Math.sqrt(x * x + y * y), hh = Math.floor(v / 60), mi = v % 60, nv;
+        if (modo === 'hora') { var p = Math.round(ang / 30) % 12, dentro = dist < (RF + RD) / 2; nv = (dentro ? (p === 0 ? 0 : p + 12) : (p === 0 ? 12 : p)) * 60 + mi; }
+        else nv = hh * 60 + Math.round(ang / 6) % 60;
+        if (nv !== v) { v = nv; vibrar(); aoMudar(v); } desenhar();
+      }
+      var arr = false;
+      svg.addEventListener('pointerdown', function (e) { arr = true; try { svg.setPointerCapture(e.pointerId); } catch (x) {} ponto(e); });
+      svg.addEventListener('pointermove', function (e) { if (arr) ponto(e); });
+      svg.addEventListener('pointerup', function (e) { if (!arr) return; arr = false; ponto(e); if (modo === 'hora') { modo = 'min'; setTimeout(desenhar, 120); } });
+      svg.addEventListener('keydown', function (e) {
+        var passo = modo === 'hora' ? 60 : 5;
+        if (e.key === 'ArrowUp' || e.key === 'ArrowRight') { e.preventDefault(); v = Math.min(1435, v + passo); aoMudar(v); desenhar(); }
+        if (e.key === 'ArrowDown' || e.key === 'ArrowLeft') { e.preventDefault(); v = Math.max(0, v - passo); aoMudar(v); desenhar(); }
+        if (e.key === 'Enter') { modo = modo === 'hora' ? 'min' : 'hora'; desenhar(); }
+      });
+      bH.addEventListener('click', function () { modo = 'hora'; desenhar(); });
+      bM.addEventListener('click', function () { modo = 'min'; desenhar(); });
+      desenhar();
+      return { ir: function (nv) { v = nv; modo = 'hora'; desenhar(); }, el: caixa };
+    }
+
+    /* atalhos de começo (o mais provável primeiro) e de duração para o "Até" */
+    function atalhosInicio(opc) {
+      var lista = [];
+      try { var mp = opc.maisProvavel && opc.maisProvavel(); if (mp && mp.min != null) lista.push(['alvo', T('selMaisProvavel', { h: hhmm(mp.min) }), mp.min, true, mp.dica]); } catch (e) {}
+      return lista.concat([['sol', T('selManha'), 540], ['prato', T('selAlmoco'), 750], ['tarde', T('selTarde'), 900], ['lua', T('selNoite'), 1170]]);
+    }
+    function atalhosDuracao(opc) {
+      var lista = [], tip = null;
+      try { tip = opc.duracaoTipica && opc.duracaoTipica(); } catch (e) {}
+      if (tip) lista.push(['duracao', T('selDuraGuia', { d: durTxt(tip) }), tip, true]);
+      [30, 60, 90, 120, 180].forEach(function (m) { if (m !== tip) lista.push([null, durTxt(m), m]); });
+      return lista;
+    }
+
+    /* ---------- folha do celular ---------- */
+    function folhaHora(c, opc) {
+      var ehFim = !!opc.inicio, ini = ehFim ? paraMin(opc.inicio.value) : null;
+      var atual = paraMin(c.value);
+      if (atual == null) { var a0 = !ehFim ? atalhosInicio(opc)[0] : null; atual = ehFim && ini != null ? ini + 60 : a0 ? a0[2] : 540; }
+      var grande = h('div', { class: 'sl-grande' }), dur = h('div', { class: 'sl-sub' });
+      function mostrar() {
+        grande.textContent = hhmm(atual);
+        dur.textContent = ehFim && ini != null ? (atual > ini ? T('selDura', { d: durTxt(atual - ini) }) : T('selAntesDoInicio')) : '';
+      }
+      var ultimoMuda = null;
+      function definir(v, origem) { atual = v; mostrar(); if (origem !== 'roda' && r) r.ir(v, true); if (origem !== 'relogio' && rl) rl.ir(v); ultimoMuda = origem; }
+      var chips = h('div', { class: 'sl-chips' });
+      if (ehFim && ini != null) {
+        chips.appendChild(h('span', { class: 'sl-rot', texto: T('selDuraRot') }));
+        atalhosDuracao(opc).forEach(function (x) { var b = chip(x[0], x[1], x[3]); b.addEventListener('click', function () { definir(Math.min(1439, ini + x[2]), 'chip'); }); chips.appendChild(b); });
+      } else {
+        atalhosInicio(opc).forEach(function (x) { var b = chip(x[0], x[1], x[3], x[4]); b.addEventListener('click', function () { definir(x[2], 'chip'); }); chips.appendChild(b); });
+      }
+      var modo = modoGuardado(), area = h('div', { class: 'sl-area' }), cxRoda = h('div'), cxRel = h('div');
+      area.appendChild(cxRoda); area.appendChild(cxRel);
+      var r = roda(cxRoda, atual, function (v) { definir(v, 'roda'); }), rl = relogio(cxRel, atual, function (v) { definir(v, 'relogio'); });
+      var btRoda = h('button', { type: 'button', 'aria-label': T('selRolar'), title: T('selRolar') }), btRel = h('button', { type: 'button', 'aria-label': T('selRelogio'), title: T('selRelogio') });
+      btRoda.appendChild(icone('rolar')); btRel.appendChild(icone('relogio'));
+      function usar(m) {
+        modo = m; guardarModo(m);
+        cxRoda.hidden = m !== 'roda'; cxRel.hidden = m !== 'relogio';
+        btRoda.setAttribute('aria-pressed', m === 'roda' ? 'true' : 'false'); btRel.setAttribute('aria-pressed', m === 'relogio' ? 'true' : 'false');
+        if (m === 'roda') requestAnimationFrame(function () { r.ir(atual, false); }); else rl.ir(atual);
+      }
+      btRoda.addEventListener('click', function () { usar('roda'); }); btRel.addEventListener('click', function () { usar('relogio'); });
+      grande.setAttribute('role', 'button'); grande.tabIndex = 0; grande.title = T('selRolar');
+      grande.addEventListener('click', function () { usar('roda'); });
+      var ok = h('button', { class: 'bt', type: 'button', texto: T('selPronto') });
+      var limpar = h('button', { class: 'bt leve', type: 'button', texto: T('selSemHora') });
+      var topo = h('div', { class: 'sl-topo' }, [h('div', {}, [grande, dur]), h('div', { class: 'sl-troca', role: 'group', 'aria-label': T('selJeito') }, [btRoda, btRel])]);
+      var j = janela(ehFim ? T('ateHora') : T('hora'), h('div', { class: 'sl-folha' }, [chips, topo, area, h('div', { class: 'acoes' }, [limpar, ok])]));
+      j.caixa.classList.add('sl-janela');
+      mostrar(); usar(modo);
+      ok.addEventListener('click', function () { c.value = hhmm(atual); c.dispatchEvent(new Event('change', { bubbles: true })); j.fechar(); });
+      limpar.addEventListener('click', function () { c.value = ''; c.dispatchEvent(new Event('change', { bubbles: true })); j.fechar(); });
+    }
+
+    /* ---------- lista do computador (15 em 15 min; no "Até", a duração ao lado) ---------- */
+    var aberta = null;
+    function fecharLista() { if (aberta) { aberta.remove(); aberta = null; } }
+    function listaHora(c, opc) {
+      fecharLista();
+      var ehFim = !!opc.inicio, ini = ehFim ? paraMin(opc.inicio.value) : null, atual = paraMin(c.value);
+      var caixa = h('div', { class: 'sl-pop', role: 'listbox', 'aria-label': T('hora') });
+      var chips = h('div', { class: 'sl-chips' });
+      (ehFim && ini != null ? atalhosDuracao(opc).map(function (x) { return [x[0], x[1], ini + x[2], x[3]]; }) : atalhosInicio(opc)).forEach(function (x) {
+        var b = chip(x[0], x[1], x[3], x[4]); b.addEventListener('mousedown', function (e) { e.preventDefault(); }); b.addEventListener('click', function () { escolher(Math.min(1439, x[2])); }); chips.appendChild(b);
+      });
+      caixa.appendChild(chips);
+      var lista = h('div', { class: 'sl-lista' }), de = ehFim && ini != null ? Math.ceil((ini + 15) / 15) * 15 : 6 * 60, alvo = null;
+      for (var m = de; m <= 23 * 60 + 45; m += 15) {
+        var b = h('button', { type: 'button', role: 'option', 'aria-selected': atual === m ? 'true' : 'false' }, [h('span', { texto: hhmm(m) }), ehFim && ini != null ? h('small', { texto: durTxt(m - ini) }) : null]);
+        (function (v) { b.addEventListener('mousedown', function (e) { e.preventDefault(); }); b.addEventListener('click', function () { escolher(v); }); })(m);
+        if (atual != null ? m >= atual && !alvo : m === (ehFim ? de : 540)) alvo = b;
+        lista.appendChild(b);
+      }
+      caixa.appendChild(lista);
+      function escolher(v) { c.value = hhmm(v); c.dispatchEvent(new Event('change', { bubbles: true })); fecharLista(); }
+      d.body.appendChild(caixa); aberta = caixa;
+      var r = c.getBoundingClientRect();
+      caixa.style.left = Math.max(8, Math.min(r.left, innerWidth - caixa.offsetWidth - 8)) + 'px';
+      var abaixo = innerHeight - r.bottom;
+      caixa.style.top = (abaixo > caixa.offsetHeight + 8 ? r.bottom + 4 : Math.max(8, r.top - caixa.offsetHeight - 4)) + 'px';
+      if (alvo) lista.scrollTop = alvo.offsetTop - 40;
+    }
+    function hora(c, opc) {
+      c.setAttribute('aria-haspopup', 'dialog');
+      if (toque()) {
+        /* celular: sem teclado; tocar abre a folha */
+        c.setAttribute('inputmode', 'none'); c.readOnly = true;
+        c.addEventListener('click', function () { folhaHora(c, opc); });
+        c.addEventListener('keydown', function (e) { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); folhaHora(c, opc); } });
+      } else {
+        c.addEventListener('focus', function () { listaHora(c, opc); });
+        c.addEventListener('click', function () { if (!aberta) listaHora(c, opc); });
+        c.addEventListener('input', function () { fecharLista(); });
+        c.addEventListener('blur', function () { setTimeout(fecharLista, 120); });
+        c.addEventListener('keydown', function (e) {
+          if (e.key === 'Escape') fecharLista();
+          if (e.key === 'ArrowDown' || e.key === 'ArrowUp') { e.preventDefault(); var v = paraMin(c.value); v = v == null ? 540 : Math.max(0, Math.min(1425, v + (e.key === 'ArrowDown' ? 15 : -15))); c.value = hhmm(v); fecharLista(); }
+        });
+      }
+    }
+    addEventListener('scroll', function (e) { if (aberta && !aberta.contains(e.target)) fecharLista(); }, true);
+    addEventListener('resize', fecharLista);
+
+    /* ---------- calendário (dias → meses → anos) ---------- */
+    var MESES_LONGOS = { pt: ['janeiro', 'fevereiro', 'março', 'abril', 'maio', 'junho', 'julho', 'agosto', 'setembro', 'outubro', 'novembro', 'dezembro'], en: ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'] };
+    function mesesLongos() { return MESES_LONGOS[idioma()] || MESES_LONGOS.pt; }
+    function letrasSemana() { return idioma() === 'en' ? ['S', 'M', 'T', 'W', 'T', 'F', 'S'] : ['D', 'S', 'T', 'Q', 'Q', 'S', 'S']; }
+    function calendario(alvo, isoIni, aoEscolher, opc) {
+      opc = opc || {};
+      var sel = isoIni ? dataDe(isoIni) : null, base = sel || (opc.inicioEm ? dataDe(opc.inicioEm) : new Date()), vis = new Date(base.getFullYear(), base.getMonth(), 1), vista = opc.vista || 'dias';
+      var hoje = new Date(); hoje.setHours(0, 0, 0, 0);
+      function nav(ic, rot, fn) { var b = h('button', { type: 'button', class: 'sl-nav', 'aria-label': rot }); b.appendChild(icone(ic)); b.addEventListener('click', fn); return b; }
+      function desenhar() {
+        alvo.textContent = '';
+        var cal = h('div', { class: 'sl-cal' }), cab = h('div', { class: 'sl-cal-cab' });
+        var tit = h('button', { type: 'button', class: 'sl-cal-tit', 'aria-label': T('selMesAno') });
+        tit.appendChild(d.createTextNode(vista === 'dias' ? mesesLongos()[vis.getMonth()] + ' ' + vis.getFullYear() : vista === 'meses' ? String(vis.getFullYear()) : T('selEscolhaAno')));
+        tit.appendChild(icone('baixo'));
+        tit.addEventListener('click', function () { vista = vista === 'dias' ? 'anos' : vista === 'meses' ? 'anos' : 'dias'; desenhar(); });
+        if (vista === 'dias') { cab.appendChild(nav('esq', T('selMesAnterior'), function () { vis.setMonth(vis.getMonth() - 1); desenhar(); })); cab.appendChild(tit); cab.appendChild(nav('dir', T('selProxMes'), function () { vis.setMonth(vis.getMonth() + 1); desenhar(); })); }
+        else cab.appendChild(tit);
+        cal.appendChild(cab);
+        if (vista === 'anos') {
+          var g = h('div', { class: 'sl-grade anos' }), alvoAno = null, a0 = opc.anoMin || 1920, a1 = opc.anoMax || hoje.getFullYear() + 5;
+          for (var a = a0; a <= a1; a++) {
+            var b = h('button', { type: 'button', texto: String(a), 'aria-selected': sel && a === sel.getFullYear() ? 'true' : 'false', class: a === hoje.getFullYear() ? 'atual' : '' });
+            (function (ano) { b.addEventListener('click', function () { vis.setFullYear(ano); vista = 'meses'; desenhar(); }); })(a);
+            if (a === vis.getFullYear()) alvoAno = b; g.appendChild(b);
+          }
+          cal.appendChild(g);
+          requestAnimationFrame(function () { if (alvoAno) g.scrollTop = alvoAno.offsetTop - g.clientHeight / 2 + 20; });
+        } else if (vista === 'meses') {
+          var gm = h('div', { class: 'sl-grade' });
+          MESES[idioma()].forEach(function (m, i) {
+            var b = h('button', { type: 'button', texto: m, 'aria-selected': sel && i === sel.getMonth() && vis.getFullYear() === sel.getFullYear() ? 'true' : 'false' });
+            b.addEventListener('click', function () { vis.setMonth(i); vista = 'dias'; desenhar(); }); gm.appendChild(b);
+          });
+          cal.appendChild(gm);
+        } else {
+          var sem = h('div', { class: 'sl-sem' }); letrasSemana().forEach(function (x) { sem.appendChild(h('span', { texto: x })); }); cal.appendChild(sem);
+          var dias = h('div', { class: 'sl-dias' }), prim = vis.getDay(), n = new Date(vis.getFullYear(), vis.getMonth() + 1, 0).getDate();
+          for (var k = 0; k < prim; k++) dias.appendChild(h('span'));
+          for (var dd = 1; dd <= n; dd++) {
+            var dt = new Date(vis.getFullYear(), vis.getMonth(), dd), i2 = iso(dt);
+            var bd = h('button', { type: 'button', texto: String(dd), 'aria-selected': sel && iso(sel) === i2 ? 'true' : 'false', class: i2 === iso(hoje) ? 'hoje' : '', 'aria-label': semana(i2) + ', ' + fData(i2) });
+            if (opc.min && i2 < opc.min) bd.disabled = true;
+            (function (x) { bd.addEventListener('click', function () { sel = x; desenhar(); aoEscolher(iso(x)); }); })(dt);
+            dias.appendChild(bd);
+          }
+          dias.addEventListener('keydown', function (e) {
+            var mapa = { ArrowLeft: -1, ArrowRight: 1, ArrowUp: -7, ArrowDown: 7 };
+            if (mapa[e.key]) { e.preventDefault(); var x = new Date(sel || vis); x.setDate(x.getDate() + mapa[e.key]); sel = x; vis = new Date(x.getFullYear(), x.getMonth(), 1); desenhar(); var f = alvo.querySelector('.sl-dias [aria-selected="true"]'); if (f) f.focus(); }
+            if (e.key === 'Enter' && sel) aoEscolher(iso(sel));
+            if (e.key === 'PageUp' || e.key === 'PageDown') { e.preventDefault(); vis.setMonth(vis.getMonth() + (e.key === 'PageDown' ? 1 : -1)); desenhar(); }
+          });
+          cal.appendChild(dias);
+        }
+        alvo.appendChild(cal);
+      }
+      desenhar();
+    }
+    /* calendário de uma data: folha no celular, janela no computador */
+    function abrirData(campo, opc) {
+      var atual = campo.valor() || null, cx = h('div');
+      var j = janela(opc.titulo || T('abrirCalendario'), h('div', { class: 'sl-folha' }, [cx]));
+      j.caixa.classList.add('sl-janela', 'sl-janela-cal');
+      calendario(cx, atual, function (v) { campo.definir(v); if (opc.aoMudar) opc.aoMudar(v); setTimeout(function () { j.fechar(); }, 150); }, opc);
+    }
+
+    /* ---------- ida e volta (meses rolando na vertical, com as noites) ---------- */
+    function abrirIdaVolta(ini, fim, aoFim) {
+      var ida = ini || null, volta = fim || null, hoje = new Date(); hoje.setHours(0, 0, 0, 0);
+      var bIda = h('b', {}), bVolta = h('b', {}), noites = h('span', { class: 'sl-noites' }), passo = h('p', { class: 'sub', style: 'margin:0' });
+      var rol = h('div', { class: 'sl-meses' });
+      function resumo() {
+        bIda.textContent = ida ? semana(ida) + ', ' + fData(ida) : '—'; bVolta.textContent = volta ? semana(volta) + ', ' + fData(volta) : '—';
+        var n = ida && volta ? Math.round((dataDe(volta) - dataDe(ida)) / 864e5) : null;
+        noites.textContent = n == null ? '' : n === 1 ? T('selUmaNoite') : T('selNoites', { n: n });
+        passo.textContent = ida && !volta ? T('selAgoraVolta') : ida && volta ? T('selRecomecar') : T('selToqueIda');
+        ok.disabled = !(ida && volta);
+      }
+      function desenhar() {
+        var topo = rol.scrollTop; rol.textContent = '';
+        var comeco = ida && dataDe(ida) < hoje ? dataDe(ida) : hoje;
+        for (var k = 0; k < 13; k++) {
+          var mes = new Date(comeco.getFullYear(), comeco.getMonth() + k, 1);
+          var bloco = h('div', { class: 'sl-mes' }, [h('h4', { texto: mesesLongos()[mes.getMonth()] + ' ' + mes.getFullYear() })]);
+          var sem = h('div', { class: 'sl-sem' }); letrasSemana().forEach(function (x) { sem.appendChild(h('span', { texto: x })); }); bloco.appendChild(sem);
+          var dias = h('div', { class: 'sl-dias' }), prim = mes.getDay(), n = new Date(mes.getFullYear(), mes.getMonth() + 1, 0).getDate();
+          for (var i = 0; i < prim; i++) dias.appendChild(h('span'));
+          for (var dd = 1; dd <= n; dd++) {
+            var dt = new Date(mes.getFullYear(), mes.getMonth(), dd), i2 = iso(dt), cls = [];
+            if (i2 === iso(hoje)) cls.push('hoje');
+            if (ida && volta && i2 > ida && i2 < volta) cls.push('meio');
+            if (i2 === ida && volta) cls.push('ponta-ini'); if (i2 === volta) cls.push('ponta-fim');
+            if (dt.getDay() === 0 || dt.getDay() === 6) cls.push('fds');
+            var b = h('button', { type: 'button', texto: String(dd), class: cls.join(' '), 'aria-selected': i2 === ida || i2 === volta ? 'true' : 'false', 'aria-label': semana(i2) + ', ' + fData(i2) });
+            if (dt < hoje) b.disabled = true;
+            (function (x) { b.addEventListener('click', function () {
+              if (!ida || volta) { ida = x; volta = null; } else if (x <= ida) ida = x; else volta = x;
+              vibrar(); resumo(); desenhar();
+            }); })(i2);
+            dias.appendChild(b);
+          }
+          bloco.appendChild(dias); rol.appendChild(bloco);
+        }
+        rol.scrollTop = topo;
+      }
+      var ok = h('button', { class: 'bt', type: 'button', texto: T('selUsarDatas') });
+      var j = janela(T('selQuando'), h('div', { class: 'sl-folha sl-ida' }, [
+        h('div', { class: 'sl-resumo' }, [h('div', {}, [h('small', { texto: T('selIda') }), bIda]), noites, h('div', { style: 'text-align:right' }, [h('small', { texto: T('selVolta') }), bVolta])]),
+        passo, rol, h('div', { class: 'acoes' }, [ok])]));
+      j.caixa.classList.add('sl-janela', 'sl-janela-cal');
+      resumo(); desenhar();
+      if (ida) requestAnimationFrame(function () { var f = rol.querySelector('[aria-selected="true"]'); if (f) rol.scrollTop = f.closest('.sl-mes').offsetTop - rol.offsetTop - 8; });
+      ok.addEventListener('click', function () { if (ida && volta) { aoFim(ida, volta); j.fechar(); } });
+    }
+    return { hora: hora, icone: icone, abrirData: abrirData, abrirIdaVolta: abrirIdaVolta, calendario: calendario };
+  })();
+
   /* hora do campo: '' (sem hora), 'HH:MM' ou null (inválida: avisa e foca) */
   function lerHora(c) { var n = normHora(c.value); if (n == null) { avisar(T('horaInvalida')); c.focus(); } else c.value = n; return n; }
   /* texto com endereços da internet viram links que abrem fora do app */
@@ -639,7 +988,7 @@
             comecar(st.getAudioTracks()[0]);
           }, function (err) {
             if (err && (err.name === 'NotAllowedError' || err.name === 'SecurityError')) { soltar('vozPermitir'); return; }
-            if (err && err.name === 'NotFoundError') { soltar('vozSemMicrofone'); return; }
+            /* sem acesso direto ao microfone: deixa o reconhecimento do navegador tentar do jeito dele */
             comecar(null);
           });
         } else comecar(null);
@@ -1448,6 +1797,22 @@
   }
   /* tempo de carro: na cidade ~30 km/h; na estrada ~65 km/h (com 30% de curvas) */
   function minCarro(km) { return km == null ? null : km < 15 ? Geo.minutosCarro(km) : Math.round(km * 1.3 / 65 * 60); }
+  /* duração típica do lugar no guia ("Cerca de 3 h", "1h30 a 2h") em minutos */
+  function duracaoLugar(l) {
+    var m = /(\d{1,2})\s*h\s*(\d{2})?/i.exec(String(l && l.duracao || ''));
+    return m ? +m[1] * 60 + (+m[2] || 0) : null;
+  }
+  /* o horário mais provável para o próximo programa do dia: fim do anterior + o carro até o lugar novo */
+  function horaMaisProvavel(itens, lugarNovo, antesDe) {
+    var lista = (itens || []).filter(function (x) { return x && x.hora && (!antesDe || x.hora < antesDe); }).sort(function (a, b) { return a.hora < b.hora ? -1 : 1; });
+    var ult = lista[lista.length - 1]; if (!ult) return null;
+    var lu = ult.lugarId ? lugarPorId(ult.lugarId) : null;
+    var fimMin = ult.fim ? minutos(ult.fim) : minutos(ult.hora) + (duracaoLugar(lu) || 60);
+    var carro = lu && lugarNovo && lu.lat != null && lugarNovo.lat != null && lu.id !== lugarNovo.id ? minCarro(Geo.distancia(lu, lugarNovo)) : null;
+    var v = Math.ceil((fimMin + (carro || 0)) / 5) * 5;
+    if (v >= 1440) return null;
+    return { min: v, dica: T(carro ? 'selDicaCarro' : 'selDicaFim', { nome: ult.titulo || (lu && lu.nome) || '', fim: hhmm(fimMin), carro: carro }) };
+  }
   function hhmm(min) { min = ((min % 1440) + 1440) % 1440; var hh = Math.floor(min / 60), mm = min % 60; return (hh < 10 ? '0' : '') + hh + ':' + (mm < 10 ? '0' : '') + mm; }
   /* voo de volta: a que horas sair do hotel (chegar 1h30 antes do voo doméstico, estrada até o aeroporto, devolver o carro) */
   function notaSairParaVoo(hora, rs) {
@@ -1969,7 +2334,8 @@
     return { el: h('div', { class: 'linha campo-alt', style: 'flex-wrap:nowrap;align-items:flex-start;gap:.5rem' }, [c, h('label', { for: id }, [h('b', { texto: '🔀 ' + T('ehAlternativa') }), h('span', { class: 'pequeno', style: 'display:block', texto: T('ehAlternativaDica') })])]), chk: c };
   }
   function janelaItem(o, dmod) {
-    var hora = campoHora('gx-item-hora'), fim = campoHora('gx-item-fim');
+    var hora = campoHora('gx-item-hora', '', { maisProvavel: function () { return horaMaisProvavel(dmod.itens, sel && sel.value ? lugarPorId(sel.value) : null); } });
+    var fim = campoHora('gx-item-fim', '', { inicio: hora, duracaoTipica: function () { return sel && sel.value ? duracaoLugar(lugarPorId(sel.value)) : null; } });
     var nota = h('input', { class: 'campo', type: 'text', id: 'gx-item-nota', maxlength: '300', placeholder: T('exNotaLink') });
     var alt = campoAlternativa('gx-item-alt');
     var tit = h('input', { class: 'campo', type: 'text', id: 'gx-item-tit', maxlength: '100', placeholder: T('exItem') });
@@ -1993,7 +2359,8 @@
   /* editar um item do dia: hora, o que, nota, lugar; ver no mapa; tirar */
   function janelaEditarItem(o, dmod, idx) {
     var it = dmod.itens[idx], l = it.lugarId ? lugarPorId(it.lugarId) : null;
-    var hora = campoHora('gx-ed-hora', it.hora || ''), fim = campoHora('gx-ed-fim', it.fim || '');
+    var hora = campoHora('gx-ed-hora', it.hora || '', { maisProvavel: function () { return horaMaisProvavel(dmod.itens.filter(function (x) { return x !== it; }), l, it.hora || null); } });
+    var fim = campoHora('gx-ed-fim', it.fim || '', { inicio: hora, duracaoTipica: function () { return duracaoLugar(l); } });
     var alt = campoAlternativa('gx-ed-alt', it.alt);
     var diasV = diasDaViagem(estado.viagem), diAtual = o.dias.indexOf(dmod);
     var selDia = h('select', { class: 'campo', id: 'gx-ed-dia' }, diasV.map(function (dt, i) {
@@ -2692,7 +3059,8 @@
     var v = estado.viagem, dias = diasDaViagem(v);
     var sel = h('select', { class: 'campo', id: 'gx-add-dia' }, dias.map(function (dt, i) { return h('option', { value: String(i), selected: i === estado.dia }, semana(dt) + ' ' + fData(dt, true)); }));
     var hx = /(\d{1,2})h(\d{2})?/.exec(l.horario || '');
-    var hora = campoHora('gx-add-hora', !horarioAberto(l.horario) && hx ? normHora(hx[1] + ':' + (hx[2] || '00')) : '');
+    var hora = campoHora('gx-add-hora', !horarioAberto(l.horario) && hx ? normHora(hx[1] + ':' + (hx[2] || '00')) : '', { maisProvavel: function () {
+      var dd = estado.opcao && estado.opcao.dias ? estado.opcao.dias[+sel.value] : null; return horaMaisProvavel(dd ? dd.itens : [], l); } });
     var alt = campoAlternativa('gx-add-alt');
     var ok = h('button', { class: 'bt', type: 'button' }, T('adicionar'));
     var j = janela(T('addAoRoteiro') + ': ' + l.nome, h('div', { class: 'linha', style: 'flex-direction:column;align-items:stretch' }, [
@@ -4373,6 +4741,11 @@
     /* o campo de data segue o idioma do navegador (às vezes mês/dia): embaixo, a data escrita por extenso tira a dúvida */
     var extIni = h('span', { class: 'pequeno data-extenso' }), extFim = h('span', { class: 'pequeno data-extenso' });
     var porExtenso = function () { extIni.textContent = r.inicio ? semana(r.inicio) + ', ' + fData(r.inicio) : ''; extFim.textContent = r.fim ? semana(r.fim) + ', ' + fData(r.fim) : ''; };
+    /* ida e volta num calendário só (meses rolando, com as noites); os campos continuam aceitando digitar */
+    var btIV = h('button', { class: 'bt sec bt-ida-volta', type: 'button' }, [Seletor.icone('cal'), d.createTextNode(' ' + T('selEscolherIdaVolta'))]);
+    btIV.addEventListener('click', function () { Seletor.abrirIdaVolta(r.inicio || null, r.fim || null, function (a, b) { r.inicio = a; r.fim = b; ini.definir(a); fim.definir(b); porExtenso(); }); });
+    ini.opcCalendario = fim.opcCalendario = { min: iso(new Date()) };
+    c.appendChild(btIV);
     c.appendChild(h('div', { class: 'dois' }, [h('div', {}, [h('label', { class: 'rot', for: 'gx-w-ini', texto: T('ida') }), ini, extIni]), h('div', {}, [h('label', { class: 'rot', for: 'gx-w-fim', texto: T('volta') }), fim, extFim])]));
     porExtenso();
     val(function () {

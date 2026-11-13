@@ -2,6 +2,27 @@
   "app": "guiaxpert",
   "versoes": [
     {
+      "versao": "1.5.58",
+      "data": "2026-11-13",
+      "substitui": "1.5.57",
+      "itens": {
+        "pt": [
+          "Hora nova no celular: tocar no horário abre uma folha com atalhos (o horário mais provável, pelo fim do programa anterior e o tempo de carro; manhã, almoço, tarde e noite), a roda para rolar com o dedão e o relógio. O app lembra se você prefere roda ou relógio.",
+          "\"Até\": a duração em botões (30 min, 1 h, 2 h…), com a duração típica do passeio no guia em destaque.",
+          "No computador: continua dando para digitar (\"930\"), e aparece a lista de 15 em 15 minutos, com a duração ao lado no \"Até\".",
+          "Datas: o calendário do app pula direto para o ano e o mês (sem voltar mês a mês) e funciona com o teclado.",
+          "Nova viagem: \"Escolher ida e volta no calendário\", com o número de noites e os fins de semana à vista."
+        ],
+        "en": [
+          "New time picker on phones: shortcuts (most likely time, morning, lunch, afternoon, evening), scroll wheel and clock; your preference is remembered.",
+          "\"Until\": duration buttons, with the guide's typical duration highlighted.",
+          "Desktop: type (\"930\") or pick from a 15-minute list showing the duration.",
+          "Dates: the app calendar jumps straight to year and month and works with the keyboard.",
+          "New trip: pick departure and return on one calendar, with the number of nights."
+        ]
+      }
+    },
+    {
       "versao": "1.5.57",
       "data": "2026-11-13",
       "substitui": "1.5.56",
