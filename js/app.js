@@ -12,7 +12,7 @@
 (function () {
   'use strict';
   var d = document, $ = function (id) { return d.getElementById(id); };
-  var VERSAO_APP = '1.5.63';
+  var VERSAO_APP = '1.5.64';
 
   /* ------------------------------------------------------------------
      1. UTILIDADES
@@ -886,31 +886,79 @@
      responde. Baixa o modelo uma vez (≈77 MB) e transcreve num worker; o áudio não sai do aparelho. */
   var VOZ_MOTOR = 'guiaxpert.voz.motor';
   var VozApp = (function () {
-    var w = null, pct = 0, pronto = false, esperando = {}, n = 0, ouvintes = [];
+    var w = null, pct = 0, mb = 0, mbTotal = 77, estadoV = 'nada', esperando = {}, n = 0, ouvintes = [], barra = null;
+    function avisarEstado() { ouvintes.forEach(function (f) { f(estadoV, pct); }); desenharBarra(); d.documentElement.style.setProperty('--voz-pct', String(pct)); d.body.classList.toggle('voz-baixando', estadoV === 'baixando'); }
+    /* faixa fixa com o progresso do download (some sozinha quando fica pronta) */
+    function desenharBarra() {
+      if (estadoV !== 'baixando') { if (barra) { var b = barra; barra = null; if (estadoV === 'pronta') { b.querySelector('span').textContent = T('vozProntaAviso'); b.querySelector('i').style.width = '100%'; setTimeout(function () { b.remove(); }, 4000); } else b.remove(); } return; }
+      if (!barra) { barra = h('div', { class: 'voz-baixa', role: 'status', 'aria-live': 'polite' }, [h('span'), h('b', {}, [h('i')])]); d.body.appendChild(barra); }
+      barra.querySelector('span').textContent = T('vozBaixandoMb', { p: pct, mb: mb, total: mbTotal });
+      barra.querySelector('i').style.width = pct + '%';
+    }
     function worker() {
       if (w) return w;
       w = new Worker('vendor/voz/voz-worker.js', { type: 'module' });
       w.onmessage = function (e) {
         var m = e.data || {};
-        if (m.tipo === 'progresso') { pct = m.pct; ouvintes.forEach(function (f) { f(pct); }); }
-        else if (m.tipo === 'pronto') pronto = true;
+        if (m.tipo === 'progresso') { pct = m.pct; mb = m.mb || mb; mbTotal = m.mbTotal || mbTotal; if (estadoV !== 'pronta') { estadoV = 'baixando'; avisarEstado(); } }
+        else if (m.tipo === 'pronto') { estadoV = 'pronta'; pct = 100; try { localStorage.setItem('guiaxpert.voz.baixada', '1'); } catch (x) {} avisarEstado(); }
+        else if (m.tipo === 'falhou') { estadoV = 'erro'; avisarEstado(); avisar(T(navigator.onLine ? 'vozAppFalhou' : 'vozAppSemInternet'), null, null, 9000); }
         else if ((m.tipo === 'texto' || m.tipo === 'erro') && esperando[m.id]) {
           var p = esperando[m.id]; delete esperando[m.id];
           if (m.tipo === 'texto') p.ok(m.texto); else p.erro(new Error(m.erro));
         }
       };
-      w.onerror = function () { Object.keys(esperando).forEach(function (k) { esperando[k].erro(new Error('worker')); delete esperando[k]; }); w = null; };
+      w.onerror = function () { Object.keys(esperando).forEach(function (k) { esperando[k].erro(new Error('worker')); delete esperando[k]; }); w = null; estadoV = 'erro'; avisarEstado(); };
       return w;
     }
     return {
-      carregar: function () { worker().postMessage({ tipo: 'carregar' }); },
-      pronto: function () { return pronto; },
+      carregar: function () { if (estadoV === 'pronta' || estadoV === 'baixando' || estadoV === 'preparando') return; estadoV = 'preparando'; avisarEstado(); worker().postMessage({ tipo: 'carregar' }); },
+      estado: function () { return estadoV; }, pct: function () { return pct; },
+      pronto: function () { return estadoV === 'pronta'; },
       ouvir: function (f) { ouvintes.push(f); return function () { ouvintes = ouvintes.filter(function (x) { return x !== f; }); }; },
       transcrever: function (audio, lingua) {
         return new Promise(function (ok, erro) { var id = ++n; esperando[id] = { ok: ok, erro: erro }; worker().postMessage({ tipo: 'transcrever', id: id, audio: audio, lingua: lingua }, [audio.buffer]); });
       }
     };
   })();
+  /* computador com a voz do app escolhida: já deixa a voz pronta ao abrir (do disco é rápido) */
+  function vozAppAtiva() { return !/Android|iPhone|iPad|iPod/i.test(navigator.userAgent || '') && (function () { try { return localStorage.getItem(VOZ_MOTOR) === 'app'; } catch (e) { return false; } })(); }
+  /* grava pelo microfone do site e transcreve no aparelho. opc: { aoNivel(n), aoEstado('ouvindo'|'escrevendo'), lingua }.
+     Devolve { parar(usar), fim: Promise<{ texto, motivo }> }; termina sozinho depois de 1,4 s de silêncio. */
+  function ouvirNoAparelho(opc) {
+    opc = opc || {};
+    var ctl = { parar: function () {} };
+    ctl.fim = new Promise(function (ok) {
+      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia || !window.MediaRecorder) { ok({ motivo: 'vozErro' }); return; }
+      navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: true, channelCount: 1 } }).then(function (st) {
+        var partes = [], mr = new MediaRecorder(st), falou = false, ultimo = Date.now(), comeco = Date.now(), acabou = false, usar = true, nivel = 0, q = 0, ctx = null;
+        try {
+          var Ctx = window.AudioContext || window.webkitAudioContext; ctx = new Ctx(); var an = ctx.createAnalyser(); an.fftSize = 512;
+          ctx.createMediaStreamSource(st).connect(an); var buf = new Uint8Array(512);
+          (function passo() { if (acabou) return; an.getByteTimeDomainData(buf); var s2 = 0; for (var i = 0; i < buf.length; i++) { var v = (buf[i] - 128) / 128; s2 += v * v; } nivel = Math.min(1, Math.sqrt(s2 / buf.length) * 6); if (opc.aoNivel) opc.aoNivel(nivel); q = requestAnimationFrame(passo); })();
+        } catch (e) {}
+        var iv = setInterval(function () {
+          var agora = Date.now();
+          if (nivel > .12) { falou = true; ultimo = agora; }
+          if ((falou && agora - ultimo > 1400) || agora - comeco > 20000 || (!falou && agora - comeco > 9000)) ctl.parar(true);
+        }, 100);
+        ctl.parar = function (u) { if (acabou) return; acabou = true; usar = u !== false; clearInterval(iv); cancelAnimationFrame(q); try { mr.stop(); } catch (e) {} };
+        mr.ondataavailable = function (e) { if (e.data && e.data.size) partes.push(e.data); };
+        mr.onstop = function () {
+          st.getTracks().forEach(function (t) { t.stop(); }); try { ctx && ctx.close(); } catch (e) {}
+          if (!usar) { ok({ motivo: null }); return; }
+          if (!falou) { ok({ motivo: 'naoOuvi' }); return; }
+          if (opc.aoEstado) opc.aoEstado('escrevendo');
+          audioPara16k(new Blob(partes, { type: mr.mimeType || 'audio/webm' })).then(function (f32) { return VozApp.transcrever(f32, opc.lingua || 'portuguese'); }).then(function (txt) {
+            ok(txt && !/^[\[(].*[\])]$/.test(txt) ? { texto: txt, segundos: ((Date.now() - comeco) / 1000).toFixed(1) } : { motivo: 'naoOuvi' });
+          }, function (e) { ok({ motivo: navigator.onLine ? 'vozErro' : 'vozAppSemInternet', erro: String((e && e.message) || e).slice(0, 80) }); });
+        };
+        mr.start(250);
+        if (opc.aoEstado) opc.aoEstado('ouvindo');
+      }, function (err) { ok({ motivo: err && err.name === 'NotAllowedError' ? 'vozPermitir' : 'vozSemMicrofone', erro: err && err.name }); });
+    });
+    return ctl;
+  }
   /* áudio gravado (webm/ogg) → amostras de 16 kHz, como o Whisper pede */
   function audioPara16k(blob) {
     return blob.arrayBuffer().then(function (ab) {
@@ -929,6 +977,7 @@
       /* "Fale agora…" aparece numa etiqueta própria: o tradutor automático da plataforma reescreve o placeholder */
       var fale = h('span', { class: 'voz-fale', 'aria-hidden': 'true', 'data-dgo-ignorar': '', texto: T('faleAgora') });
       caixa.appendChild(fale);
+      function alinharFale() { try { var cs = getComputedStyle(c); fale.style.left = (parseFloat(cs.paddingLeft) || 14) + (parseFloat(cs.borderLeftWidth) || 0) + 'px'; } catch (e) {} }
       var nivelAtual = 0, grav = null, usarLocal = false, rec = null, relogio = null, ouviu = false, local = false, somRec = false, somApp = false, medidor = null, trilha = null, t0 = 0;
       function passo(nome, extra) { if (trilha && trilha.length < 60) trilha.push(Math.round(Date.now() - t0) + ' ' + nome + (extra ? ' ' + extra : '')); }
       /* medidor do volume pelo microfone do site (o mesmo que o Claude e o Meet usam): mostra que o app está ouvindo
@@ -996,54 +1045,40 @@
         iniciar(false);
       });
       function fimApp(msg) {
+        bt.classList.remove('escrevendo'); bt.setAttribute('aria-label', T('falarNoCampo'));
         if (trilha) { passo('fim', msg || ''); enviarDiagVoz({ origem: 'app', passos: trilha }); trilha = null; }
         pararMedidor();
         caixa.classList.remove('ouvindo'); bt.classList.remove('ouvindo'); bt.setAttribute('aria-pressed', 'false'); fale.textContent = T('faleAgora');
         if (msg) avisar(T(msg), T('vozTesteTitulo'), janelaTesteVoz, 9000);
       }
-      /* grava pelo microfone do site e transcreve no próprio aparelho; termina sozinho depois de 1,4 s de silêncio */
+      /* voz do app: só grava quando está pronta; enquanto baixa, o 🎤 mostra o progresso e tocar explica quanto falta */
       function gravarApp() {
-        if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia || !window.MediaRecorder) { avisar(T('vozErro')); return; }
-        var lingua = idioma() === 'en' ? 'english' : 'portuguese', base = c.value ? c.value.replace(/\s+$/, '') + ' ' : '';
-        trilha = []; t0 = Date.now(); passo('inicio', 'app ' + (VozApp.pronto() ? 'pronta' : 'baixando'));
+        var est = VozApp.estado();
+        if (est !== 'pronta') {
+          VozApp.carregar();
+          avisar(est === 'baixando' ? T('vozAindaBaixando', { p: VozApp.pct() }) : T('vozPreparando'), null, null, 5000);
+          return;
+        }
+        var base = c.value ? c.value.replace(/\s+$/, '') + ' ' : '';
+        trilha = []; t0 = Date.now(); passo('inicio', 'app');
+        alinharFale();
         caixa.classList.add('ouvindo'); bt.classList.add('ouvindo'); bt.setAttribute('aria-pressed', 'true'); fale.textContent = T('faleAgora');
-        VozApp.carregar();
-        navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: true, channelCount: 1 } }).then(function (st) {
-          passo('microfone');
-          var partes = [], mr = new MediaRecorder(st), falou = false, ultimo = Date.now(), comeco = Date.now(), acabou = false, iv = null;
-          ligarMedidor(st);
-          grav = { usar: true, parar: function (usar) { if (acabou) return; acabou = true; clearInterval(iv); grav.usar = usar; try { mr.stop(); } catch (e) {} } };
-          mr.ondataavailable = function (e) { if (e.data && e.data.size) partes.push(e.data); };
-          mr.onstop = function () {
-            st.getTracks().forEach(function (t) { t.stop(); });
-            var g = grav; grav = null; pararMedidor();
-            if (!g || !g.usar) { fimApp(null); return; }
-            if (!falou) { fimApp('naoOuvi'); return; }
-            passo('gravado', ((Date.now() - comeco) / 1000).toFixed(1) + 's');
-            fale.textContent = VozApp.pronto() ? T('vozEscrevendo') : T('vozBaixando', { p: 0 });
-            var tirar = VozApp.ouvir(function (p) { fale.textContent = T('vozBaixando', { p: p }); });
-            audioPara16k(new Blob(partes, { type: mr.mimeType || 'audio/webm' })).then(function (f32) { return VozApp.transcrever(f32, lingua); }).then(function (txt) {
-              tirar(); passo('texto', 'letras=' + txt.length);
-              if (txt && !/^[\[(].*[\])]$/.test(txt)) {
-                c.value = (base + semRepeticao(txt)).slice(0, +(c.getAttribute('maxlength') || 1000));
-                c.dispatchEvent(new Event('input', { bubbles: true })); fimApp(null); c.focus();
-              } else fimApp('naoOuvi');
-            }, function (e) { tirar(); passo('erro', String((e && e.message) || e).slice(0, 80)); fimApp(navigator.onLine || VozApp.pronto() ? 'vozErro' : 'vozAppSemInternet'); });
-          };
-          mr.start(250);
-          iv = setInterval(function () {
-            var agora = Date.now();
-            if (nivelAtual > .12) { falou = true; ultimo = agora; }
-            if ((falou && agora - ultimo > 1400) || agora - comeco > 20000 || (!falou && agora - comeco > 9000)) grav.parar(true);
-          }, 100);
-        }, function (err) { passo('microfone-erro', err && err.name); fimApp(err && err.name === 'NotAllowedError' ? 'vozPermitir' : 'vozSemMicrofone'); });
+        var ctl = ouvirNoAparelho({ lingua: idioma() === 'en' ? 'english' : 'portuguese',
+          aoNivel: function (n) { caixa.style.setProperty('--nivel', n.toFixed(2)); },
+          aoEstado: function (e) { passo(e); if (e === 'escrevendo') { fale.textContent = T('vozEscrevendo'); bt.classList.add('escrevendo'); bt.setAttribute('aria-label', T('vozEscrevendo')); } } });
+        grav = ctl;
+        ctl.fim.then(function (r) {
+          grav = null; caixa.style.removeProperty('--nivel');
+          if (r.texto) { passo('texto', 'letras=' + r.texto.length + ' ' + r.segundos + 's'); c.value = (base + semRepeticao(r.texto)).slice(0, +(c.getAttribute('maxlength') || 1000)); c.dispatchEvent(new Event('input', { bubbles: true })); fimApp(null); c.focus(); }
+          else { if (r.erro) passo('erro', r.erro); fimApp(r.motivo); }
+        });
       }
       /* primeira vez no computador sem o serviço do Google: explica e oferece a voz do app */
       function oferecerVozApp() {
         var sim = h('button', { class: 'bt', type: 'button', texto: T('vozAppBaixar') }), nao = h('button', { class: 'bt leve', type: 'button', texto: T('agoraNao') });
         var j = janela(T('vozAppTitulo'), h('div', { class: 'linha', style: 'flex-direction:column;align-items:stretch' }, [h('p', { class: 'sub', texto: T('vozAppTexto') }), h('div', { class: 'acoes' }, [nao, sim])]));
         nao.addEventListener('click', function () { j.fechar(); });
-        sim.addEventListener('click', function () { gravarVoz(VOZ_MOTOR, 'app'); j.fechar(function () { gravarApp(); }); });
+        sim.addEventListener('click', function () { gravarVoz(VOZ_MOTOR, 'app'); d.body.classList.add('voz-app'); j.fechar(function () { VozApp.carregar(); }); });
       }
       /* o serviço de voz do Google não responde neste aparelho (erro de rede na hora): troca sozinho para a voz do
          próprio aparelho, se o navegador tiver; se precisar baixar, oferece o botão (baixar pede um toque) */
@@ -1074,7 +1109,7 @@
         trilha = []; t0 = Date.now(); passo('inicio', (local ? 'local ' : '') + rec.lang);
         ouviu = false; somRec = false; somApp = false;
         var base = c.value ? c.value.replace(/\s+$/, '') + ' ' : '';
-        caixa.classList.add('ouvindo'); bt.classList.add('ouvindo'); bt.setAttribute('aria-pressed', 'true');
+        alinharFale(); caixa.classList.add('ouvindo'); bt.classList.add('ouvindo'); bt.setAttribute('aria-pressed', 'true');
         /* no máximo 15 s ouvindo; depois que a pessoa para de falar, até 6 s para o texto chegar */
         relogio = setTimeout(function () { if (ouviu || somApp) semTexto(lang); else soltar('naoOuvi'); }, 15000);
         /* 7 s com o app ouvindo voz e o reconhecimento sem ouvir nada: não espera os 15 s para explicar */
@@ -2765,7 +2800,16 @@
       lista.appendChild(h('button', { class: 'chip', type: 'button', texto: s, style: 'align-self:flex-start', onclick: function () { campo.value = s; mandar(); } }));
     });
     if (!(window.Guia && Guia.temVoz())) mic.hidden = true;
+    var ctlAst = null;
     mic.addEventListener('click', function () {
+      if (vozAppAtiva()) {
+        if (ctlAst) { ctlAst.parar(true); return; }
+        if (!VozApp.pronto()) { VozApp.carregar(); avisar(VozApp.estado() === 'baixando' ? T('vozAindaBaixando', { p: VozApp.pct() }) : T('vozPreparando'), null, null, 5000); return; }
+        mic.textContent = '●'; mic.classList.add('ouvindo');
+        ctlAst = ouvirNoAparelho({ lingua: idioma() === 'en' ? 'english' : 'portuguese', aoEstado: function (e) { if (e === 'escrevendo') mic.textContent = '…'; } });
+        ctlAst.fim.then(function (r) { ctlAst = null; mic.textContent = '🎤'; mic.classList.remove('ouvindo'); if (r.texto) { campo.value = r.texto; mandar(); } else if (r.motivo) avisar(T(r.motivo)); });
+        return;
+      }
       mic.disabled = true; mic.textContent = '…';
       Guia.ouvir(idioma()).then(function (t) { campo.value = t; mandar(); }).catch(function () { avisar(T('naoOuvi')); }).then(function () { mic.disabled = false; mic.textContent = '🎤'; });
     });
@@ -5582,6 +5626,7 @@
         retomarPendente();
         setTimeout(oferecerReservasDoLink, 900);
         setTimeout(avisarAtualizacao, 1600);
+        if (vozAppAtiva()) { d.body.classList.add('voz-app'); setTimeout(function () { VozApp.carregar(); }, 3000); }
         conferirIA();
         var compartilhado = window.Importar && Importar.doEndereco();
         if (compartilhado) setTimeout(function () { if (estado.viagem) { Nav.ir('reservas'); setTimeout(function () { janelaImportar(compartilhado); }, 200); } else avisar(T('semViagemTexto')); }, 400);

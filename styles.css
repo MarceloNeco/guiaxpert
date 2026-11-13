@@ -954,3 +954,18 @@ details.lugar[open] summary .resumo-desc { display: none; }
 .chave-cab .ic-grande { font-size: 1.35rem; width: 2rem; }
 .chave-linha > .linha { flex-wrap: nowrap; gap: .4rem; }
 .chave-linha > .linha .bt { flex: 1 1 0; min-width: 0; min-height: 2.4rem; padding: .3rem .6rem; font-size: .95rem; }
+/* voz do ditado baixando: anel de progresso em volta do 🎤 e uma faixa fixa com o quanto falta */
+body.voz-app.voz-baixando .bt-voz { position: absolute; }
+body.voz-app.voz-baixando .bt-voz::before { content: ""; position: absolute; inset: 0; border-radius: 50%;
+  background: conic-gradient(var(--rodovia) calc(var(--voz-pct, 0) * 1%), color-mix(in srgb, var(--suave) 30%, transparent) 0);
+  -webkit-mask: radial-gradient(farthest-side, transparent calc(100% - 3px), #000 calc(100% - 3px)); mask: radial-gradient(farthest-side, transparent calc(100% - 3px), #000 calc(100% - 3px)); }
+body.voz-app.voz-baixando .bt-voz { opacity: .75; }
+.voz-baixa { position: fixed; left: 50%; transform: translateX(-50%); bottom: calc(var(--barra, 4.25rem) + 1rem); z-index: 60; width: min(26rem, calc(100vw - 2rem));
+  background: var(--tinta); color: var(--sup); border-radius: 14px; padding: .6rem .8rem; display: grid; gap: .4rem; box-shadow: 0 10px 30px -12px rgba(0,0,0,.5); font-size: .9rem; }
+.voz-baixa b { display: block; height: 6px; border-radius: 6px; background: color-mix(in srgb, var(--sup) 25%, transparent); overflow: hidden; }
+.voz-baixa i { display: block; height: 100%; width: 0; background: var(--faixa); transition: width .3s; }
+/* transcrevendo no aparelho: o 🎤 gira até o texto entrar */
+.bt-voz.escrevendo { animation: none !important; background: var(--sup2) !important; color: var(--rodovia) !important; box-shadow: none !important; }
+.bt-voz.escrevendo::after { content: ""; position: absolute; inset: 2px; border-radius: 50%; border: 3px solid transparent; border-top-color: var(--rodovia); animation: gx-gira .8s linear infinite; }
+@keyframes gx-gira { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) { .bt-voz.escrevendo::after { animation-duration: 2.4s; } }

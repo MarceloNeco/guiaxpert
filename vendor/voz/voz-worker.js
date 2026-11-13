@@ -22,17 +22,17 @@ function carregar() {
       if (p.status === 'progress' && p.file) {
         arquivos[p.file] = { c: p.loaded || 0, t: p.total || 0 };
         let c = 0, t = 0; Object.values(arquivos).forEach((a) => { c += a.c; t += a.t; });
-        if (t) self.postMessage({ tipo: 'progresso', pct: Math.round(c / t * 100) });
+        if (t) self.postMessage({ tipo: 'progresso', pct: Math.round(c / t * 100), mb: Math.round(c / 1048576), mbTotal: Math.round(t / 1048576) });
       }
     },
-  }).then((p) => { self.postMessage({ tipo: 'pronto' }); return p; }, (e) => { pronto = null; throw e; });
+  }).then((p) => { self.postMessage({ tipo: 'pronto' }); return p; }, (e) => { pronto = null; self.postMessage({ tipo: 'falhou', erro: String((e && e.message) || e).slice(0, 200) }); throw e; });
   return pronto;
 }
 
 self.onmessage = async (ev) => {
   const m = ev.data || {};
   try {
-    if (m.tipo === 'carregar') { await carregar(); return; }
+    if (m.tipo === 'carregar') { await carregar().catch(() => {}); return; }
     if (m.tipo === 'transcrever') {
       const asr = await carregar();
       const r = await asr(m.audio, { language: m.lingua || 'portuguese', task: 'transcribe', chunk_length_s: 30 });

@@ -2,6 +2,21 @@
   "app": "guiaxpert",
   "versoes": [
     {
+      "versao": "1.5.64",
+      "data": "2026-11-13",
+      "substitui": "1.5.63",
+      "itens": {
+        "pt": [
+          "Melhorias no ditado no computador.",
+          "Ditado também no assistente ✦ IA."
+        ],
+        "en": [
+          "Improvements to dictation on computers.",
+          "Dictation also in the ✦ AI assistant."
+        ]
+      }
+    },
+    {
       "versao": "1.5.63",
       "data": "2026-11-13",
       "substitui": "1.5.62",
