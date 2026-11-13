@@ -12,7 +12,7 @@
 (function () {
   'use strict';
   var d = document, $ = function (id) { return d.getElementById(id); };
-  var VERSAO_APP = '1.5.55';
+  var VERSAO_APP = '1.5.56';
 
   /* ------------------------------------------------------------------
      1. UTILIDADES
@@ -483,17 +483,48 @@
       /* "Fale agora…" aparece numa etiqueta própria: o tradutor automático da plataforma reescreve o placeholder */
       var fale = h('span', { class: 'voz-fale', 'aria-hidden': 'true', 'data-dgo-ignorar': '', texto: T('faleAgora') });
       caixa.appendChild(fale);
-      var rec = null, relogio = null, ouviu = false, local = false;
+      var rec = null, relogio = null, ouviu = false, local = false, somRec = false, somApp = false, medidor = null;
+      /* medidor do volume pelo microfone do site (o mesmo que o Claude e o Meet usam): mostra que o app está ouvindo
+         e separa "o Chrome ouve outro microfone" de "o Google não devolveu o texto" */
+      function pararMedidor() {
+        if (!medidor) return;
+        var m = medidor; medidor = null;
+        cancelAnimationFrame(m.q);
+        try { m.stream.getTracks().forEach(function (t) { t.stop(); }); } catch (e) {}
+        try { m.ctx.close(); } catch (e) {}
+        caixa.style.removeProperty('--nivel');
+      }
+      function ligarMedidor(stream) {
+        try {
+          var Ctx = window.AudioContext || window.webkitAudioContext; if (!Ctx) return;
+          var ctx = new Ctx(), an = ctx.createAnalyser(); an.fftSize = 512;
+          ctx.createMediaStreamSource(stream).connect(an);
+          var buf = new Uint8Array(an.fftSize), m = { stream: stream, ctx: ctx, q: 0 };
+          medidor = m;
+          (function passo() {
+            if (medidor !== m) return;
+            an.getByteTimeDomainData(buf);
+            var soma = 0; for (var i = 0; i < buf.length; i++) { var v = (buf[i] - 128) / 128; soma += v * v; }
+            var rms = Math.sqrt(soma / buf.length), nivel = Math.min(1, rms * 6);
+            if (nivel > .18) somApp = true;
+            caixa.style.setProperty('--nivel', nivel.toFixed(2));
+            m.q = requestAnimationFrame(passo);
+          })();
+        } catch (e) {}
+      }
       /* volta ao normal na hora (não espera o navegador avisar que terminou: no computador às vezes ele nunca avisa) */
       function soltar(msg, botao, acao) {
         var estava = !!rec;
         clearTimeout(relogio); relogio = null;
-        if (rec) { var r = rec; rec = null; r.onresult = r.onerror = r.onend = r.onspeechend = r.onspeechstart = r.onaudiostart = null; try { r.abort(); } catch (e) {} }
+        if (rec) { var r = rec; rec = null; r.onresult = r.onerror = r.onend = r.onspeechend = r.onspeechstart = r.onaudiostart = r.onsoundstart = null; try { r.abort(); } catch (e) {} }
+        pararMedidor();
         caixa.classList.remove('ouvindo'); bt.classList.remove('ouvindo'); bt.setAttribute('aria-pressed', 'false');
         if (msg && estava) avisar(T(msg), botao, acao, botao ? 12000 : 7000);
       }
       /* o serviço do navegador ouviu a fala e não devolveu o texto: oferece a voz no próprio aparelho, se houver */
       function semTexto(lang) {
+        /* o app ouviu som, mas o reconhecimento do Chrome não ouviu nada: ele está no microfone padrão do sistema, que é outro */
+        if (somApp && !somRec && !ouviu) { soltar('vozOutroMic'); return; }
         if (local) { soltar('vozLocalSemTexto'); return; }
         gravarVoz(VOZ_FALHOU, '1');
         soltar(null);
@@ -518,12 +549,16 @@
         if (lerVoz(VOZ_LOCAL) === 'sim' && lerVoz(VOZ_FALHOU)) {
           try { if ('processLocally' in rec) { rec.processLocally = true; local = true; } else if ('mode' in rec) { rec.mode = 'ondevice-only'; local = true; } } catch (e) {}
         }
-        ouviu = false;
+        ouviu = false; somRec = false; somApp = false;
         var base = c.value ? c.value.replace(/\s+$/, '') + ' ' : '';
         caixa.classList.add('ouvindo'); bt.classList.add('ouvindo'); bt.setAttribute('aria-pressed', 'true');
         /* no máximo 15 s ouvindo; depois que a pessoa para de falar, até 6 s para o texto chegar */
-        relogio = setTimeout(function () { if (ouviu) semTexto(lang); else soltar('naoOuvi'); }, 15000);
-        rec.onspeechstart = function () { ouviu = true; };
+        relogio = setTimeout(function () { if (ouviu || somApp) semTexto(lang); else soltar('naoOuvi'); }, 15000);
+        /* 7 s com o app ouvindo voz e o reconhecimento sem ouvir nada: não espera os 15 s para explicar */
+        var esteR = rec;
+        setTimeout(function () { if (rec === esteR && somApp && !somRec && !ouviu) semTexto(lang); }, 7000);
+        rec.onsoundstart = function () { somRec = true; };
+        rec.onspeechstart = function () { ouviu = true; somRec = true; };
         rec.onspeechend = function () { ouviu = true; clearTimeout(relogio); relogio = setTimeout(function () { semTexto(lang); }, 6000); };
         rec.onresult = function (e) {
           var r = e.results[e.results.length - 1]; if (!r || r.isFinal === false) return;
@@ -537,8 +572,27 @@
           if (e.error === 'language-not-supported' && local) { gravarVoz(VOZ_LOCAL, null); soltar('vozErro'); return; }
           soltar(e.error === 'not-allowed' || e.error === 'service-not-allowed' ? 'vozPermitir' : e.error === 'no-speech' ? 'naoOuvi' : e.error === 'audio-capture' ? 'vozSemMicrofone' : 'vozErro');
         };
-        rec.onend = function () { if (!rec) return; if (ouviu) semTexto(lang); else soltar('naoOuvi'); };
-        try { rec.start(); } catch (e) { soltar('vozErro'); }
+        rec.onend = function () { if (!rec) return; if (ouviu || somApp) semTexto(lang); else soltar('naoOuvi'); };
+        /* ouve pelo microfone escolhido para o site (o Chrome novo aceita a trilha no start; o antigo ignora e usa o padrão) */
+        var esteRec = rec;
+        function comecar(trilha) {
+          if (rec !== esteRec) return;
+          try { if (trilha) rec.start(trilha); else rec.start(); }
+          catch (e) { try { rec.start(); } catch (e2) { soltar('vozErro'); } }
+        }
+        /* só no computador: no celular o ditado já funciona e abrir o microfone duas vezes pode atrapalhar */
+        var celular = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent || '');
+        if (!celular && navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+          navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: true } }).then(function (st) {
+            if (rec !== esteRec) { st.getTracks().forEach(function (t) { t.stop(); }); return; }
+            ligarMedidor(st);
+            comecar(st.getAudioTracks()[0]);
+          }, function (err) {
+            if (err && (err.name === 'NotAllowedError' || err.name === 'SecurityError')) { soltar('vozPermitir'); return; }
+            if (err && err.name === 'NotFoundError') { soltar('vozSemMicrofone'); return; }
+            comecar(null);
+          });
+        } else comecar(null);
       });
     });
   }

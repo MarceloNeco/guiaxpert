@@ -2,6 +2,23 @@
   "app": "guiaxpert",
   "versoes": [
     {
+      "versao": "1.5.56",
+      "data": "2026-11-13",
+      "substitui": "1.5.55",
+      "itens": {
+        "pt": [
+          "Microfone no computador: o ditado passa a ouvir pelo mesmo microfone escolhido para o site (antes o Chrome podia usar o microfone padrão do Windows, que às vezes é outro).",
+          "Enquanto ouve, o anel do 🎤 cresce com a sua voz, mostrando que o som está chegando.",
+          "Se o app ouvir você e o reconhecimento do Chrome não, ele avisa em uns 7 segundos qual microfone ajustar."
+        ],
+        "en": [
+          "Desktop dictation now listens through the microphone chosen for the site.",
+          "The 🎤 ring grows with your voice while listening.",
+          "If the app hears you but Chrome's recognizer doesn't, it tells you which microphone to fix within ~7 seconds."
+        ]
+      }
+    },
+    {
       "versao": "1.5.55",
       "data": "2026-11-13",
       "substitui": "1.5.54",

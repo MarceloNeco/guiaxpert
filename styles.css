@@ -820,3 +820,5 @@ details.lugar[open] summary .resumo-desc { display: none; }
 .campo-voz.area .voz-fale { top: .85rem; transform: none; }
 .campo-voz.ouvindo > input::placeholder, .campo-voz.ouvindo > textarea::placeholder { color: transparent; }
 .campo-voz.ouvindo > input:placeholder-shown ~ .voz-fale, .campo-voz.ouvindo > textarea:placeholder-shown ~ .voz-fale { display: block; }
+/* nível do som enquanto ouve: o anel do 🎤 cresce com a voz (mostra que o app está ouvindo de verdade) */
+.campo-voz.ouvindo .bt-voz.ouvindo { animation: none; box-shadow: 0 0 0 calc(2px + var(--nivel, 0) * 10px) color-mix(in srgb, var(--evita) 30%, transparent); transition: box-shadow .08s linear; }

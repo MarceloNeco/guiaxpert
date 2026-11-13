@@ -170,6 +170,7 @@ window.TEXTOS = (function () {
     vozLocalInstalada: ['Pronto: a voz em português está neste computador.', 'Done: the voice is now on this computer.'],
     vozLocalNao: ['Não deu para instalar a voz neste navegador. Use o celular ou digite.', 'Couldn’t install the voice in this browser. Use your phone or type.'],
     vozLocalSemTexto: ['A voz do próprio computador também não entendeu. Fale mais perto do microfone ou digite.', 'The on-device voice didn’t understand either. Speak closer to the mic or type.'],
+    vozOutroMic: ['O app ouviu você, mas o reconhecimento de voz do Chrome está ouvindo outro microfone. Deixe o microfone certo como padrão do Windows (Configurações › Sistema › Som › Entrada) e tente de novo.', 'The app heard you, but Chrome’s speech recognition is listening to another microphone. Set the right one as the system default (Settings › System › Sound › Input) and try again.'],
     vozSemMicrofone: ['Não achei o microfone. Confira se ele está ligado e escolhido no navegador.', 'No microphone found. Check it is on and selected in the browser.'],
     vozSemResposta: ['O reconhecimento de voz deste navegador não devolveu o texto. Tente de novo ou digite. (No computador ele depende do serviço de voz do Google; no celular costuma funcionar melhor.)', 'This browser’s speech service didn’t return the text. Try again or type.'],
     procurandoLugar: ['Procurando "{q}" no mapa…', 'Looking for "{q}" on the map…'],
