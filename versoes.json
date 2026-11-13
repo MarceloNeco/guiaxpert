@@ -2,6 +2,21 @@
   "app": "guiaxpert",
   "versoes": [
     {
+      "versao": "1.5.59",
+      "data": "2026-11-13",
+      "substitui": "1.5.58",
+      "itens": {
+        "pt": [
+          "Microfone: cada tentativa de ditado manda ao servidor só os passos do reconhecimento de voz (nunca o que foi falado), para achar por que o texto não entra.",
+          "Microfone: o app não fica mais preso na voz do aparelho depois de uma falha; ela só é usada quando você escolhe e enquanto funcionar."
+        ],
+        "en": [
+          "Microphone: each dictation attempt sends only the recognition steps to the server (never what was said), to find why text doesn't arrive.",
+          "Microphone: the app no longer gets stuck on the on-device voice after a failure."
+        ]
+      }
+    },
+    {
       "versao": "1.5.58",
       "data": "2026-11-13",
       "substitui": "1.5.57",

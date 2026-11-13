@@ -12,7 +12,7 @@
 (function () {
   'use strict';
   var d = document, $ = function (id) { return d.getElementById(id); };
-  var VERSAO_APP = '1.5.58';
+  var VERSAO_APP = '1.5.59';
 
   /* ------------------------------------------------------------------
      1. UTILIDADES
@@ -821,6 +821,13 @@
     } catch (e) { return Promise.reject(e); }
     return Promise.resolve(false);
   }
+  /* manda ao servidor os passos de uma tentativa de ditado (nunca o texto falado): é como o dono vê por que não escreveu */
+  function enviarDiagVoz(dados) {
+    try {
+      if (!window.Conta || !Conta.sessao || !Conta.sessao()) return;
+      Conta.rpc('guiaxpert_diag_voz', { p_versao: VERSAO_APP, p_ua: (navigator.userAgent || '').slice(0, 300), p_dados: dados }).catch(function () {});
+    } catch (e) {}
+  }
   /* 🎤 Teste do microfone: mostra, passo a passo, o que o reconhecimento de voz do navegador faz.
      "Jeito do app" usa as mesmas opções do ditado dos campos; "Teste mínimo" usa o reconhecimento puro, com parciais.
      Se o mínimo funciona e o do app não, o defeito é do app; se nenhum funciona, é do navegador ou do serviço de voz. */
@@ -849,7 +856,7 @@
         }
       };
       r.onerror = function (e) { if (rec === r) anotar('error: ' + (e.error || '?') + (e.message ? ' (' + e.message + ')' : '')); };
-      r.onend = function () { if (rec === r) { anotar('end'); rec = null; } };
+      r.onend = function () { if (rec === r) { anotar('end'); rec = null; enviarDiagVoz({ origem: minimo ? 'teste-minimo' : 'teste-app', passos: linhas.map(function (l) { return l.replace(/"[^"]*"/g, '"…"'); }) }); } };
       try { r.start(); anotar('start()'); } catch (e) { anotar('start() falhou: ' + (e && e.name) + ' ' + (e && e.message)); }
     }
     var info = h('p', { class: 'pequeno', texto: [
@@ -882,7 +889,8 @@
       /* "Fale agora…" aparece numa etiqueta própria: o tradutor automático da plataforma reescreve o placeholder */
       var fale = h('span', { class: 'voz-fale', 'aria-hidden': 'true', 'data-dgo-ignorar': '', texto: T('faleAgora') });
       caixa.appendChild(fale);
-      var rec = null, relogio = null, ouviu = false, local = false, somRec = false, somApp = false, medidor = null;
+      var usarLocal = false, rec = null, relogio = null, ouviu = false, local = false, somRec = false, somApp = false, medidor = null, trilha = null, t0 = 0;
+      function passo(nome, extra) { if (trilha && trilha.length < 60) trilha.push(Math.round(Date.now() - t0) + ' ' + nome + (extra ? ' ' + extra : '')); }
       /* medidor do volume pelo microfone do site (o mesmo que o Claude e o Meet usam): mostra que o app está ouvindo
          e separa "o Chrome ouve outro microfone" de "o Google não devolveu o texto" */
       function pararMedidor() {
@@ -914,6 +922,7 @@
       /* volta ao normal na hora (não espera o navegador avisar que terminou: no computador às vezes ele nunca avisa) */
       function soltar(msg, botao, acao) {
         var estava = !!rec;
+        if (trilha) { passo('fim', msg || ''); enviarDiagVoz({ origem: 'campo', local: local, somApp: somApp, somRec: somRec, ouviu: ouviu, passos: trilha }); trilha = null; }
         clearTimeout(relogio); relogio = null;
         if (rec) { var r = rec; rec = null; r.onresult = r.onerror = r.onend = r.onspeechend = r.onspeechstart = r.onaudiostart = r.onsoundstart = null; try { r.abort(); } catch (e) {} }
         pararMedidor();
@@ -924,14 +933,14 @@
       function semTexto(lang) {
         /* o app ouviu som, mas o reconhecimento do Chrome não ouviu nada: ele está no microfone padrão do sistema, que é outro */
         if (somApp && !somRec && !ouviu) { soltar('vozOutroMic'); return; }
-        if (local) { soltar('vozLocalSemTexto'); return; }
+        if (local) { gravarVoz(VOZ_LOCAL, null); soltar('vozLocalSemTexto'); return; }
         gravarVoz(VOZ_FALHOU, '1');
         soltar(null);
         vozLocalEstado(lang).then(function (st) {
-          if (st === 'available') { gravarVoz(VOZ_LOCAL, 'sim'); avisar(T('vozLocalPronta'), T('vozTentar'), function () { bt.click(); }, 12000); }
+          if (st === 'available') avisar(T('vozLocalPronta'), T('vozTentar'), function () { usarLocal = true; bt.click(); }, 12000);
           else if (st === 'downloadable' || st === 'downloading') avisar(T('vozLocalOferta'), T('vozLocalBaixar'), function () {
             vozLocalInstalar(lang).then(function (ok) {
-              if (ok) { gravarVoz(VOZ_LOCAL, 'sim'); avisar(T('vozLocalInstalada'), T('vozTentar'), function () { bt.click(); }, 12000); }
+              if (ok) avisar(T('vozLocalInstalada'), T('vozTentar'), function () { usarLocal = true; bt.click(); }, 12000);
               else avisar(T('vozLocalNao'), null, null, 9000);
             }, function () { avisar(T('vozLocalNao'), null, null, 9000); });
           }, 15000);
@@ -945,9 +954,11 @@
         rec = new SR_VOZ(); rec.lang = lang; rec.interimResults = false; rec.continuous = false; rec.maxAlternatives = 1;
         /* se o serviço do Google já falhou neste aparelho e a voz local está instalada, usa a local */
         local = false;
-        if (lerVoz(VOZ_LOCAL) === 'sim' && lerVoz(VOZ_FALHOU)) {
+        if (usarLocal || lerVoz(VOZ_LOCAL) === 'funciona') {
           try { if ('processLocally' in rec) { rec.processLocally = true; local = true; } else if ('mode' in rec) { rec.mode = 'ondevice-only'; local = true; } } catch (e) {}
         }
+        usarLocal = false;
+        trilha = []; t0 = Date.now(); passo('inicio', (local ? 'local ' : '') + rec.lang);
         ouviu = false; somRec = false; somApp = false;
         var base = c.value ? c.value.replace(/\s+$/, '') + ' ' : '';
         caixa.classList.add('ouvindo'); bt.classList.add('ouvindo'); bt.setAttribute('aria-pressed', 'true');
@@ -956,37 +967,44 @@
         /* 7 s com o app ouvindo voz e o reconhecimento sem ouvir nada: não espera os 15 s para explicar */
         var esteR = rec;
         setTimeout(function () { if (rec === esteR && somApp && !somRec && !ouviu) semTexto(lang); }, 7000);
-        rec.onsoundstart = function () { somRec = true; };
-        rec.onspeechstart = function () { ouviu = true; somRec = true; };
-        rec.onspeechend = function () { ouviu = true; clearTimeout(relogio); relogio = setTimeout(function () { semTexto(lang); }, 6000); };
+        rec.onsoundstart = function () { somRec = true; passo('som'); };
+        rec.onspeechstart = function () { ouviu = true; somRec = true; passo('fala'); };
+        rec.onaudiostart = function () { passo('audio'); };
+        rec.onnomatch = function () { passo('nomatch'); };
+        rec.onspeechend = function () { passo('fimfala'); ouviu = true; clearTimeout(relogio); relogio = setTimeout(function () { semTexto(lang); }, 6000); };
         rec.onresult = function (e) {
-          var r = e.results[e.results.length - 1]; if (!r || r.isFinal === false) return;
+          var r = e.results[e.results.length - 1];
+          passo('resultado', 'n=' + e.results.length + ' final=' + (r && r.isFinal) + ' letras=' + (r && r[0] ? String(r[0].transcript || '').length : -1));
+          if (!r || r.isFinal === false) return;
           var t = semRepeticao(String(r[0].transcript || '').trim());
-          if (t) { c.value = (base + t).slice(0, +(c.getAttribute('maxlength') || 1000)); c.dispatchEvent(new Event('input', { bubbles: true })); if (!local) gravarVoz(VOZ_FALHOU, null); }
+          if (t) { c.value = (base + t).slice(0, +(c.getAttribute('maxlength') || 1000)); c.dispatchEvent(new Event('input', { bubbles: true })); if (local) gravarVoz(VOZ_LOCAL, 'funciona'); else gravarVoz(VOZ_FALHOU, null); }
           soltar(); c.focus();
         };
         rec.onerror = function (e) {
+          passo('erro', e.error + (e.message ? ' ' + String(e.message).slice(0, 80) : ''));
           if (e.error === 'aborted') { soltar(); return; }
           if (e.error === 'network' || (e.error === 'service-not-allowed' && ouviu)) { semTexto(lang); return; }
           if (e.error === 'language-not-supported' && local) { gravarVoz(VOZ_LOCAL, null); soltar('vozErro'); return; }
           soltar(e.error === 'not-allowed' || e.error === 'service-not-allowed' ? 'vozPermitir' : e.error === 'no-speech' ? 'naoOuvi' : e.error === 'audio-capture' ? 'vozSemMicrofone' : 'vozErro');
         };
-        rec.onend = function () { if (!rec) return; if (ouviu || somApp) semTexto(lang); else soltar('naoOuvi'); };
+        rec.onend = function () { passo('end'); if (!rec) return; if (ouviu || somApp) semTexto(lang); else soltar('naoOuvi'); };
         /* ouve pelo microfone escolhido para o site (o Chrome novo aceita a trilha no start; o antigo ignora e usa o padrão) */
         var esteRec = rec;
-        function comecar(trilha) {
+        function comecar(faixa) {
           if (rec !== esteRec) return;
-          try { if (trilha) rec.start(trilha); else rec.start(); }
-          catch (e) { try { rec.start(); } catch (e2) { soltar('vozErro'); } }
+          try { if (faixa) rec.start(faixa); else rec.start(); passo('start', faixa ? 'faixa' : ''); }
+          catch (e) { passo('start-falhou', e && e.name); try { rec.start(); } catch (e2) { soltar('vozErro'); } }
         }
         /* só no computador: no celular o ditado já funciona e abrir o microfone duas vezes pode atrapalhar */
         var celular = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent || '');
         if (!celular && navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
           navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: true } }).then(function (st) {
             if (rec !== esteRec) { st.getTracks().forEach(function (t) { t.stop(); }); return; }
+            passo('microfone-site', (st.getAudioTracks()[0] || {}).label ? 'com-nome' : 'ok');
             ligarMedidor(st);
             comecar(st.getAudioTracks()[0]);
           }, function (err) {
+            passo('microfone-site-erro', err && err.name);
             if (err && (err.name === 'NotAllowedError' || err.name === 'SecurityError')) { soltar('vozPermitir'); return; }
             /* sem acesso direto ao microfone: deixa o reconhecimento do navegador tentar do jeito dele */
             comecar(null);
