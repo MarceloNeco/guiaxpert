@@ -38,6 +38,9 @@ QR/código para outro celular, e-mail → reserva, família (membros, convites, 
 - ✅ 1.5.58 Hora e data: híbrido (atalhos + roda + relógio; lista de 15 min no computador) e calendário que pula para o ano + ida e volta (docs/superpowers/specs/2026-11-13-hora-e-data-design.md).
 - 🎤 Microfone: falha também no celular (relato do dono, 13/Nov). 1.5.57 trouxe Configurações › Testar o microfone; aguardando o resultado do teste para achar a causa.
 
+## 🔴 Reservas: QR do check-in (prioridade máxima, 19/Nov 17h)
+- Ver docs/RECADO-RESERVAS-2026-11-18.md: escanear não salva, falta enviar arquivo/colar imagem, QR redesenhado limpo; insumos no Drive.
+
 ## Testes pendentes para retomar (13/Nov/2026)
 - ✅ **Novidades:** reescritas curtas (regra no CLAUDE.md, 13/Nov).
 - **Microfone (ditado) ainda falha:** no teste pelo Claude in Chrome, tocar no 🎤 não trouxe o texto. Retomar com o relatório da regressão (texto exato do aviso, tempo, se destravou) e testar também no celular Android real.
