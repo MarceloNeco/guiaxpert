@@ -37,3 +37,15 @@ Inteligência esperada ao escanear, enviar arquivo ou colar:
 - ler o QR/código, **reconhecer a qual reserva pertence** (pelo localizador, voo, data, nome) e oferecer "Juntar ao voo LA1234 de 20/Nov (localizador ABC123)";
 - se houver mais de uma possível, perguntar qual; se não houver nenhuma, oferecer criar;
 - um QR por pessoa, mostrado limpo (redesenhado), pronto para o embarque, também sem internet.
+
+## Complemento 2 (18/Nov): todas as formas de carregar o QR, fluidas, no celular e no computador
+- **Câmera** do celular (e do computador), lendo foto de tela ou de papel.
+- **Enviar arquivo:** PDF, PNG, JPG, TXT e outros formatos comuns.
+- **Colar da área de transferência:** ex. "Copiar" uma foto no WhatsApp e colar dentro do GuiaXpert; **mostrar a imagem colada** antes de ler.
+- Testar cada forma nas versões de **celular e de computador**.
+
+## Complemento 3 (18/Nov): o que é a entrada "E-mail" — esclarecer e explorar
+- Hoje não está claro se é só **colar o corpo do e-mail**. Precisa de explicação na tela.
+- **Colar o texto, sem IA:** reconhecer por regras os elementos (localizador, número do voo, datas e horários, aeroportos, nomes, códigos de bilhete/e-ticket) e propor completar a reserva certa.
+- **Encaminhar o e-mail** para um endereço da SolverONE (ex.: roteiro@solverone.com.br), que lê o e-mail e os anexos e pendura na viagem — já está no ROADMAP como E1 (crítico); entra junto nesta análise.
+- **PDF com senha:** improvável em viagem, mas prever o aviso ("este PDF pede senha") em vez de falhar calado.
