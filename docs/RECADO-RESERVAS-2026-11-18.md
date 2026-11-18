@@ -24,3 +24,16 @@ Insumos no Drive: https://drive.google.com/drive/folders/14hhTlMXtLo9qWZiyoHMdrt
 
 ## Para a quinta
 Baixar os 8 arquivos do Drive, testar escanear (as 4 fotos), enviar arquivo e colar (os 4 prints) no app, nos dois aparelhos (celular e computador), achar a causa do "fecha a câmera e não salva" e corrigir tudo acima, com teste intenso antes de publicar.
+
+## Complemento do dono (18/Nov): a jornada da reserva, por etapas — pilar do app
+As reservas da viagem **já existiam**; o que falta é **atualizar a reserva existente** quando chega o artefato final (QR, código de barras, o que for), mais perto da data. Não adianta escanear se o app não sabe **onde** pôr.
+
+Reconstruir a jornada (e desenhar isso antes de codar, com os passos do cadastro):
+1. **Planejar:** a viagem nasce sem passagem — só a data de ida (sem horário) e as preferências.
+2. **Comprar:** chega o e-ticket com o **localizador** (e horário, voo, assentos) → completa a reserva que já existe.
+3. **Check-in / embarque:** perto da data chegam os **QR/códigos de barras** (um por pessoa) → **penduram na reserva existente** (no voo daquele localizador), não criam outra.
+
+Inteligência esperada ao escanear, enviar arquivo ou colar:
+- ler o QR/código, **reconhecer a qual reserva pertence** (pelo localizador, voo, data, nome) e oferecer "Juntar ao voo LA1234 de 20/Nov (localizador ABC123)";
+- se houver mais de uma possível, perguntar qual; se não houver nenhuma, oferecer criar;
+- um QR por pessoa, mostrado limpo (redesenhado), pronto para o embarque, também sem internet.
