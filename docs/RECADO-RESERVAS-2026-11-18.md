@@ -49,3 +49,7 @@ Inteligência esperada ao escanear, enviar arquivo ou colar:
 - **Colar o texto, sem IA:** reconhecer por regras os elementos (localizador, número do voo, datas e horários, aeroportos, nomes, códigos de bilhete/e-ticket) e propor completar a reserva certa.
 - **Encaminhar o e-mail** para um endereço da SolverONE (ex.: roteiro@solverone.com.br), que lê o e-mail e os anexos e pendura na viagem — já está no ROADMAP como E1 (crítico); entra junto nesta análise.
 - **PDF com senha:** improvável em viagem, mas prever o aviso ("este PDF pede senha") em vez de falhar calado.
+- **O robô do e-mail abre os anexos e os links** (confirmado com o dono em 18/Nov), desde que não peçam senha:
+  - anexos: PDF, imagens (PNG/JPG), .pkpass (Apple Wallet), .ics (convite de calendário), TXT/HTML — procura QR, código de barras e dados da reserva;
+  - links no corpo: só de sites conhecidos (companhias aéreas, hotéis, locadoras, ingressos), só para ler, sem clicar em "confirmar/cancelar"; se o link pedir login, avisa e pede o print ou o PDF;
+  - arquivo ou link com senha: avisa "pede senha" em vez de falhar calado.
