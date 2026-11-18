@@ -10,6 +10,11 @@ A Definition of done da plataforma SolverONE passa a ter 12 pontos: manual e ori
   3. nada de integração nova sem a regra zero.
 
 ## Regras permanentes do app
+- **Idioma** (diretriz geral do dono, 14/Nov/2026): textos para o usuário em PT (Brasil), EN (EUA) e ES (Espanha), tradução
+  humanizada; um seletor só em todo lugar, bandeira em SVG + sigla (PT · EN · ES), componente do módulo comum, nunca emoji nem botão
+  próprio; cópia mestra das bandeiras em `bandeiras/` do RootifyONE (flag-icons, MIT), copiada inteira e posta no `sw.js`; ES só quando
+  o app inteiro estiver traduzido (até lá, PT e EN). Detalhe: diretriz geral do `rootify-one`, seção "Idioma e datas". Nada
+  implementado aqui ainda: entra na ordem combinada com o dono (regra zero).
 - Toda solução funciona sem IA (regras, dados abertos, links oficiais); IA é só opcional.
 - Nunca publicar dado pessoal (CPF, códigos de reserva, PINs) em repositório ou pacote público. No código só a chave publicável do Supabase.
 - Chaves de serviço só no Supabase Vault (tela Configurações → Chaves do serviço); nunca no chat, no código ou no Drive.
