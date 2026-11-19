@@ -105,7 +105,15 @@
       }
 
       /* ---- painel ---- */
-      function estadoPainel(e) { painel.setAttribute('data-estado', e); alca.setAttribute('aria-label', e === 'resumo' ? T('abrirLista') : T('fecharLista')); }
+      /* a lista nunca sobe por cima da busca (com o teclado aberto a tela encolhe e ela tampava o que se digita) */
+      function limitarPainel() {
+        var r = tela.getBoundingClientRect(), tb = topo.getBoundingClientRect().bottom;
+        if (r.height) painel.style.maxHeight = Math.max(90, Math.round(r.bottom - tb - 6)) + 'px';
+      }
+      window.addEventListener('resize', limitarPainel);
+      if (window.visualViewport) window.visualViewport.addEventListener('resize', limitarPainel);
+      setTimeout(limitarPainel, 0);
+      function estadoPainel(e) { limitarPainel(); painel.setAttribute('data-estado', e); alca.setAttribute('aria-label', e === 'resumo' ? T('abrirLista') : T('fecharLista')); }
       alca.addEventListener('click', function () { var e = painel.getAttribute('data-estado'); if (e === 'resumo' && escolhido) { abrirLugar(escolhido); return; } estadoPainel(e === 'resumo' ? 'lista' : 'resumo'); if (e === 'cartao') mostrarLista(); });
       /* arrastar a alça (toque) */
       var y0 = null;
@@ -122,7 +130,8 @@
         resumo.textContent = '';
         if (escolhido) {
           /* ficha recolhida: o lugar escolhido continua à vista (nome + abrir de novo) */
-          resumo.appendChild(h('button', { class: 'escolhido-peek', type: 'button', onclick: function () { abrirLugar(escolhido); } }, [h('span', { class: 'bolinha', style: 'background:' + corDe(escolhido) }), h('b', { texto: escolhido.nome }), h('span', { class: 'pequeno', texto: T('abrirFicha') })]));
+          resumo.appendChild(h('button', { class: 'escolhido-peek', type: 'button', onclick: function () { abrirLugar(escolhido); } }, [h('span', { class: 'bolinha', style: 'background:' + corDe(escolhido) }),
+            h('span', { class: 'peek-txt' }, [h('b', { texto: escolhido.nome }), h('span', { class: 'pequeno', texto: T('abrirFicha') })])]));
           resumo.appendChild(h('button', { class: 'ic', type: 'button', 'aria-label': T('fechar'), texto: '✕', onclick: function () { escolhido = null; desenharMapa(); mostrarLista(); } }));
         } else {
           resumo.appendChild(h('b', { texto: itens.length === 1 ? T('nLugar') : T('nLugares', { n: itens.length }) }));
@@ -153,7 +162,9 @@
         }
         /* não achou aqui? procura na internet pelo nome ou endereço (só quando a pessoa toca) */
         var q = (estado.busca || '').trim();
-        if (q.length >= 3 && op.buscarFora) {
+        if (q.length >= 3 && op.buscarFora && !navigator.onLine) {
+          corpo.appendChild(h('p', { class: 'sub busca-offline', style: 'margin:.6rem 1rem', texto: T(itens.length ? 'buscaOfflineAlgum' : 'buscaOfflineNada', { q: q }) }));
+        } else if (q.length >= 3 && op.buscarFora) {
           var bf = h('button', { class: 'bt sec', type: 'button', style: 'margin:.5rem 1rem', texto: '🔎 ' + T('buscarNaInternet', { q: q }) });
           ultimoBf = bf;
           bf.addEventListener('click', function () {
@@ -298,6 +309,7 @@
       }
       function centrarEmMim() { if (mapa && estado.pos) mapa.setView([estado.pos.lat, estado.pos.lng], Math.max(mapa.getZoom(), 14)); }
       campo.addEventListener('input', function () { estado.busca = campo.value; redesenhar(); if (campo.value) estadoPainel('lista'); });
+      campo.addEventListener('focus', function () { setTimeout(limitarPainel, 300); setTimeout(limitarPainel, 700); });
       /* Enter: com algo no mapa, abre a lista; sem nada, vai até o lugar (cidade, estado, país) no Explorar ou procura na internet */
       function procurarFora() { if (!ultimoBf) return; ultimoBf.hidden = false; estadoPainel('lista'); if (!ultimoBf.disabled) ultimoBf.click(); }
       campo.addEventListener('keydown', function (e) {

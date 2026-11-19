@@ -739,6 +739,8 @@ window.TEXTOS = (function () {
     lk_p2: ['No arquivo baixado: Compartilhar → GuiaXpert. Ou aqui: "QR / cartão" → Arquivo.', 'On the downloaded file: Share → GuiaXpert. Or here: "QR / pass" → File.'],
     lk_p3: ['O app lê o QR e junta na reserva certa.', 'The app reads the QR and links it to the right booking.'],
     lk_abrir: ['Abrir o link', 'Open the link'],
+    buscaOfflineNada: ['Sem internet: procurei "{q}" só nos lugares guardados do guia e não achei. Com sinal, dá para procurar na internet.', 'Offline: I searched "{q}" only in the guide’s saved places and found nothing. With signal you can search online.'],
+    buscaOfflineAlgum: ['Sem internet: estes são os lugares guardados do guia. Com sinal, dá para procurar mais na internet.', 'Offline: these are the guide’s saved places. With signal you can search more online.'],
     cat_endereco: ['Endereço', 'Address'], cat_hotel: ['Hospedagem', 'Lodging'], hotelDatas: ['Sua hospedagem de {de} a {ate}.', 'Your stay from {de} to {ate}.'],
     hotelAjustar: ['Ajustar o ponto do hotel', 'Adjust the hotel pin'], hotelPeloEndereco: ['Ponto achado pelo endereço da reserva. Se estiver errado, ajuste acima.', 'Pin found from the booking address. If it’s wrong, adjust it above.'],
     hotelMarcado: ['Ponto marcado por você.', 'Pin set by you.'], legHotel: ['hotel', 'hotel'], legRoteiro: ['roteiro do dia, na ordem', 'today’s plan, in order'], legGuardado: ['guardados', 'saved'], legOutros: ['outros', 'others'], nDoDia: ['{n}º do dia · {h}', 'Stop {n} of the day · {h}'], legendaNumeros: ['1, 2, 3… = ordem do roteiro do dia', '1, 2, 3… = order of the day’s plan'],

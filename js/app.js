@@ -12,7 +12,7 @@
 (function () {
   'use strict';
   var d = document, $ = function (id) { return d.getElementById(id); };
-  var VERSAO_APP = '1.5.73';
+  var VERSAO_APP = '1.5.74';
 
   /* ------------------------------------------------------------------
      1. UTILIDADES
@@ -1801,7 +1801,10 @@
     var f = $('gx-sem-sinal');
     if (navigator.onLine) { if (f) f.remove(); return; }
     if (f) return;
-    d.body.appendChild(h('div', { id: 'gx-sem-sinal', class: 'faixa-sem-sinal', role: 'status', texto: T('si_semSinalAgora') }));
+    var fx = h('div', { id: 'gx-sem-sinal', class: 'faixa-sem-sinal', role: 'status', texto: T('si_semSinalAgora') });
+    d.body.appendChild(fx);
+    /* aviso rápido: some em 5 s para não tampar a busca do mapa (o cartão do Hoje e a busca continuam dizendo) */
+    setTimeout(function () { fx.classList.add('saindo'); setTimeout(function () { fx.remove(); }, 400); }, 5000);
   }
   window.addEventListener('online', faixaSemSinal); window.addEventListener('offline', faixaSemSinal);
   setTimeout(faixaSemSinal, 1500);
