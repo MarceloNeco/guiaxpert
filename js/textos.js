@@ -692,8 +692,11 @@ window.TEXTOS = (function () {
     pendentesNuvem: ['{n} mudanças guardadas para a nuvem (quando ligada)', '{n} changes saved for the cloud (when enabled)'],
     /* pacote de usabilidade no celular (19/Nov/2026) */
     /* QR e cartão de embarque (19/Nov/2026) */
+    cod_coladoTexto: ['O que está copiado no celular é texto, não uma imagem:', 'What’s copied on your phone is text, not an image:'],
+    cod_colarComo: ['No Android, o WhatsApp não copia fotos. Use "Arquivo" e escolha a foto do QR, ou na foto: ⋮ → Compartilhar → GuiaXpert. "Colar" serve para imagem copiada no computador ou no iPhone.', 'On Android, WhatsApp can’t copy photos. Use "File" and pick the QR photo, or on the photo: ⋮ → Share → GuiaXpert. "Paste" works for images copied on a computer or iPhone.'],
+    cod_escolherFoto: ['Escolher a foto do QR', 'Choose the QR photo'],
     cod_titulo: ['QR ou cartão de embarque', 'QR or boarding pass'], cod_tituloAlvo: ['Pôr o QR nesta reserva', 'Add the QR to this booking'],
-    cod_texto: ['Use a câmera, um arquivo (foto, print ou PDF) ou cole uma imagem copiada, por exemplo do WhatsApp. O app lê o código, redesenha limpo e guarda na reserva certa. Depois funciona sem internet.', 'Use the camera, a file (photo, screenshot or PDF) or paste a copied image, e.g. from WhatsApp. The app reads the code, redraws it cleanly and saves it to the right booking. Works offline afterwards.'],
+    cod_texto: ['Câmera: aponte para o QR. Arquivo: escolha a foto, o print ou o PDF do cartão (fotos do WhatsApp ficam na galeria). Colar: imagem copiada no computador. O app lê o código, redesenha limpo e guarda na reserva certa; depois funciona sem internet.', 'Camera: point at the QR. File: pick the photo, screenshot or PDF of the pass (WhatsApp photos are in the gallery). Paste: an image copied on a computer. The app reads the code, redraws it cleanly and saves it to the right booking; works offline afterwards.'],
     cod_textoAlvo: ['O código lido vai para: {r}.', 'The code will go to: {r}.'],
     cod_camera: ['Câmera', 'Camera'], cod_arquivo: ['Arquivo', 'File'], cod_colar: ['Colar', 'Paste'], cod_previa: ['Imagem lida', 'Image read'],
     cod_colarAqui: ['Toque e segure aqui e escolha Colar', 'Press and hold here and choose Paste'], cod_colarDica: ['Toque e segure na caixa e escolha Colar (ou Ctrl+V no computador).', 'Press and hold the box and choose Paste (or Ctrl+V on a computer).'],

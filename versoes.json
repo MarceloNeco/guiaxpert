@@ -2,6 +2,21 @@
   "app": "guiaxpert",
   "versoes": [
     {
+      "versao": "1.5.70",
+      "data": "2026-11-19",
+      "substitui": "1.5.69",
+      "itens": {
+        "pt": [
+          "Melhorias no botão Colar das reservas.",
+          "Correção no fechar das janelas."
+        ],
+        "en": [
+          "Improvements to Paste in bookings.",
+          "Fix for closing windows."
+        ]
+      }
+    },
+    {
       "versao": "1.5.69",
       "data": "2026-11-19",
       "substitui": "1.5.68",

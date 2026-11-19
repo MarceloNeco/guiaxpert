@@ -12,7 +12,7 @@
 (function () {
   'use strict';
   var d = document, $ = function (id) { return d.getElementById(id); };
-  var VERSAO_APP = '1.5.69';
+  var VERSAO_APP = '1.5.70';
 
   /* ------------------------------------------------------------------
      1. UTILIDADES
@@ -4175,10 +4175,18 @@
         resultado(todos, 'arquivo');
       }).catch(function () { msg.className = 'cod-msg erro'; msg.textContent = T('cod_nada'); });
     }
-    function oferecerTexto(t) {
-      msg.className = 'cod-msg'; msg.textContent = T('cod_soTexto');
+    /* veio texto em vez de imagem: mostra O QUE veio (a pessoa entende) e o caminho certo; e-mail comprido ainda pode ser lido */
+    function oferecerTexto(t, doColar) {
+      var curto = String(t).replace(/\s+/g, ' ').trim();
+      msg.className = 'cod-msg'; msg.textContent = '';
       lista.textContent = '';
-      lista.appendChild(h('button', { class: 'bt', type: 'button', texto: '✉ ' + T('cod_lerComoEmail'), onclick: function () { j.fechar(function () { janelaImportar(t); }); } }));
+      lista.appendChild(h('div', { class: 'cod-aviso' }, [
+        h('b', { texto: T(doColar ? 'cod_coladoTexto' : 'cod_soTexto') }),
+        h('span', { class: 'cod-trecho', texto: '“' + curto.slice(0, 90) + (curto.length > 90 ? '…' : '') + '”' }),
+        doColar ? h('span', { class: 'pequeno', texto: T('cod_colarComo') }) : null]));
+      if (linkDeDocumento(t)) lista.appendChild(h('button', { class: 'bt sec', type: 'button', texto: T('lk_titulo'), onclick: function () { j.fechar(function () { janelaSoLink(t); }); } }));
+      if (curto.length > 120) lista.appendChild(h('button', { class: doColar ? 'bt leve' : 'bt', type: 'button', texto: '✉ ' + T('cod_lerComoEmail'), onclick: function () { j.fechar(function () { janelaImportar(t); }); } }));
+      if (doColar) lista.appendChild(h('button', { class: 'bt', type: 'button', texto: T('cod_escolherFoto'), onclick: function () { arq.click(); } }));
     }
     function aoColar(e) {
       var cd = e.clipboardData; if (!cd) return;
@@ -4188,7 +4196,7 @@
       var t = cd.getData('text/plain');
       if (t && (e.target === colarAqui || e.target === corpo || !/^(INPUT|TEXTAREA)$/.test(e.target.tagName || ''))) {
         e.preventDefault(); colarAqui.hidden = true;
-        if (/^M[1-4][A-Z\/ ]{10,}/.test(t.trim())) resultado([{ texto: t.trim(), formato: 'texto' }], 'texto'); else oferecerTexto(t);
+        if (/^M[1-4][A-Z\/ ]{10,}/.test(t.trim())) resultado([{ texto: t.trim(), formato: 'texto' }], 'texto'); else oferecerTexto(t, true);
       }
     }
     d.addEventListener('paste', aoColar);
@@ -4203,7 +4211,7 @@
         itens.forEach(function (it) { var tp = it.types.filter(function (x) { return /^image\//.test(x); })[0]; if (tp) ps.push(it.getType(tp).then(function (b) { return new File([b], 'colado.' + tp.split('/')[1], { type: tp }); })); });
         if (ps.length) return Promise.all(ps).then(lerArquivos);
         var tx = itens.filter(function (it) { return it.types.indexOf('text/plain') > -1; })[0];
-        if (tx) return tx.getType('text/plain').then(function (b) { return b.text(); }).then(function (t) { if (/^M[1-4][A-Z\/ ]{10,}/.test(t.trim())) resultado([{ texto: t.trim(), formato: 'texto' }], 'texto'); else if (t.trim()) oferecerTexto(t); else mostrarCaixa(); });
+        if (tx) return tx.getType('text/plain').then(function (b) { return b.text(); }).then(function (t) { if (/^M[1-4][A-Z\/ ]{10,}/.test(t.trim())) resultado([{ texto: t.trim(), formato: 'texto' }], 'texto'); else if (t.trim()) oferecerTexto(t, true); else mostrarCaixa(); });
         mostrarCaixa();
       }).catch(mostrarCaixa);
     });
