@@ -2,6 +2,19 @@
   "app": "guiaxpert",
   "versoes": [
     {
+      "versao": "1.5.73",
+      "data": "2026-11-19",
+      "substitui": "1.5.72",
+      "itens": {
+        "pt": [
+          "Melhorias na explicação do uso sem internet."
+        ],
+        "en": [
+          "Clearer offline explanation."
+        ]
+      }
+    },
+    {
       "versao": "1.5.72",
       "data": "2026-11-19",
       "substitui": "1.5.71",

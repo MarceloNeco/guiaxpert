@@ -12,7 +12,7 @@
 (function () {
   'use strict';
   var d = document, $ = function (id) { return d.getElementById(id); };
-  var VERSAO_APP = '1.5.72';
+  var VERSAO_APP = '1.5.73';
 
   /* ------------------------------------------------------------------
      1. UTILIDADES
@@ -1775,7 +1775,10 @@
           var det = x.k === 'mapa' && x.mb ? x.mb + ' MB' : x.k === 'guia' && x.n ? T('si_nLugares', { n: x.n }) : x.k === 'reservas' && x.n ? T('si_nReservas', { n: x.n }) : x.k === 'tempo' && x.em ? T('si_tempoEm', { d: fData(new Date(x.em).toISOString().slice(0, 10), true), h: horaCurta(x.em) }) : '';
           return h('li', { class: x.ok ? 'ok' : 'falta' }, [h('span', { class: 'si-marca', 'aria-hidden': 'true', texto: x.ok ? '✓' : '✗' }), h('span', { texto: nome(x) + (x.ok ? '' : ' — ' + T('si_naoGuardado')) }), det ? h('small', { texto: det }) : null]);
         }));
-        var det = h('details', { class: 'si-det' }, [h('summary', { texto: T('si_verLista') }), lista, h('p', { class: 'pequeno', texto: T('si_como') })]);
+        /* instalar ≠ funcionar sem internet: deixa isso escrito (dúvida do dono, 19/Nov) */
+        var instalado = (window.matchMedia && matchMedia('(display-mode: standalone)').matches) || navigator.standalone === true;
+        var det = h('details', { class: 'si-det' }, [h('summary', { texto: T('si_verLista') }), lista, h('p', { class: 'pequeno', texto: T('si_como') }),
+          h('p', { class: 'pequeno si-instalar', texto: T(instalado ? 'si_instalado' : 'si_naoInstalado') })]);
         if (!tudo) det.open = true;
         c.appendChild(det);
         var prog = h('div', { class: 'progresso', hidden: true }, h('i', { style: 'width:0%' }));
