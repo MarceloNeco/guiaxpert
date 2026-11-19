@@ -2,6 +2,19 @@
   "app": "guiaxpert",
   "versoes": [
     {
+      "versao": "1.5.72",
+      "data": "2026-11-19",
+      "substitui": "1.5.71",
+      "itens": {
+        "pt": [
+          "Novo: ingresso comprado confirma o roteiro."
+        ],
+        "en": [
+          "New: bought tickets confirm the plan."
+        ]
+      }
+    },
+    {
       "versao": "1.5.71",
       "data": "2026-11-19",
       "substitui": "1.5.70",

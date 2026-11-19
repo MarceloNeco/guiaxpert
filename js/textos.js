@@ -695,6 +695,7 @@ window.TEXTOS = (function () {
     cod_coladoTexto: ['O que está copiado no celular é texto, não uma imagem:', 'What’s copied on your phone is text, not an image:'],
     cod_colarComo: ['No Android, o WhatsApp não copia fotos. Use "Arquivo" e escolha a foto do QR, ou na foto: ⋮ → Compartilhar → GuiaXpert. "Colar" serve para imagem copiada no computador ou no iPhone.', 'On Android, WhatsApp can’t copy photos. Use "File" and pick the QR photo, or on the photo: ⋮ → Share → GuiaXpert. "Paste" works for images copied on a computer or iPhone.'],
     cod_escolherFoto: ['Escolher a foto do QR', 'Choose the QR photo'],
+    res_confirmadoRoteiro: ['✓ {t} confirmado no roteiro de {d}', '✓ {t} confirmed in the plan for {d}'],
     cod_cupom: ['Cupom: {t}', 'Coupon: {t}'], cod_brinde: ['brinde', 'gift'], cod_validoAte: ['válido até {d}', 'valid until {d}'],
     cod_guardarCupom: ['Guardar o cupom', 'Save the coupon'], cod_criarIngressoDe: ['Guardar ingresso: {t}', 'Save ticket: {t}'],
     cod_titulo: ['QR ou cartão de embarque', 'QR or boarding pass'], cod_tituloAlvo: ['Pôr o QR nesta reserva', 'Add the QR to this booking'],

@@ -12,7 +12,7 @@
 (function () {
   'use strict';
   var d = document, $ = function (id) { return d.getElementById(id); };
-  var VERSAO_APP = '1.5.71';
+  var VERSAO_APP = '1.5.72';
 
   /* ------------------------------------------------------------------
      1. UTILIDADES
@@ -3961,6 +3961,40 @@
   }
   /* câmera: lê o QR de um ingresso e já abre a reserva com o código preenchido */
   function escanearIngresso() { janelaCodigos({}); }
+  /* ingresso ou passagem COMPRADOS = programa decidido (pedido do dono, 19/Nov): o item igual no roteiro daquele dia vira
+     confirmado ✓ e deixa de ser alternativa; sem item igual, a própria reserva já aparece no roteiro como compromisso fixo 🔒 */
+  var confirmados = {};
+  function confirmarNoRoteiro(c) {
+    var v = estado.viagem, o = estado.opcao, data = String(c && c.quando || '').slice(0, 10);
+    if (!v || !o || !data || !(c.tipo === 'ingresso' || c.tipo === 'voo' || c.tipo === 'passeio') || !podeEditar()) return Promise.resolve(null);
+    var dias = diasDaViagem(v), di = dias.indexOf(data); if (di < 0) return Promise.resolve(null);
+    var dm = o.dias[mapearDia(di, dias.length, o.dias.length)]; if (!dm) return Promise.resolve(null);
+    var ch = normalizar(c.titulo || '').split(/\s+/).filter(function (w) { return w.length >= 4 && ['parque', 'bilhete', 'ingresso', 'passeio', 'entrada', 'adulto', 'crianca'].indexOf(w) < 0; });
+    var idx = -1;
+    (dm.itens || []).some(function (x, k) {
+      var t = normalizar((x.titulo || '') + ' ' + (x.lugarId ? (lugarPorId(x.lugarId) || {}).nome || '' : ''));
+      var bate = c.tipo === 'voo' ? /\bvoo\b|aeroporto|embarque/.test(t) : ch.some(function (w) { return t.indexOf(w) > -1; });
+      if (bate) idx = k; return bate;
+    });
+    if (idx < 0) return Promise.resolve(null);
+    var it = dm.itens[idx], chave = o.id + '|' + data + '|' + idx;
+    if (confirmados[chave] || (it.estado === 'confirmado' && !it.alt)) return Promise.resolve(null);
+    confirmados[chave] = 1;
+    var hora = String(c.quando).slice(11, 16);
+    var eraAlt = !!it.alt, horaAlt = it.hora;
+    return mudarItem(o, dm, idx, function (item) { item.estado = 'confirmado'; item.alt = undefined; if (!item.hora && hora) item.hora = hora; })
+      .then(function (alvo) {
+        /* era uma alternativa: as outras do mesmo horário deixam de ser "escolha uma" (já foi escolhido); viram programas comuns
+           e o roteiro mostra o aviso de mesmo horário, para a pessoa tirar ou mudar a hora. Nada é apagado. */
+        if (!eraAlt || !alvo || !alvo.dias) return;
+        var dd = alvo.dias[o.dias.indexOf(dm)], mexeu = false;
+        (dd && dd.itens || []).forEach(function (x, k) { if (k !== idx && x.alt && x.hora === horaAlt) { x.alt = undefined; mexeu = true; } });
+        return mexeu ? Banco.gravar('roteiros', alvo) : null;
+      })
+      .then(function () { return carregarViagem(v.id); })
+      .then(function () { avisar(T('res_confirmadoRoteiro', { t: it.titulo, d: semana(data) + ' ' + fData(data, true) })); return true; })
+      .catch(function () { delete confirmados[chave]; return null; });
+  }
   function horaNoRoteiro(titulo, data) {
     var v = estado.viagem, o = estado.opcao; if (!v || !o) return null;
     var dias = diasDaViagem(v), di = dias.indexOf(data); if (di < 0) return null;
@@ -4104,14 +4138,14 @@
       if (!c.quando && i.data) c.quando = i.data;
       var reg = x.reg;
       if (!reg.agenda && c.quando) reg.agenda = { titulo: c.titulo, quando: c.quando, local: c.local || null };
-      return gravar(reg, c).then(function () { return c; });
+      return gravar(reg, c).then(function () { confirmarNoRoteiro(c); return c; });
     }
     if (escolha.irmao) {
       var b = escolha.irmao, ag = Object.assign({}, b.reg.agenda || { titulo: b.c.titulo, quando: b.c.quando || i.data || '', local: b.c.local || null });
       var grupo = ag.grupo || ('g-' + b.reg.id);
       var antes = b.reg.agenda && b.reg.agenda.grupo ? Promise.resolve() : (b.reg.agenda = Object.assign({}, ag, { grupo: grupo }), Banco.gravar('reservas', b.reg));
       var dados = Object.assign({}, b.c, { titulo: semPessoa(b.c.titulo, b.c.pessoa), qr: i.qr, barra: '', barraFormato: '', pessoa: i.pessoa || '', assento: i.assento || '', codigo: i.localizador || b.c.codigo || '', nota: '' });
-      return antes.then(function () { return gravar({ viagem_id: vid, agenda: Object.assign({}, ag, { grupo: grupo }) }, dados); }).then(function () { return dados; });
+      return antes.then(function () { return gravar({ viagem_id: vid, agenda: Object.assign({}, ag, { grupo: grupo }) }, dados); }).then(function () { confirmarNoRoteiro(dados); return dados; });
     }
     var titulo = i.tipo === 'voo' ? T('cod_tituloVoo', { cia: CIAS[i.cia] || i.cia, voo: i.voo, de: i.de, para: i.para }) : (i.titulo || T('res_ingresso'));
     var nota = [i.detalhe, i.tipo !== 'voo' && i.localizador ? T('cod_reserva', { r: i.localizador }) : null, i.nota].filter(Boolean).join(' · ');
@@ -4121,7 +4155,7 @@
     var novo = { tipo: i.tipo, titulo: titulo, quando: quando, codigo: extra.codigo || '', local: '', nota: nota, pessoa: i.pessoa || extra.pessoa || '', assento: extra.assento || '', qr: i.qr };
     var g = i.tipo === 'voo' ? 'v-' + i.cia + i.voo + '-' + (i.data || '') : i.tipo === 'ingresso' && i.titulo ? 'i-' + normalizar(i.localizador || i.titulo).slice(0, 30) + '-' + (i.data || '') : null;
     return gravar({ viagem_id: vid, marca: novo.codigo ? 'cod:' + novo.codigo + (novo.pessoa ? '|' + normalizar(novo.pessoa) : '') : null,
-      agenda: novo.quando ? { titulo: titulo, quando: novo.quando, local: null, grupo: g } : null }, novo).then(function () { return novo; });
+      agenda: novo.quando ? { titulo: titulo, quando: novo.quando, local: null, grupo: g } : null }, novo).then(function () { confirmarNoRoteiro(novo); return novo; });
   }
   /* decisão padrão para um código, olhando as reservas de agora (relê depois de cada gravação: duas pessoas não caem na mesma) */
   function decidir(i) {
@@ -4330,7 +4364,7 @@
         /* título, data e local ficam abertos para o roteiro mostrar o compromisso fixo 🔒 sem pedir o PIN */
         reg.agenda = dados.quando ? Object.assign({}, reg.agenda || {}, { titulo: dados.titulo, quando: dados.quando, local: dados.local || null }) : null;
         return Banco.gravar('reservas', reg);
-      }).then(function () { j.fechar(); avisar(T('salvo')); mostrar('reservas'); }).catch(function () { avisar(T('cofreFechou')); j.fechar(); mostrar('reservas'); });
+      }).then(function () { j.fechar(); avisar(T('salvo')); confirmarNoRoteiro(dados); mostrar('reservas'); }).catch(function () { avisar(T('cofreFechou')); j.fechar(); mostrar('reservas'); });
     });
     if (apagar) apagar.addEventListener('click', function () { Banco.apagar('reservas', x.reg.id).then(function () { j.fechar(); mostrar('reservas'); }); });
   }
