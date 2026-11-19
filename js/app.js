@@ -12,7 +12,7 @@
 (function () {
   'use strict';
   var d = document, $ = function (id) { return d.getElementById(id); };
-  var VERSAO_APP = '1.5.70';
+  var VERSAO_APP = '1.5.71';
 
   /* ------------------------------------------------------------------
      1. UTILIDADES
@@ -3961,6 +3961,14 @@
   }
   /* câmera: lê o QR de um ingresso e já abre a reserva com o código preenchido */
   function escanearIngresso() { janelaCodigos({}); }
+  function horaNoRoteiro(titulo, data) {
+    var v = estado.viagem, o = estado.opcao; if (!v || !o) return null;
+    var dias = diasDaViagem(v), di = dias.indexOf(data); if (di < 0) return null;
+    var dm = o.dias[mapearDia(di, dias.length, o.dias.length)]; if (!dm) return null;
+    var ch = normalizar(titulo).split(/\s+/).filter(function (w) { return w.length >= 4 && ['parque', 'bilhete', 'ingresso', 'passeio'].indexOf(w) < 0; });
+    var it = (dm.itens || []).filter(function (x) { var t = normalizar((x.titulo || '') + ' ' + (x.lugarId ? (lugarPorId(x.lugarId) || {}).nome || '' : '')); return x.hora && ch.some(function (w) { return t.indexOf(w) > -1; }); })[0];
+    return it ? it.hora : null;
+  }
   /* arquivos que vieram pelo "Compartilhar" do celular (o service worker guardou num cache temporário) */
   function receberArquivosCompartilhados() {
     var nome = 'dgo-' + (location.pathname.replace(/^\/+|\/+[^/]*$/g, '').replace(/[^a-z0-9-]+/gi, '-') || 'raiz') + '-compartilhado';
@@ -4001,13 +4009,43 @@
       .then(function (lista) { return Promise.all(lista.map(function (r) { return Cofre.decifrarReserva(r.conteudo).then(function (c) { return { reg: r, c: c }; }, function () { return null; }); })); })
       .then(function (ls) { return ls.filter(Boolean); });
   }
-  function infoCodigo(texto) {
+  function infoCodigo(texto, bloco) {
     var ano = estado.viagem && estado.viagem.inicio ? +estado.viagem.inicio.slice(0, 4) : null;
     var b = window.Codigos ? Codigos.bcbp(texto, ano) : null;
     if (b) return Object.assign({ tipo: 'voo', qr: texto }, b);
-    return { tipo: 'ingresso', qr: String(texto).slice(0, 2000), codigo: String(texto).length <= 40 ? String(texto) : '' };
+    var i = { tipo: 'ingresso', qr: String(texto).slice(0, 2000), codigo: String(texto).length <= 40 ? String(texto) : '' };
+    return bloco ? Object.assign(i, lerBlocoIngresso(bloco)) : i;
+  }
+  /* PDF de ingresso/voucher (Parksnet, Sympla, parques…): o texto ao lado de cada código diz o que ele é.
+     Pega SÓ o necessário (atração, categoria, dia de uso, localizador, validade); nunca nome nem CPF. */
+  function blocoDoCodigo(texto, cod) {
+    var t = String(texto || ''), k = t.indexOf(cod); if (k < 0) return null;
+    var resto = t.slice(k + cod.length), prox = resto.search(/C[oó]digo\s*:/i);
+    return resto.slice(0, prox > 0 ? Math.min(prox, 600) : 600);
+  }
+  function tituloBonito(t) { return String(t).toLowerCase().replace(/(^|[\s(|/-])(\S)/g, function (m, a, c) { return a + c.toUpperCase(); }).replace(/\b(Do|Da|De|Dos|Das|E|Em|No|Na)\b/g, function (x) { return x.toLowerCase(); }).replace(/^./, function (c) { return c.toUpperCase(); }).trim(); }
+  function lerBlocoIngresso(bl) {
+    var o = {}, b = String(bl).replace(/\s+/g, ' ');
+    var m = /Data de utiliza[cç][aã]o\s*:?\s*(\d{2})\/(\d{2})\/(\d{4})/i.exec(b) || /Data do (?:evento|passeio|uso)\s*:?\s*(\d{2})\/(\d{2})\/(\d{4})/i.exec(b);
+    if (m) o.data = m[3] + '-' + m[2] + '-' + m[1];
+    m = /Localizador[^:]{0,20}:\s*([A-Z0-9]{5,12})/i.exec(b); if (m) o.localizador = m[1];
+    m = /(Adulto|Crian[cç]a|Melhor Idade|Idoso|Estudante|Infantil|Meia[- ]entrada|Inteira|PCD)\s*(\([^)]{1,25}\))?/i.exec(b); if (m) o.pessoa = tituloBonito(m[1]) + (m[2] ? ' ' + m[2] : '');
+    var cupom = /ganhou|cupom|desconto|promo[cç][aã]o/i.test(b) && !o.data;
+    if (cupom) {
+      o.tipo = 'outro'; o.cupom = true;
+      m = /ganhou\s+(.{3,70}?)(?=\s+(?:Fa[cç]a|Um |Uma |Cupom|V[aá]lido|Consumo|Promo)|$)/i.exec(b);
+      o.titulo = T('cod_cupom', { t: m ? tituloBonito(m[1]) : T('cod_brinde') });
+      m = /V[aá]lido at[eé]\s*(\d{2}\/\d{2}\/\d{2,4})/i.exec(b); if (m) o.nota = T('cod_validoAte', { d: m[1] });
+      return o;
+    }
+    m = /^\s*([A-ZÀ-Ú0-9][A-ZÀ-Ú0-9 '&.,-]{3,60}?)\s*\|\s*([^|]{3,60}?)(?=\s+(?:Adulto|Crian|Melhor|Idoso|Estudante|Infantil|Meia|Inteira|PCD|Nome|CPF|Data)|$)/.exec(b);
+    if (m) { o.titulo = tituloBonito(m[1]); o.detalhe = m[2].trim(); }
+    else { m = /^\s*([A-ZÀ-Ú][A-ZÀ-Úa-zà-ú0-9 '&.-]{3,60}?)(?=\s+(?:Adulto|Crian|Melhor|Idoso|Nome|CPF|Data)|$)/.exec(b); if (m) o.titulo = tituloBonito(m[1]); }
+    return o;
   }
   function textoInfo(i) {
+    if (i.cupom) return ['🏷 ' + i.titulo, i.nota].filter(Boolean).join(' · ');
+    if (i.tipo !== 'voo' && i.titulo) return ['🎟 ' + i.titulo, i.pessoa, i.data ? semana(i.data) + ' ' + fData(i.data, true) : null, i.localizador ? T('cod_reserva', { r: i.localizador }) : null].filter(Boolean).join(' · ');
     if (i.tipo !== 'voo') return T('cod_generico', { c: String(i.qr).slice(0, 40) + (String(i.qr).length > 40 ? '…' : '') });
     return ['✈ ' + (i.pessoa || ''), T('cod_voo', { cia: CIAS[i.cia] || i.cia, voo: i.voo }), i.de + ' → ' + i.para, i.data ? semana(i.data) + ' ' + fData(i.data, true) : null,
       i.assento ? T('cod_assento', { a: i.assento }) : null, i.localizador ? T('cod_reserva', { r: i.localizador }) : null].filter(Boolean).join(' · ');
@@ -4019,6 +4057,21 @@
   }
   /* a qual reserva este código pertence? → { grupo:[x], alvo:x|null, pontos } */
   function casarCodigo(i, itens) {
+    if (i.tipo === 'ingresso' && i.titulo) {
+      var chaves = normalizar(i.titulo).split(/\s+/).filter(function (w) { return w.length >= 4 && ['parque', 'bilhete', 'ingresso', 'passeio'].indexOf(w) < 0; });
+      var ps = itens.map(function (x) {
+        var c = x.c, t = normalizar([c.titulo, c.nota, c.codigo, c.local].join(' ')), p = 0;
+        if (i.localizador && t.indexOf(normalizar(i.localizador)) > -1) p += 6;
+        if (chaves.some(function (w) { return t.indexOf(w) > -1; })) p += 4;
+        if (i.data && String(c.quando || '').slice(0, 10) === i.data) p += 2;
+        if (c.tipo === 'ingresso' || c.tipo === 'outro') p += 1;
+        return { x: x, p: p >= 5 ? p : 0 };
+      }).filter(function (y) { return y.p; }).sort(function (a, b) { return b.p - a.p; });
+      if (!ps.length) return { grupo: [], alvo: null, pontos: 0 };
+      var tp = ps[0].p, gr = ps.filter(function (y) { return y.p >= tp - 1; }).map(function (y) { return y.x; });
+      var al = gr.filter(function (x) { return x.c.qr === i.qr || (i.codigo && x.c.codigo === i.codigo); })[0] || gr.filter(function (x) { return !x.c.qr && !x.c.barra; })[0] || null;
+      return { grupo: gr, alvo: al, pontos: tp };
+    }
     if (i.tipo !== 'voo') return { grupo: [], alvo: null, pontos: 0 };
     var pts = itens.map(function (x) {
       var c = x.c, t = normalizar([c.titulo, c.codigo, c.nota, c.local].join(' ')), p = 0, forte = false;
@@ -4044,7 +4097,7 @@
   function guardarCodigo(i, escolha) {
     var vid = estado.viagem.id;
     function gravar(reg, dados) { return cifrarReserva(vid, dados).then(function (blob) { reg.conteudo = blob; reg.tipo = dados.tipo; return Banco.gravar('reservas', reg); }); }
-    var extra = i.tipo === 'voo' ? { pessoa: i.pessoa, assento: i.assento, codigo: i.localizador } : { codigo: i.codigo };
+    var extra = i.tipo === 'voo' ? { pessoa: i.pessoa, assento: i.assento, codigo: i.localizador } : { codigo: i.codigo, pessoa: i.pessoa || '' };
     if (escolha.alvo) {
       var x = escolha.alvo, c = Object.assign({}, x.c, { qr: i.qr, barra: '', barraFormato: '' });
       Object.keys(extra).forEach(function (k) { if (extra[k] && !c[k]) c[k] = extra[k]; });
@@ -4060,9 +4113,13 @@
       var dados = Object.assign({}, b.c, { titulo: semPessoa(b.c.titulo, b.c.pessoa), qr: i.qr, barra: '', barraFormato: '', pessoa: i.pessoa || '', assento: i.assento || '', codigo: i.localizador || b.c.codigo || '', nota: '' });
       return antes.then(function () { return gravar({ viagem_id: vid, agenda: Object.assign({}, ag, { grupo: grupo }) }, dados); }).then(function () { return dados; });
     }
-    var titulo = i.tipo === 'voo' ? T('cod_tituloVoo', { cia: CIAS[i.cia] || i.cia, voo: i.voo, de: i.de, para: i.para }) : T('res_ingresso');
-    var novo = { tipo: i.tipo, titulo: titulo, quando: i.data || '', codigo: extra.codigo || '', local: '', nota: '', pessoa: extra.pessoa || '', assento: extra.assento || '', qr: i.qr };
-    var g = i.tipo === 'voo' ? 'v-' + i.cia + i.voo + '-' + (i.data || '') : null;
+    var titulo = i.tipo === 'voo' ? T('cod_tituloVoo', { cia: CIAS[i.cia] || i.cia, voo: i.voo, de: i.de, para: i.para }) : (i.titulo || T('res_ingresso'));
+    var nota = [i.detalhe, i.tipo !== 'voo' && i.localizador ? T('cod_reserva', { r: i.localizador }) : null, i.nota].filter(Boolean).join(' · ');
+    /* ingresso só com o dia: usa a hora do programa igual no roteiro daquele dia (senão ele iria para o fim do dia, sem hora) */
+    var quando = i.data || '';
+    if (quando && quando.length === 10 && i.tipo === 'ingresso') { var hr = horaNoRoteiro(titulo, quando); if (hr) quando += 'T' + hr; }
+    var novo = { tipo: i.tipo, titulo: titulo, quando: quando, codigo: extra.codigo || '', local: '', nota: nota, pessoa: i.pessoa || extra.pessoa || '', assento: extra.assento || '', qr: i.qr };
+    var g = i.tipo === 'voo' ? 'v-' + i.cia + i.voo + '-' + (i.data || '') : i.tipo === 'ingresso' && i.titulo ? 'i-' + normalizar(i.localizador || i.titulo).slice(0, 30) + '-' + (i.data || '') : null;
     return gravar({ viagem_id: vid, marca: novo.codigo ? 'cod:' + novo.codigo + (novo.pessoa ? '|' + normalizar(novo.pessoa) : '') : null,
       agenda: novo.quando ? { titulo: titulo, quando: novo.quando, local: null, grupo: g } : null }, novo).then(function () { return novo; });
   }
@@ -4072,7 +4129,7 @@
       var m = casarCodigo(i, itens);
       if (m.alvo) return { alvo: m.alvo, itens: itens, m: m, texto: T('cod_juntar', { r: m.alvo.c.titulo + (m.alvo.c.pessoa ? ' · ' + m.alvo.c.pessoa : '') }) };
       if (m.grupo.length) return { irmao: m.grupo[0], itens: itens, m: m, texto: T('cod_juntarPessoa', { r: semPessoa(m.grupo[0].c.titulo, m.grupo[0].c.pessoa), p: i.pessoa || '' }) };
-      return { novo: true, itens: itens, m: m, texto: T(i.tipo === 'voo' ? 'cod_criarVoo' : 'cod_criarIngresso') };
+      return { novo: true, itens: itens, m: m, texto: i.cupom ? T('cod_guardarCupom') : i.tipo === 'ingresso' && i.titulo ? T('cod_criarIngressoDe', { t: i.titulo }) : T(i.tipo === 'voo' ? 'cod_criarVoo' : 'cod_criarIngresso') };
     });
   }
   function janelaCodigos(op) {
@@ -4093,7 +4150,7 @@
       h('p', { class: 'sub', texto: T(op.alvo ? 'cod_textoAlvo' : 'cod_texto', { r: op.alvo ? op.alvo.c.titulo : '' }) }),
       h('div', { class: 'acoes-nav tres' }, [btCam, btArq, btCol]), arq, video, colarAqui, previa, msg, lista,
       h('details', { class: 'mais-opcoes' }, [h('summary', { texto: T('cod_digitar') }), manual])]);
-    var fluxo = null, salvou = 0, cartoesAbertos = [];
+    var fluxo = null, salvou = 0, cartoesAbertos = [], ctxTexto = '';
     function pararCam() { if (fluxo) fluxo.getTracks().forEach(function (t) { t.stop(); }); fluxo = null; video.hidden = true; btCam.classList.remove('ativo'); }
     var j = janela(T(op.alvo ? 'cod_tituloAlvo' : 'cod_titulo'), corpo, function () { pararCam(); d.removeEventListener('paste', aoColar); if (salvou && estado.rota === 'reservas') mostrar('reservas'); });
     j.caixa.classList.add('janela-codigos');
@@ -4103,7 +4160,7 @@
       if (!cs.length) { msg.className = 'cod-msg erro'; msg.textContent = T(origem === 'camera' ? 'cod_nadaCamera' : 'cod_nada'); return; }
       msg.className = 'cod-msg ok'; msg.textContent = cs.length === 1 ? T('cod_achei1') : T('cod_acheiN', { n: cs.length });
       try { if (navigator.vibrate) navigator.vibrate(40); } catch (e) {}
-      var infos = cs.map(function (c) { return infoCodigo(c.texto); });
+      var infos = cs.map(function (c) { return infoCodigo(c.texto, ctxTexto ? blocoDoCodigo(ctxTexto, c.texto) : null); });
       var cartoes = cartoesAbertos = infos.map(function (i) { return cartaoCodigo(i); });
       if (infos.length > 1 && !op.alvo) {
         var todos = h('button', { class: 'bt', type: 'button', texto: '✓ ' + T('cod_guardarTodos', { n: infos.length }) });
@@ -4161,11 +4218,12 @@
       files = [].slice.call(files || []).slice(0, 10);
       if (!files.length) return;
       pararCam(); lista.textContent = ''; msg.className = 'cod-msg'; msg.textContent = T('cod_lendo');
-      var todos = [], vistos = {}, textos = [];
+      var todos = [], vistos = {}, textos = []; ctxTexto = '';
       files.reduce(function (p, f) {
         return p.then(function () { return Codigos.lerArquivo(f); }).then(function (r) {
           if (r.previa) { previa.src = r.previa; previa.hidden = false; }
           if (r.erro === 'senha') textos.push('senha');
+          if (r.texto) ctxTexto = (ctxTexto ? ctxTexto + '\n' : '') + r.texto;
           (r.codigos || []).forEach(function (c) { if (!vistos[c.texto]) { vistos[c.texto] = 1; todos.push(c); } });
           if (!(r.codigos || []).length && r.texto && r.texto.trim().length > 40) textos.push(r.texto);
         });

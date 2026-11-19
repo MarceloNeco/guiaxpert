@@ -77,13 +77,22 @@
   /* jsQR (o celular sem leitor próprio): tenta tamanhos do mais rápido ao mais detalhado e PARA no primeiro que acha;
      nesse mesmo tamanho procura os outros códigos (vários cartões num print). Nada achado: recortes (QR pequeno),
      e por último cores invertidas (tela escura). */
-  function lerComJsQR(src, max, lados) {
+  function lerComJsQR(src, max, lados, intenso) {
     var achados = [], vistos = {}, limite = max || 8;
     function varrer(cv, inverter) {
       for (var n = 0; n < limite; n++) { var r = jsqrEm(cv, 0, 0, cv.width, cv.height, inverter); if (!r) break; if (!vistos[r.texto]) { vistos[r.texto] = 1; achados.push(r.texto); } cobrir(cv, r.caixa); }
     }
     var tam = lados || [1000, 700, 1500];
     for (var k = 0; k < tam.length && !achados.length; k++) varrer(contrastar(paraCanvas(src, tam[k])));
+    /* arquivo (PDF, print): pode haver VÁRIOS QR pequenos na página (ingressos, vouchers); varre em janelas que se sobrepõem */
+    if ((intenso === true || (intenso === 'talvez' && achados.length)) && !lados) {
+      var cvI = contrastar(paraCanvas(src, 2600)), W = cvI.width, H = cvI.height, jw = Math.round(W * .4), jh = Math.round(H * .2);
+      for (var yy = 0; yy + jh <= H + 1; yy += Math.round(jh / 2)) for (var xx = 0; xx + jw <= W + 1; xx += Math.round(jw / 2)) {
+        var y0 = Math.min(yy, H - jh), x0 = Math.min(xx, W - jw), r0 = jsqrEm(cvI, x0, y0, jw, jh);
+        if (r0 && !vistos[r0.texto]) { vistos[r0.texto] = 1; achados.push(r0.texto); }
+        if (achados.length >= limite) return achados;
+      }
+    }
     if (achados.length || lados) return achados;
     var cv = contrastar(paraCanvas(src, 1500)), w = cv.width, hh = cv.height, tw = Math.round(w * .6), th = Math.round(hh * .6);
     [[0, 0], [w - tw, 0], [0, hh - th], [w - tw, hh - th], [(w - tw) / 2, (hh - th) / 2]].forEach(function (o) {
@@ -102,7 +111,7 @@
       if (nat.length) return nat;   /* o leitor do próprio celular já acha todos os códigos da imagem */
       return carregarJsQR().then(function () {
         var vistos = {}; nat.forEach(function (x) { vistos[x.texto] = 1; });
-        return nat.concat(lerComJsQR(src, op.max, op.lados).filter(function (t) { return !vistos[t]; }).map(function (t) { return { texto: t, formato: 'qr_code' }; }));
+        return nat.concat(lerComJsQR(src, op.max, op.lados, op.intenso).filter(function (t) { return !vistos[t]; }).map(function (t) { return { texto: t, formato: 'qr_code' }; }));
       }).catch(function () { return nat; });
     }).then(function (ls) { return ls.filter(function (x) { return x.texto && String(x.texto).trim(); }); });
   }
@@ -124,7 +133,9 @@
     });
     return imagemDeBlob(file).then(function (im) {
       var previa = paraCanvas(im, 900).toDataURL('image/jpeg', .82);
-      return lerImagem(im).then(function (cs) { return { codigos: cs, previa: previa }; });
+      /* print/imagem limpa: procura mais QR na mesma imagem; foto grande de câmera só se já achou um (fica rápida) */
+      var grande = (im.width || 0) * (im.height || 0) > 6e6;
+      return lerImagem(im, { intenso: grande ? false : true, max: 12 }).then(function (cs) { return { codigos: cs, previa: previa }; });
     }).catch(function () { return { codigos: [], erro: 'ilegivel' }; });
   }
   function lerPdf(file) {
@@ -135,12 +146,12 @@
       function pagina(i) {
         if (i > n) return null;
         return doc.getPage(i).then(function (pg) {
-          var vp = pg.getViewport({ scale: 2.2 }), cv = document.createElement('canvas'); cv.width = vp.width; cv.height = vp.height;
+          var vp = pg.getViewport({ scale: 3.2 }), cv = document.createElement('canvas'); cv.width = vp.width; cv.height = vp.height;
           var cx = cv.getContext('2d', { willReadFrequently: true }); cx.fillStyle = '#fff'; cx.fillRect(0, 0, cv.width, cv.height);
           return pg.render({ canvasContext: cx, viewport: vp }).promise.then(function () {
             if (!previa) previa = paraCanvas(cv, 900).toDataURL('image/jpeg', .8);
             return pg.getTextContent().then(function (tc) { texto += tc.items.map(function (x) { return x.str; }).join(' ') + '\n'; }).catch(function () {});
-          }).then(function () { return lerImagem(cv); }).then(function (cs) { cs.forEach(function (c) { if (!vistos[c.texto]) { vistos[c.texto] = 1; todos.push(c); } }); return pagina(i + 1); });
+          }).then(function () { return lerImagem(cv, { intenso: true, max: 12 }); }).then(function (cs) { cs.forEach(function (c) { if (!vistos[c.texto]) { vistos[c.texto] = 1; todos.push(c); } }); return pagina(i + 1); });
         });
       }
       return pagina(1).then(function () { return { codigos: todos, previa: previa, texto: texto, paginas: doc.numPages }; });

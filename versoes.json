@@ -2,6 +2,21 @@
   "app": "guiaxpert",
   "versoes": [
     {
+      "versao": "1.5.71",
+      "data": "2026-11-19",
+      "substitui": "1.5.70",
+      "itens": {
+        "pt": [
+          "Melhorias na leitura de ingressos em PDF.",
+          "Novo: cupons guardados nas reservas."
+        ],
+        "en": [
+          "Improvements reading PDF tickets.",
+          "New: coupons saved in bookings."
+        ]
+      }
+    },
+    {
       "versao": "1.5.70",
       "data": "2026-11-19",
       "substitui": "1.5.69",

@@ -695,6 +695,8 @@ window.TEXTOS = (function () {
     cod_coladoTexto: ['O que está copiado no celular é texto, não uma imagem:', 'What’s copied on your phone is text, not an image:'],
     cod_colarComo: ['No Android, o WhatsApp não copia fotos. Use "Arquivo" e escolha a foto do QR, ou na foto: ⋮ → Compartilhar → GuiaXpert. "Colar" serve para imagem copiada no computador ou no iPhone.', 'On Android, WhatsApp can’t copy photos. Use "File" and pick the QR photo, or on the photo: ⋮ → Share → GuiaXpert. "Paste" works for images copied on a computer or iPhone.'],
     cod_escolherFoto: ['Escolher a foto do QR', 'Choose the QR photo'],
+    cod_cupom: ['Cupom: {t}', 'Coupon: {t}'], cod_brinde: ['brinde', 'gift'], cod_validoAte: ['válido até {d}', 'valid until {d}'],
+    cod_guardarCupom: ['Guardar o cupom', 'Save the coupon'], cod_criarIngressoDe: ['Guardar ingresso: {t}', 'Save ticket: {t}'],
     cod_titulo: ['QR ou cartão de embarque', 'QR or boarding pass'], cod_tituloAlvo: ['Pôr o QR nesta reserva', 'Add the QR to this booking'],
     cod_texto: ['Câmera: aponte para o QR. Arquivo: escolha a foto, o print ou o PDF do cartão (fotos do WhatsApp ficam na galeria). Colar: imagem copiada no computador. O app lê o código, redesenha limpo e guarda na reserva certa; depois funciona sem internet.', 'Camera: point at the QR. File: pick the photo, screenshot or PDF of the pass (WhatsApp photos are in the gallery). Paste: an image copied on a computer. The app reads the code, redraws it cleanly and saves it to the right booking; works offline afterwards.'],
     cod_textoAlvo: ['O código lido vai para: {r}.', 'The code will go to: {r}.'],
