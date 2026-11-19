@@ -53,3 +53,12 @@ Inteligência esperada ao escanear, enviar arquivo ou colar:
   - anexos: PDF, imagens (PNG/JPG), .pkpass (Apple Wallet), .ics (convite de calendário), TXT/HTML — procura QR, código de barras e dados da reserva;
   - links no corpo: só de sites conhecidos (companhias aéreas, hotéis, locadoras, ingressos), só para ler, sem clicar em "confirmar/cancelar"; se o link pedir login, avisa e pede o print ou o PDF;
   - arquivo ou link com senha: avisa "pede senha" em vez de falhar calado.
+
+## Nota do pacote de usabilidade das 14h05 (19/Nov/2026, versão 1.5.66) para a rotina das 17h
+- Regra permanente nova no CLAUDE.md: persona de usuário comum (celular, uma mão, pressa, sol, sem sinal). Vale para a rotina das 17h.
+- Mapa offline (relato do aeroporto): diagnosticado e corrigido na 1.5.66. Causa: a cada versão nova o cache antigo era apagado e o
+  Leaflet e o leitor do mapa guardado só voltavam ao cache quando a pessoa abria o Mapa com sinal; o índice dos mapas também esperava a
+  rede sem prazo (sinal fraco = mapa em branco). Agora o app guarda esses arquivos logo depois de abrir e o índice espera no máximo 4 s.
+  A rotina das 17h só precisa repetir o teste em modo avião depois de publicar (não mexer nisso).
+- Os novos botões de navegação (Ver no mapa · Google Maps · Waze · Site) e o detalhe só de leitura do item já existem: a tela de Reservas/QR
+  pode reaproveitar `acoesNavegar(l)` e o padrão "ler primeiro, lápis para editar".

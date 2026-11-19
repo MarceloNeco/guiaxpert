@@ -690,6 +690,21 @@ window.TEXTOS = (function () {
     maisAjustes: ['Mais ajustes (notificações, rede, acessibilidade)', 'More settings (notifications, network, accessibility)'],
     espaco: ['Espaço e uso sem internet', 'Storage and offline use'], espacoUsado: ['{mb} MB usados neste aparelho', '{mb} MB used on this device'],
     pendentesNuvem: ['{n} mudanças guardadas para a nuvem (quando ligada)', '{n} changes saved for the cloud (when enabled)'],
+    /* pacote de usabilidade no celular (19/Nov/2026) */
+    cat_endereco: ['Endereço', 'Address'], legRoteiro: ['roteiro do dia, na ordem', 'today’s plan, in order'], legGuardado: ['guardados', 'saved'], legOutros: ['outros', 'others'], nDoDia: ['{n}º do dia · {h}', 'Stop {n} of the day · {h}'], legendaNumeros: ['1, 2, 3… = ordem do roteiro do dia', '1, 2, 3… = order of the day’s plan'],
+    abrirFicha: ['tocar para ver', 'tap to see'], lugarSemPonto: ['Este lugar ainda não tem ponto no mapa.', 'This place has no map point yet.'],
+    comoChegarCom: ['Como chegar pelo {app}', 'Directions with {app}'], verNoApp: ['Ver no mapa', 'On the map'],
+    editarEste: ['Editar este programa', 'Edit this plan'], quando: ['Quando', 'When'], onde: ['Onde', 'Where'], obs: ['Observação', 'Note'], ingressoReserva: ['Ingresso', 'Ticket'],
+    semLugarDefinido: ['Sem lugar marcado. Toque no lápis para escolher.', 'No place set. Tap the pencil to choose one.'],
+    todosDias: ['Todos', 'All'], todosDiasLongo: ['Todos os dias', 'All days'], diaPassou: ['já passou', 'past'],
+    tipoTodos: ['Tudo', 'All'], tipo_atracao: ['Passeios', 'Sights'], tipo_comer: ['Comida', 'Food'], tipo_logistica: ['Transporte e hotel', 'Travel & hotel'], tipo_outro: ['Outros', 'Other'],
+    nadaDesteTipo: ['Nada deste tipo neste dia.', 'Nothing of this kind on this day.'],
+    atualizadoAs: ['atualizado às {h}', 'updated {h}'], atualizarTempo: ['Atualizar a previsão', 'Refresh forecast'], tempoDaqui: ['previsão de onde você está', 'forecast for where you are'],
+    maisOpcoesItem: ['Mais opções', 'More options'], novaOpcaoCurta: ['Novo roteiro', 'New plan'],
+    ehAlternativa2: ['Ainda estou em dúvida entre este e outro programa no mesmo horário', 'I’m still choosing between this and another plan at the same time'],
+    ehAlternativaDica2: ['Os dois aparecem juntos no roteiro, com um botão para escolher um depois.', 'Both show together in the plan, with a button to pick one later.'],
+    abrirMapaDoApp: ['Ver no mapa do app', 'Show on the app map'], rotaAte: ['Como chegar a {nome}', 'Directions to {nome}'], enderecoAchado: ['Endereço encontrado', 'Address found'],
+    procurandoEndereco: ['Procurando o endereço…', 'Looking up the address…'], enderecoNaoAchado: ['Não achei esse endereço perto da viagem.', 'Couldn’t find that address near the trip.'],
     semInternetComo: ['Abra uma vez com internet e depois use sem sinal. Para instalar: menu do navegador → Instalar app (Android) ou Compartilhar → Tela de Início (iPhone).', 'Open once online, then use it without signal. To install: browser menu → Install app (Android) or Share → Add to Home Screen (iPhone).']
   });
 

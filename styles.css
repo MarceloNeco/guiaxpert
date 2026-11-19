@@ -977,3 +977,98 @@ body.voz-app.voz-baixando .bt-voz { opacity: .75; }
 .campo-voz.escrevendo > input::placeholder { color: transparent; }
 .campo-voz.escrevendo .bt-voz { pointer-events: none; }
 .busca-caixa:has(.campo-voz.escrevendo) > svg, .busca-caixa:has(.campo-voz.escrevendo) button { pointer-events: none; opacity: .45; }
+
+/* ---------- pacote de usabilidade no celular (19/Nov/2026, Gramado) ---------- */
+/* botões de ir até o lugar: ícone + rótulo, em fileira (como no Google Maps / Apple Maps) */
+.acoes-nav { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: .45rem; margin: .7rem 0 .4rem; }
+.acoes-nav.tres { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.acoes-nav .an { all: unset; box-sizing: border-box; cursor: pointer; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: .3rem;
+  min-height: 3.6rem; padding: .5rem .2rem; border-radius: 14px; background: var(--sup); border: 1.5px solid var(--linha); color: var(--rodovia);
+  font-size: .8rem; font-weight: 700; text-align: center; line-height: 1.15; -webkit-tap-highlight-color: transparent; }
+.acoes-nav .an span { color: var(--tinta); overflow: hidden; text-overflow: ellipsis; max-width: 100%; white-space: nowrap; }
+.acoes-nav .an .sl-ic { width: 1.4rem; height: 1.4rem; }
+.acoes-nav .an.principal { background: var(--rodovia); border-color: var(--rodovia); color: #fff; }
+.acoes-nav .an.principal span { color: #fff; }
+.acoes-nav .an:active { transform: scale(.97); }
+.acoes-nav .an:focus-visible { outline: 3px solid var(--faixa); outline-offset: 2px; }
+.links-lugar > .linha { margin-top: .3rem; gap: .6rem; align-items: center; }
+.lugar .meta .dist::before { content: "· "; }
+
+/* atalhos no cartão da atividade (mapa e rota), sem entrar no item */
+.acoes-item .ic-at { all: unset; box-sizing: border-box; cursor: pointer; width: 2.5rem; height: 2.5rem; display: grid; place-items: center; border-radius: 10px; color: var(--rodovia); }
+.acoes-item .ic-at .sl-ic { width: 1.25rem; height: 1.25rem; }
+.acoes-item .ic-at:active { background: var(--rodovia-claro); }
+.acoes-item .ic-at:focus-visible { outline: 3px solid var(--faixa); }
+
+/* detalhe da atividade (leitura) */
+.detalhe-item { display: grid; gap: .55rem; }
+.detalhe-item .kv span:first-child { color: var(--suave); }
+.janela .lapis-ed { margin-left: auto; margin-right: .25rem; color: var(--rodovia); display: grid; place-items: center; }
+.janela .lapis-ed .sl-ic { width: 1.3rem; height: 1.3rem; }
+.mais-opcoes { border-top: 1px solid var(--linha); padding-top: .4rem; }
+.mais-opcoes summary { cursor: pointer; color: var(--suave); font-weight: 700; font-size: .9rem; padding: .4rem 0; }
+
+/* topo do roteiro: título + "Novo roteiro" com espaço */
+.titulo-roteiro { align-items: center; flex-wrap: nowrap; }
+.titulo-roteiro h1 { margin-bottom: 0; }
+.bt-nova-opcao { display: inline-flex; align-items: center; gap: .35rem; white-space: nowrap; flex: none; }
+.bt-nova-opcao .sl-ic { width: 1.1rem; height: 1.1rem; }
+
+/* dias: "Todos" primeiro; dias que passaram ficam cinza (continuam clicáveis) */
+.dia.todos { min-width: 4.2rem; }
+.dia.passado:not([aria-selected="true"]) { opacity: .5; filter: grayscale(1); }
+.dia.hoje:not([aria-selected="true"]) { box-shadow: inset 0 0 0 2px var(--faixa); }
+.tempo.passado { opacity: .62; filter: grayscale(.9); }
+.area-dias { display: grid; gap: 1rem; }
+.filtro-tipo { margin: .45rem 0 .2rem; }
+.vazio-filtro { display: none; }
+.area-dias.filtro-atracao .item:not([data-cat="atracao"]), .area-dias.filtro-comer .item:not([data-cat="comer"]),
+.area-dias.filtro-logistica .item:not([data-cat="logistica"]), .area-dias.filtro-outro .item:not([data-cat="outro"]) { display: none; }
+.area-dias.filtro-atracao .alternativas:not(:has(.item[data-cat="atracao"])), .area-dias.filtro-comer .alternativas:not(:has(.item[data-cat="comer"])),
+.area-dias.filtro-logistica .alternativas:not(:has(.item[data-cat="logistica"])), .area-dias.filtro-outro .alternativas:not(:has(.item[data-cat="outro"])) { display: none; }
+.area-dias.filtro-atracao .tempo:not(:has(.item[data-cat="atracao"])) .vazio-filtro, .area-dias.filtro-comer .tempo:not(:has(.item[data-cat="comer"])) .vazio-filtro,
+.area-dias.filtro-logistica .tempo:not(:has(.item[data-cat="logistica"])) .vazio-filtro, .area-dias.filtro-outro .tempo:not(:has(.item[data-cat="outro"])) .vazio-filtro { display: block; }
+
+/* previsão: "atualizado às" + botão fino de atualizar, que gira enquanto carrega */
+.tempo-dia { display: inline-flex; align-items: center; gap: .5rem; flex-wrap: wrap; }
+.atualizado { display: inline-flex; align-items: center; gap: .15rem; font-size: .76rem; color: var(--suave); font-weight: 500; }
+.bt-atualizar { all: unset; cursor: pointer; width: 2.25rem; height: 2.25rem; display: grid; place-items: center; border-radius: 50%; color: var(--suave); }
+.bt-atualizar .sl-ic { width: 1.05rem; height: 1.05rem; stroke-width: 1.6; }
+.bt-atualizar:active, .bt-atualizar:focus-visible { background: var(--sup2); color: var(--rodovia); }
+.bt-atualizar.girando { color: var(--rodovia); pointer-events: none; }
+.bt-atualizar.girando .sl-ic { animation: gx-girar .9s linear infinite; }
+@keyframes gx-girar { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) { .bt-atualizar.girando .sl-ic { animation-duration: 2.5s; } }
+.clima-cab { align-items: center; }
+.clima-cab h3 { margin: 0; }
+
+/* mapa: pino escolhido em destaque, hora embaixo do número, ficha mais baixa (o pino fica à vista acima dela) */
+.pino.sel { box-shadow: 0 0 0 3px #fff, 0 0 0 7px var(--faixa), 0 3px 10px rgba(0, 0, 0, .45); }
+.pino.num.sel { width: 38px; height: 38px; line-height: 38px; font-size: 1.05rem; }
+.pino-hora { position: absolute; left: 50%; top: calc(100% + 4px); transform: translateX(-50%); background: #fff; color: #172024; font: 700 .68rem/1 var(--fonte);
+  padding: 2px 4px; border-radius: 6px; box-shadow: 0 1px 3px rgba(0, 0, 0, .3); white-space: nowrap; pointer-events: none; }
+.pino-caixa { position: relative; }
+.painel[data-estado="cartao"] { height: 56%; }
+.escolhido-peek { all: unset; cursor: pointer; flex: 1; min-width: 0; display: flex; align-items: center; gap: .5rem; padding: .3rem 0; }
+.escolhido-peek b { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.escolhido-peek .bolinha { width: .9rem; height: .9rem; border-radius: 50%; flex: none; box-shadow: 0 0 0 3px var(--faixa); }
+.escolhido-peek .pequeno { color: var(--rodovia); white-space: nowrap; }
+.etq.do-dia { background: var(--rodovia); color: #fff; }
+.tempo.passado .periodos { display: none; }
+.lugar summary .etq.do-dia { justify-self: start; width: auto; }
+/* nomes no mapa e legenda das cores */
+.pino-nome { position: absolute; left: calc(100% + 5px); top: 50%; transform: translateY(-50%); white-space: nowrap; pointer-events: none;
+  font: 700 .72rem/1.15 var(--fonte); color: #172024; background: rgba(255, 255, 255, .92); padding: 2px 5px; border-radius: 6px; box-shadow: 0 1px 3px rgba(0, 0, 0, .25); }
+.pino-nome.do-dia { font-size: .78rem; }
+.pino-nome b { color: var(--rodovia); font-variant-numeric: tabular-nums; }
+.pino.sel + .pino-nome, .pino.sel ~ .pino-nome { background: var(--faixa); color: #2b2100; }
+.legenda-mapa { flex-basis: 100%; display: flex; flex-wrap: wrap; gap: .25rem .8rem; color: var(--suave); margin-top: .15rem; }
+.legenda-mapa span { display: inline-flex; align-items: center; gap: .3rem; }
+.legenda-mapa .lg { display: inline-block; width: .7rem; height: .7rem; border-radius: 50%; font-style: normal; }
+.legenda-mapa .lg.num { width: 1rem; height: 1rem; font: 800 .62rem/1rem var(--fonte); text-align: center; color: #2b2100; }
+.painel { height: 5.7rem; }
+.mapa-tela .leaflet-bottom { bottom: 5.8rem; }
+.mapa-tela .bt-mapa { bottom: 7.4rem; }
+.mapa-tela .leaflet-control-attribution { font-size: .62rem; background: rgba(255, 255, 255, .75); }
+.legenda-mapa { order: 5; }
+.painel { height: 6.2rem; } .mapa-tela .leaflet-bottom { bottom: 6.3rem; } .mapa-tela .bt-mapa { bottom: 7.9rem; }

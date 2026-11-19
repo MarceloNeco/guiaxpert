@@ -156,10 +156,11 @@
   var Clima = {
     icone: function (c) { return CODIGOS[c] || '🌡'; },
 
-    previsao: function (lat, lng) {
+    /* forcar = o botão de atualizar; sem ele, a guardada vale 30 min (antes 1 h: em Gramado, 19/Nov, dizia chuva com sol forte) */
+    previsao: function (lat, lng, forcar) {
       var chave = 'clima:' + lat.toFixed(2) + ',' + lng.toFixed(2);
       return Banco.meta(chave, null).then(function (g) {
-        if (g && Date.now() - g.em < 3600 * 1000) return g;
+        if (g && !forcar && Date.now() - g.em < 1800 * 1000) return g;
         return tentar(0, lat, lng).then(function (res) {
           Banco.definirMeta(chave, res);
           return res;
@@ -190,10 +191,10 @@
 
     /* previsão por hora (Open-Meteo): chuva, código do tempo, visibilidade e nuvem baixa.
        Serve para os avisos por passeio: neblina some com a vista do bondinho/mirante; chuva atrapalha o que é ao ar livre. */
-    porHora: function (lat, lng) {
+    porHora: function (lat, lng, forcar) {
       var chave = 'clima-h:' + lat.toFixed(2) + ',' + lng.toFixed(2);
       return Banco.meta(chave, null).then(function (g) {
-        if (g && Date.now() - g.em < 3600 * 1000) return g;
+        if (g && !forcar && Date.now() - g.em < 1800 * 1000) return g;
         return horasOpenMeteo(lat, lng).catch(function () { return horasMet(lat, lng); }).then(function (res) {
           if (!res.horas.length) throw new Error('vazio');
           Banco.definirMeta(chave, res);

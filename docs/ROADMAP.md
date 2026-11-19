@@ -180,3 +180,13 @@ gastam as chaves do dono. Sem IA, nada some do app: só o assistente fica escond
 - Planos: o que o visitante, o degustação e o premium podem usar (`servicos/guiaxpert.json` está com tudo liberado e `aConfirmar`).
 - Hoje o uso é pessoal. Clima: Open-Meteo com reserva automática em MET Norway e wttr.in. Se um dia vender assinatura: MET Norway como 1ª opção (permite uso comercial) ou plano comercial da Open-Meteo; tiles do OSM por provedor próprio.
 - Registrar a marca GuiaXpert no INPI (classes 9, 35, 39, 41, 42) e o domínio `guiaxpert.com.br`.
+
+## Mapa no celular — proposto (pesquisa de 19/Nov/2026, depois da 1.5.66)
+Feito na 1.5.66 (baixo risco): números = ordem do roteiro do dia com hora e nome; pino escolhido em destaque; ficha recolhe e o
+lugar escolhido continua à vista; ao abrir, o dia inteiro enquadrado; cinzas só de perto; nomes no mapa; legenda das cores; busca de
+endereço perto da viagem; botões Ver no mapa · Google Maps · Waze · Site.
+Proposto (precisa de aprovação, regra zero):
+- Agrupar pinos (cluster) com Leaflet.markercluster (MIT, ~40 KB) quando houver mais de ~60 lugares na tela.
+- Painel com 3 alturas de arrastar contínuo (espiada / meio / cheio), como Google Maps e Apple Maps.
+- "Como chegar" dentro do app (rota a pé/carro desenhada no mapa) com OSRM público ou GraphHopper: depende de serviço externo.
+- Filtros do mapa por tipo com os mesmos chips do Roteiro (Passeios, Comida, Transporte e hotel).

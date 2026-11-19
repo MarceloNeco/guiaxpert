@@ -12,7 +12,7 @@
 (function () {
   'use strict';
   var d = document, $ = function (id) { return d.getElementById(id); };
-  var VERSAO_APP = '1.5.65';
+  var VERSAO_APP = '1.5.66';
 
   /* ------------------------------------------------------------------
      1. UTILIDADES
@@ -133,6 +133,12 @@
       lapis: '<path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7.5 18.5 3 20l1.5-4.5z"/>',
       compartilhar: '<path d="M4 12v7a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-7"/><path d="M16 6l-4-4-4 4"/><path d="M12 2v13"/>',
       mais: '<path d="M12 5v14M5 12h14"/>',
+      pino: '<path d="M12 21.5s-7-6.2-7-11.7a7 7 0 0 1 14 0c0 5.5-7 11.7-7 11.7Z"/><circle cx="12" cy="9.8" r="2.6"/>',
+      navegar: '<path d="M3.5 11.2 20.5 3.5l-7.7 17-1.9-7.4z"/>',
+      waze: '<path d="M4.6 13.2a7.6 7.1 0 1 1 3.1 5.7l-2.9 1.5.6-3.1a7 7 0 0 1-.8-4.1Z"/><circle cx="10" cy="10.6" r=".6"/><circle cx="15.2" cy="10.6" r=".6"/><path d="M9.6 13.6a3.3 3.3 0 0 0 5.4 0"/>',
+      globo: '<circle cx="12" cy="12" r="9.5"/><path d="M2.5 12h19M12 2.5c2.6 2.7 3.9 5.9 3.9 9.5s-1.3 6.8-3.9 9.5M12 2.5C9.4 5.2 8.1 8.4 8.1 12s1.3 6.8 3.9 9.5"/>',
+      atualizar: '<path d="M20 12a8 8 0 1 1-2.35-5.65"/><path d="M20.2 3.8v4.6h-4.6"/>',
+      mapa: '<path d="m9 4.5-5.5 2v13l5.5-2 6 2 5.5-2v-13l-5.5 2z"/><path d="M9 4.5v13M15 6.5v13"/>',
       esq: '<path d="m15 18-6-6 6-6"/>', dir: '<path d="m9 18 6-6-6-6"/>', baixo: '<path d="m6 9 6 6 6-6"/>'
     };
     function icone(n) { var e = d.createElementNS(NS, 'svg'); e.setAttribute('viewBox', '0 0 24 24'); e.setAttribute('class', 'sl-ic'); e.setAttribute('aria-hidden', 'true'); e.innerHTML = ICO[n] || ''; return e; }
@@ -676,6 +682,7 @@
       acharPontoHotel(v);
       if (v) {
         var dias = diasDaViagem(v), hj = hojeIso(), i = dias.indexOf(hj);
+        if (estado.diaViagem !== v.id) estado.verTodos = i < 0 && hj < v.inicio;
         if (estado.dia >= dias.length || estado.diaViagem !== v.id) estado.dia = i >= 0 ? i : 0;
         estado.diaViagem = v.id;
       }
@@ -1686,7 +1693,7 @@
     }
 
     /* clima */
-    var c = centroViagem(), cx = h('div', { class: 'cartao cartao-clima' }, [h('h3', { texto: T('climaTitulo') }), h('p', { class: 'sub', texto: T('carregando') })]);
+    var c = lugarClima(), cx = h('div', { class: 'cartao cartao-clima' }, [h('h3', { texto: T('climaTitulo') }), h('p', { class: 'sub', texto: T('carregando') })]);
     tela.appendChild(cx);
     var semPrev = function (txt) { cx.lastChild.textContent = txt; if (estado.viagem) cx.appendChild(h('button', { class: 'bt sec', type: 'button', style: 'align-self:flex-start', texto: '🧳 ' + T('malasBotao'), onclick: function () { janelaMalas(estado.viagem, []); } })); };
     if (c) Clima.previsao(c.lat, c.lng).then(function (p) { desenharClima(cx, p, dias); }).catch(function () { semPrev(T('climaSem')); });
@@ -1741,13 +1748,13 @@
     if (l && l.lat != null) c.appendChild(h('div', { class: 'acoes-sinal' }, [
       h('a', { href: Geo.linkRota(l, estado.pos), target: '_blank', rel: 'noopener', texto: T('rota') }),
       h('a', { href: Geo.linkWaze(l), target: '_blank', rel: 'noopener', texto: 'Waze' }),
-      h('button', { type: 'button', texto: T('verNoMapa'), onclick: function () { estado.abrirLugar = l.id; estado.filtro = 'todos'; Nav.ir('mapa'); } })
+      h('button', { type: 'button', texto: T('verNoMapa'), onclick: function () { irAoMapa(l); } })
     ]));
     return c;
   }
   function desenharClima(cx, p, dias) {
     cx.textContent = '';
-    cx.appendChild(h('h3', { texto: T('climaTitulo') }));
+    cx.appendChild(h('div', { class: 'linha entre clima-cab' }, [h('h3', { texto: T('climaTitulo') }), linhaAtualizado(p)]));
     var ds = p.dias.filter(function (x) { return dias.indexOf(x.data) > -1; });
     if (!ds.length) {
       /* viagem que já terminou não fala de previsão; antes dela, o mesmo número em todo lugar (Hoje e O que levar) */
@@ -1815,7 +1822,8 @@
   TELAS.roteiro = function (tela) {
     var v = estado.viagem;
     if (!v) return semViagem(tela);
-    tela.appendChild(h('h1', { texto: T('rota_roteiro') }));
+    var tituloRot = h('div', { class: 'linha entre titulo-roteiro' }, [h('h1', { texto: T('rota_roteiro') })]);
+    tela.appendChild(tituloRot);
     if (!estado.roteiros.length) {
       tela.appendChild(h('p', { class: 'sub', texto: T('semOpcoes') }));
       tela.appendChild(botoesNovaOpcao());
@@ -1839,8 +1847,10 @@
     }
     var btFav = btIcone('estrela', T('favoritarRoteiro'), function () { o.favorito = !o.favorito; Banco.gravar('roteiros', o).then(function () { return recarregar(); }); }, { 'aria-pressed': o.favorito ? 'true' : 'false' });
     btFav.classList.add('bt-fav');
+    /* "+ Novo roteiro" fica ao lado do título, com espaço (antes ia espremido entre os roteiros e os ícones) */
+    var btNova = h('button', { class: 'bt leve bt-nova-opcao', type: 'button', title: T('outraOpcao'), onclick: function () { janelaNovaOpcao(); } }, [Seletor.icone('mais'), h('span', { texto: T('novaOpcaoCurta') })]);
+    tituloRot.appendChild(btNova);
     var barra = h('div', { class: 'linha barra-opcao' }, [
-      btIcone('mais', T('outraOpcao'), function () { janelaNovaOpcao(); }),
       btIcone('lapis', T('estaOpcao'), function () { janelaEstaOpcao(o); }),
       btFav,
       btIcone('compartilhar', T('cmp_botao'), function () { janelaCompartilharRoteiro(v); }),
@@ -1850,23 +1860,56 @@
     tela.appendChild(barra);
     if (o.origem === 'ia') tela.appendChild(h('div', { class: 'alerta' }, [h('b', { texto: T('iaConfira') }), T('iaConfiraTexto')]));
 
-    var dias = diasDaViagem(v);
+    var dias = diasDaViagem(v), hojeTxt = hojeIso();
     var tabs = h('div', { class: 'dias', role: 'tablist', 'aria-label': T('diasDaViagem') });
+    /* 1ª aba "Todos": a viagem inteira em sequência, agrupada por dia */
+    tabs.appendChild(h('button', { class: 'dia todos', role: 'tab', type: 'button', 'aria-selected': estado.verTodos ? 'true' : 'false', onclick: function () { estado.verTodos = true; estado.manterDias = true; mostrar('roteiro'); } },
+      [h('span', { texto: T('todosDias') }), h('small', { texto: dias.length + ' ' + (idioma() === 'en' ? 'days' : 'dias') })]));
     dias.forEach(function (dt, i) {
-      tabs.appendChild(h('button', { class: 'dia', role: 'tab', type: 'button', 'aria-selected': i === estado.dia ? 'true' : 'false', onclick: function () { estado.dia = i; estado.manterDias = true; mostrar('roteiro'); } },
+      var passou = dt < hojeTxt;
+      tabs.appendChild(h('button', { class: 'dia' + (passou ? ' passado' : '') + (dt === hojeTxt ? ' hoje' : ''), role: 'tab', type: 'button', 'aria-selected': !estado.verTodos && i === estado.dia ? 'true' : 'false', title: passou ? T('diaPassou') : '', onclick: function () { estado.verTodos = false; estado.dia = i; estado.manterDias = true; mostrar('roteiro'); } },
         [h('span', { texto: semana(dt) }), h('small', { texto: fData(dt, true) })]));
     });
     tela.appendChild(tabs);
+    setTimeout(function () { var sel = tabs.querySelector('[aria-selected="true"]'); if (sel && sel.offsetLeft + sel.offsetWidth > tabs.clientWidth) tabs.scrollLeft = sel.offsetLeft + sel.offsetWidth - tabs.clientWidth + 8; }, 0);
+    /* filtro por tipo (as categorias do app): vale no dia e em "Todos" */
+    var TIPOS_F = ['todos', 'atracao', 'comer', 'logistica', 'outro'];
+    var filtroAtual = TIPOS_F.indexOf(estado.filtroTipo) > -1 ? estado.filtroTipo : 'todos';
+    var chipsTipo = h('div', { class: 'chips rolar filtro-tipo', role: 'group', 'aria-label': T('filtrar') });
+    TIPOS_F.forEach(function (k) {
+      chipsTipo.appendChild(h('button', { class: 'chip', type: 'button', 'aria-pressed': filtroAtual === k ? 'true' : 'false', onclick: function () { estado.filtroTipo = k; estado.manterDias = true; mostrar('roteiro'); } }, k === 'todos' ? T('tipoTodos') : T('tipo_' + k)));
+    });
+    tela.appendChild(chipsTipo);
+    var areaDias = h('div', { class: 'area-dias' + (filtroAtual !== 'todos' ? ' filtro-' + filtroAtual : '') });
+    tela.appendChild(areaDias);
+    var lugarC = lugarClima();
+    (estado.verTodos ? dias.map(function (x, i) { return i; }) : [estado.dia]).forEach(function (di) { areaDias.appendChild(blocoDia(di)); });
+    var dmodAtual = o.dias[mapearDia(estado.dia, dias.length, o.dias.length)] || { itens: [] };
+    if (o.origem === 'pacote') tela.appendChild(h('p', { class: 'pequeno', texto: T('pacoteEditar') }));
+    if (podeEditar()) tela.appendChild(h('div', { class: 'linha' }, [h('button', { class: 'bt leve', type: 'button', onclick: function () { janelaItem(o, dmodAtual); } }, '＋ ' + T('addItem')),
+      h('button', { class: 'bt leve', type: 'button', onclick: function () { Nav.ir('salvos'); } }, '⭐ ' + T('ideiasGuardadas', { n: ideiasDaViagem().length }))]));
+    else tela.appendChild(h('p', { class: 'pequeno', texto: T('soVe') }));
 
-    var dmod = o.dias[mapearDia(estado.dia, dias.length, o.dias.length)] || { itens: [] };
-    var data = dias[estado.dia];
-    var bloco = h('div', { class: 'tempo' });
+    function catItem(l, titulo) {
+      if (l) return l.categoria === 'atracao' ? 'atracao' : (l.categoria === 'comer' || l.categoria === 'bebidas' || l.categoria === 'doces') ? 'comer' : l.categoria === 'logistica' ? 'logistica' : 'outro';
+      var t = normalizar(titulo || '');
+      if (/\bvoo\b|aeroporto|embarque|check.?in|check.?out|\bhotel\b|pousada|carro|locadora|transfer|onibus|rodoviaria|estrada|viagem de volta|ida para|volta para/.test(t)) return 'logistica';
+      if (/cafe|almoco|jantar|lanche|restaurante|fondue|churrasc|chocolate|sorvete|padaria|comer/.test(t)) return 'comer';
+      return 'outro';
+    }
+    function catFixo(tipo) { return tipo === 'voo' || tipo === 'carro' || tipo === 'hotel' ? 'logistica' : tipo === 'ingresso' || tipo === 'passeio' ? 'atracao' : tipo === 'restaurante' ? 'comer' : 'outro'; }
+
+    function blocoDia(di) {
+    var dmod = o.dias[mapearDia(di, dias.length, o.dias.length)] || { itens: [] };
+    var data = dias[di];
+    var bloco = h('div', { class: 'tempo' + (data < hojeTxt ? ' passado' : '') + (data === hojeTxt ? ' hoje' : '') });
     var cab = h('header', {}, [h('h3', { texto: semana(data) + ', ' + fData(data) }), h('span', { class: 'sub', texto: dmod.titulo || '' })]);
     bloco.appendChild(cab);
-    var c = centroViagem();
-    if (c) Clima.previsao(c.lat, c.lng).then(function (p) {
+    var c = lugarC;
+    if (c && data >= hojeTxt) Clima.previsao(c.lat, c.lng).then(function (p) {
       var x = p.dias.filter(function (y) { return y.data === data; })[0];
-      if (x) cab.appendChild(h('span', { class: 'sub', texto: Clima.icone(x.codigo) + ' ' + x.min + '°/' + x.max + '°' + (x.chuva != null ? ' ☔' + x.chuva + '%' : '') }));
+      if (x) cab.appendChild(h('span', { class: 'sub tempo-dia' }, [Clima.icone(x.codigo) + ' ' + x.min + '°/' + x.max + '°' + (x.chuva != null ? ' ☔' + x.chuva + '%' : ''),
+        !estado.verTodos || data === hojeTxt ? linhaAtualizado(p) : null]));
     }).catch(function () {});
     /* compromissos fixos 🔒: reservas com dia e hora (ingressos comprados, voo, hotel); o dia se monta em volta deles */
     var fixos = h('div', { class: 'fixos' });
@@ -1893,7 +1936,7 @@
         var horaTxt = g._fim ? '—' : (hora || '—');
         var dica = hora && (pr === 'entra' && tipo === 'hotel' || pr === 'sai') ? T(pr === 'sai' ? 'ateAs' : 'aPartirDe', { h: hora }) : '';
         var etq = tipo === 'ingresso' && g.length > 1 ? T('nIngressos', { n: g.length }) : g.length > 1 ? T('nReservas', { n: g.length }) : null;
-        var el = h('div', { class: 'item fixo' }, [h('span', { class: 'h', texto: horaTxt }),
+        var el = h('div', { class: 'item fixo', 'data-cat': catFixo(tipo) }, [h('span', { class: 'h', texto: horaTxt }),
           h('div', { class: 'x' }, [h('div', { class: 'linha' }, [h('span', { 'aria-hidden': 'true', title: T('fixoNaoMuda'), texto: '🔒' }), h('b', { texto: a.titulo }),
             h('span', { class: 'etq' }, rotuloRes(tipo || 'outro')), etq ? h('span', { class: 'etq', texto: etq }) : null]),
             dica ? h('span', { class: 'nota', texto: dica.charAt(0).toUpperCase() + dica.slice(1) }) : null,
@@ -1918,7 +1961,7 @@
       if (agora) marcouAgora = true;
       var x = h('div', { class: 'x' }, [
         h('div', { class: 'linha' }, [l ? placa(l.categoria) : null,
-          h('button', { class: 'lk', type: 'button', style: 'text-decoration:none', onclick: function () { janelaEditarItem(o, dmod, idx); } }, it.titulo),
+          h('button', { class: 'lk', type: 'button', style: 'text-decoration:none', onclick: function () { janelaDetalheItem(o, dmod, idx, di); } }, it.titulo),
           it.tipo === 'gratis' ? h('span', { class: 'etq gratis', texto: T('gratis') }) : null,
           it.tipo === 'ingresso' ? h('span', { class: 'etq', texto: T('ingresso') }) : null]),
         it.nota ? h('span', { class: 'nota' }, comLinks(it.nota)) : null
@@ -1929,8 +1972,12 @@
         mudarItem(o, dmod, idx, function (item) { item.estado = item.estado === 'confirmado' ? null : 'confirmado'; }).then(recarregarTela); } });
       var rm = o.origem !== 'pacote' ? h('button', { class: 'fav tirar', type: 'button', 'aria-label': T('tirarItem') + ': ' + it.titulo, texto: '✕', onclick: function () {
         tirarComDesfazer(o, o.dias.indexOf(dmod), idx); } }) : null;
-      var el = h('div', { class: 'item' + (agora ? ' agora' : '') + (conf ? ' confirmado' : '') + (it.alt ? ' alt' : ''), 'data-tit': normalizar(it.titulo || ''), 'data-lugar': it.lugarId || '', 'data-hora': it.hora || '', 'data-idx': String(idx) },
-        [h('span', { class: 'h' }, it.alt ? '' : [it.hora || '—', it.fim ? h('small', { class: 'ate', texto: '–' + it.fim }) : null]), x, h('span', { class: 'linha acoes-item', style: 'flex-wrap:' + (it.alt ? 'wrap' : 'nowrap') + ';gap:0;justify-content:flex-end' }, [btConf, rm])]);
+      /* atalhos sem entrar no item: mapa do app (pino em destaque) e rota no Google Maps */
+      var temLugar = l && (l.lat != null || l.endereco);
+      var btMapa = temLugar ? h('button', { class: 'ic-at', type: 'button', 'aria-label': T('verNoMapa') + ': ' + it.titulo, title: T('verNoMapa'), onclick: function () { irAoMapa(l); } }, [Seletor.icone('mapa')]) : null;
+      var btRota = temLugar ? h('a', { class: 'ic-at', href: Geo.linkRota(l), target: '_blank', rel: 'noopener', 'aria-label': T('comoChegarCom', { app: 'Google Maps' }) + ': ' + it.titulo, title: T('comoChegarCom', { app: 'Google Maps' }) }, [Seletor.icone('navegar')]) : null;
+      var el = h('div', { class: 'item' + (agora ? ' agora' : '') + (conf ? ' confirmado' : '') + (it.alt ? ' alt' : ''), 'data-cat': catItem(l, it.titulo), 'data-tit': normalizar(it.titulo || ''), 'data-lugar': it.lugarId || '', 'data-hora': it.hora || '', 'data-idx': String(idx) },
+        [h('span', { class: 'h' }, it.alt ? '' : [it.hora || '—', it.fim ? h('small', { class: 'ate', texto: '–' + it.fim }) : null]), x, h('span', { class: 'linha acoes-item', style: 'flex-wrap:' + (it.alt ? 'wrap' : 'nowrap') + ';gap:0;justify-content:flex-end' }, [btMapa, btRota, btConf, rm])]);
       if (!it.alt) { bloco.appendChild(el); return; }
       /* alternativas (ainda não decidido) no mesmo horário: uma caixa só, "escolha uma" */
       var k = it.hora || Clima.periodoDaHora(it.hora) || 'sem';
@@ -1953,11 +2000,9 @@
     encurtarNotas(bloco);
     bloco.appendChild(fixos);
     if (!(dmod.itens || []).length) bloco.appendChild(h('p', { class: 'sub', style: 'padding:1rem', texto: T('diaVazio') }));
-    tela.appendChild(bloco);
-    if (o.origem === 'pacote') tela.appendChild(h('p', { class: 'pequeno', texto: T('pacoteEditar') }));
-    if (podeEditar()) tela.appendChild(h('div', { class: 'linha' }, [h('button', { class: 'bt leve', type: 'button', onclick: function () { janelaItem(o, dmod); } }, '＋ ' + T('addItem')),
-      h('button', { class: 'bt leve', type: 'button', onclick: function () { Nav.ir('salvos'); } }, '⭐ ' + T('ideiasGuardadas', { n: ideiasDaViagem().length }))]));
-    else tela.appendChild(h('p', { class: 'pequeno', texto: T('soVe') }));
+    else bloco.appendChild(h('p', { class: 'sub vazio-filtro', style: 'padding:1rem', texto: T('nadaDesteTipo') }));
+    return bloco;
+    }
   };
   /* nota comprida no roteiro: mostra 2 linhas e um "mais"; tocar abre o resto (o celular não vira uma coluna de texto) */
   function encurtarNotas(bloco) {
@@ -2520,7 +2565,11 @@
   /* "é uma alternativa?": várias opções no mesmo horário, ainda sem decidir */
   function campoAlternativa(id, marcado) {
     var c = h('input', { type: 'checkbox', id: id }); c.checked = !!marcado;
-    return { el: h('div', { class: 'linha campo-alt', style: 'flex-wrap:nowrap;align-items:flex-start;gap:.5rem' }, [c, h('label', { for: id }, [h('b', { texto: '🔀 ' + T('ehAlternativa') }), h('span', { class: 'pequeno', style: 'display:block', texto: T('ehAlternativaDica') })])]), chk: c };
+    /* fica em "Mais opções" (no meio do formulário confundia, 19/Nov); aberto se já estava marcado */
+    var dt = h('details', { class: 'mais-opcoes' }, [h('summary', { texto: T('maisOpcoesItem') }),
+      h('div', { class: 'linha campo-alt', style: 'flex-wrap:nowrap;align-items:flex-start;gap:.5rem' }, [c, h('label', { for: id }, [h('b', { texto: T('ehAlternativa2') }), h('span', { class: 'pequeno', style: 'display:block', texto: T('ehAlternativaDica2') })])])]);
+    if (marcado) dt.open = true;
+    return { el: dt, chk: c };
   }
   function janelaItem(o, dmod) {
     var hora = campoHora('gx-item-hora', '', { maisProvavel: function () { return horaMaisProvavel(dmod.itens, sel && sel.value ? lugarPorId(sel.value) : null); } });
@@ -2544,6 +2593,78 @@
       if (lerHora(hora) == null || lerHora(fim) == null) return;
       addItemNaOpcao(o, dmod, { fim: fim.value || undefined, hora: hora.value, titulo: tit.value.trim(), nota: nota.value.trim() || null, tipo: null, lugarId: sel.value || null, alt: alt.chk.checked || undefined }).then(function () { j.fechar(); recarregar(); });
     });
+  }
+  /* "Ver no mapa": o mapa do PRÓPRIO app, centrado no lugar, pino em destaque. Um caminho só para todos os botões.
+     (No celular do dono, 19/Nov, o "Ver no mapa" de dentro do item às vezes só voltava para a lista do dia: a troca
+     de tela ficava presa no fechamento da janela. Agora há uma rede de segurança que termina a troca.) */
+  function irAoMapa(l) {
+    if (!l) return;
+    if (estado.rota === 'mapa' && !Nav.camadas.length && window.Mapa && Mapa.focar(l.id)) return;
+    estado.abrirLugar = l.id; estado.abrirPeek = l.lat != null; estado.filtro = 'todos'; estado.busca = ''; estado.soDia = false;
+    if (!estado.viagem) { estado.abrirPeek = false; Nav.ir('explorar'); return; }
+    if (estado.rota === 'mapa' && !Nav.camadas.length) { mostrar('mapa'); return; }
+    Nav.ir('mapa');
+    setTimeout(function () {
+      if (estado.rota === 'mapa' || estado.abrirLugar !== l.id) return;
+      while (Nav.camadas.length) { try { Nav.camadas.pop()(); } catch (e) {} }
+      Nav.depois = [];
+      try { history.replaceState({ gx: 1, rota: 'mapa' }, '', '#/mapa'); } catch (e) {}
+      mostrar('mapa');
+    }, 900);
+  }
+  /* botões de ir até o lugar: 1º o mapa do app (principal), 2º Google Maps (já com a rota), 3º Waze, 4º site */
+  function acoesNavegar(l) {
+    var ic = Seletor.icone, b = [];
+    var ext = function (href, icone, txt, dica) { return h('a', { class: 'an', href: href, target: '_blank', rel: 'noopener', title: dica || txt, 'aria-label': dica || txt }, [ic(icone), h('span', { texto: txt })]); };
+    b.push(h('button', { class: 'an principal', type: 'button', title: T('abrirMapaDoApp'), onclick: function () { irAoMapa(l); } }, [ic('pino'), h('span', { texto: T('verNoApp') })]));
+    b.push(ext(Geo.linkRota(l), 'navegar', 'Google Maps', T('comoChegarCom', { app: 'Google Maps' })));
+    b.push(ext(Geo.linkWaze(l), 'waze', 'Waze', T('comoChegarCom', { app: 'Waze' })));
+    if (l.site && /^https?:\/\//.test(l.site)) b.push(ext(l.site, 'globo', T('site'), T('siteOficial')));
+    return h('div', { class: 'acoes-nav' + (b.length === 3 ? ' tres' : ''), role: 'group', 'aria-label': T('rotaAte', { nome: l.nome }) }, b);
+  }
+  /* tocar numa atividade: primeiro LER (o quê, quando, onde, observação, ingresso); o lápis leva à edição */
+  function janelaDetalheItem(o, dmod, idx, di) {
+    if (di != null) estado.dia = di;
+    var it = dmod.itens[idx]; if (!it) return;
+    var l = it.lugarId ? lugarPorId(it.lugarId) : null, dt = diasDaViagem(estado.viagem)[estado.dia];
+    var kv = function (rot, val) { return val ? h('div', { class: 'kv' }, [h('span', { texto: rot }), h('span', {}, val)]) : null; };
+    var quando = (dt ? semana(dt) + ', ' + fData(dt) + ' · ' : '') + (it.hora || '—') + (it.fim ? '–' + it.fim : '');
+    var ingresso = l && (l.reserva || l.preco) ? [l.reserva, l.preco].filter(Boolean).join(' · ') : (it.tipo === 'ingresso' ? T('ingresso') : null);
+    var dh = l ? doHotelTexto(l) : null;
+    var corpo = h('div', { class: 'detalhe-item' }, [
+      l || it.alt ? h('div', { class: 'linha' }, [l ? placa(l.categoria) : null, it.alt ? h('span', { class: 'etq', texto: '🔀 ' + T('altTitulo') }) : null]) : null,
+      kv(T('quando'), quando),
+      kv(T('onde'), l ? [h('b', { texto: l.nome }), l.endereco ? h('span', { class: 'pequeno', style: 'display:block', texto: l.endereco }) : null, dh ? h('span', { class: 'pequeno', style: 'display:block', texto: dh }) : null] : T('semLugarDefinido')),
+      kv(T('obs'), it.nota ? comLinks(it.nota) : null),
+      kv(T('ingressoReserva'), ingresso),
+      l && l.horario ? kv(T('horario'), l.horario) : null,
+      l ? acoesNavegar(l) : null,
+      l && l.compra && /^https?:\/\//.test(l.compra) ? h('a', { class: 'bt sec', href: l.compra, target: '_blank', rel: 'noopener' }, '🎟 ' + T('comprarIngresso')) : null
+    ]);
+    var j = janela(it.titulo, corpo);
+    if (podeEditar()) {
+      var lapis = h('button', { class: 'ic lapis-ed', type: 'button', 'aria-label': T('editarEste'), title: T('editarEste'), onclick: function () { j.fechar(function () { janelaEditarItem(o, dmod, idx); }); } }, [Seletor.icone('lapis')]);
+      var cab = j.caixa.querySelector('.linha.entre'); cab.insertBefore(lapis, cab.lastChild);
+    }
+  }
+  /* previsão: de onde a pessoa está (se ela tocou em atualizar e está perto do destino); senão, da cidade do roteiro */
+  function lugarClima() { var c = centroViagem(); return estado.climaPos && c && Geo.distancia(estado.climaPos, c) < 60 ? estado.climaPos : c; }
+  function horaCurta(ms) { var x = new Date(ms); return (x.getHours() < 10 ? '0' : '') + x.getHours() + ':' + (x.getMinutes() < 10 ? '0' : '') + x.getMinutes(); }
+  function botaoAtualizarTempo() {
+    var bt = h('button', { class: 'bt-atualizar', type: 'button', 'aria-label': T('atualizarTempo'), title: T('atualizarTempo') }, [Seletor.icone('atualizar')]);
+    bt.addEventListener('click', function () {
+      if (bt.classList.contains('girando')) return;
+      bt.classList.add('girando');
+      var pos = new Promise(function (ok) { var t = setTimeout(ok, 6000); pegarPosicao().then(function (p) { clearTimeout(t); estado.climaPos = { lat: p.lat, lng: p.lng }; ok(); }, function () { clearTimeout(t); ok(); }); });
+      pos.then(function () { var c = lugarClima(); if (!c) throw new Error('sem'); return Promise.all([Clima.previsao(c.lat, c.lng, true), Clima.porHora(c.lat, c.lng, true).catch(function () { return null; })]); })
+        .then(function (r) { if (r[0].antiga) throw new Error('antiga'); mostrar(estado.rota); },
+          function () { bt.classList.remove('girando'); avisar(navigator.onLine ? T('climaSem') : T('semInternet')); });
+    });
+    return bt;
+  }
+  function linhaAtualizado(p) {
+    estado.climaVistoEm = Math.min(estado.climaVistoEm || Infinity, p.em || Date.now());
+    return h('span', { class: 'atualizado' }, [T('atualizadoAs', { h: horaCurta(p.em || Date.now()) }), botaoAtualizarTempo()]);
   }
   /* editar um item do dia: hora, o que, nota, lugar; ver no mapa; tirar */
   function janelaEditarItem(o, dmod, idx) {
@@ -2572,8 +2693,7 @@
       h('label', { class: 'rot', for: 'gx-ed-tit', texto: T('oQue') }), tit,
       h('label', { class: 'rot', for: 'gx-ed-nota', texto: T('nota') }), nota,
       h('label', { class: 'rot', for: 'gx-ed-lugar', texto: T('lugarOpcional') }), campoLugarComBusca(sel, function (n) { if (!tit.value.trim()) tit.value = n.nome; }), alt.el,
-      l ? h('div', { class: 'linha' }, [h('button', { class: 'bt sec', type: 'button', texto: '🗺 ' + T('verNoMapa'), onclick: function () { estado.abrirLugar = l.id; estado.filtro = 'todos'; j.fechar(function () { Nav.ir('mapa'); }); } }),
-        h('a', { class: 'bt leve', href: Geo.linkRota(l, estado.pos), target: '_blank', rel: 'noopener' }, T('rota'))]) : null,
+      l ? acoesNavegar(l) : null,
       h('p', { class: 'pequeno', texto: T('jaCompreiDica') }), comprei,
       h('div', { class: 'acoes' }, [tirar, ok])]);
     var j = janela(T('editarItem'), corpo);
@@ -2754,7 +2874,7 @@
           nomes.forEach(function (l) { var i = resto.indexOf(l.nome); if (i > -1 && (!achou || i < achou.i)) achou = { i: i, l: l }; });
           if (!achou) { el.appendChild(d.createTextNode(resto)); break; }
           el.appendChild(d.createTextNode(resto.slice(0, achou.i)));
-          el.appendChild((function (lug) { return h('button', { class: 'lk', type: 'button', texto: lug.nome, onclick: function () { estado.abrirLugar = lug.id; estado.filtro = 'todos'; j.fechar(function () { Nav.ir('mapa'); }); } }); })(achou.l));
+          el.appendChild((function (lug) { return h('button', { class: 'lk', type: 'button', texto: lug.nome, onclick: function () { irAoMapa(lug); } }); })(achou.l));
           resto = resto.slice(achou.i + achou.l.nome.length);
         }
       } else el.textContent = texto;
@@ -2829,7 +2949,7 @@
           acharPeloAssistente(r.busca, j);
         } else if (r.tipo === 'mapa' && r.busca) {
           var l = todosLugares().filter(function (x) { return x.nome.toLowerCase() === r.busca.toLowerCase(); })[0];
-          balao('ia', r.texto, l ? h('button', { class: 'bt sec', type: 'button', style: 'margin-top:.4rem', texto: '🗺 ' + T('verNoMapa'), onclick: function () { estado.abrirLugar = l.id; estado.filtro = 'todos'; j.fechar(function () { Nav.ir('mapa'); }); } }) : null);
+          balao('ia', r.texto, l ? h('button', { class: 'bt sec', type: 'button', style: 'margin-top:.4rem', texto: '🗺 ' + T('verNoMapa'), onclick: function () { irAoMapa(l); } }) : null);
         } else if (r.tipo === 'replanejar') {
           balao('ia', r.texto, estado.viagem ? h('button', { class: 'bt sec', type: 'button', style: 'margin-top:.4rem', texto: '🌦 ' + T('replanejarHoje'), onclick: function () { j.fechar(function () { replanejarHoje(); }); } }) : null);
         } else balao('ia', r.texto || T('iaErro'));
@@ -2918,6 +3038,27 @@
       centro: centroViagem(), zoom: 13, cidade: v.destino, filtros: FILTROS,
       buscarFora: function (q) { return Descobrir.buscarNome(q, estado.pos || centroViagem(), idioma()); },
       buscarPerto: estado.pacote ? null : function () { buscarPerto(null); },
+      /* Enter com um endereço ("Rua Coberta", "Av. Borges de Medeiros 2000"): acha o ponto perto da viagem e põe no mapa,
+         com os botões de Google Maps e Waze; não achou, procura lugares na internet como antes */
+      irPara: function (q, seNao) {
+        var c = centroViagem();
+        if (!navigator.onLine || !c) { if (seNao) seNao(); return; }
+        avisar(T('procurandoEndereco'));
+        var u = 'https://nominatim.openstreetmap.org/search?format=jsonv2&limit=1&addressdetails=1&q=' + encodeURIComponent(q) +
+          '&viewbox=' + (c.lng - .35).toFixed(3) + ',' + (c.lat + .3).toFixed(3) + ',' + (c.lng + .35).toFixed(3) + ',' + (c.lat - .3).toFixed(3) + '&bounded=1';
+        var ctl = window.AbortController ? new AbortController() : null; if (ctl) setTimeout(function () { ctl.abort(); }, 8000);
+        fetch(u, { headers: { 'Accept-Language': idioma() === 'en' ? 'en' : 'pt-BR' }, signal: ctl ? ctl.signal : undefined }).then(function (r) { return r.ok ? r.json() : []; }).then(function (j) {
+          var x = j && j[0];
+          if (!x) { if (seNao) seNao(); else avisar(T('enderecoNaoAchado')); return; }
+          var a = x.address || {}, partes = (x.display_name || q).split(',');
+          var l = { id: 'end-' + x.place_id, nome: x.name || partes[0].trim(), categoria: 'endereco', confianca: 'osm', fonte: 'OpenStreetMap',
+            endereco: [a.road, a.house_number, a.suburb || a.neighbourhood, a.city || a.town].filter(Boolean).join(', ') || partes.slice(0, 3).join(',').trim(),
+            lat: +(+x.lat).toFixed(5), lng: +(+x.lon).toFixed(5) };
+          if (!estado.descobertas.some(function (y) { return y.id === l.id; })) estado.descobertas.push(l);
+          estado.busca = ''; var cb = $('gx-busca-lugares'); if (cb) cb.value = '';
+          Mapa.focar(l.id);
+        }).catch(function () { if (seNao) seNao(); });
+      },
       acrescentar: function (ls) { var ids = {}; estado.descobertas.concat(todosLugares()).forEach(function (x) { ids[x.id] = 1; }); ls.forEach(function (l) { if (!ids[l.id]) estado.descobertas.push(l); }); },
       acharJuntos: function (q, aoCriar) { janelaAcharJuntos(q, aoCriar); },
       topo: function (topo) {
@@ -3195,7 +3336,7 @@
     var fav = !!estado.favoritos['lugar:' + l.id];
     var det = h('details', { class: 'lugar', 'data-id': l.id });
     var meta = h('span', { class: 'meta' }, [placa(l.categoria), l.subcategoria ? nomeSub(l.subcategoria) : null,
-      l._km != null ? Geo.formatarKm(l._km) : null, l.gratis ? h('span', { class: 'etq gratis', texto: T('gratis') }) : null,
+      l.gratis ? h('span', { class: 'etq gratis', texto: T('gratis') }) : null, l._km != null ? h('span', { class: 'dist', texto: Geo.formatarKm(l._km) }) : null,
       Gostos.combina(l, somaGostos) > 0 ? h('span', { class: 'etq combina', texto: '♥ ' + T('combina') }) : null,
       l.confianca === 'baixa' ? h('span', { class: 'conferir', texto: T('conferir') }) : null,
       l.nota != null ? h('span', { class: 'etq', texto: '★ ' + String(l.nota).replace('.', ',') }) : null,
@@ -3226,15 +3367,13 @@
     return det;
   }
   function linksLugar(l) {
-    var lk = function (href, txt, cls) { return h('a', { class: 'bt ' + (cls || 'leve'), href: href, target: '_blank', rel: 'noopener' }, txt); };
-    var g = h('div', { class: 'linha' }, [
-      lk(Geo.linkRota(l, estado.pos), T('rota'), ''), lk(Geo.linkWaze(l), 'Waze'), lk(Geo.linkMapa(l), T('verMapa')),
-      l.compra && /^https?:\/\//.test(l.compra) ? lk(l.compra, '🎟 ' + T('comprarIngresso'), 'sec') : null,
-      l.site && /^https?:\/\//.test(l.site) ? lk(l.site, T('siteOficial')) : null,
-      l.telefone ? h('span', { class: 'pequeno', texto: '☎ ' + l.telefone }) : null
-    ]);
+    var g = h('div', { class: 'links-lugar' }, [acoesNavegar(l)]);
     var dh = doHotelTexto(l);
-    if (dh) g.appendChild(h('span', { class: 'pequeno', texto: dh }));
+    var extra = h('div', { class: 'linha' }, [
+      l.compra && /^https?:\/\//.test(l.compra) ? h('a', { class: 'bt sec', href: l.compra, target: '_blank', rel: 'noopener' }, '🎟 ' + T('comprarIngresso')) : null,
+      l.telefone ? h('a', { class: 'pequeno', href: 'tel:' + String(l.telefone).replace(/[^\d+]/g, ''), texto: '☎ ' + l.telefone }) : null,
+      dh ? h('span', { class: 'pequeno', texto: dh }) : null]);
+    if (extra.childNodes.length) g.appendChild(extra);
     return g;
   }
   /* ⭐ = ideia. Um lugar vindo da internet ou do "Buscar perto" ainda não está guardado: guarda o lugar junto,
@@ -5840,6 +5979,22 @@
     window.addEventListener('online', function () { conferirSePreciso(true); });
     d.addEventListener('visibilitychange', function () { if (!d.hidden) conferirSePreciso(false); });
     setInterval(function () { if (!d.hidden) conferirSePreciso(false); }, 30 * 60000);
+    /* previsão sempre fresca: ao voltar para o app e de tempos em tempos, se a mostrada tem mais de 30 min, redesenha
+       (só no Hoje e no Roteiro, sem janela aberta; a tela fica onde estava) */
+    function climaVelho() {
+      if (d.hidden || Nav.camadas.length || (estado.rota !== 'inicio' && estado.rota !== 'roteiro')) return;
+      if (estado.climaVistoEm && Date.now() - estado.climaVistoEm > 30 * 60000 && navigator.onLine) { estado.climaVistoEm = null; mostrar(estado.rota); }
+    }
+    setInterval(climaVelho, 5 * 60000);
+    d.addEventListener('visibilitychange', function () { if (!d.hidden) setTimeout(climaVelho, 1500); });
+    /* mapa sem internet: o app troca de versão e o cache antigo some; o Leaflet e o leitor do mapa guardado só voltavam
+       ao cache quando a pessoa abria o Mapa com sinal. No aeroporto (19/Nov) o mapa não abriu. Agora, com sinal,
+       o app já deixa guardados os arquivos do mapa logo depois de abrir. */
+    setTimeout(function aquecerOffline() {
+      if (!navigator.onLine || !navigator.serviceWorker || !navigator.serviceWorker.controller) return;
+      ['vendor/leaflet/leaflet.js', 'vendor/leaflet/leaflet.css', 'vendor/pmtiles/pmtiles.js', 'vendor/pmtiles/protomaps-leaflet.js']
+        .forEach(function (u) { fetch(u).catch(function () {}); });
+    }, 8000);
     var rota = Nav.iniciar();
     estado.rota = rota; estado.rotaPedida = rota;
     $('bt-menu').addEventListener('click', abrirGaveta);

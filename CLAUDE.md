@@ -9,6 +9,13 @@ A Definition of done da plataforma SolverONE passa a ter 12 pontos: manual e ori
   2. em cada entrega, dizer no resumo o que o RootifyONE, o ArchONE ou o EaglePlanONE precisariam saber (integração nova ou removida, recurso novo, item do roadmap concluído);
   3. nada de integração nova sem a regra zero.
 
+## Regra permanente — persona de usuário comum (dono, 19/Nov/2026, em viagem)
+Todo desenvolvimento e todo teste do GuiaXpert é feito na pele de uma pessoa comum, não programadora, passeando com a família,
+só com o celular, com uma mão, às vezes com pressa, sol na tela ou sem sinal. Jornada-modelo: "Acordei. Qual a programação de hoje?
+Onde estou? O primeiro programa é perto ou longe? Onde fica no mapa? Como chego lá? Vai chover?". Antes de entregar qualquer tela,
+percorrer essas jornadas tocando como um humano (tela ~390 px, Android) e responder: dá para entender sem explicação? Em quantos
+toques chego ao que preciso? Sei onde estou e o que está selecionado? Vale para todas as sessões e rotinas.
+
 ## Regras permanentes do app
 - **Idioma** (diretriz geral do dono, 14/Nov/2026): textos para o usuário em PT (Brasil), EN (EUA) e ES (Espanha), tradução
   humanizada; um seletor só em todo lugar, bandeira em SVG + sigla (PT · EN · ES), componente do módulo comum, nunca emoji nem botão

@@ -36,9 +36,11 @@
     var fs = fontes();
     function tentar(i) {
       if (i >= fs.length) return Banco.meta('mapas-indice', null).then(function (j) { return j || { mapas: {} }; });
-      return fetch(fs[i] + 'indice.json', { cache: 'no-cache' }).then(function (r) { if (!r.ok) throw 0; return r.json(); })
+      /* sinal fraco (aeroporto): não espera a rede mais de 4 s; usa o índice guardado */
+      var lento = new Promise(function (_, erro) { setTimeout(function () { erro(new Error('lento')); }, 4000); });
+      return Promise.race([fetch(fs[i] + 'indice.json', { cache: 'no-cache' }), lento]).then(function (r) { if (!r.ok) throw 0; return r.json(); })
         .then(function (j) { j._fonte = fs[i]; Banco.definirMeta('mapas-indice', j); return j; })
-        .catch(function () { return tentar(i + 1); });
+        .catch(function (e) { return e && e.message === 'lento' ? tentar(fs.length) : tentar(i + 1); });
     }
     return tentar(0).then(function (j) { indice = j; return j; });
   }
