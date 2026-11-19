@@ -1072,3 +1072,12 @@ body.voz-app.voz-baixando .bt-voz { opacity: .75; }
 .mapa-tela .leaflet-control-attribution { font-size: .62rem; background: rgba(255, 255, 255, .75); }
 .legenda-mapa { order: 5; }
 .painel { height: 6.2rem; } .mapa-tela .leaflet-bottom { bottom: 6.3rem; } .mapa-tela .bt-mapa { bottom: 7.9rem; }
+/* hotel: pino de cama, escuro e grande, com o nome sempre à vista */
+.pino-hotel { display: grid; place-items: center; width: 36px; height: 36px; border-radius: 10px; background: #1f3a8a; color: #fff;
+  box-shadow: 0 0 0 3px #fff, 0 3px 8px rgba(0, 0, 0, .4); }
+.pino-hotel svg { width: 22px; height: 22px; fill: currentColor; }
+.pino-hotel.sel { box-shadow: 0 0 0 3px #fff, 0 0 0 7px var(--faixa), 0 3px 10px rgba(0, 0, 0, .45); }
+.pino-nome.hotel { color: #1f3a8a; font-size: .8rem; }
+.legenda-mapa .lg.hotel { width: 1rem; height: 1rem; border-radius: 4px; background: #1f3a8a; color: #fff; display: inline-grid; place-items: center; }
+.legenda-mapa .lg.hotel svg { width: .75rem; height: .75rem; fill: currentColor; }
+.mapa-tela:has(.painel[data-estado="cartao"]) .leaflet-bottom, .mapa-tela:has(.painel[data-estado="lista"]) .leaflet-bottom { display: none; }

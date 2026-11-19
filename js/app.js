@@ -12,7 +12,7 @@
 (function () {
   'use strict';
   var d = document, $ = function (id) { return d.getElementById(id); };
-  var VERSAO_APP = '1.5.66';
+  var VERSAO_APP = '1.5.67';
 
   /* ------------------------------------------------------------------
      1. UTILIDADES
@@ -612,6 +612,7 @@
   function rotuloRes(tipo, extra) { return h('span', { class: 'rot-res' }, [iconeRes(tipo), T('res_' + (tipo || 'outro')) + (extra || '')]); }
   /* pictogramas da placa turística (desenhos simples, sem fonte externa) */
   var PICTO = {
+    hotel: '<svg viewBox="0 0 24 24"><path d="M3 5h2v8h6V8h7a3 3 0 0 1 3 3v8h-2v-3H5v3H3zm5 2.5a2.2 2.2 0 1 1 0 4.4 2.2 2.2 0 0 1 0-4.4z"/></svg>',
     comer: '<svg viewBox="0 0 24 24"><path d="M7 2v9a2 2 0 0 0 2 2v9h2v-9a2 2 0 0 0 2-2V2h-1.5v6h-1V2h-1v6h-1V2zM17 2c-2 0-3 3-3 6v5h2v9h2V2z"/></svg>',
     atracao: '<svg viewBox="0 0 24 24"><path d="M12 2 9 8H3l5 4-2 7 6-4 6 4-2-7 5-4h-6z"/></svg>',
     bebidas: '<svg viewBox="0 0 24 24"><path d="M6 3h10v4a3 3 0 0 1 3 3v4a3 3 0 0 1-3 3v4H6zm10 6v6a1 1 0 0 0 1-1v-4a1 1 0 0 0-1-1z"/></svg>',
@@ -2122,33 +2123,100 @@
   }
   var NOME_PERIODO = { manha: 'perManha', tarde: 'perTarde', noite: 'perNoite' };
   /* ponto do hotel: estadia com coordenada, reserva de hospedagem com ponto, ou o endereço da reserva achado no mapa aberto (guardado) */
+  /* HOTEL no mapa (dono, 19/Nov: "nem o Hotel Fiorese fica fácil de achar"): cada hospedagem vira um pino de cama,
+     fixo do dia do check-in ao do check-out. Fontes: hospedagens da viagem, depois reservas de hotel (check-in/check-out).
+     O ponto vem do endereço (busca de ENDEREÇO, não de lugar: antes podia cair noutro hotel perto) ou do toque da pessoa. */
+  function nomeHotel(t) {
+    /* só o nome do hotel: o que vem depois de " · " (ex.: o nome de quem está na reserva) nunca sai do aparelho */
+    t = String(t || '').split(/\s[·|—–]\s/)[0].replace(/\s*[-–—·:|]\s*(check.?in|check.?out|entrada|sa[ií]da|hospedagem).*$/i, '').replace(/^(check.?in|check.?out|entrada|sa[ií]da)\s*(no|na|em|do|da|:|-)?\s*/i, '').trim();
+    return t || T('cat_hotel');
+  }
+  function geocodarEndereco(texto) {
+    var c = centroViagem(); if (!texto || !navigator.onLine) return Promise.resolve(null);
+    var vb = c ? '&viewbox=' + (c.lng - .4).toFixed(3) + ',' + (c.lat + .35).toFixed(3) + ',' + (c.lng + .4).toFixed(3) + ',' + (c.lat - .35).toFixed(3) + '&bounded=1' : '';
+    function tentar(q) {
+      return fetch('https://nominatim.openstreetmap.org/search?format=jsonv2&limit=1&q=' + encodeURIComponent(q) + vb, { headers: { 'Accept-Language': 'pt-BR' } })
+        .then(function (r) { return r.ok ? r.json() : []; }).then(function (j) { return j && j[0] ? { lat: +(+j[0].lat).toFixed(5), lng: +(+j[0].lon).toFixed(5) } : null; }).catch(function () { return null; });
+    }
+    /* "Hotel Fiorese, Rua X, 123, Gramado": tenta inteiro; depois sem o nome do hotel (o OpenStreetMap conhece a rua) */
+    var sem = String(texto).split(',').filter(function (p) { return !/hotel|pousada|resort|hostel|inn\b/i.test(p); }).join(',').trim();
+    return tentar(texto).then(function (p) { return p || (sem && sem !== texto ? tentar(sem) : null); });
+  }
   function pontoHotel() { return estado.hotelPonto || null; }
   function acharPontoHotel(v) {
-    if (!v) { estado.hotelPonto = null; estado.hotelDe = null; return; }
-    if (estado.hotelDe === v.id && estado.hotelPonto) return;    /* já achado para esta viagem */
-    if (estado.hotelDe !== v.id) estado.hotelPonto = null;
-    estado.hotelDe = v.id;
-    var e = (v.estadias || []).filter(function (x) { return x.lat != null; })[0];
-    if (e) { estado.hotelPonto = { lat: e.lat, lng: e.lng }; return; }
-    Banco.listar('reservas', function (r) { return r.viagem_id === v.id && r.tipo === 'hotel' && r.agenda; }).then(function (rs) {
-      var com = rs.filter(function (r) { return r.agenda.lat != null; })[0];
-      if (com) { estado.hotelPonto = { lat: com.agenda.lat, lng: com.agenda.lng }; return; }
-      var loc = rs.map(function (r) { return r.agenda.local; }).filter(Boolean)[0];
-      if (!loc) return;
-      return Banco.meta('hotel-ponto:' + v.id, null).then(function (g) {
-        if (g && g.local === loc) { estado.hotelPonto = g; return; }
-        if (!navigator.onLine || !window.Descobrir) return;
-        return Descobrir.buscarNome(loc, centroViagem(), idioma()).then(function (ls) {
-          if (!ls[0]) return;
-          estado.hotelPonto = { lat: ls[0].lat, lng: ls[0].lng, local: loc };
-          Banco.definirMeta('hotel-ponto:' + v.id, estado.hotelPonto);
-        });
+    if (!v) { estado.hotelPonto = null; estado.hotelDe = null; estado.hoteis = []; return Promise.resolve(); }
+    if (estado.hotelDe === v.id && estado.hoteis && estado.hoteis.length) return Promise.resolve();
+    estado.hotelDe = v.id; estado.hotelPonto = null; estado.hoteis = [];
+    var lista = (v.estadias || []).filter(function (e) { return e.nome || e.endereco || e.lat != null; }).map(function (e, i) {
+      return { k: 'e' + i, nome: e.nome || T('cat_hotel'), endereco: e.endereco || '', lat: e.lat != null ? e.lat : null, lng: e.lng != null ? e.lng : null, entrada: e.entrada || v.inicio, saida: e.saida || v.fim };
+    });
+    return Banco.listar('reservas', function (r) { return r.viagem_id === v.id && r.tipo === 'hotel' && r.agenda; }).then(function (rs) {
+      var grupos = {};
+      rs.forEach(function (r) {
+        var a = r.agenda, nome = nomeHotel(a.titulo), k = normalizar(a.local || nome);
+        var g = grupos[k] || (grupos[k] = { k: 'r-' + k.slice(0, 40), nome: nome, endereco: a.local || '', lat: null, lng: null, entrada: null, saida: null });
+        if (nome.length < g.nome.length || g.nome === T('cat_hotel')) g.nome = nome;
+        if (a.lat != null) { g.lat = a.lat; g.lng = a.lng; }
+        var dia = String(a.quando || '').slice(0, 10), sai = /saida|check.?out/.test(normalizar(a.titulo || ''));
+        if (!dia) return;
+        if (sai) g.saida = !g.saida || dia > g.saida ? dia : g.saida; else g.entrada = !g.entrada || dia < g.entrada ? dia : g.entrada;
       });
+      Object.keys(grupos).forEach(function (k) {
+        var g = grupos[k]; g.entrada = g.entrada || v.inicio; g.saida = g.saida || v.fim;
+        var igual = lista.filter(function (x) { var a = normalizar(x.nome), b = normalizar(g.nome); return a && b && (a.indexOf(b) > -1 || b.indexOf(a) > -1); })[0];
+        if (igual) { if (igual.lat == null && g.lat != null) { igual.lat = g.lat; igual.lng = g.lng; } if (!igual.endereco) igual.endereco = g.endereco; }
+        else lista.push(g);
+      });
+      /* ponto: o marcado à mão vale mais; depois o guardado deste endereço; senão procura o endereço */
+      return lista.reduce(function (p, ho) {
+        return p.then(function () {
+          return Banco.meta('hotel-manual:' + v.id + ':' + ho.k, null).then(function (m) {
+            if (m) { ho.lat = m.lat; ho.lng = m.lng; ho.manual = true; return; }
+            if (ho.lat != null) return;
+            var q = ho.endereco && normalizar(ho.endereco).indexOf(normalizar(ho.nome)) > -1 ? ho.endereco : [ho.nome !== T('cat_hotel') ? ho.nome : '', ho.endereco].filter(Boolean).join(', ');
+            if (!q) return;
+            return Banco.meta('hotel-end:' + normalizar(q), null).then(function (g) {
+              if (g) { ho.lat = g.lat; ho.lng = g.lng; return; }
+              return geocodarEndereco(q).then(function (pt) { if (pt) { ho.lat = pt.lat; ho.lng = pt.lng; Banco.definirMeta('hotel-end:' + normalizar(q), pt); } });
+            });
+          });
+        });
+      }, Promise.resolve()).then(function () { return lista; });
+    }).then(function (ls) {
+      if (estado.hotelDe !== v.id) return;
+      estado.hoteis = ls;
+      var hj = hojeIso(), agora = ls.filter(function (x) { return x.lat != null && x.entrada <= hj && hj <= x.saida; })[0] || ls.filter(function (x) { return x.lat != null; })[0];
+      estado.hotelPonto = agora ? { lat: agora.lat, lng: agora.lng } : null;
+      if (estado.rota === 'mapa' && window.Mapa && Mapa.atualizar) Mapa.atualizar();
     }).catch(function () {});
+  }
+  /* hotéis como "lugares" do mapa (aparecem na busca e no Ver no mapa); _ativo = hospedado no dia escolhido */
+  function hotelLugares() {
+    var v = estado.viagem; if (!v || !estado.hoteis) return [];
+    var dt = diasDaViagem(v)[estado.dia] || hojeIso();
+    var ls = estado.hoteis.filter(function (x) { return x.lat != null; });
+    var ativos = ls.filter(function (x) { return x.entrada <= dt && dt <= x.saida; });
+    if (!ativos.length) ativos = ls;
+    return ls.map(function (x) {
+      return { id: 'hotel-' + x.k, nome: x.nome, categoria: 'hotel', endereco: x.endereco || null, lat: x.lat, lng: x.lng, confianca: 'meu', _hotel: x, _ativo: ativos.indexOf(x) > -1,
+        descricao: T('hotelDatas', { de: fData(x.entrada, true), ate: fData(x.saida, true) }) };
+    });
+  }
+  /* o ponto do hotel está errado? a pessoa arrasta o mapa e toca em "É aqui" */
+  function ajustarPontoHotel(l) {
+    var v = estado.viagem, ho = l._hotel; if (!v || !ho) return;
+    Mapa.escolherPonto({ centro: { lat: ho.lat, lng: ho.lng }, zoom: 17, cidade: v.destino, titulo: T('hotelAjustar') }).then(function (p) {
+      if (!p) return;
+      Banco.definirMeta('hotel-manual:' + v.id + ':' + ho.k, p).then(function () {
+        ho.lat = p.lat; ho.lng = p.lng; ho.manual = true; estado.hotelPonto = { lat: p.lat, lng: p.lng };
+        avisar(T('salvo')); estado.abrirLugar = l.id; estado.abrirPeek = true; mostrar('mapa');
+      });
+    });
   }
   function doHotelTexto(l) {
     var hp = pontoHotel(); if (!hp || !l || l.lat == null) return null;
     var km = Geo.distancia(hp, l);
+    if (l._hotel || km < .05) return null;
     return T('doHotel', { km: Geo.formatarKm(km), min: Geo.minutosCarro(km) });
   }
   /* passeios cobertos do catálogo, para plano B com chuva ou neblina */
@@ -3028,7 +3096,7 @@
     somaGostos = Gostos.doGrupo(pessoasDaViagem());
     var v = estado.viagem, dias = diasDaViagem(v);
     Mapa.tela(tela, {
-      lugares: function () { var ts = todosLugares(), ids = {}; ts.forEach(function (x) { ids[x.id] = 1; }); return ts.concat(estado.descobertas.filter(function (x) { return !ids[x.id]; })); },
+      lugares: function () { var ts = todosLugares(), ids = {}; ts.forEach(function (x) { ids[x.id] = 1; }); return hotelLugares().concat(ts, estado.descobertas.filter(function (x) { return !ids[x.id]; })); },
       itensDoDia: function () {
         var o = estado.opcao; if (!o) return [];
         var dmod = o.dias[mapearDia(estado.dia, dias.length, o.dias.length)];
@@ -3355,7 +3423,8 @@
     if (l.categoria === 'comer' && restr.length) corpo.appendChild(h('div', { class: 'alerta' }, [h('b', { texto: T('restricoesGrupo') }), restr.join(', ') + '. ' + T('pergunteAntes')]));
     if (l.dieta) { var dd = Object.keys(l.dieta).filter(function (k) { return l.dieta[k]; }); if (dd.length) corpo.appendChild(h('p', { class: 'pequeno', texto: T('osmDieta') + ': ' + dd.map(function (k) { return T('r_' + k); }).join(', ') })); }
     corpo.appendChild(linksLugar(l));
-    if (estado.viagem && emViagem() && podeEditar()) corpo.appendChild(h('button', { class: 'bt', type: 'button', onclick: function () { janelaAddAoRoteiro(l); } }, '＋ ' + T('porNoDia')));
+    if (l._hotel) { corpo.appendChild(h('button', { class: 'bt leve', type: 'button', onclick: function () { ajustarPontoHotel(l); } }, '📍 ' + T('hotelAjustar'))); corpo.appendChild(h('p', { class: 'pequeno', texto: T(l._hotel.manual ? 'hotelMarcado' : 'hotelPeloEndereco') })); }
+    else if (estado.viagem && emViagem() && podeEditar()) corpo.appendChild(h('button', { class: 'bt', type: 'button', onclick: function () { janelaAddAoRoteiro(l); } }, '＋ ' + T('porNoDia')));
     if (!estado.viagem && window.Explorar) Explorar.acoes(l, corpo);
     else if (!fav && (l.confianca === 'osm' || l.confianca === 'foursquare' || l.confianca === 'tripadvisor')) corpo.appendChild(h('button', { class: 'bt leve', type: 'button', onclick: function () {
       alternarFavorito(l).then(function () { avisar(T('ilGuardada', { nome: l.nome })); recarregar(); }); } }, T('salvarLugar')));

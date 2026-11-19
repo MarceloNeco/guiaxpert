@@ -39,6 +39,11 @@
       : '<span class="pino' + (escolhido ? ' sel' : '') + '" style="background:' + cor + ';width:' + tam + 'px;height:' + tam + 'px"></span>' + rot;
     return L.divIcon({ className: 'pino-caixa', html: html, iconSize: [tam, tam], iconAnchor: [tam / 2, tam / 2] });
   }
+  /* hotel: pino próprio com cama, sempre à vista nos dias da hospedagem */
+  var CAMA = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 5h2v8h6V8h7a3 3 0 0 1 3 3v8h-2v-3H5v3H3zm5 2.5a2.2 2.2 0 1 1 0 4.4 2.2 2.2 0 0 1 0-4.4z"/></svg>';
+  function iconeHotel(nome, escolhido) {
+    return L.divIcon({ className: 'pino-caixa', html: '<span class="pino-hotel' + (escolhido ? ' sel' : '') + '">' + CAMA + '</span><span class="pino-nome hotel">' + esc(curto(nome)) + '</span>', iconSize: [36, 36], iconAnchor: [18, 18] });
+  }
   var atual = null;   /* a tela de mapa aberta agora (para o "Ver no mapa" focar sem recarregar) */
 
   var Mapa = {
@@ -125,6 +130,7 @@
           /* legenda das cores em palavras */
           resumo.appendChild(h('div', { class: 'legenda-mapa pequeno' }, [
             Object.keys(diaMap).length ? h('span', {}, [h('i', { class: 'lg num', style: 'background:' + CORES.sugerido, texto: '1' }), T('legRoteiro')]) : null,
+            op.lugares().some(function (l) { return l._hotel && l._ativo; }) ? h('span', {}, [h('i', { class: 'lg hotel', svg: CAMA }), T('legHotel')]) : null,
             h('span', {}, [h('i', { class: 'lg', style: 'background:' + CORES.salvo }), T('legGuardado')]),
             h('span', {}, [h('i', { class: 'lg', style: 'background:' + CORES.outro }), T('legOutros')])]));
         }
@@ -251,7 +257,7 @@
         var poucos = Object.keys(diaMap).length > 0 && mapa.getZoom() < 14 && !(estado.busca || '').trim() && (estado.filtro || 'todos') === 'todos';
         var pontos = [];
         vis.forEach(function (l) {
-          if (l.lat == null) return;
+          if (l.lat == null || l._hotel) return;
           var it = diaMap[l.id], sel = escolhido && escolhido.id === l.id;
           if (estado.soDia && !it && !sel) return;
           if (poucos && !it && !sel && corDe(l) === CORES.outro) return;
@@ -262,6 +268,15 @@
           mk.on('click', function () { abrirLugar(l); });
           mk.addTo(mapa); camadas.push(mk);
           if (it) pontos[it.n - 1] = [l.lat, l.lng];
+        });
+        /* hotéis dos dias escolhidos: sempre, com qualquer filtro ou zoom */
+        op.lugares().forEach(function (l) {
+          if (!l._hotel || l.lat == null) return;
+          var sel = escolhido && escolhido.id === l.id;
+          if (!l._ativo && !sel) return;
+          var mh = L.marker([l.lat, l.lng], { icon: iconeHotel(l.nome, sel), zIndexOffset: sel ? 3500 : 2500, title: l.nome, keyboard: false });
+          mh.on('click', function () { abrirLugar(l); });
+          mh.addTo(mapa); camadas.push(mh);
         });
         pontos = pontos.filter(Boolean);
         if (pontos.length > 1) {
@@ -317,6 +332,7 @@
         desenharMapa();
         /* abre mostrando o dia inteiro (todos os programas numerados à vista, entre a busca e o painel) */
         var pts = Object.keys(diaMap).map(function (id) { var l = op.lugares().filter(function (x) { return x.id === id; })[0]; return l && l.lat != null ? [l.lat, l.lng] : null; }).filter(Boolean);
+        if (pts.length) op.lugares().forEach(function (l) { if (l._hotel && l._ativo && l.lat != null) pts.push([l.lat, l.lng]); });   /* o hotel entra no enquadramento do dia */
         if (!estado.abrirLugar && pts.length) {
           var r0 = caixa.getBoundingClientRect(), cima = Math.max(0, topo.getBoundingClientRect().bottom - r0.top);
           if (pts.length === 1) mapa.setView(pts[0], 15);
@@ -378,6 +394,7 @@
       });
     },
     /* "Ver no mapa" com a tela de mapa já aberta: centra e destaca o pino sem recarregar */
+    atualizar: function () { if (atual && atual.tela && atual.tela.isConnected) atual.redesenhar(); },
     focar: function (id) { return !!(atual && atual.tela && atual.tela.isConnected && mapa && atual.focar(id)); },
     destruir: function () { if (mapa) { try { mapa.remove(); } catch (e) {} mapa = null; camadas = []; } }
   };

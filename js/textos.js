@@ -691,7 +691,9 @@ window.TEXTOS = (function () {
     espaco: ['Espaço e uso sem internet', 'Storage and offline use'], espacoUsado: ['{mb} MB usados neste aparelho', '{mb} MB used on this device'],
     pendentesNuvem: ['{n} mudanças guardadas para a nuvem (quando ligada)', '{n} changes saved for the cloud (when enabled)'],
     /* pacote de usabilidade no celular (19/Nov/2026) */
-    cat_endereco: ['Endereço', 'Address'], legRoteiro: ['roteiro do dia, na ordem', 'today’s plan, in order'], legGuardado: ['guardados', 'saved'], legOutros: ['outros', 'others'], nDoDia: ['{n}º do dia · {h}', 'Stop {n} of the day · {h}'], legendaNumeros: ['1, 2, 3… = ordem do roteiro do dia', '1, 2, 3… = order of the day’s plan'],
+    cat_endereco: ['Endereço', 'Address'], cat_hotel: ['Hospedagem', 'Lodging'], hotelDatas: ['Sua hospedagem de {de} a {ate}.', 'Your stay from {de} to {ate}.'],
+    hotelAjustar: ['Ajustar o ponto do hotel', 'Adjust the hotel pin'], hotelPeloEndereco: ['Ponto achado pelo endereço da reserva. Se estiver errado, ajuste acima.', 'Pin found from the booking address. If it’s wrong, adjust it above.'],
+    hotelMarcado: ['Ponto marcado por você.', 'Pin set by you.'], legHotel: ['hotel', 'hotel'], legRoteiro: ['roteiro do dia, na ordem', 'today’s plan, in order'], legGuardado: ['guardados', 'saved'], legOutros: ['outros', 'others'], nDoDia: ['{n}º do dia · {h}', 'Stop {n} of the day · {h}'], legendaNumeros: ['1, 2, 3… = ordem do roteiro do dia', '1, 2, 3… = order of the day’s plan'],
     abrirFicha: ['tocar para ver', 'tap to see'], lugarSemPonto: ['Este lugar ainda não tem ponto no mapa.', 'This place has no map point yet.'],
     comoChegarCom: ['Como chegar pelo {app}', 'Directions with {app}'], verNoApp: ['Ver no mapa', 'On the map'],
     editarEste: ['Editar este programa', 'Edit this plan'], quando: ['Quando', 'When'], onde: ['Onde', 'Where'], obs: ['Observação', 'Note'], ingressoReserva: ['Ingresso', 'Ticket'],

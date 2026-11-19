@@ -2,6 +2,21 @@
   "app": "guiaxpert",
   "versoes": [
     {
+      "versao": "1.5.67",
+      "data": "2026-11-19",
+      "substitui": "1.5.66",
+      "itens": {
+        "pt": [
+          "Novo: hotel com ícone no mapa.",
+          "Correção no ponto do hotel."
+        ],
+        "en": [
+          "New: hotel icon on the map.",
+          "Fix for the hotel pin."
+        ]
+      }
+    },
+    {
       "versao": "1.5.66",
       "data": "2026-11-19",
       "substitui": "1.5.65",
