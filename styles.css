@@ -1081,3 +1081,21 @@ body.voz-app.voz-baixando .bt-voz { opacity: .75; }
 .legenda-mapa .lg.hotel { width: 1rem; height: 1rem; border-radius: 4px; background: #1f3a8a; color: #fff; display: inline-grid; place-items: center; }
 .legenda-mapa .lg.hotel svg { width: .75rem; height: .75rem; fill: currentColor; }
 .mapa-tela:has(.painel[data-estado="cartao"]) .leaflet-bottom, .mapa-tela:has(.painel[data-estado="lista"]) .leaflet-bottom { display: none; }
+
+/* QR e cartão de embarque: câmera, arquivo, colar */
+.cod-janela { display: grid; gap: .7rem; }
+.acoes-nav .an.ativo { background: var(--evita, #b3261e); border-color: transparent; color: #fff; }
+.cod-video { width: 100%; max-height: 52vh; border-radius: 14px; background: #000; object-fit: cover; }
+.cod-previa { width: 100%; max-height: 32vh; object-fit: contain; border-radius: 12px; background: var(--sup2); }
+.cod-colar { min-height: 4.5rem; border: 2px dashed var(--rodovia); border-radius: 14px; padding: .8rem; color: var(--suave); outline: none; }
+.cod-colar:empty::before { content: attr(data-placeholder); }
+.cod-msg { margin: 0; font-weight: 600; }
+.cod-msg.ok { color: var(--rodovia); }
+.cod-msg.erro { color: var(--evita, #b3261e); }
+.cod-lista { display: grid; gap: .6rem; }
+.cod-cartao { display: grid; grid-template-columns: 4.5rem 1fr; gap: .6rem; align-items: start; background: var(--sup2); border-radius: 14px; padding: .7rem; }
+.cod-mini { width: 4.5rem; height: 4.5rem; image-rendering: pixelated; background: #fff; border-radius: 8px; }
+.cod-info b { font-size: .92rem; line-height: 1.35; }
+.cod-acoes { grid-column: 1 / -1; display: grid; gap: .45rem; }
+.cod-ok { color: var(--rodovia); font-weight: 700; }
+.cod-na-nova { display: grid; gap: .35rem; background: var(--sup2); }

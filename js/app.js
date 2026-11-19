@@ -12,7 +12,7 @@
 (function () {
   'use strict';
   var d = document, $ = function (id) { return d.getElementById(id); };
-  var VERSAO_APP = '1.5.67';
+  var VERSAO_APP = '1.5.68';
 
   /* ------------------------------------------------------------------
      1. UTILIDADES
@@ -139,6 +139,9 @@
       globo: '<circle cx="12" cy="12" r="9.5"/><path d="M2.5 12h19M12 2.5c2.6 2.7 3.9 5.9 3.9 9.5s-1.3 6.8-3.9 9.5M12 2.5C9.4 5.2 8.1 8.4 8.1 12s1.3 6.8 3.9 9.5"/>',
       atualizar: '<path d="M20 12a8 8 0 1 1-2.35-5.65"/><path d="M20.2 3.8v4.6h-4.6"/>',
       mapa: '<path d="m9 4.5-5.5 2v13l5.5-2 6 2 5.5-2v-13l-5.5 2z"/><path d="M9 4.5v13M15 6.5v13"/>',
+      camera: '<path d="M3.5 8.5a2 2 0 0 1 2-2h2l1.6-2.2h5.8l1.6 2.2h2a2 2 0 0 1 2 2v9.5a2 2 0 0 1-2 2h-13a2 2 0 0 1-2-2z"/><circle cx="12" cy="13" r="3.8"/>',
+      arquivo: '<path d="M14 2.8H7a2 2 0 0 0-2 2v14.4a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7.8z"/><path d="M14 2.8v5h5M9 13h6M9 16.5h4"/>',
+      colar: '<rect x="5" y="4" width="14" height="17" rx="2"/><path d="M9 4V2.8h6V4M9 10h6M9 14h6M9 18h3"/>',
       esq: '<path d="m15 18-6-6 6-6"/>', dir: '<path d="m9 18 6-6-6-6"/>', baixo: '<path d="m6 9 6 6 6-6"/>'
     };
     function icone(n) { var e = d.createElementNS(NS, 'svg'); e.setAttribute('viewBox', '0 0 24 24'); e.setAttribute('class', 'sl-ic'); e.setAttribute('aria-hidden', 'true'); e.innerHTML = ICO[n] || ''; return e; }
@@ -3632,7 +3635,7 @@
         /* uma linha só, discreta: adicionar, escanear, colar e-mail */
         tela.appendChild(h('div', { class: 'acoes-res' }, [
           h('button', { class: 'bt', type: 'button', 'aria-label': T('novaReserva'), onclick: function () { janelaReserva(null); } }, '＋ ' + T('res_nova')),
-          h('button', { class: 'bt sec', type: 'button', 'aria-label': T('res_escanear'), onclick: function () { escanearIngresso(); } }, '📷 ' + T('res_escanearCurto')),
+          h('button', { class: 'bt sec', type: 'button', 'aria-label': T('cod_titulo'), onclick: function () { janelaCodigos({}); } }, '▦ ' + T('res_escanearCurto')),
           h('button', { class: 'bt leve', type: 'button', 'aria-label': T('colarEmail'), onclick: function () { janelaImportar(''); } }, '✉ ' + T('res_emailCurto'))]));
         if (!itens.length) { tela.appendChild(h('p', { class: 'sub', texto: T('semReservas') })); return; }
         /* grupos: ingressos do mesmo evento (mesmo grupo, ou mesmo título e horário) viram um cartão só */
@@ -3804,6 +3807,7 @@
       c.nota ? h('span', { class: 'sub', texto: c.nota }) : null,
       h('div', { class: 'linha' }, [
         c.qr || c.barra ? h('button', { class: 'bt', type: 'button', onclick: function () { mostrarQRs([c], 0); } }, '▦ ' + T('mostrarQRIngresso')) : null,
+        !x.trancada ? h('button', { class: 'bt leve', type: 'button', onclick: function () { janelaCodigos({ alvo: x }); } }, '▦ ' + T(c.qr || c.barra ? 'cod_trocarQR' : 'cod_porQR')) : null,
         h('button', { class: 'bt leve', type: 'button', onclick: function () { janelaReserva(x); } }, T('editar'))])
     ]);
   }
@@ -3818,7 +3822,7 @@
     });
     var verUm = h('button', { class: 'lk', type: 'button', texto: T('res_verUmPorUm'), 'aria-expanded': 'false', onclick: function () { lista.hidden = !lista.hidden; verUm.setAttribute('aria-expanded', lista.hidden ? 'false' : 'true'); } });
     return h('div', { class: 'cartao' }, [
-      h('span', { class: 'pequeno' }, rotuloRes(c0.tipo, ' · ' + T('nIngressos', { n: g.length }))),
+      h('span', { class: 'pequeno' }, rotuloRes(c0.tipo, ' · ' + T(c0.tipo === 'voo' ? 'nPassageiros' : 'nIngressos', { n: g.length }))),
       h('b', { texto: c0.titulo }),
       linhaQuando(c0) ? h('span', { texto: linhaQuando(c0) }) : null,
       h('span', { texto: g.map(function (x) { return x.c.pessoa; }).filter(Boolean).join(', ') }),
@@ -3826,6 +3830,7 @@
       c0.nota ? h('span', { class: 'sub', texto: c0.nota }) : null,
       h('div', { class: 'linha' }, [
         comQR.length ? h('button', { class: 'bt', type: 'button', onclick: function () { mostrarQRs(comQR, 0); } }, '▦ ' + T('res_mostrarTodosQR', { n: comQR.length })) : null,
+        h('button', { class: 'bt leve', type: 'button', onclick: function () { janelaCodigos({}); } }, '▦ ' + T('cod_porQR')),
         h('button', { class: 'bt leve', type: 'button', onclick: function () { janelaEditarGrupo(g); } }, '✎ ' + T('res_editarGrupo'))]),
       verUm, lista]);
   }
@@ -3893,8 +3898,251 @@
     });
   }
   /* câmera: lê o QR de um ingresso e já abre a reserva com o código preenchido */
-  function escanearIngresso() {
-    lerQR({ livre: true }).then(function (txt) { janelaReserva({ c: { tipo: 'ingresso', codigo: String(txt).slice(0, 120), qr: String(txt).slice(0, 500) } }); }).catch(function () {});
+  function escanearIngresso() { janelaCodigos({}); }
+
+  /* ---------- QR e cartão de embarque: câmera, arquivo (foto, print, PDF, TXT) ou colar (19/Nov/2026) ----------
+     Jornada (pedido do dono, 18/Nov): a reserva já existe (planejar → comprar com localizador); o QR chega perto da data
+     e PENDURA na reserva certa (localizador, voo, dia, nome), um por pessoa, redesenhado limpo, e funciona sem internet. */
+  var CIAS = { AD: 'Azul', G3: 'GOL', LA: 'LATAM', JJ: 'LATAM', '2Z': 'Voepass', TP: 'TAP', AR: 'Aerolíneas Argentinas', CM: 'Copa', AA: 'American', UA: 'United', DL: 'Delta', AF: 'Air France', KL: 'KLM', IB: 'Iberia', UX: 'Air Europa', LH: 'Lufthansa' };
+  function reservasDaViagem() {
+    var v = estado.viagem;
+    return abrirReservas(v).then(function () { return Banco.listar('reservas', function (r) { return r.viagem_id === v.id && !r.apagado; }); })
+      .then(function (lista) { return Promise.all(lista.map(function (r) { return Cofre.decifrarReserva(r.conteudo).then(function (c) { return { reg: r, c: c }; }, function () { return null; }); })); })
+      .then(function (ls) { return ls.filter(Boolean); });
+  }
+  function infoCodigo(texto) {
+    var ano = estado.viagem && estado.viagem.inicio ? +estado.viagem.inicio.slice(0, 4) : null;
+    var b = window.Codigos ? Codigos.bcbp(texto, ano) : null;
+    if (b) return Object.assign({ tipo: 'voo', qr: texto }, b);
+    return { tipo: 'ingresso', qr: String(texto).slice(0, 2000), codigo: String(texto).length <= 40 ? String(texto) : '' };
+  }
+  function textoInfo(i) {
+    if (i.tipo !== 'voo') return T('cod_generico', { c: String(i.qr).slice(0, 40) + (String(i.qr).length > 40 ? '…' : '') });
+    return ['✈ ' + (i.pessoa || ''), T('cod_voo', { cia: CIAS[i.cia] || i.cia, voo: i.voo }), i.de + ' → ' + i.para, i.data ? semana(i.data) + ' ' + fData(i.data, true) : null,
+      i.assento ? T('cod_assento', { a: i.assento }) : null, i.localizador ? T('cod_reserva', { r: i.localizador }) : null].filter(Boolean).join(' · ');
+  }
+  /* mesma pessoa = mesmo PRIMEIRO nome (a família divide o sobrenome: "Ana Teste" não é "Bruno Teste") */
+  function pessoaBate(a, b) {
+    var ta = normalizar(a || '').split(/\s+/).filter(Boolean), tb = normalizar(b || '').split(/\s+/).filter(Boolean);
+    return !!(ta.length && tb.length && ta[0] === tb[0]);
+  }
+  /* a qual reserva este código pertence? → { grupo:[x], alvo:x|null, pontos } */
+  function casarCodigo(i, itens) {
+    if (i.tipo !== 'voo') return { grupo: [], alvo: null, pontos: 0 };
+    var pts = itens.map(function (x) {
+      var c = x.c, t = normalizar([c.titulo, c.codigo, c.nota, c.local].join(' ')), p = 0, forte = false;
+      if (i.localizador && normalizar(c.codigo || '') === normalizar(i.localizador)) { p += 6; forte = true; }
+      else if (i.localizador && t.indexOf(normalizar(i.localizador)) > -1) { p += 5; forte = true; }
+      if (new RegExp('(^|\\D)0*' + i.voo + '(\\D|$)').test(t)) { p += 4; forte = true; }
+      if (i.data && String(c.quando || '').slice(0, 10) === i.data) p += 2;
+      if (c.tipo === 'voo') p += 1;
+      if (t.indexOf(normalizar(i.de)) > -1 && t.indexOf(normalizar(i.para)) > -1) p += 1;
+      return { x: x, p: forte || (p >= 3 && c.tipo === 'voo') ? p : 0 };
+    }).filter(function (y) { return y.p > 0; }).sort(function (a, b) { return b.p - a.p; });
+    if (!pts.length) return { grupo: [], alvo: null, pontos: 0 };
+    var top = pts[0].p, grupo = pts.filter(function (y) { return y.p >= top - 1; }).map(function (y) { return y.x; });
+    var alvo = grupo.filter(function (x) { return x.c.qr === i.qr; })[0] || grupo.filter(function (x) { return pessoaBate(x.c.pessoa, i.pessoa); })[0] ||
+      grupo.filter(function (x) { return !x.c.qr && !x.c.pessoa; })[0] || grupo.filter(function (x) { return !x.c.qr && !x.c.barra && !(x.c.pessoa && !pessoaBate(x.c.pessoa, i.pessoa)); })[0] || null;
+    return { grupo: grupo, alvo: alvo, pontos: top };
+  }
+  function semPessoa(titulo, pessoa) {
+    var t = String(titulo || ''); if (pessoa) t = t.replace(new RegExp('\\s*·\\s*' + String(pessoa).replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '\\s*$', 'i'), '');
+    return t;
+  }
+  /* grava: escolha = { alvo:x } (pendura nesta), { irmao:x } (outra pessoa do mesmo voo) ou { novo:true } */
+  function guardarCodigo(i, escolha) {
+    var vid = estado.viagem.id;
+    function gravar(reg, dados) { return cifrarReserva(vid, dados).then(function (blob) { reg.conteudo = blob; reg.tipo = dados.tipo; return Banco.gravar('reservas', reg); }); }
+    var extra = i.tipo === 'voo' ? { pessoa: i.pessoa, assento: i.assento, codigo: i.localizador } : { codigo: i.codigo };
+    if (escolha.alvo) {
+      var x = escolha.alvo, c = Object.assign({}, x.c, { qr: i.qr, barra: '', barraFormato: '' });
+      Object.keys(extra).forEach(function (k) { if (extra[k] && !c[k]) c[k] = extra[k]; });
+      if (!c.quando && i.data) c.quando = i.data;
+      var reg = x.reg;
+      if (!reg.agenda && c.quando) reg.agenda = { titulo: c.titulo, quando: c.quando, local: c.local || null };
+      return gravar(reg, c).then(function () { return c; });
+    }
+    if (escolha.irmao) {
+      var b = escolha.irmao, ag = Object.assign({}, b.reg.agenda || { titulo: b.c.titulo, quando: b.c.quando || i.data || '', local: b.c.local || null });
+      var grupo = ag.grupo || ('g-' + b.reg.id);
+      var antes = b.reg.agenda && b.reg.agenda.grupo ? Promise.resolve() : (b.reg.agenda = Object.assign({}, ag, { grupo: grupo }), Banco.gravar('reservas', b.reg));
+      var dados = Object.assign({}, b.c, { titulo: semPessoa(b.c.titulo, b.c.pessoa), qr: i.qr, barra: '', barraFormato: '', pessoa: i.pessoa || '', assento: i.assento || '', codigo: i.localizador || b.c.codigo || '', nota: '' });
+      return antes.then(function () { return gravar({ viagem_id: vid, agenda: Object.assign({}, ag, { grupo: grupo }) }, dados); }).then(function () { return dados; });
+    }
+    var titulo = i.tipo === 'voo' ? T('cod_tituloVoo', { cia: CIAS[i.cia] || i.cia, voo: i.voo, de: i.de, para: i.para }) : T('res_ingresso');
+    var novo = { tipo: i.tipo, titulo: titulo, quando: i.data || '', codigo: extra.codigo || '', local: '', nota: '', pessoa: extra.pessoa || '', assento: extra.assento || '', qr: i.qr };
+    var g = i.tipo === 'voo' ? 'v-' + i.cia + i.voo + '-' + (i.data || '') : null;
+    return gravar({ viagem_id: vid, marca: novo.codigo ? 'cod:' + novo.codigo + (novo.pessoa ? '|' + normalizar(novo.pessoa) : '') : null,
+      agenda: novo.quando ? { titulo: titulo, quando: novo.quando, local: null, grupo: g } : null }, novo).then(function () { return novo; });
+  }
+  /* decisão padrão para um código, olhando as reservas de agora (relê depois de cada gravação: duas pessoas não caem na mesma) */
+  function decidir(i) {
+    return reservasDaViagem().then(function (itens) {
+      var m = casarCodigo(i, itens);
+      if (m.alvo) return { alvo: m.alvo, itens: itens, m: m, texto: T('cod_juntar', { r: m.alvo.c.titulo + (m.alvo.c.pessoa ? ' · ' + m.alvo.c.pessoa : '') }) };
+      if (m.grupo.length) return { irmao: m.grupo[0], itens: itens, m: m, texto: T('cod_juntarPessoa', { r: semPessoa(m.grupo[0].c.titulo, m.grupo[0].c.pessoa), p: i.pessoa || '' }) };
+      return { novo: true, itens: itens, m: m, texto: T(i.tipo === 'voo' ? 'cod_criarVoo' : 'cod_criarIngresso') };
+    });
+  }
+  function janelaCodigos(op) {
+    op = op || {};
+    if (!estado.viagem) { avisar(T('semViagemTexto')); return; }
+    var ic = Seletor.icone;
+    var arq = h('input', { type: 'file', accept: 'image/*,application/pdf,.pdf,.txt,.eml,.html', multiple: true, hidden: true });
+    var video = h('video', { playsinline: true, autoplay: true, muted: true, class: 'cod-video', hidden: true });
+    var previa = h('img', { class: 'cod-previa', alt: T('cod_previa'), hidden: true });
+    var msg = h('p', { class: 'cod-msg', role: 'status', 'aria-live': 'polite' });
+    var lista = h('div', { class: 'cod-lista' });
+    var colarAqui = h('div', { class: 'cod-colar', contenteditable: 'true', hidden: true, 'aria-label': T('cod_colarAqui'), 'data-placeholder': T('cod_colarAqui') });
+    var manual = h('input', { class: 'campo', autocomplete: 'off', placeholder: T('res_digitarCodigo'), 'aria-label': T('res_digitarCodigo') });
+    var btCam = h('button', { class: 'an principal', type: 'button' }, [ic('camera'), h('span', { texto: T('cod_camera') })]);
+    var btArq = h('button', { class: 'an', type: 'button' }, [ic('arquivo'), h('span', { texto: T('cod_arquivo') })]);
+    var btCol = h('button', { class: 'an', type: 'button' }, [ic('colar'), h('span', { texto: T('cod_colar') })]);
+    var corpo = h('div', { class: 'cod-janela' }, [
+      h('p', { class: 'sub', texto: T(op.alvo ? 'cod_textoAlvo' : 'cod_texto', { r: op.alvo ? op.alvo.c.titulo : '' }) }),
+      h('div', { class: 'acoes-nav tres' }, [btCam, btArq, btCol]), arq, video, colarAqui, previa, msg, lista,
+      h('details', { class: 'mais-opcoes' }, [h('summary', { texto: T('cod_digitar') }), manual])]);
+    var fluxo = null, salvou = 0, cartoesAbertos = [];
+    function pararCam() { if (fluxo) fluxo.getTracks().forEach(function (t) { t.stop(); }); fluxo = null; video.hidden = true; btCam.classList.remove('ativo'); }
+    var j = janela(T(op.alvo ? 'cod_tituloAlvo' : 'cod_titulo'), corpo, function () { pararCam(); d.removeEventListener('paste', aoColar); if (salvou && estado.rota === 'reservas') mostrar('reservas'); });
+    j.caixa.classList.add('janela-codigos');
+
+    function resultado(cs, origem) {
+      lista.textContent = '';
+      if (!cs.length) { msg.className = 'cod-msg erro'; msg.textContent = T(origem === 'camera' ? 'cod_nadaCamera' : 'cod_nada'); return; }
+      msg.className = 'cod-msg ok'; msg.textContent = cs.length === 1 ? T('cod_achei1') : T('cod_acheiN', { n: cs.length });
+      try { if (navigator.vibrate) navigator.vibrate(40); } catch (e) {}
+      var infos = cs.map(function (c) { return infoCodigo(c.texto); });
+      var cartoes = cartoesAbertos = infos.map(function (i) { return cartaoCodigo(i); });
+      if (infos.length > 1 && !op.alvo) {
+        var todos = h('button', { class: 'bt', type: 'button', texto: '✓ ' + T('cod_guardarTodos', { n: infos.length }) });
+        todos.addEventListener('click', function () {
+          todos.disabled = true;
+          cartoes.reduce(function (p, k) { return p.then(function () { return k.guardarPadrao(); }); }, Promise.resolve()).then(function () { todos.textContent = '✓ ' + T('cod_guardados', { n: infos.length }); });
+        });
+        lista.appendChild(todos);
+      }
+      cartoes.forEach(function (k) { lista.appendChild(k.el); });
+    }
+    function cartaoCodigo(i) {
+      var img = h('img', { class: 'cod-mini', alt: '' });
+      carregarQR().then(function () { var q = qrcode(0, 'M'); q.addData(String(i.qr)); q.make(); img.src = q.createDataURL(3, 2); }).catch(function () {});
+      var info = h('div', { class: 'cod-info' }, [h('b', { texto: textoInfo(i) })]);
+      var acoes = h('div', { class: 'cod-acoes' });
+      var el = h('div', { class: 'cod-cartao' }, [img, info, acoes]);
+      var feito = false;
+      function pronto(c) {
+        feito = true; salvou++; acoes.textContent = '';
+        setTimeout(function () { cartoesAbertos.forEach(function (k) { if (k.atualizar) k.atualizar(); }); }, 0);
+        acoes.appendChild(h('span', { class: 'cod-ok', texto: '✓ ' + T('cod_guardadoEm', { r: c.titulo + (c.pessoa ? ' · ' + c.pessoa : '') }) }));
+        acoes.appendChild(h('button', { class: 'bt leve', type: 'button', texto: '▦ ' + T('mostrarQRIngresso'), onclick: function () { mostrarQRs([c], 0); } }));
+      }
+      function falhou() { avisar(T(navigator.onLine ? 'cofreErro' : 'semInternet')); }
+      var api = { el: el, guardarPadrao: function () { if (feito) return Promise.resolve(); if (op.alvo) return guardarCodigo(i, { alvo: op.alvo }).then(pronto, falhou); return decidir(i).then(function (dc) { return guardarCodigo(i, dc).then(pronto); }).catch(falhou); } };
+      if (op.alvo) {
+        acoes.appendChild(h('button', { class: 'bt', type: 'button', texto: '✓ ' + T('cod_guardarAqui'), onclick: function (e) { e.currentTarget.disabled = true; api.guardarPadrao(); } }));
+        return api;
+      }
+      var prim = h('button', { class: 'bt', type: 'button', texto: '…' });
+      api.atualizar = function () { if (feito) return; decidir(i).then(function (dc) { prim.textContent = '✓ ' + dc.texto; }); };
+      prim.addEventListener('click', function () { prim.disabled = true; decidir(i).then(function (dc) { return guardarCodigo(i, dc); }).then(pronto, function () { prim.disabled = false; falhou(); }); });
+      acoes.appendChild(prim);
+      decidir(i).then(function (dc) {
+        prim.textContent = '✓ ' + dc.texto;
+        /* outra reserva? escolher da lista (ou criar nova) */
+        var outras = dc.itens.slice().sort(function (a, b) { return String(a.c.quando || '').localeCompare(String(b.c.quando || '')); });
+        if (outras.length) {
+          var sel = h('select', { class: 'campo', 'aria-label': T('cod_outra') }, [h('option', { value: '' }, T('cod_outra'))].concat(outras.map(function (x, k) {
+            return h('option', { value: String(k) }, [x.c.titulo, x.c.pessoa, x.c.quando ? fData(String(x.c.quando).slice(0, 10), true) : null].filter(Boolean).join(' · ') + (x.c.qr ? ' ▦' : '')); })).concat([h('option', { value: 'novo' }, '＋ ' + T(i.tipo === 'voo' ? 'cod_criarVoo' : 'cod_criarIngresso'))]));
+          sel.addEventListener('change', function () {
+            if (!sel.value) return;
+            var esc = sel.value === 'novo' ? { novo: true } : { alvo: outras[+sel.value] };
+            sel.disabled = true; prim.disabled = true;
+            guardarCodigo(i, esc).then(pronto, function () { sel.disabled = false; prim.disabled = false; falhou(); });
+          });
+          acoes.appendChild(sel);
+        }
+      });
+      return api;
+    }
+    /* ler um arquivo / imagem colada */
+    function lerArquivos(files) {
+      files = [].slice.call(files || []).slice(0, 10);
+      if (!files.length) return;
+      pararCam(); lista.textContent = ''; msg.className = 'cod-msg'; msg.textContent = T('cod_lendo');
+      var todos = [], vistos = {}, textos = [];
+      files.reduce(function (p, f) {
+        return p.then(function () { return Codigos.lerArquivo(f); }).then(function (r) {
+          if (r.previa) { previa.src = r.previa; previa.hidden = false; }
+          if (r.erro === 'senha') textos.push('senha');
+          (r.codigos || []).forEach(function (c) { if (!vistos[c.texto]) { vistos[c.texto] = 1; todos.push(c); } });
+          if (!(r.codigos || []).length && r.texto && r.texto.trim().length > 40) textos.push(r.texto);
+        });
+      }, Promise.resolve()).then(function () {
+        if (!todos.length && textos.indexOf('senha') > -1) { msg.className = 'cod-msg erro'; msg.textContent = T('cod_senha'); return; }
+        if (!todos.length && textos.length) { oferecerTexto(textos.filter(function (t) { return t !== 'senha'; }).join('\n\n')); return; }
+        resultado(todos, 'arquivo');
+      }).catch(function () { msg.className = 'cod-msg erro'; msg.textContent = T('cod_nada'); });
+    }
+    function oferecerTexto(t) {
+      msg.className = 'cod-msg'; msg.textContent = T('cod_soTexto');
+      lista.textContent = '';
+      lista.appendChild(h('button', { class: 'bt', type: 'button', texto: '✉ ' + T('cod_lerComoEmail'), onclick: function () { j.fechar(function () { janelaImportar(t); }); } }));
+    }
+    function aoColar(e) {
+      var cd = e.clipboardData; if (!cd) return;
+      var fs = [].slice.call(cd.files || []).filter(function (f) { return /^image\//.test(f.type); });
+      if (!fs.length) [].forEach.call(cd.items || [], function (it) { if (it.kind === 'file' && /^image\//.test(it.type)) { var f = it.getAsFile(); if (f) fs.push(f); } });
+      if (fs.length) { e.preventDefault(); colarAqui.hidden = true; lerArquivos(fs); return; }
+      var t = cd.getData('text/plain');
+      if (t && (e.target === colarAqui || e.target === corpo || !/^(INPUT|TEXTAREA)$/.test(e.target.tagName || ''))) {
+        e.preventDefault(); colarAqui.hidden = true;
+        if (/^M[1-4][A-Z\/ ]{10,}/.test(t.trim())) resultado([{ texto: t.trim(), formato: 'texto' }], 'texto'); else oferecerTexto(t);
+      }
+    }
+    d.addEventListener('paste', aoColar);
+    btArq.addEventListener('click', function () { arq.click(); });
+    arq.addEventListener('change', function () { lerArquivos(arq.files); arq.value = ''; });
+    btCol.addEventListener('click', function () {
+      /* Android e computador: lê a imagem copiada (ex.: "Copiar" no WhatsApp). Sem permissão: caixa para tocar e colar */
+      var mostrarCaixa = function () { colarAqui.hidden = false; colarAqui.textContent = ''; colarAqui.focus(); msg.className = 'cod-msg'; msg.textContent = T('cod_colarDica'); };
+      if (!navigator.clipboard || !navigator.clipboard.read) { mostrarCaixa(); return; }
+      navigator.clipboard.read().then(function (itens) {
+        var ps = [];
+        itens.forEach(function (it) { var tp = it.types.filter(function (x) { return /^image\//.test(x); })[0]; if (tp) ps.push(it.getType(tp).then(function (b) { return new File([b], 'colado.' + tp.split('/')[1], { type: tp }); })); });
+        if (ps.length) return Promise.all(ps).then(lerArquivos);
+        var tx = itens.filter(function (it) { return it.types.indexOf('text/plain') > -1; })[0];
+        if (tx) return tx.getType('text/plain').then(function (b) { return b.text(); }).then(function (t) { if (/^M[1-4][A-Z\/ ]{10,}/.test(t.trim())) resultado([{ texto: t.trim(), formato: 'texto' }], 'texto'); else if (t.trim()) oferecerTexto(t); else mostrarCaixa(); });
+        mostrarCaixa();
+      }).catch(mostrarCaixa);
+    });
+    btCam.addEventListener('click', function () {
+      if (fluxo) { pararCam(); return; }
+      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) { msg.className = 'cod-msg erro'; msg.textContent = T('semCamera'); return; }
+      lista.textContent = ''; previa.hidden = true; colarAqui.hidden = true;
+      msg.className = 'cod-msg'; msg.textContent = T('cod_aponte');
+      navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment', width: { ideal: 1920 }, height: { ideal: 1080 } } }).then(function (st) {
+        fluxo = st; video.srcObject = st; video.hidden = false; btCam.classList.add('ativo');
+        var ocupado = false, voltas = 0;
+        (function tick() {
+          if (!fluxo) return;
+          if (video.readyState >= 2 && !ocupado) {
+            ocupado = true; voltas++;
+            /* alterna tamanhos: perto (QR grande) e longe (QR pequeno na tela do computador) */
+            Codigos.lerImagem(video, { rapido: true, max: 4, lados: [voltas % 2 ? 900 : 1400] }).then(function (cs) {
+              ocupado = false;
+              if (cs.length && fluxo) {
+                var cv = Codigos.paraCanvas(video, 900); previa.src = cv.toDataURL('image/jpeg', .8); previa.hidden = false;
+                pararCam(); resultado(cs, 'camera');
+              }
+            }).catch(function () { ocupado = false; });
+          }
+          setTimeout(tick, 120);
+        })();
+      }).catch(function () { msg.className = 'cod-msg erro'; msg.textContent = T('semCamera'); });
+    });
+    manual.addEventListener('change', function () { var t = manual.value.trim(); if (t) resultado([{ texto: t, formato: 'texto' }], 'texto'); });
+    if (op.arquivos) lerArquivos(op.arquivos);
   }
   function janelaReserva(x) {
     var c = x ? x.c : {};
@@ -3912,6 +4160,8 @@
       h('label', { class: 'rot', for: 'gx-r-tipo', texto: T('tipo') }), campos.tipo, h('label', { class: 'rot', for: 'gx-r-tit', texto: T('titulo') }), campos.titulo,
       h('label', { class: 'rot', for: 'gx-r-quando', texto: T('quando') }), campos.quando, h('label', { class: 'rot', for: 'gx-r-cod', texto: T('codigo') }), campos.codigo,
       h('label', { class: 'rot', for: 'gx-r-local', texto: T('local') }), campos.local, h('label', { class: 'rot', for: 'gx-r-nota', texto: T('nota') }), campos.nota,
+      x && x.reg ? null : h('div', { class: 'cartao cod-na-nova' }, [h('b', { texto: '▦ ' + T('cod_naNovaTitulo') }), h('span', { class: 'pequeno', texto: T('cod_naNovaTexto') }),
+        h('button', { class: 'bt sec', type: 'button', texto: T('cod_titulo'), onclick: function () { j.fechar(function () { janelaCodigos({}); }); } })]),
       h('div', { class: 'acoes' }, [apagar, ok])]);
     var j = janela(x && x.reg ? T('editar') : T('novaReserva'), corpo);
     ok.addEventListener('click', function () {
@@ -4138,10 +4388,12 @@
       if (op.livre) manual.placeholder = T('res_digitarCodigo');
       var corpo = h('div', { class: 'linha', style: 'flex-direction:column;align-items:stretch' }, [h('p', { class: 'sub', texto: T(op.livre ? 'res_escanearTexto' : 'lerQRTexto') }), video, manual, msg]);
       var fluxo = null, parar = function () { if (fluxo) fluxo.getTracks().forEach(function (t) { t.stop(); }); fluxo = null; };
-      var j = janela(T('lerQR'), corpo, function () { parar(); erro(new Error('cancelado')); });
+      /* BUG de 18/Nov: fechar a janela chamava o "cancelado" ANTES de entregar o código lido; a leitura se perdia calada */
+      var entregue = false;
+      var j = janela(T('lerQR'), corpo, function () { parar(); if (!entregue) erro(new Error('cancelado')); });
       var achou = function (txt) {
-        if (op.livre) { var t = String(txt || '').trim(); if (!t) return; parar(); j.fechar(function () { ok(t); }); return; }
-        var m = /^GXK1:([A-Za-z0-9+\/=]{40,48})$/.exec(String(txt || '').trim()); if (!m) { msg.textContent = T('qrInvalido'); return; } parar(); j.fechar(function () { ok(m[1]); }); };
+        if (op.livre) { var t = String(txt || '').trim(); if (!t) return; entregue = true; parar(); ok(t); j.fechar(); return; }
+        var m = /^GXK1:([A-Za-z0-9+\/=]{40,48})$/.exec(String(txt || '').trim()); if (!m) { msg.textContent = T('qrInvalido'); return; } entregue = true; parar(); ok(m[1]); j.fechar(); };
       manual.addEventListener('change', function () { achou(manual.value); });
       carregarQR().then(function () {
         if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) { video.hidden = true; msg.textContent = T('semCamera'); return; }
@@ -6061,7 +6313,7 @@
        o app já deixa guardados os arquivos do mapa logo depois de abrir. */
     setTimeout(function aquecerOffline() {
       if (!navigator.onLine || !navigator.serviceWorker || !navigator.serviceWorker.controller) return;
-      ['vendor/leaflet/leaflet.js', 'vendor/leaflet/leaflet.css', 'vendor/pmtiles/pmtiles.js', 'vendor/pmtiles/protomaps-leaflet.js']
+      ['vendor/leaflet/leaflet.js', 'vendor/leaflet/leaflet.css', 'vendor/pmtiles/pmtiles.js', 'vendor/pmtiles/protomaps-leaflet.js', 'vendor/qr/qrcode.js', 'vendor/qr/jsqr.js']
         .forEach(function (u) { fetch(u).catch(function () {}); });
     }, 8000);
     var rota = Nav.iniciar();

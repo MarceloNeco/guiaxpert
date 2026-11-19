@@ -62,3 +62,19 @@ Inteligência esperada ao escanear, enviar arquivo ou colar:
   A rotina das 17h só precisa repetir o teste em modo avião depois de publicar (não mexer nisso).
 - Os novos botões de navegação (Ver no mapa · Google Maps · Waze · Site) e o detalhe só de leitura do item já existem: a tela de Reservas/QR
   pode reaproveitar `acoesNavegar(l)` e o padrão "ler primeiro, lápis para editar".
+
+## Feito em 19/Nov/2026 (antecipado a pedido do dono; versão 1.5.68)
+- **Causa do "a câmera fecha e não salva":** ao fechar a janela da câmera, o app executava antes o "cancelado" da janela e a leitura
+  era descartada calada (o código chegava depois de a promessa já ter falhado). Corrigido (vale também para o QR do cofre).
+- **Janela nova "QR ou cartão de embarque"** (botão "QR / cartão" nas Reservas, "Pôr QR" em cada reserva e o atalho dentro de "Nova"):
+  Câmera · Arquivo (foto, print, PDF, TXT; vários de uma vez) · Colar (imagem copiada, ex.: WhatsApp; Ctrl+V no computador), com a
+  imagem mostrada antes de ler. Leitor do próprio celular (QR, Aztec, PDF417) e, sem ele, jsQR com vários tamanhos e recortes; acha
+  vários QR na mesma imagem; PDF pelo pdf.js (no aparelho); PDF com senha avisa.
+- **Cartão de embarque (padrão IATA BCBP):** lê nome, localizador, voo, de/para, dia e assento e PENDURA na reserva que já existe
+  (localizador, número do voo, dia e primeiro nome; a família divide o sobrenome). Uma reserva por pessoa no mesmo grupo; o mesmo QR
+  lido de novo não duplica; sem reserva, oferece criar a do voo. QR redesenhado limpo, também sem internet.
+- **E-mail:** texto da tela explica o que é (colar o texto; o app acha localizador, voo, datas, sem IA); TXT/HTML sem QR vira "ler como e-mail".
+- **Testes:** 4 cartões fictícios no formato da Azul (o Drive tem os reais, que não vieram para cá por conterem dados pessoais e pelo
+  tamanho das fotos): prints, "fotos da tela" tortas e borradas, dois QR numa imagem, PDF, colar e câmera simulada. Tudo lido e guardado
+  na reserva certa. Tempo por foto: ~0,25 s sem o leitor do celular.
+- **Falta (regra zero):** robô do e-mail roteiro@solverone.com.br (E1) — integração nova, precisa de aprovação do dono.
