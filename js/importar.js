@@ -97,6 +97,8 @@
     doEndereco: function () {
       var q = new URLSearchParams(location.search);
       var t = [q.get('title'), q.get('text'), q.get('url')].filter(Boolean).join('\n');
+      if (q.get('compartilhado')) Importar.arquivosCompartilhados = +q.get('compartilhado');
+      if (!t && Importar.arquivosCompartilhados) history.replaceState(null, '', location.pathname + (location.hash || ''));
       if (!t) return null;
       history.replaceState(null, '', location.pathname + (location.hash || ''));
       return t;

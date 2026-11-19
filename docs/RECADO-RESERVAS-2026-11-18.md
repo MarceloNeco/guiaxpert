@@ -78,3 +78,10 @@ Inteligência esperada ao escanear, enviar arquivo ou colar:
   tamanho das fotos): prints, "fotos da tela" tortas e borradas, dois QR numa imagem, PDF, colar e câmera simulada. Tudo lido e guardado
   na reserva certa. Tempo por foto: ~0,25 s sem o leitor do celular.
 - **Falta (regra zero):** robô do e-mail roteiro@solverone.com.br (E1) — integração nova, precisa de aprovação do dono.
+
+## 19/Nov/2026, versão 1.5.69
+- "Compartilhar → GuiaXpert" (Android, app instalado) agora recebe FOTO e PDF, até 10 de uma vez (manifest share_target POST +
+  sw.js guarda num cache temporário e abre o app, que lê os QR e junta à reserva). Só um link (Adobe, Drive…) ganha a explicação de
+  baixar o arquivo. Mudança no sw.js é genérica (rota ./compartilhar): avisar o RootifyONE para levar ao modelo comum.
+- Cartão "Funciona sem internet?" no Hoje (e em Configurações): confere de verdade app, mapa, guia, roteiro, chave das reservas e
+  previsão; botão "Guardar tudo agora"; faixa "Sem internet agora" quando o celular perde o sinal.

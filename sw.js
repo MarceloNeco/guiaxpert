@@ -2,7 +2,7 @@
    como app no celular e no computador.
    Ao publicar uma versao nova do seu site, troque o numero de VERSAO
    abaixo (ex.: 'v1' -> 'v2') para o aparelho pegar os arquivos novos. */
-var VERSAO = 'guiaxpert-v1.5.68';
+var VERSAO = 'guiaxpert-v1.5.69';
 /* Todos os apps moram no mesmo endereco (marceloneco.github.io) e dividem
    os caches. Por isso o nome leva a pasta do app: assim um app nunca apaga
    o modo sem internet de outro. A pasta vem do proprio endereco, entao este
@@ -28,6 +28,26 @@ self.addEventListener('activate', function (e) {
   }).then(function () { return self.clients.claim(); }));
 });
 
+/* "Compartilhar" do celular (manifest share_target, POST): foto, PDF ou texto vindos de outro app (ex.: WhatsApp).
+   Guarda os arquivos num cache temporario e abre o app com ?compartilhado=...; o app le e apaga. Generico para os apps. */
+self.addEventListener('fetch', function (e) {
+  var req = e.request;
+  if (req.method !== 'POST' || !/\/compartilhar\/?$/.test(new URL(req.url).pathname)) return;
+  e.respondWith(req.formData().then(function (fd) {
+    var arqs = fd.getAll('arquivos').filter(function (f) { return f && f.size; }).slice(0, 10);
+    var cacheNome = PREFIXO + 'compartilhado';
+    return caches.delete(cacheNome).then(function () { return caches.open(cacheNome); }).then(function (c) {
+      return Promise.all(arqs.map(function (f, i) {
+        return c.put('./__compartilhado/' + i, new Response(f, { headers: { 'Content-Type': f.type || 'application/octet-stream', 'X-Nome': encodeURIComponent(f.name || ('arquivo-' + i)) } }));
+      }));
+    }).then(function () {
+      var q = new URLSearchParams();
+      ['title', 'text', 'url'].forEach(function (k) { var v = fd.get(k); if (v) q.set(k, String(v).slice(0, 4000)); });
+      if (arqs.length) q.set('compartilhado', String(arqs.length));
+      return Response.redirect('./index.html?' + q.toString(), 303);
+    });
+  }).catch(function () { return Response.redirect('./index.html', 303); }));
+});
 self.addEventListener('fetch', function (e) {
   var req = e.request;
   if (req.method !== 'GET') return;

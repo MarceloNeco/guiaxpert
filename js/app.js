@@ -12,7 +12,7 @@
 (function () {
   'use strict';
   var d = document, $ = function (id) { return d.getElementById(id); };
-  var VERSAO_APP = '1.5.68';
+  var VERSAO_APP = '1.5.69';
 
   /* ------------------------------------------------------------------
      1. UTILIDADES
@@ -1714,32 +1714,94 @@
     if (estado.pacote && estado.pacote.aviso) tela.appendChild(h('p', { class: 'pequeno', texto: estado.pacote.aviso[idioma()] || estado.pacote.aviso.pt }));
   };
   /* "Guardar para usar sem internet": mapa + pacote desta viagem */
+  /* "Funciona sem internet?" — confere DE VERDADE cada parte guardada neste celular (não confia só num marcador),
+     mostra a lista e um botão "Guardar tudo agora". Pedido do dono, 19/Nov: "como é que eu sei que está local?" */
+  function arquivosDoApp() {
+    var ls = ['./', 'index.html'];
+    [].forEach.call(d.querySelectorAll('script[src]'), function (sc) { ls.push(sc.getAttribute('src')); });
+    [].forEach.call(d.querySelectorAll('link[rel="stylesheet"][href]'), function (l) { ls.push(l.getAttribute('href')); });
+    return ls.concat(['vendor/qr/qrcode.js', 'vendor/qr/jsqr.js']).filter(function (u) { return u && !/^https?:/.test(u); });
+  }
+  function noCache(u) { return window.caches ? caches.match(new URL(u, location.href).href).then(function (r) { return !!r; }).catch(function () { return false; }) : Promise.resolve(false); }
+  function todosNoCache(ls) { return Promise.all(ls.map(noCache)).then(function (r) { return r.filter(function (x) { return !x; }).length === 0; }); }
+  function conferirSemInternet(v) {
+    var cidade = v.destino, c = lugarClima();
+    return Promise.all([
+      /* 1. o próprio app */
+      Promise.all([Promise.resolve(!!(navigator.serviceWorker && navigator.serviceWorker.controller)), todosNoCache(arquivosDoApp())]).then(function (r) { return { k: 'app', ok: r[0] && r[1] }; }),
+      /* 2. o mapa da cidade (arquivo + o que desenha) */
+      cidade && window.Offline ? Offline.estado(cidade).then(function (e) {
+        if (!e.temMapa) return { k: 'mapa', ok: null };
+        return Promise.all([caches.open('gx-mapas-v1').then(function (cc) { return cc.match('gx-mapa-' + cidade); }).then(function (r) { return !!r; }).catch(function () { return false; }),
+          todosNoCache(['vendor/leaflet/leaflet.js', 'vendor/leaflet/leaflet.css', 'vendor/pmtiles/pmtiles.js', 'vendor/pmtiles/protomaps-leaflet.js'])])
+          .then(function (r) { return { k: 'mapa', ok: r[0] && r[1], mb: (e.bytes / 1048576).toFixed(1).replace('.', ',') }; });
+      }) : Promise.resolve({ k: 'mapa', ok: null }),
+      /* 3. o guia da cidade (lugares) */
+      cidade ? Banco.ler('pacotes', cidade).then(function (p) { return { k: 'guia', ok: !!p, n: p && p.lugares ? p.lugares.length : 0 }; }).catch(function () { return { k: 'guia', ok: false }; }) : Promise.resolve({ k: 'guia', ok: null }),
+      /* 4. roteiro e viagem: moram no celular */
+      Promise.resolve({ k: 'roteiro', ok: true, n: estado.roteiros.length }),
+      /* 5. reservas e QR: a chave da viagem guardada aqui abre tudo sem internet */
+      Banco.listar('reservas', function (r) { return r.viagem_id === v.id && !r.apagado; }).then(function (rs) {
+        if (!rs.length) return { k: 'reservas', ok: null };
+        return Banco.meta('viagem-chave:' + v.id, null).then(function (m) { return { k: 'reservas', ok: !!m, n: rs.length }; });
+      }).catch(function () { return { k: 'reservas', ok: false }; }),
+      /* 6. previsão: a última guardada */
+      c ? Banco.meta('clima:' + c.lat.toFixed(2) + ',' + c.lng.toFixed(2), null).then(function (g) { return { k: 'tempo', ok: !!g, em: g && g.em }; }) : Promise.resolve({ k: 'tempo', ok: null })
+    ]);
+  }
+  function guardarTudoSemInternet(v, aoProgresso) {
+    var passos = [
+      function () { return Promise.all(arquivosDoApp().map(function (u) { return fetch(u, { cache: 'no-cache' }).catch(function () {}); })); },
+      function () { return v.destino && window.Offline ? Offline.guardarViagem(v.destino, function (f) { if (aoProgresso) aoProgresso(.15 + f * .65); }) : null; },
+      function () { return Promise.all(['vendor/leaflet/leaflet.js', 'vendor/leaflet/leaflet.css', 'vendor/pmtiles/pmtiles.js', 'vendor/pmtiles/protomaps-leaflet.js'].map(function (u) { return fetch(u).catch(function () {}); })); },
+      function () { return Cofre.chaveViagem(v.id).catch(function () {}); },
+      function () { var c = lugarClima(); return c ? Promise.all([Clima.previsao(c.lat, c.lng, true), Clima.porHora(c.lat, c.lng, true)]).catch(function () {}) : null; }
+    ];
+    return passos.reduce(function (p, f, k) { return p.then(function () { if (aoProgresso && k !== 1) aoProgresso(k === 0 ? .1 : .8 + k * .04); return f(); }); }, Promise.resolve());
+  }
   function cartaoOffline(v) {
-    var c = h('div', { class: 'cartao' }), cidade = v && v.destino;
-    if (!cidade || !window.Offline) return h('span', { hidden: true });
-    Offline.estado(cidade).then(function (e) {
-      if (!e.temMapa) { c.remove(); return; }
-      var mb = (e.bytes / 1048576).toFixed(1).replace('.', ',');
-      if (e.guardado) {
-        c.appendChild(h('div', { class: 'linha entre' }, [h('b', { texto: '✓ ' + T('prontoSemInternet') }), h('span', { class: 'pequeno', texto: mb + ' MB' })]));
-        c.appendChild(h('p', { class: 'sub', texto: T('prontoSemInternetTexto') }));
-        c.appendChild(h('button', { class: 'bt leve', type: 'button', texto: T('apagarMapa', { mb: mb }), onclick: function () {
-          Offline.apagar(cidade).then(function () { avisar(T('mapaApagado')); mostrar(estado.rota); });
-        } }));
-        return;
-      }
-      var prog = h('div', { class: 'progresso', hidden: true }, h('i', { style: 'width:0%' }));
-      var bt = h('button', { class: 'bt sec', type: 'button', texto: '⬇ ' + T('guardarSemInternet', { mb: mb }) });
-      bt.addEventListener('click', function () {
-        bt.disabled = true; prog.hidden = false;
-        Offline.guardarViagem(cidade, function (f) { prog.firstChild.style.width = Math.round(f * 100) + '%'; })
-          .then(function () { avisar(T('guardadoSemInternet')); mostrar(estado.rota); })
-          .catch(function () { bt.disabled = false; prog.hidden = true; avisar(navigator.onLine ? T('erroRede') : T('semInternet')); });
+    var c = h('div', { class: 'cartao sem-internet' });
+    if (!v) return h('span', { hidden: true });
+    function desenhar() {
+      conferirSemInternet(v).then(function (itens) {
+        c.textContent = '';
+        var falta = itens.filter(function (x) { return x.ok === false; }), tudo = !falta.length;
+        var nome = function (x) { return T('si_' + x.k); };
+        c.appendChild(h('div', { class: 'si-cab ' + (tudo ? 'ok' : 'falta') }, [
+          h('span', { class: 'si-icone', 'aria-hidden': 'true', texto: tudo ? '✓' : '!' }),
+          h('div', {}, [h('b', { texto: T(tudo ? 'si_pronto' : 'si_falta') }),
+            h('span', { class: 'pequeno', style: 'display:block', texto: tudo ? T('si_prontoTexto') : T('si_faltaTexto', { o: falta.map(nome).join(', ') }) })])]));
+        var lista = h('ul', { class: 'si-lista' }, itens.filter(function (x) { return x.ok !== null; }).map(function (x) {
+          var det = x.k === 'mapa' && x.mb ? x.mb + ' MB' : x.k === 'guia' && x.n ? T('si_nLugares', { n: x.n }) : x.k === 'reservas' && x.n ? T('si_nReservas', { n: x.n }) : x.k === 'tempo' && x.em ? T('si_tempoEm', { d: fData(new Date(x.em).toISOString().slice(0, 10), true), h: horaCurta(x.em) }) : '';
+          return h('li', { class: x.ok ? 'ok' : 'falta' }, [h('span', { class: 'si-marca', 'aria-hidden': 'true', texto: x.ok ? '✓' : '✗' }), h('span', { texto: nome(x) + (x.ok ? '' : ' — ' + T('si_naoGuardado')) }), det ? h('small', { texto: det }) : null]);
+        }));
+        var det = h('details', { class: 'si-det' }, [h('summary', { texto: T('si_verLista') }), lista, h('p', { class: 'pequeno', texto: T('si_como') })]);
+        if (!tudo) det.open = true;
+        c.appendChild(det);
+        var prog = h('div', { class: 'progresso', hidden: true }, h('i', { style: 'width:0%' }));
+        var bt = h('button', { class: tudo ? 'bt leve' : 'bt', type: 'button', texto: tudo ? T('si_conferirDeNovo') : '⬇ ' + T('si_guardarTudo') });
+        bt.addEventListener('click', function () {
+          if (!navigator.onLine && !tudo) { avisar(T('si_precisaInternet')); return; }
+          bt.disabled = true; prog.hidden = false; bt.textContent = T('si_guardando');
+          (tudo ? Promise.resolve() : guardarTudoSemInternet(v, function (f) { prog.firstChild.style.width = Math.round(f * 100) + '%'; }))
+            .then(function () { prog.firstChild.style.width = '100%'; desenhar(); if (!tudo) avisar(T('si_guardadoAviso')); })
+            .catch(function () { bt.disabled = false; prog.hidden = true; avisar(navigator.onLine ? T('erroRede') : T('semInternet')); });
+        });
+        c.appendChild(bt); c.appendChild(prog);
       });
-      c.appendChild(h('h3', { texto: T('semInternetTitulo') })); c.appendChild(h('p', { class: 'sub', texto: T('semInternetTexto') })); c.appendChild(bt); c.appendChild(prog);
-    });
+    }
+    desenhar();
     return c;
   }
+  /* sem sinal agora: uma faixa discreta no alto dizendo que o app está usando o que está guardado */
+  function faixaSemSinal() {
+    var f = $('gx-sem-sinal');
+    if (navigator.onLine) { if (f) f.remove(); return; }
+    if (f) return;
+    d.body.appendChild(h('div', { id: 'gx-sem-sinal', class: 'faixa-sem-sinal', role: 'status', texto: T('si_semSinalAgora') }));
+  }
+  window.addEventListener('online', faixaSemSinal); window.addEventListener('offline', faixaSemSinal);
+  setTimeout(faixaSemSinal, 1500);
   function minutos(hh) { var p = String(hh).split(':'); return (+p[0]) * 60 + (+p[1] || 0); }
   function cartaoAgora(it) {
     var l = it.lugarId ? lugarPorId(it.lugarId) : null;
@@ -3899,6 +3961,35 @@
   }
   /* câmera: lê o QR de um ingresso e já abre a reserva com o código preenchido */
   function escanearIngresso() { janelaCodigos({}); }
+  /* arquivos que vieram pelo "Compartilhar" do celular (o service worker guardou num cache temporário) */
+  function receberArquivosCompartilhados() {
+    var nome = 'dgo-' + (location.pathname.replace(/^\/+|\/+[^/]*$/g, '').replace(/[^a-z0-9-]+/gi, '-') || 'raiz') + '-compartilhado';
+    if (!window.caches) return;
+    caches.keys().then(function (ks) { return ks.filter(function (k) { return /-compartilhado$/.test(k); })[0] || nome; }).then(function (cn) {
+      return caches.open(cn).then(function (c) {
+        return c.keys().then(function (reqs) {
+          return Promise.all(reqs.map(function (r) { return c.match(r).then(function (resp) {
+            return resp.blob().then(function (b) { return new File([b], decodeURIComponent(resp.headers.get('X-Nome') || 'arquivo'), { type: resp.headers.get('Content-Type') || b.type }); }); }); }));
+        }).then(function (fs) { caches.delete(cn); return fs; });
+      });
+    }).then(function (fs) {
+      Importar.arquivosCompartilhados = 0;
+      if (!fs || !fs.length) return;
+      if (!estado.viagem) { avisar(T('semViagemTexto')); return; }
+      Nav.ir('reservas'); setTimeout(function () { janelaCodigos({ arquivos: fs }); }, 300);
+    }).catch(function () {});
+  }
+  /* veio só um LINK para o documento (Adobe, Google Drive, Dropbox, OneDrive): o app não entra na conta de ninguém */
+  function linkDeDocumento(t) { return /acrobat\.adobe\.com|adobeacrobat\.app\.link|drive\.google\.com|docs\.google\.com|dropbox\.com|1drv\.ms|onedrive\.live\.com|icloud\.com\//i.test(t) && !/\b[A-Z0-9]{6}\b.*\b\d{3,4}\b/.test(t); }
+  function janelaSoLink(t) {
+    var url = (String(t).match(/https?:\/\/\S+/) || [])[0];
+    var corpo = h('div', { class: 'linha', style: 'flex-direction:column;align-items:stretch;gap:.6rem' }, [
+      h('p', { texto: T('lk_texto') }),
+      h('ol', { class: 'passos' }, [h('li', { texto: T('lk_p1') }), h('li', { texto: T('lk_p2') }), h('li', { texto: T('lk_p3') })]),
+      url ? h('a', { class: 'bt sec', href: url, target: '_blank', rel: 'noopener', texto: T('lk_abrir') }) : null,
+      h('button', { class: 'bt', type: 'button', texto: '▦ ' + T('cod_titulo'), onclick: function () { j.fechar(function () { if (estado.viagem) { Nav.ir('reservas'); setTimeout(function () { janelaCodigos({}); }, 200); } }); } })]);
+    var j = janela(T('lk_titulo'), corpo);
+  }
 
   /* ---------- QR e cartão de embarque: câmera, arquivo (foto, print, PDF, TXT) ou colar (19/Nov/2026) ----------
      Jornada (pedido do dono, 18/Nov): a reserva já existe (planejar → comprar com localizador); o QR chega perto da data
@@ -6101,7 +6192,10 @@
         if (vozAppAtiva()) { d.body.classList.add('voz-app'); setTimeout(function () { VozApp.carregar(); }, 3000); }
         conferirIA();
         var compartilhado = window.Importar && Importar.doEndereco();
-        if (compartilhado) setTimeout(function () { if (estado.viagem) { Nav.ir('reservas'); setTimeout(function () { janelaImportar(compartilhado); }, 200); } else avisar(T('semViagemTexto')); }, 400);
+        /* chegou por "Compartilhar": arquivos (foto, PDF) vão direto para a leitura do QR; só um link de documento (Adobe, Drive…) ganha a explicação */
+        if (Importar.arquivosCompartilhados) setTimeout(function () { receberArquivosCompartilhados(); }, 400);
+        else if (compartilhado && linkDeDocumento(compartilhado)) setTimeout(function () { janelaSoLink(compartilhado); }, 400);
+        else if (compartilhado) setTimeout(function () { if (estado.viagem) { Nav.ir('reservas'); setTimeout(function () { janelaImportar(compartilhado); }, 200); } else avisar(T('semViagemTexto')); }, 400);
       });
     });
   }

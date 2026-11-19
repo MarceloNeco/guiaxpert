@@ -2,6 +2,21 @@
   "app": "guiaxpert",
   "versoes": [
     {
+      "versao": "1.5.69",
+      "data": "2026-11-19",
+      "substitui": "1.5.68",
+      "itens": {
+        "pt": [
+          "Novo: conferência do uso sem internet.",
+          "Novo: compartilhar foto ou PDF com o app."
+        ],
+        "en": [
+          "New: offline readiness check.",
+          "New: share a photo or PDF with the app."
+        ]
+      }
+    },
+    {
       "versao": "1.5.68",
       "data": "2026-11-19",
       "substitui": "1.5.67",

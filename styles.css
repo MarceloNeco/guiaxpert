@@ -1099,3 +1099,19 @@ body.voz-app.voz-baixando .bt-voz { opacity: .75; }
 .cod-acoes { grid-column: 1 / -1; display: grid; gap: .45rem; }
 .cod-ok { color: var(--rodovia); font-weight: 700; }
 .cod-na-nova { display: grid; gap: .35rem; background: var(--sup2); }
+
+/* "Funciona sem internet?" — lista conferida */
+.sem-internet { display: grid; gap: .5rem; }
+.si-cab { display: flex; gap: .7rem; align-items: center; }
+.si-icone { flex: none; width: 2.2rem; height: 2.2rem; border-radius: 50%; display: grid; place-items: center; font-weight: 900; font-size: 1.1rem; color: #fff; }
+.si-cab.ok .si-icone { background: var(--rodovia); }
+.si-cab.falta .si-icone { background: var(--faixa); color: #2b2100; }
+.si-det summary { cursor: pointer; color: var(--rodovia); font-weight: 700; font-size: .9rem; padding: .25rem 0; }
+.si-lista { list-style: none; margin: .3rem 0; padding: 0; display: grid; gap: .3rem; }
+.si-lista li { display: flex; align-items: baseline; gap: .5rem; font-size: .93rem; }
+.si-lista li small { margin-left: auto; color: var(--suave); white-space: nowrap; }
+.si-lista .si-marca { width: 1.1rem; font-weight: 900; }
+.si-lista li.ok .si-marca { color: var(--rodovia); }
+.si-lista li.falta { color: var(--evita, #b3261e); font-weight: 600; }
+.faixa-sem-sinal { position: fixed; z-index: 900; left: 50%; transform: translateX(-50%); top: calc(env(safe-area-inset-top, 0px) + 3.6rem); background: #172024; color: #fff;
+  font-size: .8rem; font-weight: 600; padding: .35rem .8rem; border-radius: 999px; box-shadow: 0 2px 10px rgba(0, 0, 0, .3); white-space: nowrap; max-width: 94vw; overflow: hidden; text-overflow: ellipsis; }
