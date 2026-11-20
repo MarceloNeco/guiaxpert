@@ -190,3 +190,12 @@ Proposto (precisa de aprovação, regra zero):
 - Painel com 3 alturas de arrastar contínuo (espiada / meio / cheio), como Google Maps e Apple Maps.
 - "Como chegar" dentro do app (rota a pé/carro desenhada no mapa) com OSRM público ou GraphHopper: depende de serviço externo.
 - Filtros do mapa por tipo com os mesmos chips do Roteiro (Passeios, Comida, Transporte e hotel).
+
+## Guia de Gramado e Canela — lugares sem ponto no mapa (20/Nov/2026)
+21 lugares do guia ainda não têm coordenada e não aparecem como pino (abrem só a ficha). Conferir um a um pelo endereço oficial
+(não chutar: a Aldeia do Papai Noel, "Av. Borges de Medeiros, 2300", cai no Carrefour no OpenStreetMap; o Hotel Fioreze aparece
+na Borges de Medeiros no OSM e na Rua São Pedro, 438 no guia). Lista: Famiglia Guimarães, Cantina 28, Osteria Di Lucca, Bus Bier Tour,
+Florybal (Canela), Aldeia do Papai Noel, Roda Canela, Sabor da Nonna, Sabor de Casa, Hotel Fioreze Centro, Localiza, BusTour,
+Taberna MF, La Birra, Le Grand Burger, Brûlée Bistrô, Café São Pedro, Garbo, Strapazzon, Vitacieri, Pé da Cascata Explorer.
+Feito: Mundo Criamigos (Rua São Pedro, 663, pelo site oficial) e O Maquinista (Canela).
+

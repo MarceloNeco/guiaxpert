@@ -2,6 +2,21 @@
   "app": "guiaxpert",
   "versoes": [
     {
+      "versao": "1.5.75",
+      "data": "2026-11-20",
+      "substitui": "1.5.74",
+      "itens": {
+        "pt": [
+          "Correção na busca do topo para o mapa.",
+          "Correção no endereço do Mundo Criamigos."
+        ],
+        "en": [
+          "Fix for top search to the map.",
+          "Fix for Mundo Criamigos address."
+        ]
+      }
+    },
+    {
       "versao": "1.5.74",
       "data": "2026-11-19",
       "substitui": "1.5.73",

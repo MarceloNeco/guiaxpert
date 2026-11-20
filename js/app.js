@@ -12,7 +12,7 @@
 (function () {
   'use strict';
   var d = document, $ = function (id) { return d.getElementById(id); };
-  var VERSAO_APP = '1.5.74';
+  var VERSAO_APP = '1.5.75';
 
   /* ------------------------------------------------------------------
      1. UTILIDADES
@@ -1333,7 +1333,7 @@
       if (!q) return;
       var funcs = Object.keys(ROTAS).filter(function (r) { return r !== 'entrar' && normalizar(T('rota_' + r) + ' ' + T('sin_' + r)).indexOf(q) > -1; });
       funcs.forEach(function (r) {
-        lista.appendChild(h('button', { class: 'bt leve', type: 'button', onclick: function () { j.fechar(); setTimeout(function () { Nav.ir(r); }, 0); } }, T('rota_' + r)));
+        lista.appendChild(h('button', { class: 'bt leve', type: 'button', onclick: function () { j.fechar(function () { Nav.ir(r); }); } }, T('rota_' + r)));
       });
       /* procura também no que o "Buscar lugares perto" já trouxe para o mapa */
       var locais = todosLugares(), idsLoc = {}; locais.forEach(function (l) { idsLoc[l.id] = 1; });
@@ -1341,7 +1341,8 @@
       locais.map(function (l) { return { l: l, n: notaBusca(l, q) }; }).filter(function (x) { return x.n > 0; })
         .sort(function (a, b) { return b.n - a.n; }).map(function (x) { return x.l; }).slice(0, 20).forEach(function (l) {
         lista.appendChild(h('button', { class: 'bt leve', type: 'button', onclick: function () {
-          estado.busca = ''; estado.filtro = 'todos'; estado.abrirLugar = l.id; j.fechar(); setTimeout(function () { Nav.ir(emViagem() ? 'mapa' : 'explorar'); }, 0);
+          /* 20/Nov: fechar a janela e ir ao mapa ao mesmo tempo fazia o "voltar" do celular engolir a ida ao mapa */
+          j.fechar(function () { if (emViagem()) irAoMapa(l, { ficha: true }); else { estado.busca = ''; estado.abrirLugar = l.id; Nav.ir('explorar'); } });
         } }, [placa(l.categoria), ' ', l.nome]));
       });
       /* lugares fora do app (OpenStreetMap, Foursquare, Tripadvisor): procura sozinho quando a pessoa para de digitar */
@@ -1394,7 +1395,7 @@
   function mostrarNoMapa(l) {
     if (emViagem()) {
       if (!estado.descobertas.some(function (x) { return x.id === l.id; })) estado.descobertas.push(l);
-      estado.busca = ''; estado.filtro = 'todos'; estado.abrirLugar = l.id; Nav.ir('mapa');
+      irAoMapa(l, { ficha: true });
     } else {
       var ex = window.Explorar && Explorar.estado;
       if (ex && !ex.descobertas.some(function (x) { return x.id === l.id; })) ex.descobertas.push(l);
@@ -2736,10 +2737,12 @@
   /* "Ver no mapa": o mapa do PRÓPRIO app, centrado no lugar, pino em destaque. Um caminho só para todos os botões.
      (No celular do dono, 19/Nov, o "Ver no mapa" de dentro do item às vezes só voltava para a lista do dia: a troca
      de tela ficava presa no fechamento da janela. Agora há uma rede de segurança que termina a troca.) */
-  function irAoMapa(l) {
+  function irAoMapa(l, op) {
     if (!l) return;
-    if (estado.rota === 'mapa' && !Nav.camadas.length && window.Mapa && Mapa.focar(l.id)) return;
-    estado.abrirLugar = l.id; estado.abrirPeek = l.lat != null; estado.filtro = 'todos'; estado.busca = ''; estado.soDia = false;
+    op = op || {};
+    if (estado.rota === 'mapa' && !Nav.camadas.length && window.Mapa && Mapa.focar(l.id, op.ficha)) return;
+    /* ficha: veio da busca, quer ver detalhes e "Pôr no dia" já aberto; senão, o mapa com o pino em destaque */
+    estado.abrirLugar = l.id; estado.abrirPeek = l.lat != null && !op.ficha; estado.filtro = 'todos'; estado.busca = ''; estado.soDia = false;
     if (!estado.viagem) { estado.abrirPeek = false; Nav.ir('explorar'); return; }
     if (estado.rota === 'mapa' && !Nav.camadas.length) { mostrar('mapa'); return; }
     Nav.ir('mapa');

@@ -301,9 +301,10 @@
         if (op.aoDesenhar) op.aoDesenhar(mapa, vis);
       }
       function redesenhar() { desenharChips(); desenharMapa(); if (painel.getAttribute('data-estado') !== 'cartao') mostrarLista(); }
-      function focar(id) {
+      function focar(id, ficha) {
         var alvo = op.lugares().filter(function (l) { return l.id === id; })[0] || (escolhido && escolhido.id === id ? escolhido : null);
         if (!alvo) return false;
+        if (ficha) { if (alvo.lat != null) mapa.setView([alvo.lat, alvo.lng], 16); abrirLugar(alvo); return true; }
         estadoPainel('resumo'); abrirLugar(alvo); estadoPainel('resumo'); mostrarLista(); centrarAcima(alvo, 16);
         return true;
       }
@@ -407,7 +408,7 @@
     },
     /* "Ver no mapa" com a tela de mapa já aberta: centra e destaca o pino sem recarregar */
     atualizar: function () { if (atual && atual.tela && atual.tela.isConnected) atual.redesenhar(); },
-    focar: function (id) { return !!(atual && atual.tela && atual.tela.isConnected && mapa && atual.focar(id)); },
+    focar: function (id, ficha) { return !!(atual && atual.tela && atual.tela.isConnected && mapa && atual.focar(id, ficha)); },
     destruir: function () { if (mapa) { try { mapa.remove(); } catch (e) {} mapa = null; camadas = []; } }
   };
 
