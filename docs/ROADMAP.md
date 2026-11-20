@@ -199,3 +199,10 @@ Florybal (Canela), Aldeia do Papai Noel, Roda Canela, Sabor da Nonna, Sabor de C
 Taberna MF, La Birra, Le Grand Burger, Brûlée Bistrô, Café São Pedro, Garbo, Strapazzon, Vitacieri, Pé da Cascata Explorer.
 Feito: Mundo Criamigos (Rua São Pedro, 663, pelo site oficial) e O Maquinista (Canela).
 
+## Roteiro automático sem IA (20/Nov/2026, versão 1.5.77) — feito
+Botão "Montar roteiro automático (sem IA)" em "Novo roteiro" e na viagem sem roteiro. js/montador.js: lugares do guia + Wikivoyage +
+Wikidata + OpenStreetMap (busca sozinho se faltar); programas por dia pelo ritmo; agrupa por distância; ordem a partir do hotel;
+almoço perto do programa da hora e jantar perto do hotel; dia de chegada à tarde e de partida curto. Testado em Gramado (com guia) e
+Lisboa (sem guia). Próximos (propostos): considerar chuva (passeios cobertos), horário de funcionamento e dia da semana fechado,
+e montar "só o resto da viagem" a partir de hoje.
+

@@ -12,7 +12,7 @@
 (function () {
   'use strict';
   var d = document, $ = function (id) { return d.getElementById(id); };
-  var VERSAO_APP = '1.5.76';
+  var VERSAO_APP = '1.5.77';
 
   /* ------------------------------------------------------------------
      1. UTILIDADES
@@ -2555,9 +2555,53 @@
     var g = h('div', { class: 'grade' });
     if (estado.pacote && estado.pacote.roteiros.length) g.appendChild(h('button', { class: 'bt', type: 'button', onclick: agir(function () {
       criarOpcoesDoPacote(estado.viagem, estado.pacote).then(recarregar); }) }, T('usarDoPacote', { n: estado.pacote.roteiros.length })));
+    /* sem IA: monta pelos lugares que o app conhece (guia, Wikivoyage, Wikidata, OpenStreetMap) */
+    g.appendChild(h('button', { class: estado.pacote && estado.pacote.roteiros.length ? 'bt sec' : 'bt', type: 'button', onclick: agir(montarRoteiroAuto) }, '🧭 ' + T('montarAuto')));
     g.appendChild(h('button', { class: 'bt sec', type: 'button', onclick: agir(gerarComIA) }, '✨ ' + T('gerarIA')));
     g.appendChild(h('button', { class: 'bt leve', type: 'button', onclick: agir(function () { janelaNomeOpcao(T('meuRoteiro') + ' ' + (estado.roteiros.length + 1), criarOpcaoEmBranco); }) }, T('emBranco')));
     return g;
+  }
+  /* ---------- roteiro montado SEM IA (montador.js) ---------- */
+  function montarRoteiroAuto() {
+    var v = estado.viagem; if (!v) return;
+    var c = centroViagem(), base = pontoHotel() || c;
+    if (!base) { avisar(T('montarSemCentro')); return; }
+    var dias = diasDaViagem(v), per = ({ tranquilo: 2, equilibrado: 3, intenso: 4 })[(v.preferencias || {}).ritmo] || 3;
+    var precisa = Math.max(2, dias.length * per);
+    var lugares = todosLugares().concat((estado.descobertas || []).filter(function (x) { return !todosLugares().some(function (y) { return y.id === x.id; }); }));
+    var atr = function (ls) { return ls.filter(function (l) { return l.categoria === 'atracao' && l.lat != null; }).length; };
+    avisar(T('montando'), null, null, 20000);
+    var nome = String(v.destinoTexto || v.nome || '').split(/[(]/)[0].trim();
+    /* poucos lugares conhecidos: busca mais nas fontes abertas (só com internet) */
+    var mais = atr(lugares) >= precisa || !navigator.onLine ? Promise.resolve([]) :
+      (window.Destino ? Destino.oQueTem(nome, c, idioma()).then(function (r) { return r.lugares || []; }).catch(function () { return []; }) : Promise.resolve([]))
+        .then(function (ls) {
+          if (atr(lugares.concat(ls)) >= precisa || !window.Descobrir) return ls;
+          return Descobrir.perto(c, 8000).then(function (l2) { return ls.concat(l2 || []); }).catch(function () { return ls; });
+        });
+    mais.then(function (extra) {
+      var ids = {}; lugares.forEach(function (x) { ids[x.id] = 1; });
+      lugares = lugares.concat(extra.filter(function (x) { return !ids[x.id]; }));
+      if (!atr(lugares)) { avisar(T(navigator.onLine ? 'montarSemLugares' : 'montarSemLugaresOffline')); return; }
+      var pessoas = pessoasDaViagem(v);
+      var r = Montador.montar({
+        dias: dias, base: base, lugares: lugares, ritmo: (v.preferencias || {}).ritmo,
+        comCriancas: pessoas.some(function (p) { return p.idade !== '' && p.idade != null && +p.idade < 13; }),
+        gosto: function (l) { return window.Gostos ? Gostos.combina(l, Gostos.doGrupo(pessoas)) : 0; },
+        duracao: duracaoLugar, carro: function (k) { return minCarro(k); },
+        textos: { almoco: T('almoco'), jantar: T('jantar'), perto: T('pertoDe') }
+      });
+      if (!r.usados.length) { avisar(T('montarSemLugares')); return; }
+      /* lugares vindos da internet passam a ser da viagem (o roteiro aponta para eles mesmo sem internet) */
+      return r.usados.reduce(function (p, l) { return p.then(function () { return guardarLugarSePreciso(l); }); }, Promise.resolve()).then(function () {
+        var maior = estado.roteiros.reduce(function (m, o) { return Math.max(m, o.ordem || 0); }, 0);
+        return Banco.gravar('roteiros', { viagem_id: v.id, nome: T('roteiroAuto'), origem: 'auto', favorito: false, ordem: maior + 1,
+          dias: r.dias.map(function (d, i) { return { ordem: i + 1, titulo: '', itens: d.itens }; }) });
+      }).then(function (o) {
+        v.opcao_ativa = o.id; return Banco.gravar('viagens', v).then(function (nv) { estado.viagem = nv; estado.verTodos = true; return recarregar(); })
+          .then(function () { avisar(T('montadoAuto', { n: r.usados.length, d: dias.length })); });
+      });
+    }).catch(function () { avisar(T('erroRede')); });
   }
   function janelaNovaOpcao() { var j; j = janela(T('outraOpcao'), botoesNovaOpcao(function (fn) { j.fechar(fn); })); }
 
