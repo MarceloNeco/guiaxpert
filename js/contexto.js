@@ -22,7 +22,7 @@
         /* ninguém escolheu ainda: entra na viagem em curso ou na próxima; senão, Explorar (e fica "automático") */
         return Banco.listar('viagens').then(function (vs) {
           vs.sort(function (a, b) { return a.inicio < b.inicio ? -1 : 1; });
-          var hoje = new Date().toISOString().slice(0, 10);
+          var dd = new Date(), hoje = dd.getFullYear() + '-' + ('0' + (dd.getMonth() + 1)).slice(-2) + '-' + ('0' + dd.getDate()).slice(-2);   /* data do RELÓGIO do celular (antes UTC: depois das 21h no Brasil virava o dia seguinte) */
           var v = vs.filter(function (x) { return x.fim >= hoje; })[0] || vs[vs.length - 1];
           atual = v ? { modo: 'viagem', viagemId: v.id, auto: true } : { modo: 'explorar', viagemId: null, auto: true };
         });

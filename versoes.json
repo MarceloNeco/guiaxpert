@@ -2,6 +2,19 @@
   "app": "guiaxpert",
   "versoes": [
     {
+      "versao": "1.5.79",
+      "data": "2026-11-20",
+      "substitui": "1.5.78",
+      "itens": {
+        "pt": [
+          "Correção no dia de hoje à noite."
+        ],
+        "en": [
+          "Fix for today's date at night."
+        ]
+      }
+    },
+    {
       "versao": "1.5.78",
       "data": "2026-11-20",
       "substitui": "1.5.77",

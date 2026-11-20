@@ -12,7 +12,7 @@
 (function () {
   'use strict';
   var d = document, $ = function (id) { return d.getElementById(id); };
-  var VERSAO_APP = '1.5.78';
+  var VERSAO_APP = '1.5.79';
 
   /* ------------------------------------------------------------------
      1. UTILIDADES
@@ -1814,7 +1814,7 @@
           h('div', {}, [h('b', { texto: T(tudo ? 'si_pronto' : 'si_falta') }),
             h('span', { class: 'pequeno', style: 'display:block', texto: tudo ? T('si_prontoTexto') : T('si_faltaTexto', { o: falta.map(nome).join(', ') }) })])]));
         var lista = h('ul', { class: 'si-lista' }, itens.filter(function (x) { return x.ok !== null; }).map(function (x) {
-          var det = x.k === 'mapa' && x.mb ? x.mb + ' MB' : x.k === 'guia' && x.n ? T('si_nLugares', { n: x.n }) : x.k === 'reservas' && x.n ? T('si_nReservas', { n: x.n }) : x.k === 'tempo' && x.em ? T('si_tempoEm', { d: fData(new Date(x.em).toISOString().slice(0, 10), true), h: horaCurta(x.em) }) : '';
+          var det = x.k === 'mapa' && x.mb ? x.mb + ' MB' : x.k === 'guia' && x.n ? T('si_nLugares', { n: x.n }) : x.k === 'reservas' && x.n ? T('si_nReservas', { n: x.n }) : x.k === 'tempo' && x.em ? T('si_tempoEm', { d: fData(iso(new Date(x.em)), true), h: horaCurta(x.em) }) : '';
           return h('li', { class: x.ok ? 'ok' : 'falta' }, [h('span', { class: 'si-marca', 'aria-hidden': 'true', texto: x.ok ? '✓' : '✗' }), h('span', { texto: nome(x) + (x.ok ? '' : ' — ' + T('si_naoGuardado')) }), det ? h('small', { texto: det }) : null]);
         }));
         /* instalar ≠ funcionar sem internet: deixa isso escrito (dúvida do dono, 19/Nov) */

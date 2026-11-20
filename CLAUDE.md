@@ -15,6 +15,8 @@ só com o celular, com uma mão, às vezes com pressa, sol na tela ou sem sinal.
 Onde estou? O primeiro programa é perto ou longe? Onde fica no mapa? Como chego lá? Vai chover?". Antes de entregar qualquer tela,
 percorrer essas jornadas tocando como um humano (tela ~390 px, Android) e responder: dá para entender sem explicação? Em quantos
 toques chego ao que preciso? Sei onde estou e o que está selecionado? Vale para todas as sessões e rotinas.
+Testes no fuso do dono: rodar o navegador de teste com `timezoneId: 'America/Sao_Paulo'` (o servidor de testes está em UTC; em 20/Nov um
+teste mostrou 18:00 em vez de 15:00). No código, data de "hoje" sempre pelo relógio local do aparelho, nunca `toISOString()`.
 
 ## Regras permanentes do app
 - **Idioma** (diretriz geral do dono, 14/Nov/2026): textos para o usuário em PT (Brasil), EN (EUA) e ES (Espanha), tradução

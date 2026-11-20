@@ -147,7 +147,7 @@
       var en = ctx.idioma === 'en';
       var contexto = 'Você é o ✦ do GuiaXpert, um guia de viagem para famílias. A pessoa pode falar ou digitar qualquer coisa.\n' +
         'Situação agora: ' + (ctx.viagem ? 'viagem a ' + (ctx.pacote ? ctx.pacote.nome.pt : ctx.viagem.destinoTexto) + ' (' + ctx.viagem.inicio + ' a ' + ctx.viagem.fim + '); ' : 'sem viagem escolhida; ') +
-        'data ' + (ctx.data || new Date().toISOString().slice(0, 10)) + '; tela: ' + (ctx.tela || '?') + '; posição: ' + (ctx.onde || 'desconhecida') + '.\n' +
+        'data ' + (ctx.data || (function (d) { return d.getFullYear() + '-' + ('0' + (d.getMonth() + 1)).slice(-2) + '-' + ('0' + d.getDate()).slice(-2); })(new Date())) + '; tela: ' + (ctx.tela || '?') + '; posição: ' + (ctx.onde || 'desconhecida') + '.\n' +
         (ctx.viagem ? Descobrir.resumoGrupo(ctx.viagem, ctx.pessoas) + '\nPlano de hoje:\n' + textoDia(ctx.dia) + '\nPrevisão: ' + textoClima(ctx.clima) + '\n' : '') +
         'Lugares conhecidos (nome exato | tipo | detalhes):\n' + listaLugares(ctx.lugares) + '\n' +
         'Decida o que a pessoa quer e responda SÓ com JSON:\n' +
