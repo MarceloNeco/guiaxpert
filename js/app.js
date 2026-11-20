@@ -12,7 +12,7 @@
 (function () {
   'use strict';
   var d = document, $ = function (id) { return d.getElementById(id); };
-  var VERSAO_APP = '1.5.75';
+  var VERSAO_APP = '1.5.76';
 
   /* ------------------------------------------------------------------
      1. UTILIDADES
@@ -674,6 +674,7 @@
       ]); });
     }).then(function (r) {
       estado.pacote = r[0]; estado.pessoas = r[1]; estado.roteiros = r[2];
+      aplicarPontosMeus();
       estado.papel = 'dono';
       if (estado.viagem && window.Nuvem) Nuvem.papel(estado.viagem.id).then(function (p) { estado.papel = p; });
       estado.favoritos = {}; r[3].forEach(function (f) { estado.favoritos[f.id] = f; });
@@ -709,6 +710,46 @@
     var out = [], a = dataDe(v.inicio), b = dataDe(v.fim);
     for (var x = a; x <= b && out.length < 60; x = new Date(x.getFullYear(), x.getMonth(), x.getDate() + 1)) out.push(iso(x));
     return out;
+  }
+  /* lugar do guia sem ponto no mapa: a pessoa acha pelo endereço, marca no mapa ou usa "estou aqui" (sem IA, sem o Claude).
+     O ponto fica guardado neste aparelho e vale para todas as viagens; se o guia ganhar o ponto oficial, o do guia vale. */
+  var pontosMeus = null;
+  function aplicarPontosMeus() {
+    var pr = pontosMeus ? Promise.resolve(pontosMeus) : Banco.meta('pontos-lugares', {}).then(function (m) { pontosMeus = m || {}; return pontosMeus; });
+    return pr.then(function (m) {
+      ((estado.pacote && estado.pacote.lugares) || []).forEach(function (l) { var p = m[l.id]; if (p && l.lat == null) { l.lat = p.lat; l.lng = p.lng; l._pontoMeu = p.fonte || 'meu'; } });
+    }).catch(function () {});
+  }
+  function guardarPontoLugar(l, p, fonte) {
+    return Banco.meta('pontos-lugares', {}).then(function (m) {
+      m = m || {}; m[l.id] = { lat: p.lat, lng: p.lng, fonte: fonte, em: new Date().toISOString() }; pontosMeus = m;
+      return Banco.definirMeta('pontos-lugares', m);
+    }).then(function () { l.lat = p.lat; l.lng = p.lng; l._pontoMeu = fonte; avisar(T('pontoGuardado', { nome: l.nome })); irAoMapa(l); });
+  }
+  /* três jeitos, do mais fácil ao mais exato; todos terminam no mapa para a pessoa conferir e tocar em "É aqui" */
+  function caixaSemPonto(l) {
+    var c = h('div', { class: 'sem-ponto' }, [h('b', { texto: '📍 ' + T('semPontoTitulo') }), h('span', { class: 'pequeno', texto: T('semPontoTexto') })]);
+    var conferir = function (centro, fonte) {
+      Mapa.escolherPonto({ centro: centro, zoom: centro ? 17 : 14, cidade: estado.viagem && estado.viagem.destino, titulo: T('semPontoConfira', { nome: l.nome }) })
+        .then(function (p) { if (p) guardarPontoLugar(l, p, fonte); });
+    };
+    var endOk = l.endereco && !/n[aã]o confirmad|confirmar/i.test(l.endereco);
+    var bts = h('div', { class: 'linha' });
+    if (endOk) bts.appendChild(h('button', { class: 'bt sec', type: 'button', texto: '🔎 ' + T('semPontoEndereco'), onclick: function (e) {
+      var b = e.currentTarget; if (!navigator.onLine) { avisar(T('semInternet')); return; }
+      b.disabled = true; b.textContent = T('procurandoEndereco');
+      geocodarEndereco(String(l.endereco).replace(/\(.*?\)/g, '')).then(function (pt) {
+        b.disabled = false; b.textContent = '🔎 ' + T('semPontoEndereco');
+        if (!pt) avisar(T('enderecoNaoAchado'));
+        conferir(pt || centroViagem(), pt ? 'endereco' : 'marcado');
+      });
+    } }));
+    bts.appendChild(h('button', { class: 'bt leve', type: 'button', texto: '🗺 ' + T('marcarNoMapa'), onclick: function () { conferir(centroViagem(), 'marcado'); } }));
+    bts.appendChild(h('button', { class: 'bt leve', type: 'button', texto: '📍 ' + T('semPontoAqui'), onclick: function () {
+      pegarPosicao().then(function (p) { conferir({ lat: p.lat, lng: p.lng }, 'aqui'); }).catch(function () { avisar(T('gpsErro')); });
+    } }));
+    c.appendChild(bts);
+    return c;
   }
   function todosLugares() {
     var base = (estado.pacote && estado.pacote.lugares) || [];
@@ -3496,6 +3537,8 @@
     });
     if (l.categoria === 'comer' && restr.length) corpo.appendChild(h('div', { class: 'alerta' }, [h('b', { texto: T('restricoesGrupo') }), restr.join(', ') + '. ' + T('pergunteAntes')]));
     if (l.dieta) { var dd = Object.keys(l.dieta).filter(function (k) { return l.dieta[k]; }); if (dd.length) corpo.appendChild(h('p', { class: 'pequeno', texto: T('osmDieta') + ': ' + dd.map(function (k) { return T('r_' + k); }).join(', ') })); }
+    if (l.lat == null && !l._hotel) corpo.appendChild(caixaSemPonto(l));
+    else if (l._pontoMeu) corpo.appendChild(h('p', { class: 'pequeno', texto: T(l._pontoMeu === 'endereco' ? 'pontoPeloEndereco' : 'pontoMarcadoVoce') }));
     corpo.appendChild(linksLugar(l));
     if (l._hotel) { corpo.appendChild(h('button', { class: 'bt leve', type: 'button', onclick: function () { ajustarPontoHotel(l); } }, '📍 ' + T('hotelAjustar'))); corpo.appendChild(h('p', { class: 'pequeno', texto: T(l._hotel.manual ? 'hotelMarcado' : 'hotelPeloEndereco') })); }
     else if (estado.viagem && emViagem() && podeEditar()) corpo.appendChild(h('button', { class: 'bt', type: 'button', onclick: function () { janelaAddAoRoteiro(l); } }, '＋ ' + T('porNoDia')));

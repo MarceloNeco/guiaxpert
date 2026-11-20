@@ -2,6 +2,19 @@
   "app": "guiaxpert",
   "versoes": [
     {
+      "versao": "1.5.76",
+      "data": "2026-11-20",
+      "substitui": "1.5.75",
+      "itens": {
+        "pt": [
+          "Novo: pôr no mapa lugar sem ponto."
+        ],
+        "en": [
+          "New: pin a place that has no map point."
+        ]
+      }
+    },
+    {
       "versao": "1.5.75",
       "data": "2026-11-20",
       "substitui": "1.5.74",

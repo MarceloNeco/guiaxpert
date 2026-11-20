@@ -1127,3 +1127,5 @@ body.voz-app.voz-baixando .bt-voz { opacity: .75; }
 .escolhido-peek .peek-txt .pequeno { white-space: nowrap; }
 .painel-acoes .pequeno { line-height: 1.35; }
 .faixa-sem-sinal { transition: opacity .35s; } .faixa-sem-sinal.saindo { opacity: 0; }
+.sem-ponto { display: grid; gap: .4rem; background: var(--faixa-claro); color: var(--tinta); border-radius: 12px; padding: .7rem; margin: .5rem 0; }
+.sem-ponto .linha { gap: .4rem; }
