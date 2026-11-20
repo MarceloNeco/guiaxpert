@@ -12,7 +12,7 @@
 (function () {
   'use strict';
   var d = document, $ = function (id) { return d.getElementById(id); };
-  var VERSAO_APP = '1.5.77';
+  var VERSAO_APP = '1.5.78';
 
   /* ------------------------------------------------------------------
      1. UTILIDADES
@@ -2866,7 +2866,8 @@
       kv(T('ingressoReserva'), ingresso),
       l && l.horario ? kv(T('horario'), l.horario) : null,
       l ? acoesNavegar(l) : null,
-      l && l.compra && /^https?:\/\//.test(l.compra) ? h('a', { class: 'bt sec', href: l.compra, target: '_blank', rel: 'noopener' }, '🎟 ' + T('comprarIngresso')) : null
+      l && l.compra && /^https?:\/\//.test(l.compra) ? h('a', { class: 'bt sec', href: l.compra, target: '_blank', rel: 'noopener' }, '🎟 ' + T('comprarIngresso')) : null,
+      podeEditar() ? h('button', { class: 'bt leve', type: 'button', texto: '🎟 ' + T('jaComprei'), onclick: function () { j.fechar(function () { compreiAgora(l || { nome: it.titulo }, dt && it.hora ? dt + 'T' + it.hora : null); }); } }) : null
     ]);
     var j = janela(it.titulo, corpo);
     if (podeEditar()) {
@@ -3582,6 +3583,7 @@
     if (l.categoria === 'comer' && restr.length) corpo.appendChild(h('div', { class: 'alerta' }, [h('b', { texto: T('restricoesGrupo') }), restr.join(', ') + '. ' + T('pergunteAntes')]));
     if (l.dieta) { var dd = Object.keys(l.dieta).filter(function (k) { return l.dieta[k]; }); if (dd.length) corpo.appendChild(h('p', { class: 'pequeno', texto: T('osmDieta') + ': ' + dd.map(function (k) { return T('r_' + k); }).join(', ') })); }
     if (l.lat == null && !l._hotel) corpo.appendChild(caixaSemPonto(l));
+    if (estado.viagem && emViagem() && podeEditar() && (l.categoria === 'atracao' || l.categoria === 'bebidas')) corpo.appendChild(h('button', { class: 'bt sec', type: 'button', texto: '🎟 ' + T('compreiAgora'), onclick: function () { compreiAgora(l); } }));
     else if (l._pontoMeu) corpo.appendChild(h('p', { class: 'pequeno', texto: T(l._pontoMeu === 'endereco' ? 'pontoPeloEndereco' : 'pontoMarcadoVoce') }));
     corpo.appendChild(linksLugar(l));
     if (l._hotel) { corpo.appendChild(h('button', { class: 'bt leve', type: 'button', onclick: function () { ajustarPontoHotel(l); } }, '📍 ' + T('hotelAjustar'))); corpo.appendChild(h('p', { class: 'pequeno', texto: T(l._hotel.manual ? 'hotelMarcado' : 'hotelPeloEndereco') })); }
@@ -3952,8 +3954,15 @@
       return d + 'T' + hh + '|' + n + '|' + normalizar(c.titulo || '');
     });
   }
+  function linhaCancelada(c) {
+    var k = c.cancelamento || {};
+    return h('span', { class: 'res-cancelada-txt', texto: '✕ ' + [T('res_cancelada'), k.multa ? T('res_multa', { m: k.multa }) : T('res_semMulta'), k.reembolso ? T('res_reembolso', { v: k.reembolso }) : null, k.obs].filter(Boolean).join(' · ') });
+  }
   function cartaoReserva(x) {
     var c = x.c;
+    if (c.status === 'cancelada') return h('div', { class: 'cartao res-cancelada' }, [h('span', { class: 'pequeno' }, rotuloRes(c.tipo)), h('b', { texto: c.titulo }),
+      c.pessoa ? h('span', { texto: c.pessoa }) : null, c.valor ? h('span', { class: 'sub', texto: T('res_valor', { v: c.valor }) }) : null, linhaCancelada(c),
+      h('div', { class: 'linha' }, [h('button', { class: 'bt leve', type: 'button', onclick: function () { janelaReserva(x); } }, T('editar'))])]);
     return h('div', { class: 'cartao' }, [
       h('span', { class: 'pequeno' }, rotuloRes(c.tipo)),
       h('b', { texto: c.titulo }),
@@ -3961,6 +3970,7 @@
       c._chegaCedo ? h('span', { class: 'sub', texto: 'ℹ️ ' + T('chegaCedo', { h: c._chegaCedo }) }) : null,
       c.pessoa || c.assento ? h('span', { texto: [c.pessoa, c.assento].filter(Boolean).join(' · ') }) : null,
       c.codigo ? h('span', { class: 'linha' }, [T('codigo') + ': ', h('code', { texto: c.codigo, style: 'user-select:all' })]) : null,
+      c.valor ? h('span', { class: 'sub', texto: T('res_valor', { v: c.valor }) }) : null,
       c.local ? h('span', { class: 'sub', texto: c.local }) : null,
       c.nota ? h('span', { class: 'sub', texto: c.nota }) : null,
       h('div', { class: 'linha' }, [
@@ -3971,7 +3981,9 @@
   }
   /* vários ingressos do mesmo evento: um cartão, todos os QR de uma vez, editar o grupo inteiro */
   function cartaoGrupo(g) {
-    var c0 = g[0].c, comQR = g.filter(function (x) { return x.c.qr || x.c.barra; }).map(function (x) { return x.c; });
+    var c0 = g[0].c, comQR = g.filter(function (x) { return (x.c.qr || x.c.barra) && x.c.status !== 'cancelada'; }).map(function (x) { return x.c; });
+    if (g.every(function (x) { return x.c.status === 'cancelada'; })) return h('div', { class: 'cartao res-cancelada' }, [
+      h('span', { class: 'pequeno' }, rotuloRes(c0.tipo, ' · ' + T(c0.tipo === 'voo' ? 'nPassageiros' : 'nIngressos', { n: g.length }))), h('b', { texto: c0.titulo }), linhaCancelada(c0)]);
     var lista = h('div', { class: 'linha', hidden: true, style: 'flex-direction:column;align-items:stretch;gap:.4rem' });
     g.forEach(function (x) {
       lista.appendChild(h('div', { class: 'linha entre', style: 'border-top:1px solid var(--linha);padding-top:.4rem' }, [
@@ -3989,7 +4001,8 @@
       h('div', { class: 'linha' }, [
         comQR.length ? h('button', { class: 'bt', type: 'button', onclick: function () { mostrarQRs(comQR, 0); } }, '▦ ' + T('res_mostrarTodosQR', { n: comQR.length })) : null,
         h('button', { class: 'bt leve', type: 'button', onclick: function () { janelaCodigos({}); } }, '▦ ' + T('cod_porQR')),
-        h('button', { class: 'bt leve', type: 'button', onclick: function () { janelaEditarGrupo(g); } }, '✎ ' + T('res_editarGrupo'))]),
+        h('button', { class: 'bt leve', type: 'button', onclick: function () { janelaEditarGrupo(g); } }, '✎ ' + T('res_editarGrupo')),
+        h('button', { class: 'bt leve', type: 'button', onclick: function () { janelaCancelarReservas(g.filter(function (x) { return x.c.status !== 'cancelada'; })); } }, '✕ ' + T('res_cancelarTodos'))]),
       verUm, lista]);
   }
   /* QR em tela cheia, um atrás do outro: arrastar para o lado ou ‹ › (a pessoa da fila vai mostrando) */
@@ -4057,6 +4070,78 @@
   }
   /* câmera: lê o QR de um ingresso e já abre a reserva com o código preenchido */
   function escanearIngresso() { janelaCodigos({}); }
+  /* CANCELAR (não apagar): a reserva fica registrada com a multa e o reembolso; sai do roteiro (compromisso 🔒 e o programa igual) */
+  function janelaCancelarReservas(g) {
+    if (!g || !g.length) return;
+    var c0 = g[0].c, multa = '';
+    var chips = h('div', { class: 'chips' });
+    var outra = h('input', { class: 'campo', id: 'gx-cc-multa', maxlength: '40', placeholder: T('res_multaOutra') });
+    var caixaOutra = h('div', { hidden: true }, [outra]);   /* esconde o campo E o microfone dele */
+    ['', '10%', '20%', '50%', '100%', 'outra'].forEach(function (m) {
+      chips.appendChild(h('button', { class: 'chip', type: 'button', 'aria-pressed': m === multa ? 'true' : 'false', onclick: function (e) {
+        multa = m; [].forEach.call(chips.children, function (b) { b.setAttribute('aria-pressed', 'false'); }); e.currentTarget.setAttribute('aria-pressed', 'true');
+        caixaOutra.hidden = m !== 'outra'; if (m === 'outra') outra.focus();
+      } }, m === '' ? T('res_semMulta') : m === 'outra' ? T('res_outraMulta') : m));
+    });
+    var reemb = h('input', { class: 'campo', id: 'gx-cc-reemb', maxlength: '40', placeholder: T('exReembolso') });
+    var obs = h('input', { class: 'campo', id: 'gx-cc-obs', maxlength: '120', placeholder: T('exCancelObs') });
+    var tirar = h('input', { type: 'checkbox', id: 'gx-cc-tirar' }); tirar.checked = true;
+    var ok = h('button', { class: 'bt perigo', type: 'button', texto: T(g.length > 1 ? 'res_confirmarCancelN' : 'res_confirmarCancel', { n: g.length }) });
+    var j = janela(T('res_cancelarTitulo', { t: c0.titulo }), h('div', { class: 'linha', style: 'flex-direction:column;align-items:stretch' }, [
+      h('p', { class: 'sub', texto: T('res_cancelarTexto') }),
+      h('span', { class: 'rot', texto: T('res_multaQuanto') }), chips, caixaOutra,
+      h('label', { class: 'rot', for: 'gx-cc-reemb', texto: T('res_reembolsoQuanto') }), reemb,
+      h('label', { class: 'rot', for: 'gx-cc-obs', texto: T('obs') }), obs,
+      h('label', { class: 'linha', for: 'gx-cc-tirar', style: 'flex-wrap:nowrap;gap:.5rem' }, [tirar, h('span', { texto: T('res_tirarDoRoteiro') })]),
+      ok]));
+    ok.addEventListener('click', function () {
+      ok.disabled = true;
+      var mt = multa === 'outra' ? outra.value.trim() : multa;
+      var info = { em: new Date().toISOString(), multa: mt || '', reembolso: reemb.value.trim(), obs: obs.value.trim() };
+      g.reduce(function (p, x) {
+        return p.then(function () {
+          var c = Object.assign({}, x.c, { status: 'cancelada', cancelamento: info });
+          return cifrarReserva(x.reg.viagem_id, c).then(function (blob) { x.reg.conteudo = blob; x.reg.agenda = null; x.reg.cancelada = true; return Banco.gravar('reservas', x.reg); });
+        });
+      }, Promise.resolve()).then(function () {
+        j.fechar(function () {
+          avisar(T('res_canceladaAviso', { t: c0.titulo, m: mt ? T('res_multa', { m: mt }) : T('res_semMulta') }));
+          if (tirar.checked) tirarDoRoteiro(c0); else mostrar(estado.rota);
+        });
+      }).catch(function () { ok.disabled = false; avisar(T(navigator.onLine ? 'cofreErro' : 'semInternet')); });
+    });
+  }
+  /* acha no roteiro o programa daquele dia que bate com a reserva (mesmo critério do confirmar) */
+  function acharNoRoteiro(c) {
+    var v = estado.viagem, o = estado.opcao, data = String(c && c.quando || '').slice(0, 10);
+    if (!v || !o || !data) return null;
+    var dias = diasDaViagem(v), di = dias.indexOf(data); if (di < 0) return null;
+    var dmi = mapearDia(di, dias.length, o.dias.length), dm = o.dias[dmi]; if (!dm) return null;
+    var ch = normalizar(c.titulo || '').split(/\s+/).filter(function (w) { return w.length >= 4 && ['parque', 'bilhete', 'ingresso', 'passeio', 'entrada', 'adulto', 'crianca'].indexOf(w) < 0; });
+    var idx = -1;
+    (dm.itens || []).some(function (x, k) {
+      var t = normalizar((x.titulo || '') + ' ' + (x.lugarId ? (lugarPorId(x.lugarId) || {}).nome || '' : ''));
+      var bate = c.tipo === 'voo' ? /\bvoo\b|aeroporto|embarque/.test(t) : ch.some(function (w) { return t.indexOf(w) > -1; });
+      if (bate) idx = k; return bate;
+    });
+    return idx < 0 ? null : { o: o, dm: dm, dmi: dmi, idx: idx };
+  }
+  function tirarDoRoteiro(c) {
+    var a = acharNoRoteiro(c);
+    if (!a || !podeEditar()) { mostrar(estado.rota); return; }
+    if (a.o.origem !== 'pacote') { tirarComDesfazer(a.o, a.dmi, a.idx).then(function () { mostrar(estado.rota); }); return; }
+    /* roteiro pronto do guia: vira "minha versão" e tira de lá */
+    mudarItem(a.o, a.dm, a.idx, function (item) { item._tirar = true; }).then(function (alvo) {
+      alvo.dias[a.dmi].itens = (alvo.dias[a.dmi].itens || []).filter(function (x) { return !x._tirar; });
+      return Banco.gravar('roteiros', alvo);
+    }).then(function () { return recarregar(); }).then(function () { avisar(T('itemTirado', { t: c.titulo })); });
+  }
+  /* comprou na hora (bilheteria, desconto do hotel…): um toque abre a reserva já preenchida com hoje e agora */
+  function compreiAgora(l, quando) {
+    var agora = new Date(), mm = Math.round(agora.getMinutes() / 5) * 5, hh = agora.getHours() + (mm === 60 ? 1 : 0); mm = mm % 60;
+    var q = quando || (hojeIso() + 'T' + (hh < 10 ? '0' : '') + hh + ':' + (mm < 10 ? '0' : '') + mm);
+    janelaReserva({ c: { tipo: 'ingresso', titulo: l.nome || l.titulo, quando: q, local: l.endereco || l.nome || '' } });
+  }
   /* ingresso ou passagem COMPRADOS = programa decidido (pedido do dono, 19/Nov): o item igual no roteiro daquele dia vira
      confirmado ✓ e deixa de ser alternativa; sem item igual, a própria reserva já aparece no roteiro como compromisso fixo 🔒 */
   var confirmados = {};
@@ -4438,22 +4523,25 @@
       titulo: h('input', { class: 'campo', id: 'gx-r-tit', maxlength: '100', value: c.titulo || '', placeholder: T('exReserva') }),
       quando: h('input', { class: 'campo', id: 'gx-r-quando', type: 'datetime-local', value: c.quando || '' }),
       codigo: h('input', { class: 'campo', id: 'gx-r-cod', maxlength: '40', value: c.codigo || '', placeholder: 'ABC123' }),
+      valor: h('input', { class: 'campo', id: 'gx-r-valor', maxlength: '60', value: c.valor || '', placeholder: T('exValor') }),
       local: h('input', { class: 'campo', id: 'gx-r-local', maxlength: '160', value: c.local || '' }),
       nota: h('textarea', { class: 'campo', id: 'gx-r-nota', maxlength: '500', rows: '3' }, c.nota || '')
     };
     var ok = h('button', { class: 'bt', type: 'button' }, T('salvar'));
     var apagar = x && x.reg ? h('button', { class: 'bt perigo', type: 'button' }, T('apagar')) : null;
+    var cancelar = x && x.reg && c.status !== 'cancelada' ? h('button', { class: 'bt leve', type: 'button', texto: '✕ ' + T('res_cancelar'), onclick: function () { j.fechar(function () { janelaCancelarReservas([x]); }); } }) : null;
     var corpo = h('div', { class: 'linha', style: 'flex-direction:column;align-items:stretch' }, [
       h('label', { class: 'rot', for: 'gx-r-tipo', texto: T('tipo') }), campos.tipo, h('label', { class: 'rot', for: 'gx-r-tit', texto: T('titulo') }), campos.titulo,
       h('label', { class: 'rot', for: 'gx-r-quando', texto: T('quando') }), campos.quando, h('label', { class: 'rot', for: 'gx-r-cod', texto: T('codigo') }), campos.codigo,
+      h('label', { class: 'rot', for: 'gx-r-valor', texto: T('valorPago') }), campos.valor,
       h('label', { class: 'rot', for: 'gx-r-local', texto: T('local') }), campos.local, h('label', { class: 'rot', for: 'gx-r-nota', texto: T('nota') }), campos.nota,
       x && x.reg ? null : h('div', { class: 'cartao cod-na-nova' }, [h('b', { texto: '▦ ' + T('cod_naNovaTitulo') }), h('span', { class: 'pequeno', texto: T('cod_naNovaTexto') }),
         h('button', { class: 'bt sec', type: 'button', texto: T('cod_titulo'), onclick: function () { j.fechar(function () { janelaCodigos({}); }); } })]),
-      h('div', { class: 'acoes' }, [apagar, ok])]);
+      h('div', { class: 'acoes' }, [cancelar, apagar, ok])]);
     var j = janela(x && x.reg ? T('editar') : T('novaReserva'), corpo);
     ok.addEventListener('click', function () {
       if (!campos.titulo.value.trim()) { campos.titulo.focus(); return; }
-      var dados = Object.assign({}, c, { tipo: campos.tipo.value, titulo: campos.titulo.value.trim(), quando: campos.quando.value, codigo: campos.codigo.value.trim(), local: campos.local.value.trim(), nota: campos.nota.value.trim() });
+      var dados = Object.assign({}, c, { tipo: campos.tipo.value, titulo: campos.titulo.value.trim(), quando: campos.quando.value, codigo: campos.codigo.value.trim(), valor: campos.valor.value.trim(), local: campos.local.value.trim(), nota: campos.nota.value.trim() });
       cifrarReserva(x && x.reg ? x.reg.viagem_id : estado.viagem.id, dados).then(function (blob) {
         var reg = x && x.reg ? x.reg : { viagem_id: estado.viagem.id, marca: dados.codigo ? 'cod:' + dados.codigo : null };
         reg.conteudo = blob; reg.tipo = dados.tipo; /* o tipo fica aberto para ícone; código e notas embaralhados */

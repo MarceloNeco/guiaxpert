@@ -1129,3 +1129,7 @@ body.voz-app.voz-baixando .bt-voz { opacity: .75; }
 .faixa-sem-sinal { transition: opacity .35s; } .faixa-sem-sinal.saindo { opacity: 0; }
 .sem-ponto { display: grid; gap: .4rem; background: var(--faixa-claro); color: var(--tinta); border-radius: 12px; padding: .7rem; margin: .5rem 0; }
 .sem-ponto .linha { gap: .4rem; }
+/* reserva cancelada: fica registrada, apagada e sem QR */
+.res-cancelada { opacity: .7; }
+.res-cancelada b { text-decoration: line-through; }
+.res-cancelada-txt { color: var(--evita, #b3261e); font-weight: 700; font-size: .9rem; }
