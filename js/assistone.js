@@ -20,12 +20,31 @@
     'faco fazer faz posso pode consigo quero queria gostaria preciso precisa the to of in on at for how do i my is it can what where when').split(' ');
   var VZ = {}; VAZIAS.forEach(function (w) { VZ[w] = 1; });
   /* algumas formas irregulares viram a mesma raiz */
-  var TROCAS = { remarquei: 'remarc', marquei: 'marc', fiquei: 'fic', cheguei: 'cheg', paguei: 'pag', apaguei: 'apag', liguei: 'lig', expliquei: 'explic', coloquei: 'coloc', toquei: 'toc', busquei: 'busc', choveu: 'chov', chove: 'chov', chuva: 'chuv', chuvoso: 'chuv', qr: 'qrcod', qrcode: 'qrcod' };
+  var TROCAS = { agenda: 'agenda', agendas: 'agenda', remarquei: 'remarc', marquei: 'marc', fiquei: 'fic', cheguei: 'cheg', paguei: 'pag', apaguei: 'apag', liguei: 'lig', expliquei: 'explic', coloquei: 'coloc', toquei: 'toc', busquei: 'busc', choveu: 'chov', chove: 'chov', chuva: 'chuv', chuvoso: 'chuv', qr: 'qrcod', qrcode: 'qrcod' };
   var SUF = ['amentos', 'imentos', 'amento', 'imento', 'acoes', 'icoes', 'acao', 'icao', 'zinhos', 'zinhas', 'zinho', 'zinha', 'inhos', 'inhas', 'inho', 'inha',
     'ariam', 'eriam', 'iriam', 'aram', 'eram', 'iram', 'avam', 'iam', 'ando', 'endo', 'indo', 'aria', 'eria', 'iria', 'aste', 'este', 'iste',
     'amos', 'emos', 'imos', 'ados', 'idos', 'adas', 'idas', 'ado', 'ido', 'ada', 'ida', 'ava', 'ara', 'era', 'ira', 'ar', 'er', 'ir', 'ou', 'eu', 'iu', 'ei', 'ai', 'oes', 'aes',
     'es', 'as', 'os', 'am', 'em', 'a', 'e', 'o', 's', 'i'];
   function semAcento(t) { return String(t || '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, ''); }
+  /* mesma ideia, palavras diferentes (verbo, substantivo, sinônimo, inglês): todas viram uma raiz só.
+     [raiz comum, raízes exatas, começos] — ex.: reagendar, reagendamento, remarcação, adiar → "remarc" */
+  var SINON = [
+    ['remarc', ['adiar', 'adie', 'adi', 'reschedul'], ['reagend', 'remarc', 'reprogram', 'adiament', 'postergu', 'posterg', 'reschedul']],
+    ['cancel', ['anul', 'desist'], ['cancel', 'desmarc', 'desistenci', 'anulac']],
+    ['reembols', ['refund'], ['reembols', 'estorn', 'devoluc', 'devolv', 'ressarc']],
+    ['reserv', ['marc', 'bok', 'boking', 'boked'], ['reserv', 'agend', 'marcac']],
+    ['compr', ['pag', 'pagar', 'pago', 'paga', 'comp', 'buy', 'bought', 'paid'], ['compr', 'adquir', 'aquisica', 'pagament', 'purchas']],
+    ['ingress', ['ticket', 'tickets', 'vouch'], ['ingress', 'bilhet', 'passaport']]
+  ];
+  var SIN_EXATA = { agenda: 'agenda' }, SIN_INICIO = [];   /* "agenda de hoje" é a programação, não um agendamento */
+  SINON.forEach(function (g) { g[1].forEach(function (w) { SIN_EXATA[w] = g[0]; }); g[2].forEach(function (p) { SIN_INICIO.push([p, g[0]]); }); });
+  function comum(w) {
+    if (SIN_EXATA[w]) return SIN_EXATA[w];
+    for (var i = 0; i < SIN_INICIO.length; i++) if (w.indexOf(SIN_INICIO[i][0]) === 0) return SIN_INICIO[i][1];
+    /* com erro de digitação ("reagnedar", "resevar", "cancelr"): uma letra a mais, a menos, trocada ou invertida */
+    if (w.length >= 5) for (var j = 0; j < SIN_INICIO.length; j++) { var p = SIN_INICIO[j][0]; if (p.length >= 5 && dist(w.slice(0, p.length + 1), p, 1) <= 1 || p.length >= 5 && dist(w.slice(0, p.length), p, 1) <= 1) return SIN_INICIO[j][1]; }
+    return w;
+  }
   function raiz(w) {
     if (TROCAS[w]) return TROCAS[w];
     if (w.length <= 3) return w;
@@ -37,19 +56,27 @@
     return w.replace(/qu$/, 'c').replace(/gu$/, 'g').replace(/c$/, 'c');
   }
   function palavras(t) {
-    return semAcento(t).replace(/[^a-z0-9\s]/g, ' ').split(/\s+/).filter(function (w) { return w && !VZ[w]; }).map(raiz).filter(function (w) { return w.length >= 2; });
+    /* letras dobradas ("cancellar", "comprra") contam uma vez; z vira s ("rezerva") */
+    return semAcento(t).replace(/[^a-z0-9\s]/g, ' ').replace(/([a-z])\1+/g, '$1').replace(/z/g, 's')
+      .split(/\s+/).filter(function (w) { return w && !VZ[w]; }).map(raiz).map(comum).filter(function (w) { return w.length >= 2; });
   }
+  /* distância de edição; duas letras invertidas ("agned" × "agend") contam como um erro só */
   function dist(a, b, lim) {
     if (Math.abs(a.length - b.length) > lim) return lim + 1;
-    var v0 = [], v1 = [], i, j;
-    for (j = 0; j <= b.length; j++) v0[j] = j;
-    for (i = 0; i < a.length; i++) {
-      v1[0] = i + 1; var menor = v1[0];
-      for (j = 0; j < b.length; j++) { v1[j + 1] = Math.min(v1[j] + 1, v0[j + 1] + 1, v0[j] + (a[i] === b[j] ? 0 : 1)); if (v1[j + 1] < menor) menor = v1[j + 1]; }
+    var d = [], i, j;
+    for (i = 0; i <= a.length; i++) { d[i] = [i]; }
+    for (j = 0; j <= b.length; j++) d[0][j] = j;
+    for (i = 1; i <= a.length; i++) {
+      var menor = Infinity;
+      for (j = 1; j <= b.length; j++) {
+        var c = a[i - 1] === b[j - 1] ? 0 : 1;
+        d[i][j] = Math.min(d[i - 1][j] + 1, d[i][j - 1] + 1, d[i - 1][j - 1] + c);
+        if (i > 1 && j > 1 && a[i - 1] === b[j - 2] && a[i - 2] === b[j - 1]) d[i][j] = Math.min(d[i][j], d[i - 2][j - 2] + 1);
+        if (d[i][j] < menor) menor = d[i][j];
+      }
       if (menor > lim) return lim + 1;
-      var t = v0; v0 = v1; v1 = t;
     }
-    return v0[b.length];
+    return d[a.length][b.length];
   }
   /* quão parecidas são duas raízes: 1 igual; .85 uma começa com a outra; .7 com um erro de digitação; 0 nada */
   function parecido(a, b) {
@@ -85,5 +112,5 @@
       }
     };
   }
-  window.AssistONE = { motor: motor, _palavras: palavras, _raiz: raiz };
+  window.AssistONE = { motor: motor, _palavras: palavras, _raiz: raiz, _dist: dist };
 })();

@@ -12,7 +12,7 @@
 (function () {
   'use strict';
   var d = document, $ = function (id) { return d.getElementById(id); };
-  var VERSAO_APP = '1.5.82';
+  var VERSAO_APP = '1.5.83';
 
   /* ------------------------------------------------------------------
      1. UTILIDADES
@@ -3319,17 +3319,21 @@
         t: L('Mostrar o QR na entrada ou no embarque', 'Show the QR at the gate'),
         r: L('Reservas → no cartão, "Mostrar os N códigos": um QR por vez, em tela cheia; passe para o lado para o próximo. Aumente o brilho da tela. A catraca não leu? Use − e + embaixo do código para diminuir ou aumentar; o app lembra o tamanho. Funciona sem internet.', 'Bookings → on the card, "Show all codes": one QR at a time, full screen; swipe for the next. Turn up the brightness. Scanner didn’t read it? Use − and + under the code to resize; the app remembers. Works offline.'),
         acao: [L('Ir para Reservas', 'Go to Bookings'), irRes()] },
-      { id: 'remarcar', chaves: ['remarcar', 'mudar data', 'trocar dia', 'adiar', 'outro dia', 'reagendar', 'mudar o dia da reserva', 'reschedule', 'change date'],
+      { id: 'remarcar', chaves: ['remarcar', 'remarcação', 'reagendar', 'reagendamento', 'adiar', 'adiamento', 'mudar data', 'mudança de data', 'trocar data', 'trocar dia', 'outro dia', 'mudar o dia da reserva', 'remarcar ingresso', 'reagendar reserva', 'reschedule', 'change date'],
         t: L('Remarcar uma reserva para outro dia', 'Reschedule a booking'),
         r: L('Chegou o PDF novo? Carregue em "QR / cartão": o app reconhece a mesma reserva e oferece "Remarcar … → novo dia". Sem PDF: no cartão da reserva, toque em Remarcar e escolha o dia e a hora. Sai do dia antigo do roteiro e entra no novo.', 'Got a new PDF? Load it in "QR / pass": the app recognizes the booking and offers "Reschedule". Without a PDF: on the card, tap Reschedule and pick the day and time.'),
         acao: [L('Ir para Reservas', 'Go to Bookings'), irRes()] },
-      { id: 'cancelar', chaves: ['cancelar', 'cancelamento', 'multa', 'reembolso', 'estorno', 'desistir', 'cancel', 'refund', 'fee'],
+      { id: 'cancelar', chaves: ['cancelar', 'cancelamento', 'cancelar reserva', 'cancelar ingresso', 'cancelar agendamento', 'desmarcar', 'desistir', 'desistência', 'multa', 'reembolso', 'estorno', 'devolução do dinheiro', 'cancel', 'cancel booking', 'refund', 'fee'],
         t: L('Cancelar uma reserva (com multa ou reembolso)', 'Cancel a booking (fee or refund)'),
         r: L('No cartão da reserva, toque em Cancelar: escolha a multa (sem multa, 10%, 20%…), o reembolso e uma observação. A reserva fica guardada como cancelada (para conferir o estorno) e sai do roteiro.', 'On the booking card, tap Cancel: choose the fee, refund and a note. It stays saved as cancelled and leaves the plan.'),
         acao: [L('Ir para Reservas', 'Go to Bookings'), irRes()] },
-      { id: 'comprei', chaves: ['comprei', 'comprar na hora', 'bilheteria', 'ingresso comprado', 'paguei', 'valor pago', 'desconto do hotel', 'bought', 'paid'],
+      { id: 'reservar', chaves: ['reservar', 'reserva', 'nova reserva', 'fazer reserva', 'agendar', 'agendamento', 'marcar horário', 'marcar mesa', 'reservar restaurante', 'reservar hotel', 'reservar passeio', 'guardar reserva', 'book', 'booking', 'new booking'],
+        t: L('Guardar uma reserva ou agendamento novo', 'Save a new booking'),
+        r: L('Reservas → "＋ Nova": escolha o tipo (hotel, restaurante, passeio, ingresso, voo, carro), a data, a hora e o localizador; com data e hora, entra no roteiro do dia. Tem e-mail de confirmação? Use "E-mail" e cole o texto. Tem PDF ou QR? Use "QR / cartão". Só quer pôr no roteiro, sem reserva? Roteiro → ＋.', 'Bookings → "＋ New": pick the type, date, time and code; with date and time it goes into that day\'s plan. Have a confirmation email? Use "Email" and paste it. A PDF or QR? Use "QR / pass".'),
+        acao: [L('Nova reserva', 'New booking'), irRes(function () { janelaReserva(null); })] },
+      { id: 'comprei', chaves: ['comprar', 'compra', 'comprar ingresso', 'compra de ingresso', 'comprar na hora', 'bilheteria', 'ingresso comprado', 'paguei', 'paguei na entrada', 'paguei na hora', 'comprei na entrada', 'pagamento', 'valor pago', 'desconto do hotel', 'buy ticket', 'bought', 'paid'],
         t: L('Registrar um ingresso comprado na hora', 'Record a ticket bought on the spot'),
-        r: L('Ache o lugar (lupa no alto) → na ficha, "Comprei o ingresso agora". Vem preenchido com hoje e a hora; ponha o valor pago e salve. Vira compromisso fixo 🔒 do dia no roteiro.', 'Find the place (top search) → on its card, "I just bought the ticket". It comes filled with today and now; add the amount and save.'),
+        r: L('Ache o lugar (lupa no alto) → na ficha, "Comprei o ingresso agora". Vem preenchido com hoje e a hora; ponha o valor pago e salve. Vira compromisso fixo 🔒 do dia no roteiro. Para comprar pela internet: na mesma ficha, "Comprar ingresso" abre o site oficial; depois traga o PDF em "QR / cartão".', 'Find the place (top search) → on its card, "I just bought the ticket". It comes filled with today and now; add the amount and save. To buy online: "Buy ticket" on the same card opens the official site; then load the PDF in "QR / pass".'),
         acao: [L('Buscar um lugar', 'Search a place'), function () { abrirBusca(); }] },
       { id: 'semnet', chaves: ['sem internet', 'offline', 'sem sinal', 'modo avião', 'guardar no celular', 'baixar mapa', 'funciona sem internet', 'no signal', 'airplane'],
         t: L('Usar sem internet', 'Use offline'),
