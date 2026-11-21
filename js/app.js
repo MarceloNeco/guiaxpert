@@ -12,7 +12,7 @@
 (function () {
   'use strict';
   var d = document, $ = function (id) { return d.getElementById(id); };
-  var VERSAO_APP = '1.5.81';
+  var VERSAO_APP = '1.5.82';
 
   /* ------------------------------------------------------------------
      1. UTILIDADES
@@ -139,6 +139,8 @@
       globo: '<circle cx="12" cy="12" r="9.5"/><path d="M2.5 12h19M12 2.5c2.6 2.7 3.9 5.9 3.9 9.5s-1.3 6.8-3.9 9.5M12 2.5C9.4 5.2 8.1 8.4 8.1 12s1.3 6.8 3.9 9.5"/>',
       atualizar: '<path d="M20 12a8 8 0 1 1-2.35-5.65"/><path d="M20.2 3.8v4.6h-4.6"/>',
       mapa: '<path d="m9 4.5-5.5 2v13l5.5-2 6 2 5.5-2v-13l-5.5 2z"/><path d="M9 4.5v13M15 6.5v13"/>',
+      qr: '<rect x="3.5" y="3.5" width="6.5" height="6.5" rx="1"/><rect x="14" y="3.5" width="6.5" height="6.5" rx="1"/><rect x="3.5" y="14" width="6.5" height="6.5" rx="1"/><path d="M14 14h2.5v2.5H14zM18 18h2.5v2.5H18zM14 18.5v2M18.5 14h2"/>',
+      fechar: '<path d="M6 6l12 12M18 6 6 18"/>',
       camera: '<path d="M3.5 8.5a2 2 0 0 1 2-2h2l1.6-2.2h5.8l1.6 2.2h2a2 2 0 0 1 2 2v9.5a2 2 0 0 1-2 2h-13a2 2 0 0 1-2-2z"/><circle cx="12" cy="13" r="3.8"/>',
       arquivo: '<path d="M14 2.8H7a2 2 0 0 0-2 2v14.4a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7.8z"/><path d="M14 2.8v5h5M9 13h6M9 16.5h4"/>',
       colar: '<rect x="5" y="4" width="14" height="17" rx="2"/><path d="M9 4V2.8h6V4M9 10h6M9 14h6M9 18h3"/>',
@@ -1866,6 +1868,58 @@
     ]));
     return c;
   }
+  /* ---------- previsão HORA A HORA de um dia (como o app de tempo do celular), sem chave e sem IA ---------- */
+  function nomeTempo(cod) {
+    var c = +cod;
+    return T(c === 0 ? 'wmo_limpo' : c <= 2 ? 'wmo_parcial' : c === 3 ? 'wmo_nublado' : c === 45 || c === 48 ? 'wmo_neblina' : c >= 95 ? 'wmo_tempestade' : c >= 80 ? 'wmo_pancadas' : c >= 71 && c <= 77 ? 'wmo_neve' : c >= 61 ? 'wmo_chuva' : c >= 51 ? 'wmo_garoa' : 'wmo_nublado');
+  }
+  function janelaPrevisaoHora(data) {
+    var c = lugarClima(); if (!c) return;
+    var corpo = h('div', { class: 'ph' }, [h('p', { class: 'sub', texto: T('carregando') })]);
+    janela(T('ph_titulo', { d: semana(data) + ', ' + fData(data, true) }), corpo);
+    Promise.all([Clima.previsao(c.lat, c.lng).catch(function () { return null; }), Clima.porHora(c.lat, c.lng).catch(function () { return null; })]).then(function (r) {
+      var dia = r[0] && r[0].dias.filter(function (x) { return x.data === data; })[0];
+      var todas = r[1] ? r[1].horas : [], hs = todas.filter(function (x) { return x.t.slice(0, 10) === data; });
+      corpo.textContent = '';
+      if (!hs.length && !dia) { corpo.appendChild(h('p', { class: 'sub', texto: T('ph_sem') })); return; }
+      var hoje = data === hojeIso(), hAgora = new Date().getHours();
+      var agora = hoje ? hs.filter(function (x) { return +x.t.slice(11, 13) === hAgora; })[0] : null;
+      var nome = estado.pacote ? Pacotes.nome(estado.pacote, idioma()) : String((estado.viagem || {}).destinoTexto || '').split(',')[0];
+      /* topo: agora (hoje) ou o dia */
+      corpo.appendChild(h('div', { class: 'ph-topo' }, [
+        h('div', {}, [h('span', { class: 'pequeno', texto: '📍 ' + nome }),
+          h('b', { class: 'ph-grande', texto: (agora && agora.temp != null ? agora.temp : dia ? dia.max : '—') + '°' }),
+          h('span', { texto: nomeTempo(agora ? agora.cod : dia ? dia.codigo : 3) })]),
+        h('div', { class: 'ph-dir' }, [h('span', { class: 'ph-icone', texto: Clima.icone(agora ? agora.cod : dia ? dia.codigo : 3) }),
+          dia ? h('span', { texto: '↑' + dia.max + '° ↓' + dia.min + '°' }) : null,
+          agora && agora.sens != null ? h('span', { class: 'pequeno', texto: T('ph_sensacao', { t: agora.sens }) }) : null])]));
+      /* alertas por período (chuva ou tempestade) */
+      ['manha', 'tarde', 'noite'].forEach(function (n) {
+        var per = Clima.periodo(todas, data, n); if (!per) return;
+        if (per.cod >= 95 || per.chuva >= 50) corpo.appendChild(h('div', { class: 'ph-alerta' }, [h('b', { texto: (per.cod >= 95 ? '⛈ ' : '🌧 ') + T(per.cod >= 95 ? 'ph_tempestade' : 'ph_chuva', { per: T(NOME_PERIODO[n]).toLowerCase() }) }), h('span', { class: 'ph-pct', texto: per.chuva + '%' })]));
+      });
+      /* tira hora a hora: rola de lado; a temperatura vira uma linha */
+      var lista = hs.filter(function (x) { var hh = +x.t.slice(11, 13); return hoje ? hh >= hAgora : hh >= 6; });
+      if (lista.length) {
+        var W = 58, H = 70, temps = lista.map(function (x) { return x.temp; }).filter(function (t) { return t != null; });
+        var mn = Math.min.apply(null, temps), mx = Math.max.apply(null, temps), esp = Math.max(1, mx - mn);
+        var pts = lista.map(function (x, k) { return x.temp == null ? null : [k * W + W / 2, 14 + (1 - (x.temp - mn) / esp) * (H - 34)]; });
+        var svg = d.createElementNS('http://www.w3.org/2000/svg', 'svg');
+        svg.setAttribute('width', lista.length * W); svg.setAttribute('height', H); svg.setAttribute('class', 'ph-linha'); svg.setAttribute('aria-hidden', 'true');
+        var poly = pts.filter(Boolean).map(function (p) { return p[0] + ',' + p[1].toFixed(1); }).join(' ');
+        svg.innerHTML = '<polyline points="' + poly + '" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>' +
+          pts.map(function (p, k) { return p ? '<circle cx="' + p[0] + '" cy="' + p[1].toFixed(1) + '" r="3.5" fill="currentColor"/><text x="' + p[0] + '" y="' + (p[1] + 20).toFixed(1) + '" text-anchor="middle">' + lista[k].temp + '°</text>' : ''; }).join('');
+        var cols = h('div', { class: 'ph-cols' }, lista.map(function (x, k) {
+          return h('div', { class: 'ph-col' + (hoje && k === 0 ? ' agora' : '') }, [h('span', { class: 'ph-h', texto: hoje && k === 0 ? T('ph_agora') : x.t.slice(11, 16) }),
+            h('span', { class: 'ph-ic', texto: Clima.icone(x.cod) }), h('span', { class: 'ph-ch', texto: '☂ ' + (x.chuva != null ? x.chuva + '%' : '—') })]);
+        }));
+        corpo.appendChild(h('div', { class: 'ph-tira' }, [h('div', { class: 'ph-tira-in', style: 'width:' + (lista.length * W) + 'px' }, [cols, svg])]));
+      }
+      if (dia) corpo.appendChild(h('p', { class: 'sub', texto: T('ph_resumo', { c: nomeTempo(dia.codigo), max: dia.max, min: dia.min, ch: dia.chuva != null ? dia.chuva : '—' }) }));
+      var base = r[1] || r[0];
+      corpo.appendChild(h('p', { class: 'pequeno' }, [T('climaFonte', { fonte: (base && base.fonte) || 'Open-Meteo' }) + ' · ', base ? linhaAtualizado(base) : null]));
+    });
+  }
   function desenharClima(cx, p, dias) {
     cx.textContent = '';
     cx.appendChild(h('div', { class: 'linha entre clima-cab' }, [h('h3', { texto: T('climaTitulo') }), linhaAtualizado(p)]));
@@ -1879,9 +1933,11 @@
       return;
     }
     cx.appendChild(h('div', { class: 'clima' }, ds.map(function (x) {
-      return h('div', { class: 'd', 'aria-label': fData(x.data) + ': ' + x.min + '° a ' + x.max + '°' }, [
+      /* tocar no dia abre a previsão hora a hora (pedido do dono, 21/Nov) */
+      return h('button', { class: 'd', type: 'button', 'aria-label': fData(x.data) + ': ' + x.min + '° a ' + x.max + '° · ' + T('ph_horaAHora'), onclick: function () { janelaPrevisaoHora(x.data); } }, [
         h('span', { texto: semana(x.data) + ' ' + fData(x.data, true) }), h('b', { texto: Clima.icone(x.codigo) }),
-        h('span', { texto: x.min + '° / ' + x.max + '°' }), x.chuva != null ? h('span', { class: 'pequeno', texto: '☔ ' + x.chuva + '%' }) : null
+        h('span', { texto: x.min + '° / ' + x.max + '°' }), x.chuva != null ? h('span', { class: 'pequeno', texto: '☔ ' + x.chuva + '%' }) : null,
+        h('span', { class: 'ph-link', texto: T('ph_horaAHora') + ' ›' })
       ]);
     })));
     var avisos = {};
@@ -2023,6 +2079,7 @@
     if (c && data >= hojeTxt) Clima.previsao(c.lat, c.lng).then(function (p) {
       var x = p.dias.filter(function (y) { return y.data === data; })[0];
       if (x) cab.appendChild(h('span', { class: 'sub tempo-dia' }, [Clima.icone(x.codigo) + ' ' + x.min + '°/' + x.max + '°' + (x.chuva != null ? ' ☔' + x.chuva + '%' : ''),
+        h('button', { class: 'lk ph-lk', type: 'button', texto: T('ph_horaAHora') + ' ›', onclick: function () { janelaPrevisaoHora(data); } }),
         !estado.verTodos || data === hojeTxt ? linhaAtualizado(p) : null]));
     }).catch(function () {});
     /* compromissos fixos 🔒: reservas com dia e hora (ingressos comprados, voo, hotel); o dia se monta em volta deles */
@@ -3240,13 +3297,139 @@
     d.body.classList.add('rolando'); clearTimeout(relogioRolar);
     relogioRolar = setTimeout(function () { d.body.classList.remove('rolando'); }, 900);
   }, { passive: true });
+  /* ---------- AssistONE (21/Nov): UM botão fixo de ajuda em todas as telas (antes o ✦ IA aparecia e sumia ao navegar).
+     Responde SEM internet e SEM IA, pelas palavras-chave (assistone.js); a IA fica lá dentro como opção, se existir. ---------- */
   function botaoAssistente() {
     var antigo = $('bt-assistente');
-    if (!iaParaMim()) { if (antigo) antigo.remove(); return; }
-    if (antigo) { var r = antigo.querySelector('.ia-rotulo'); if (r) r.textContent = idioma() === 'en' ? 'AI' : 'IA'; return; }
-    var b = h('button', { class: 'bt-assistente', id: 'bt-assistente', type: 'button', 'aria-label': T('assistente'), title: T('assistente'), onclick: function () { janelaAssistente(); } },
-      [h('span', { 'aria-hidden': 'true', texto: '✦' }), h('span', { class: 'ia-rotulo', 'aria-hidden': 'true', texto: idioma() === 'en' ? 'AI' : 'IA' })]);
+    if (antigo) { var r = antigo.querySelector('.ia-rotulo'); if (r) r.textContent = T('ast_botao'); return; }
+    var b = h('button', { class: 'bt-assistente', id: 'bt-assistente', type: 'button', 'aria-label': 'AssistONE · ' + T('ast_botao'), title: 'AssistONE', onclick: function () { janelaAssistONE(''); } },
+      [h('span', { 'aria-hidden': 'true', class: 'ast-ic', texto: '?' }), h('span', { class: 'ia-rotulo', 'aria-hidden': 'true', texto: T('ast_botao') })]);
     d.body.appendChild(b);
+  }
+  /* perguntas e respostas do GuiaXpert: chaves em PT e EN; cada uma leva a pessoa direto ao lugar certo */
+  function ajudaGuia() {
+    var en = idioma() === 'en', L = function (pt, ing) { return en ? ing : pt; };
+    var irRes = function (fn) { return function () { Nav.ir('reservas'); if (fn) setTimeout(fn, 250); }; };
+    return [
+      { id: 'qr', chaves: ['qr', 'qr code', 'pôr qr', 'carregar ingresso', 'cartão de embarque', 'pdf', 'voucher', 'escanear', 'ler código', 'passagem', 'bilhete', 'boarding pass', 'scan', 'ticket pdf', 'load ticket'],
+        t: L('Pôr o QR do ingresso ou o cartão de embarque', 'Add a ticket QR or boarding pass'),
+        r: L('Reservas → "QR / cartão": câmera, arquivo (foto, print ou PDF, vários de uma vez) ou colar. No WhatsApp também dá: na foto ou no PDF, ⋮ → Compartilhar → GuiaXpert. O app junta na reserva certa e guarda o QR limpo, que funciona sem internet.', 'Bookings → "QR / pass": camera, file (photo, screenshot or PDF) or paste. From WhatsApp: ⋮ → Share → GuiaXpert. The app links it to the right booking and keeps a clean QR that works offline.'),
+        acao: [L('Abrir "QR / cartão"', 'Open "QR / pass"'), irRes(function () { janelaCodigos({}); })] },
+      { id: 'mostrar', chaves: ['mostrar qr', 'mostrar ingresso', 'embarcar', 'entrada', 'catraca', 'portão', 'qr grande', 'qr pequeno', 'diminuir qr', 'tamanho do qr', 'nao le', 'leitor nao leu', 'show qr', 'gate', 'entrance', 'qr size', 'smaller'],
+        t: L('Mostrar o QR na entrada ou no embarque', 'Show the QR at the gate'),
+        r: L('Reservas → no cartão, "Mostrar os N códigos": um QR por vez, em tela cheia; passe para o lado para o próximo. Aumente o brilho da tela. A catraca não leu? Use − e + embaixo do código para diminuir ou aumentar; o app lembra o tamanho. Funciona sem internet.', 'Bookings → on the card, "Show all codes": one QR at a time, full screen; swipe for the next. Turn up the brightness. Scanner didn’t read it? Use − and + under the code to resize; the app remembers. Works offline.'),
+        acao: [L('Ir para Reservas', 'Go to Bookings'), irRes()] },
+      { id: 'remarcar', chaves: ['remarcar', 'mudar data', 'trocar dia', 'adiar', 'outro dia', 'reagendar', 'mudar o dia da reserva', 'reschedule', 'change date'],
+        t: L('Remarcar uma reserva para outro dia', 'Reschedule a booking'),
+        r: L('Chegou o PDF novo? Carregue em "QR / cartão": o app reconhece a mesma reserva e oferece "Remarcar … → novo dia". Sem PDF: no cartão da reserva, toque em Remarcar e escolha o dia e a hora. Sai do dia antigo do roteiro e entra no novo.', 'Got a new PDF? Load it in "QR / pass": the app recognizes the booking and offers "Reschedule". Without a PDF: on the card, tap Reschedule and pick the day and time.'),
+        acao: [L('Ir para Reservas', 'Go to Bookings'), irRes()] },
+      { id: 'cancelar', chaves: ['cancelar', 'cancelamento', 'multa', 'reembolso', 'estorno', 'desistir', 'cancel', 'refund', 'fee'],
+        t: L('Cancelar uma reserva (com multa ou reembolso)', 'Cancel a booking (fee or refund)'),
+        r: L('No cartão da reserva, toque em Cancelar: escolha a multa (sem multa, 10%, 20%…), o reembolso e uma observação. A reserva fica guardada como cancelada (para conferir o estorno) e sai do roteiro.', 'On the booking card, tap Cancel: choose the fee, refund and a note. It stays saved as cancelled and leaves the plan.'),
+        acao: [L('Ir para Reservas', 'Go to Bookings'), irRes()] },
+      { id: 'comprei', chaves: ['comprei', 'comprar na hora', 'bilheteria', 'ingresso comprado', 'paguei', 'valor pago', 'desconto do hotel', 'bought', 'paid'],
+        t: L('Registrar um ingresso comprado na hora', 'Record a ticket bought on the spot'),
+        r: L('Ache o lugar (lupa no alto) → na ficha, "Comprei o ingresso agora". Vem preenchido com hoje e a hora; ponha o valor pago e salve. Vira compromisso fixo 🔒 do dia no roteiro.', 'Find the place (top search) → on its card, "I just bought the ticket". It comes filled with today and now; add the amount and save.'),
+        acao: [L('Buscar um lugar', 'Search a place'), function () { abrirBusca(); }] },
+      { id: 'semnet', chaves: ['sem internet', 'offline', 'sem sinal', 'modo avião', 'guardar no celular', 'baixar mapa', 'funciona sem internet', 'no signal', 'airplane'],
+        t: L('Usar sem internet', 'Use offline'),
+        r: L('Na tela Hoje, o cartão "Funciona sem internet?" confere cada parte. Verde = pode ficar sem sinal. Se faltar algo, toque em "Guardar tudo agora" com internet uma vez (o Wi-Fi do hotel serve).', 'On Today, the "Works offline?" card checks each part. Green = fine offline. If something is missing, tap "Save everything now" once while online.'),
+        acao: [L('Abrir Hoje', 'Open Today'), function () { Nav.ir('inicio'); }] },
+      { id: 'instalar', chaves: ['instalar', 'ícone', 'tela inicial', 'aparecer no compartilhar', 'compartilhar com o guia', 'install', 'home screen', 'share to app'],
+        t: L('Instalar o app e fazer ele aparecer no "Compartilhar"', 'Install the app and show it in "Share"'),
+        r: L('No Chrome: menu ⋮ → "Instalar app" (não "Adicionar à tela inicial"). Instalado, o GuiaXpert aparece no Compartilhar do WhatsApp e da galeria. Para funcionar sem internet não precisa instalar.', 'In Chrome: ⋮ → "Install app". Once installed, GuiaXpert shows in the Share menu. Working offline doesn’t need it.'),
+        acao: null },
+      { id: 'chegar', chaves: ['como chegar', 'rota', 'waze', 'google maps', 'onde fica', 'endereço', 'navegar', 'ver no mapa', 'directions', 'route', 'where is'],
+        t: L('Ver no mapa e como chegar', 'See on the map and get there'),
+        r: L('Toque no programa do roteiro (ou no lugar no mapa): os botões "Ver no mapa", "Google Maps" e "Waze" levam até lá. No cartão do roteiro também há os ícones de mapa e de rota.', 'Tap the plan item (or the place on the map): "On the map", "Google Maps" and "Waze" take you there.'),
+        acao: [L('Abrir o Mapa', 'Open the Map'), function () { Nav.ir('mapa'); }] },
+      { id: 'adicionar', chaves: ['adicionar programa', 'pôr no dia', 'incluir passeio', 'novo programa', 'acrescentar', 'colocar no roteiro', 'add to plan', 'add activity'],
+        t: L('Pôr um passeio ou restaurante no roteiro', 'Add a place to the plan'),
+        r: L('Ache o lugar (lupa no alto ou no Mapa) → na ficha, "Pôr no dia" → escolha o dia e a hora → Acrescentar. Ou no Roteiro: "+ Acrescentar ao dia".', 'Find the place → on its card, "Add to day" → pick day and time → Add.'),
+        acao: [L('Buscar um lugar', 'Search a place'), function () { abrirBusca(); }] },
+      { id: 'mudarhora', chaves: ['mudar horário', 'trocar horário', 'editar programa', 'mudar de dia', 'mudar hora', 'change time', 'edit activity'],
+        t: L('Mudar a hora ou o dia de um programa', 'Change time or day of an activity'),
+        r: L('No Roteiro, toque no programa → lápis ✎ → mude a hora, o dia ou o lugar → Salvar.', 'In the plan, tap the activity → pencil ✎ → change time, day or place → Save.'),
+        acao: [L('Abrir o Roteiro', 'Open the plan'), function () { Nav.ir('roteiro'); }] },
+      { id: 'auto', chaves: ['montar roteiro', 'roteiro automático', 'gerar roteiro', 'sugerir roteiro', 'criar roteiro', 'build plan', 'automatic plan'],
+        t: L('Montar o roteiro automático (sem IA)', 'Build the plan automatically (no AI)'),
+        r: L('Roteiro → "+ Novo roteiro" → "Montar roteiro automático (sem IA)". Ele junta o que fica perto no mesmo dia, põe na ordem a partir do hotel e encaixa almoço e jantar.', 'Plan → "+ New plan" → "Build plan automatically (no AI)".'),
+        acao: [L('Abrir o Roteiro', 'Open the plan'), function () { Nav.ir('roteiro'); }] },
+      { id: 'tempo', chaves: ['chuva', 'vai chover', 'previsão', 'tempo', 'temperatura', 'frio', 'calor', 'hora a hora', 'weather', 'rain', 'forecast'],
+        t: L('Previsão do tempo, hora a hora', 'Weather, hour by hour'),
+        r: L('Na tela Hoje, toque no dia da previsão: abre hora a hora (chuva e temperatura). No Roteiro, "Hora a hora ›" ao lado da previsão do dia. O botão ↻ atualiza na hora.', 'On Today, tap a forecast day for the hourly view. In the plan, "Hourly ›" next to the day’s forecast.'),
+        acao: [L('Ver hoje hora a hora', 'See today hourly'), function () { janelaPrevisaoHora(hojeIso()); }] },
+      { id: 'hotel', chaves: ['hotel', 'ponto errado', 'pin errado', 'ajustar ponto', 'hotel no lugar errado', 'hotel location'],
+        t: L('Hotel no mapa (ou no lugar errado)', 'Hotel on the map (or in the wrong place)'),
+        r: L('O hotel aparece com um pino de cama nos dias da hospedagem. Se estiver no lugar errado: toque no pino → "Ajustar o ponto do hotel" → arraste o mapa → "É aqui".', 'The hotel shows with a bed pin during your stay. If it’s wrong: tap it → "Adjust the hotel pin" → drag → "It’s here".'),
+        acao: [L('Abrir o Mapa', 'Open the Map'), function () { Nav.ir('mapa'); }] },
+      { id: 'semponto', chaves: ['não aparece no mapa', 'sem ponto', 'lugar sumiu', 'sem pino', 'not on the map'],
+        t: L('Lugar que não aparece no mapa', 'Place missing from the map'),
+        r: L('Na ficha do lugar: "Achar pelo endereço", "Marcar no mapa" ou, se estiver lá, "Estou aqui agora". Depois confira e toque em "É aqui".', 'On the place card: "Find by address", "Mark on map" or "I’m here now".'),
+        acao: null },
+      { id: 'alternativa', chaves: ['alternativa', 'dúvida entre', 'ainda não decidi', 'duas opções', 'escolher entre', 'alternative'],
+        t: L('Ficar em dúvida entre dois programas no mesmo horário', 'Keep two options at the same time'),
+        r: L('Ao editar o programa, abra "Mais opções" e marque "Ainda estou em dúvida…". Os dois aparecem juntos no roteiro, com o botão para escolher um depois.', 'When editing, open "More options" and tick "I’m still choosing…".'),
+        acao: null },
+      { id: 'hoje', chaves: ['programação de hoje', 'o que tem hoje', 'agenda de hoje', 'hoje', 'próximo programa', 'today', 'next'],
+        t: L('Ver a programação de hoje', 'See today’s plan'),
+        r: L('Roteiro → aba do dia de hoje (aberta sozinha durante a viagem). A tela Hoje mostra o próximo programa.', 'Plan → today’s tab (opens by itself during the trip).'),
+        acao: [L('Abrir o Roteiro', 'Open the plan'), function () { Nav.ir('roteiro'); }] },
+      { id: 'perto', chaves: ['perto de mim', 'restaurante perto', 'comer perto', 'o que tem perto', 'near me', 'food near'],
+        t: L('O que tem perto de mim', 'What’s near me'),
+        r: L('Mapa → toque no alvo ⌖ (onde estou) e use os filtros "Perto", "Comer"… A lista fica do mais perto para o mais longe.', 'Map → tap ⌖ (where I am) and use the "Near", "Food" filters.'),
+        acao: [L('Abrir o Mapa', 'Open the Map'), function () { estado.filtro = 'perto'; Nav.ir('mapa'); }] },
+      { id: 'email', chaves: ['email', 'e-mail', 'colar email', 'localizador', 'confirmação', 'booking email'],
+        t: L('Trazer uma reserva do e-mail', 'Bring a booking from email'),
+        r: L('Reservas → E-mail: copie o texto do e-mail de confirmação e cole. O app acha localizador, voo, datas e horários (sem IA). O QR que vem em anexo: salve e use "QR / cartão" → Arquivo.', 'Bookings → Email: paste the confirmation text. The app finds code, flight, dates and times.'),
+        acao: [L('Ir para Reservas', 'Go to Bookings'), irRes(function () { janelaImportar(''); })] },
+      { id: 'cupom', chaves: ['cupom', 'desconto', 'brinde', 'coupon', 'voucher gift'],
+        t: L('Onde ficam os cupons e brindes', 'Where coupons are'),
+        r: L('Reservas → "Sem data": cada cupom com o código, a validade e o botão para mostrar o QR na loja.', 'Bookings → "No date": each coupon with code and validity.'),
+        acao: [L('Ir para Reservas', 'Go to Bookings'), irRes()] },
+      { id: 'desfazer', chaves: ['desfazer', 'apaguei sem querer', 'voltar atrás', 'tirei sem querer', 'undo'],
+        t: L('Desfazer algo que tirei sem querer', 'Undo a removal'),
+        r: L('Logo depois de tirar um programa aparece "Desfazer" embaixo por alguns segundos. Passou? Ponha de novo pelo lugar → "Pôr no dia".', 'Right after removing, "Undo" shows for a few seconds.'),
+        acao: null },
+      { id: 'voz', chaves: ['microfone', 'falar', 'ditar', 'voz', 'falar em vez de digitar', 'microphone', 'voice', 'dictate'],
+        t: L('Falar em vez de digitar', 'Speak instead of typing'),
+        r: L('Toque no microfone 🎤 dentro do campo e fale. Funciona aqui no AssistONE também.', 'Tap the 🎤 inside the field and speak. Works here too.'),
+        acao: null },
+      { id: 'familia', chaves: ['compartilhar viagem', 'família', 'convidar', 'esposa', 'marido', 'filhos', 'quem vai', 'share trip', 'invite'],
+        t: L('Compartilhar a viagem com a família', 'Share the trip with family'),
+        r: L('Aba Quem → convidar por link ou código. Quem entra vê o roteiro e os ingressos (e os QR) também.', 'Who tab → invite by link or code.'),
+        acao: [L('Abrir Quem', 'Open Who'), function () { Nav.ir('familia'); }] }
+    ];
+  }
+  var motorAjuda = null, motorIdioma = null;
+  function janelaAssistONE(textoInicial) {
+    if (!window.AssistONE) return;
+    if (!motorAjuda || motorIdioma !== idioma()) { motorAjuda = AssistONE.motor(ajudaGuia()); motorIdioma = idioma(); }
+    var campo = h('input', { class: 'campo', type: 'search', id: 'gx-assist', placeholder: T('ast_pergunte'), autocomplete: 'off', maxlength: '200', value: textoInicial || '' });
+    var res = h('div', { class: 'ast-res', 'aria-live': 'polite' });
+    var sug = h('div', { class: 'chips ast-sug' }, ['qr', 'remarcar', 'cancelar', 'semnet', 'tempo', 'chegar'].map(function (id) {
+      var it = ajudaGuia().filter(function (x) { return x.id === id; })[0];
+      return h('button', { class: 'chip', type: 'button', texto: it.t, onclick: function () { campo.value = it.t; responder(); } });
+    }));
+    var corpo = h('div', { class: 'ast' }, [h('p', { class: 'sub', texto: T('ast_texto') }), campo, sug, res]);
+    var j = janela('AssistONE', corpo);
+    function cartao(it, k) {
+      return h('div', { class: 'ast-card' + (k === 0 ? ' melhor' : '') }, [h('b', { texto: it.t }), h('p', { texto: it.r }),
+        it.acao ? h('button', { class: k === 0 ? 'bt' : 'bt leve', type: 'button', texto: it.acao[0] + ' ›', onclick: function () { j.fechar(function () { it.acao[1](); }); } }) : null]);
+    }
+    function responder() {
+      var q = campo.value.trim(); res.textContent = '';
+      sug.hidden = !!q;
+      if (q.length < 2) return;
+      var r = motorAjuda.buscar(q, 3);
+      if (r.length) r.forEach(function (x, k) { res.appendChild(cartao(x.item, k)); });
+      else res.appendChild(h('div', { class: 'ast-card' }, [h('b', { texto: T('ast_naoEntendi') }), h('p', { class: 'pequeno', texto: T('ast_tente') })]));
+      if (iaParaMim()) res.appendChild(h('button', { class: 'bt sec', type: 'button', texto: '✦ ' + T('ast_perguntarIA'), onclick: function () { j.fechar(function () { janelaAssistente(q); }); } }));
+    }
+    var espera = null;
+    campo.addEventListener('input', function () { clearTimeout(espera); espera = setTimeout(responder, 250); });
+    campo.addEventListener('keydown', function (e) { if (e.key === 'Enter') { e.preventDefault(); responder(); } });
+    if (textoInicial) responder();
   }
 
   /* ---------- Mapa da viagem (mapa + lista + cartão: mapa.js) ---------- */
@@ -3294,7 +3477,7 @@
         if (!estado.opcao) return;
         var tabs = h('div', { class: 'dias', role: 'tablist', 'aria-label': T('diasDaViagem') });
         dias.forEach(function (dt, i) {
-          tabs.appendChild(h('button', { class: 'dia', role: 'tab', type: 'button', 'aria-selected': i === estado.dia ? 'true' : 'false', onclick: function () { estado.dia = i; mostrar('mapa'); } },
+          tabs.appendChild(h('button', { class: 'dia' + (dt < hojeIso() ? ' passado' : '') + (dt === hojeIso() ? ' hoje' : ''), role: 'tab', type: 'button', 'aria-selected': i === estado.dia ? 'true' : 'false', onclick: function () { estado.dia = i; mostrar('mapa'); } },
             [h('span', { texto: semana(dt) }), h('small', { texto: fData(dt, true) })]));
         });
         topo.appendChild(tabs);
@@ -3861,7 +4044,7 @@
             var resumo = h('span', { class: 'dia-resumo' });
             var mais = dia === 'sem' ? null : h('button', { class: 'dia-mais', type: 'button', 'aria-label': T('addNesteDia'), title: T('addNesteDia'), texto: '＋', onclick: function () { janelaAddNoDia(v, dia); } });
             if (umDiaSo) {   /* um dia só (ex.: passeio): título simples, sempre aberto, sem chevron */
-              caixa.appendChild(h('section', { class: 'dia-sec' }, [h('div', { class: 'dia-linha' }, [
+              caixa.appendChild(h('section', { class: 'dia-sec' + (dia !== 'sem' && dia < hjIso ? ' passado' : '') }, [h('div', { class: 'dia-linha' }, [
                 h('h3', { class: 'dia-titulo dia-fixo', texto: dia === 'sem' ? T('res_semData') : semana(dia) + ', ' + fData(dia) }), mais]), corpo]));
               sec = { corpo: corpo, resumo: resumo, icones: [] };
               return;
@@ -3870,7 +4053,7 @@
               h('span', { class: 'chev', 'aria-hidden': 'true', texto: '›' }),
               h('span', { class: 'dia-titulo', texto: dia === 'sem' ? T('res_semData') : semana(dia) + ', ' + fData(dia) }), resumo]);
             bt.addEventListener('click', function () { aberto = !aberto; diasAbertos[chave] = aberto; bt.setAttribute('aria-expanded', aberto ? 'true' : 'false'); corpo.hidden = !aberto; });
-            caixa.appendChild(h('section', { class: 'dia-sec' }, [h('div', { class: 'dia-linha' }, [bt, mais]), corpo]));
+            caixa.appendChild(h('section', { class: 'dia-sec' + (dia !== 'sem' && dia < hjIso ? ' passado' : '') }, [h('div', { class: 'dia-linha' }, [bt, mais]), corpo]));
             sec = { corpo: corpo, resumo: resumo, icones: [] };
           }
           /* veio do roteiro ("Ver reserva do carro"): abre o dia e a etapa dessa reserva */
@@ -3958,6 +4141,22 @@
     var k = c.cancelamento || {};
     return h('span', { class: 'res-cancelada-txt', texto: '✕ ' + [T('res_cancelada'), k.multa ? T('res_multa', { m: k.multa }) : T('res_semMulta'), k.reembolso ? T('res_reembolso', { v: k.reembolso }) : null, k.obs].filter(Boolean).join(' · ') });
   }
+  /* ações do cartão (21/Nov: botões empilhados ocupavam a tela): uma principal larga + fileira de ícones com rótulo curto */
+  function acoesCartao(principal, itens) {
+    var ic = Seletor.icone;
+    var fila = h('div', { class: 'acoes-cartao' }, itens.filter(Boolean).map(function (a) {
+      return h('button', { class: 'ac', type: 'button', title: a[1], 'aria-label': a[1], onclick: a[2] }, [ic(a[0]), h('span', { texto: a[1] })]);
+    }));
+    return h('div', { class: 'acoes-res-cartao' }, [principal, fila]);
+  }
+  /* "Adulto (+13 anos), Adulto (+13 anos), Criança…" → "2 adultos · 2 crianças · 1 melhor idade"; nomes de pessoas ficam como estão */
+  function resumoPessoas(g) {
+    var cont = {}, ordem = [];
+    g.forEach(function (x) { var p = String(x.c.pessoa || '').replace(/\s*\(.*?\)\s*/g, '').trim(); if (!p) return; if (!cont[p]) { cont[p] = 0; ordem.push(p); } cont[p]++; });
+    var repete = ordem.some(function (p) { return cont[p] > 1; });
+    if (!repete) return ordem.join(', ');
+    return ordem.map(function (p) { var n = cont[p], t = p.toLowerCase(); if (n > 1 && !/\s/.test(t) && /[aeiou]$/.test(t)) t += 's'; return n + ' ' + t; }).join(' · ');
+  }
   function cartaoReserva(x) {
     var c = x.c;
     if (c.status === 'cancelada') return h('div', { class: 'cartao res-cancelada' }, [h('span', { class: 'pequeno' }, rotuloRes(c.tipo)), h('b', { texto: c.titulo }),
@@ -3974,10 +4173,11 @@
       c.remarcadoDe ? h('span', { class: 'sub', texto: '📅 ' + T('res_remarcadoDe', { d: semana(c.remarcadoDe) + ' ' + fData(c.remarcadoDe, true) }) }) : null,
       c.local ? h('span', { class: 'sub', texto: c.local }) : null,
       c.nota ? h('span', { class: 'sub', texto: c.nota }) : null,
-      h('div', { class: 'linha' }, [
-        c.qr || c.barra ? h('button', { class: 'bt', type: 'button', onclick: function () { mostrarQRs([c], 0); } }, '▦ ' + T('mostrarQRIngresso')) : null,
-        !x.trancada ? h('button', { class: 'bt leve', type: 'button', onclick: function () { janelaCodigos({ alvo: x }); } }, '▦ ' + T(c.qr || c.barra ? 'cod_trocarQR' : 'cod_porQR')) : null,
-        h('button', { class: 'bt leve', type: 'button', onclick: function () { janelaReserva(x); } }, T('editar'))])
+      acoesCartao(c.qr || c.barra ? h('button', { class: 'bt bt-principal', type: 'button', onclick: function () { mostrarQRs([c], 0); } }, '▦ ' + T('mostrarQRIngresso')) : null, [
+        !x.trancada ? ['qr', T(c.qr || c.barra ? 'cod_trocarQR' : 'cod_porQR'), function () { janelaCodigos({ alvo: x }); }] : null,
+        !x.trancada ? ['cal', T('res_remarcar'), function () { janelaRemarcar([x]); }] : null,
+        ['lapis', T('editar'), function () { janelaReserva(x); }],
+        !x.trancada ? ['fechar', T('res_cancelarTodos'), function () { janelaCancelarReservas([x]); }] : null])
     ]);
   }
   /* vários ingressos do mesmo evento: um cartão, todos os QR de uma vez, editar o grupo inteiro */
@@ -3997,15 +4197,14 @@
       h('span', { class: 'pequeno' }, rotuloRes(c0.tipo, ' · ' + T(c0.tipo === 'voo' ? 'nPassageiros' : 'nIngressos', { n: g.length }))),
       h('b', { texto: c0.titulo }),
       linhaQuando(c0) ? h('span', { texto: linhaQuando(c0) }) : null,
-      h('span', { texto: g.map(function (x) { return x.c.pessoa; }).filter(Boolean).join(', ') }),
-      c0.local ? h('span', { class: 'sub', texto: c0.local }) : null,
-      c0.nota ? h('span', { class: 'sub', texto: c0.nota }) : null,
-      h('div', { class: 'linha' }, [
-        comQR.length ? h('button', { class: 'bt', type: 'button', onclick: function () { mostrarQRs(comQR, 0); } }, '▦ ' + T('res_mostrarTodosQR', { n: comQR.length })) : null,
-        h('button', { class: 'bt leve', type: 'button', onclick: function () { janelaCodigos({}); } }, '▦ ' + T('cod_porQR')),
-        h('button', { class: 'bt leve', type: 'button', onclick: function () { janelaEditarGrupo(g); } }, '✎ ' + T('res_editarGrupo')),
-        h('button', { class: 'bt leve', type: 'button', onclick: function () { janelaRemarcar(g); } }, '📅 ' + T('res_remarcar')),
-        h('button', { class: 'bt leve', type: 'button', onclick: function () { janelaCancelarReservas(g.filter(function (x) { return x.c.status !== 'cancelada'; })); } }, '✕ ' + T('res_cancelarTodos'))]),
+      h('span', { texto: resumoPessoas(g) }),
+      c0.local ? h('span', { class: 'sub pequeno', texto: c0.local }) : null,
+      c0.nota ? h('span', { class: 'sub pequeno', texto: c0.nota }) : null,
+      acoesCartao(comQR.length ? h('button', { class: 'bt bt-principal', type: 'button', onclick: function () { mostrarQRs(comQR, 0); } }, '▦ ' + T('res_mostrarTodosQR', { n: comQR.length })) : null, [
+        ['qr', T('cod_porQR'), function () { janelaCodigos({}); }],
+        ['cal', T('res_remarcar'), function () { janelaRemarcar(g); }],
+        ['lapis', T('editar'), function () { janelaEditarGrupo(g); }],
+        ['fechar', T('res_cancelarTodos'), function () { janelaCancelarReservas(g.filter(function (x) { return x.c.status !== 'cancelada'; })); }]]),
       verUm, lista]);
   }
   /* QR em tela cheia, um atrás do outro: arrastar para o lado ou ‹ › (a pessoa da fila vai mostrando) */
@@ -4016,7 +4215,23 @@
     var cod = h('code', { style: 'font-size:1.3rem;user-select:all' }), pos = h('span', { class: 'sub' });
     var ant = h('button', { class: 'bt leve', type: 'button', 'aria-label': T('anterior'), texto: '‹ ' + T('anterior') });
     var prox = h('button', { class: 'bt', type: 'button', 'aria-label': T('proximo'), texto: T('proximo') + ' ›' });
-    var corpo = h('div', { class: 'linha', style: 'flex-direction:column;align-items:center;gap:.5rem;text-align:center' }, [titulo, quem, img, cod, pos,
+    /* tamanho do QR (21/Nov: na catraca o QR grande demais não era lido; precisava ficar menor) — lembrado para a próxima vez */
+    var TAMS = [0.4, 0.52, 0.64, 0.78, 0.92], tam = 3;
+    try { var tg = localStorage.getItem('guiaxpert.qrTamanho'); if (tg != null && /^[0-9]$/.test(tg) && +tg < TAMS.length) tam = +tg; } catch (e) {}
+    var menor = h('button', { class: 'bt leve qr-tam-bt', type: 'button', 'aria-label': T('qrMenor'), title: T('qrMenor'), texto: '−' });
+    var maior = h('button', { class: 'bt leve qr-tam-bt', type: 'button', 'aria-label': T('qrMaior'), title: T('qrMaior'), texto: '+' });
+    var tamTxt = h('span', { class: 'pequeno', texto: T('qrTamanho') });
+    function aplicarTam() {
+      var base = Math.min(window.innerWidth * 0.92, 440), w = Math.round(base * TAMS[tam]);
+      img.style.width = w + 'px';
+      if ((img.getAttribute('style') || '').indexOf('padding:.6rem') >= 0) img.style.height = Math.round(w * 0.4) + 'px';
+      menor.disabled = tam === 0; maior.disabled = tam === TAMS.length - 1;
+      try { localStorage.setItem('guiaxpert.qrTamanho', String(tam)); } catch (e) {}
+    }
+    menor.addEventListener('click', function () { if (tam > 0) { tam--; aplicarTam(); } });
+    maior.addEventListener('click', function () { if (tam < TAMS.length - 1) { tam++; aplicarTam(); } });
+    var corpo = h('div', { class: 'linha', style: 'flex-direction:column;align-items:center;gap:.5rem;text-align:center' }, [titulo, quem, img, cod,
+      h('div', { class: 'qr-tam' }, [menor, tamTxt, maior]), pos,
       lista.length > 1 ? h('div', { class: 'acoes' }, [ant, prox]) : null, h('p', { class: 'pequeno', texto: T('qrBrilho') })]);
     var j = janela(T('qrIngresso'), corpo);
     j.caixa.classList.add('cheia');
@@ -4027,11 +4242,11 @@
       ant.disabled = i === 0; prox.disabled = i === lista.length - 1;
       img.hidden = false;
       if (c.barra && window.Barras) {   /* voucher com código de barras (ex.: Florybal, ITF) */
-        try { img.setAttribute('style', EST_BARRA); img.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(Barras.svg(c.barra, c.barraFormato)); img.alt = T('codigoBarras') + ' ' + c.barra; }
+        try { img.setAttribute('style', EST_BARRA); aplicarTam(); img.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(Barras.svg(c.barra, c.barraFormato)); img.alt = T('codigoBarras') + ' ' + c.barra; }
         catch (e) { img.hidden = true; }
         return;
       }
-      img.setAttribute('style', EST_QR);
+      img.setAttribute('style', EST_QR); aplicarTam();
       carregarQR().then(function () { var q = qrcode(0, 'M'); q.addData(String(c.qr || c.codigo)); q.make(); img.src = q.createDataURL(8, 8); img.alt = 'QR ' + (c.codigo || ''); })
         .catch(function () { img.hidden = true; });
     }
@@ -4405,7 +4620,7 @@
     var nota = [i.detalhe, i.tipo !== 'voo' && i.localizador ? T('cod_reserva', { r: i.localizador }) : null, i.nota].filter(Boolean).join(' · ');
     /* ingresso só com o dia: usa a hora do programa igual no roteiro daquele dia (senão ele iria para o fim do dia, sem hora) */
     var quando = i.data || '';
-    if (quando && quando.length === 10 && i.tipo === 'ingresso') { var hr = horaNoRoteiro(titulo, quando); if (hr) quando += 'T' + hr; }
+    if (quando && quando.length === 10 && i.tipo === 'ingresso') { var hr = horaNoRoteiro(titulo, quando) || horaAbertura(titulo); if (hr) quando += 'T' + hr; }
     var novo = { tipo: i.tipo, titulo: titulo, quando: quando, codigo: extra.codigo || '', local: '', nota: nota, pessoa: i.pessoa || extra.pessoa || '', assento: extra.assento || '', qr: i.qr };
     var g = i.tipo === 'voo' ? 'v-' + i.cia + i.voo + '-' + (i.data || '') : i.tipo === 'ingresso' && i.titulo ? 'i-' + normalizar(i.localizador || i.titulo).slice(0, 30) + '-' + (i.data || '') : null;
     return gravar({ viagem_id: vid, marca: novo.codigo ? 'cod:' + novo.codigo + (novo.pessoa ? '|' + normalizar(novo.pessoa) : '') : null,
@@ -4459,19 +4674,36 @@
     var btCam = h('button', { class: 'an principal', type: 'button' }, [ic('camera'), h('span', { texto: T('cod_camera') })]);
     var btArq = h('button', { class: 'an', type: 'button' }, [ic('arquivo'), h('span', { texto: T('cod_arquivo') })]);
     var btCol = h('button', { class: 'an', type: 'button' }, [ic('colar'), h('span', { texto: T('cod_colar') })]);
+    /* três estados (21/Nov): ESCOLHER (texto + 3 botões) · LENDO (só o aviso animado, sem botões chamando o toque) ·
+       RESULTADO ("Li 7 códigos" + "Guardar os 7" no alto, páginas em miniatura, e um link discreto para ler outro) */
+    var espera = h('div', { class: 'cod-espera', role: 'status', 'aria-live': 'polite' }, [h('span', { class: 'cod-giro', 'aria-hidden': 'true' }), h('div', {}, [h('b', { class: 'cod-espera-t' }), h('span', { class: 'pequeno cod-espera-p' })])]);
+    var paginas = h('div', { class: 'cod-paginas' });
+    var outro = h('button', { class: 'lk cod-outro', type: 'button', texto: T('cod_lerOutro'), onclick: function () { corpo.classList.remove('com-resultado'); paginas.textContent = ''; lista.textContent = ''; msg.textContent = ''; previa.hidden = true; } });
     var corpo = h('div', { class: 'cod-janela' }, [
-      h('p', { class: 'sub', texto: T(op.alvo ? 'cod_textoAlvo' : 'cod_texto', { r: op.alvo ? op.alvo.c.titulo : '' }) }),
-      h('div', { class: 'acoes-nav tres' }, [btCam, btArq, btCol]), arq, video, colarAqui, previa, msg, lista,
+      h('p', { class: 'sub cod-intro', texto: T(op.alvo ? 'cod_textoAlvo' : 'cod_texto', { r: op.alvo ? op.alvo.c.titulo : '' }) }),
+      h('div', { class: 'acoes-nav tres' }, [btCam, btArq, btCol]), arq, video, colarAqui, espera, msg, lista, previa, paginas, outro,
       h('details', { class: 'mais-opcoes' }, [h('summary', { texto: T('cod_digitar') }), manual])]);
+    function estadoLendo(nome) {
+      corpo.classList.add('lendo'); corpo.classList.remove('com-resultado');
+      espera.querySelector('.cod-espera-t').textContent = T('cod_lendoArq', { a: nome || T('cod_arquivo').toLowerCase() });
+      espera.querySelector('.cod-espera-p').textContent = T('cod_esperaDica');
+    }
+    function fimLendo(temResultado) {
+      corpo.classList.remove('lendo');
+      if (temResultado) { corpo.classList.add('com-resultado'); setTimeout(function () { j.caixa.scrollTop = 0; }, 30); }
+    }
     var fluxo = null, salvou = 0, cartoesAbertos = [], ctxTexto = '';
     function pararCam() { if (fluxo) fluxo.getTracks().forEach(function (t) { t.stop(); }); fluxo = null; video.hidden = true; btCam.classList.remove('ativo'); }
     var j = janela(T(op.alvo ? 'cod_tituloAlvo' : 'cod_titulo'), corpo, function () { pararCam(); d.removeEventListener('paste', aoColar); if (salvou && estado.rota === 'reservas') mostrar('reservas'); });
     j.caixa.classList.add('janela-codigos');
+    /* sem foco automático no botão Câmera (o contorno amarelo parecia pedir toque) */
+    setTimeout(function () { if (d.activeElement && corpo.contains(d.activeElement)) d.activeElement.blur(); }, 80);
 
     function resultado(cs, origem) {
       lista.textContent = '';
-      if (!cs.length) { msg.className = 'cod-msg erro'; msg.textContent = T(origem === 'camera' ? 'cod_nadaCamera' : 'cod_nada'); return; }
-      msg.className = 'cod-msg ok'; msg.textContent = cs.length === 1 ? T('cod_achei1') : T('cod_acheiN', { n: cs.length });
+      if (!cs.length) { fimLendo(false); msg.className = 'cod-msg erro'; msg.textContent = T(origem === 'camera' ? 'cod_nadaCamera' : 'cod_nada'); return; }
+      fimLendo(true);
+      msg.className = 'cod-msg ok'; msg.textContent = '✓ ' + (cs.length === 1 ? T('cod_achei1') : T('cod_acheiN', { n: cs.length }));
       try { if (navigator.vibrate) navigator.vibrate(40); } catch (e) {}
       var infos = cs.map(function (c) { return infoCodigo(c.texto, ctxTexto ? blocoDoCodigo(ctxTexto, c.texto) : null); });
       var cartoes = cartoesAbertos = infos.map(function (i) { return cartaoCodigo(i); });
@@ -4531,21 +4763,36 @@
     function lerArquivos(files) {
       files = [].slice.call(files || []).slice(0, 10);
       if (!files.length) return;
-      pararCam(); lista.textContent = ''; msg.className = 'cod-msg'; msg.textContent = T('cod_lendo');
+      pararCam(); lista.textContent = ''; msg.className = 'cod-msg'; msg.textContent = ''; paginas.textContent = ''; previa.hidden = true;
       var todos = [], vistos = {}, textos = []; ctxTexto = '';
-      files.reduce(function (p, f) {
-        return p.then(function () { return Codigos.lerArquivo(f); }).then(function (r) {
-          if (r.previa) { previa.src = r.previa; previa.hidden = false; }
+      var pags = [];
+      files.reduce(function (p, f, fi) {
+        return p.then(function () {
+          estadoLendo(f.name || '');
+          return Codigos.lerArquivo(f, { aoProgresso: function (pg, n) { espera.querySelector('.cod-espera-p').textContent = T('cod_pagina', { p: pg, n: n }) + (files.length > 1 ? ' · ' + T('cod_arquivoN', { a: fi + 1, n: files.length }) : ''); } });
+        }).then(function (r) {
+          (r.paginas || (r.previa ? [{ img: r.previa, n: (r.codigos || []).length }] : [])).forEach(function (pg) { pags.push(pg); });
           if (r.erro === 'senha') textos.push('senha');
           if (r.texto) ctxTexto = (ctxTexto ? ctxTexto + '\n' : '') + r.texto;
           (r.codigos || []).forEach(function (c) { if (!vistos[c.texto]) { vistos[c.texto] = 1; todos.push(c); } });
           if (!(r.codigos || []).length && r.texto && r.texto.trim().length > 40) textos.push(r.texto);
         });
       }, Promise.resolve()).then(function () {
-        if (!todos.length && textos.indexOf('senha') > -1) { msg.className = 'cod-msg erro'; msg.textContent = T('cod_senha'); return; }
-        if (!todos.length && textos.length) { oferecerTexto(textos.filter(function (t) { return t !== 'senha'; }).join('\n\n')); return; }
+        mostrarPaginas(pags);
+        if (!todos.length && textos.indexOf('senha') > -1) { fimLendo(false); msg.className = 'cod-msg erro'; msg.textContent = T('cod_senha'); return; }
+        if (!todos.length && textos.length) { fimLendo(false); oferecerTexto(textos.filter(function (t) { return t !== 'senha'; }).join('\n\n')); return; }
         resultado(todos, 'arquivo');
-      }).catch(function () { msg.className = 'cod-msg erro'; msg.textContent = T('cod_nada'); });
+      }).catch(function () { fimLendo(false); msg.className = 'cod-msg erro'; msg.textContent = T('cod_nada'); });
+    }
+    /* todas as páginas lidas, lado a lado, com quantos códigos cada uma deu; tocar abre maior */
+    function mostrarPaginas(pags) {
+      paginas.textContent = '';
+      if (!pags.length) return;
+      paginas.appendChild(h('div', { class: 'cod-pags-fila' }, pags.map(function (pg, k) {
+        return h('button', { class: 'cod-pag', type: 'button', 'aria-label': T('cod_paginaN', { p: k + 1, n: pags.length, c: pg.n }), onclick: function () {
+          janela(T('cod_paginaTit', { p: k + 1, n: pags.length }), h('img', { src: pg.img, alt: '', style: 'width:100%;border-radius:12px;background:#fff' }));
+        } }, [h('img', { src: pg.img, alt: '' }), h('span', { texto: (pags.length > 1 ? T('cod_pagCurta', { p: k + 1, n: pags.length }) + ' · ' : '') + T(pg.n === 1 ? 'cod_n1' : 'cod_nN', { n: pg.n }) })]);
+      })));
     }
     /* veio texto em vez de imagem: mostra O QUE veio (a pessoa entende) e o caminho certo; e-mail comprido ainda pode ser lido */
     /* sobras de leituras antigas: "Ingresso" sem nome nem data (versões antes de 20/Nov) e cupons repetidos; a pessoa decide apagar */

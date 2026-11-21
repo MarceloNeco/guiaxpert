@@ -122,12 +122,14 @@
   /* por hora: Open-Meteo (16 dias, com visibilidade) e, se falhar, MET Norway (10 dias; blocos de 6 h depois de 2–3 dias) */
   function horasOpenMeteo(lat, lng) {
     return buscar('https://api.open-meteo.com/v1/forecast?latitude=' + lat.toFixed(3) + '&longitude=' + lng.toFixed(3) +
-      '&hourly=weather_code,precipitation_probability,visibility,cloud_cover_low&timezone=auto&forecast_days=16').then(function (j) {
+      '&hourly=weather_code,precipitation_probability,visibility,cloud_cover_low,temperature_2m,apparent_temperature&timezone=auto&forecast_days=16').then(function (j) {
       if (j && j.error) throw new Error('open-meteo');
       var hh = j.hourly || {};
       return { em: Date.now(), fonte: 'Open-Meteo', horas: (hh.time || []).map(function (t, i) {
         return { t: t, cod: hh.weather_code ? hh.weather_code[i] : null, chuva: hh.precipitation_probability ? hh.precipitation_probability[i] : null,
-                 vis: hh.visibility ? hh.visibility[i] : null, nuvem: hh.cloud_cover_low ? hh.cloud_cover_low[i] : null };
+                 vis: hh.visibility ? hh.visibility[i] : null, nuvem: hh.cloud_cover_low ? hh.cloud_cover_low[i] : null,
+                 temp: hh.temperature_2m && hh.temperature_2m[i] != null ? Math.round(hh.temperature_2m[i]) : null,
+                 sens: hh.apparent_temperature && hh.apparent_temperature[i] != null ? Math.round(hh.apparent_temperature[i]) : null };
       }).filter(function (x) { return x.cod != null; }) };
     });
   }
@@ -141,7 +143,8 @@
         var mm = b.details && b.details.precipitation_amount, prob = b.details && b.details.probability_of_precipitation;
         var chuva = prob != null ? Math.round(prob) : mm == null ? null : mm >= (b1 ? 1 : 3) ? 75 : mm >= (b1 ? 0.2 : 0.8) ? 50 : 10;
         var nevoa = det.fog_area_fraction != null && det.fog_area_fraction >= 50;
-        var reg = { cod: codigoMet(b.summary.symbol_code), chuva: chuva, vis: nevoa ? 500 : null, nuvem: det.cloud_area_fraction_low != null ? det.cloud_area_fraction_low : null };
+        var reg = { cod: codigoMet(b.summary.symbol_code), chuva: chuva, vis: nevoa ? 500 : null, nuvem: det.cloud_area_fraction_low != null ? det.cloud_area_fraction_low : null,
+          temp: det.air_temperature != null ? Math.round(det.air_temperature) : null, sens: null };
         var t0 = Date.parse(p.time) + fuso;
         for (var k = 0; k < (b1 ? 1 : 6); k++) {
           var d = new Date(t0 + k * 3600000);
@@ -194,7 +197,9 @@
     porHora: function (lat, lng, forcar) {
       var chave = 'clima-h:' + lat.toFixed(2) + ',' + lng.toFixed(2);
       return Banco.meta(chave, null).then(function (g) {
-        if (g && !forcar && Date.now() - g.em < 1800 * 1000) return g;
+        /* guardada antes de 21/Nov não tinha temperatura por hora: com internet, busca de novo */
+        var semTemp = g && g.horas && g.horas.length && g.horas[0].temp === undefined && navigator.onLine;
+        if (g && !forcar && !semTemp && Date.now() - g.em < 1800 * 1000) return g;
         return horasOpenMeteo(lat, lng).catch(function () { return horasMet(lat, lng); }).then(function (res) {
           if (!res.horas.length) throw new Error('vazio');
           Banco.definirMeta(chave, res);

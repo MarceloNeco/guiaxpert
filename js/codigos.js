@@ -123,9 +123,10 @@
     return new Promise(function (ok, erro) { var u = URL.createObjectURL(blob), im = new Image(); im.onload = function () { ok(im); }; im.onerror = function () { URL.revokeObjectURL(u); erro(new Error('imagem')); }; im.src = u; });
   }
   /* arquivo (ou imagem colada): { codigos:[{texto, formato}], texto, previa (dataURL), paginas, erro } */
-  function lerArquivo(file) {
+  function lerArquivo(file, op) {
+    op = op || {};
     var nome = String(file.name || '').toLowerCase(), tipo = String(file.type || '').toLowerCase();
-    if (tipo === 'application/pdf' || /\.pdf$/.test(nome)) return lerPdf(file);
+    if (tipo === 'application/pdf' || /\.pdf$/.test(nome)) return lerPdf(file, op);
     if (/^text\//.test(tipo) || /\.(txt|eml|html?)$/.test(nome)) return file.text().then(function (t) {
       t = /\.html?$/.test(nome) || /html/.test(tipo) ? t.replace(/<style[\s\S]*?<\/style>|<script[\s\S]*?<\/script>/gi, ' ').replace(/<[^>]+>/g, ' ').replace(/&nbsp;/g, ' ') : t;
       var linhas = t.split(/\r?\n/).map(function (x) { return x.trim(); }).filter(function (x) { return /^M[1-4][A-Z\/ ]{10,}/.test(x); });
@@ -135,26 +136,32 @@
       var previa = paraCanvas(im, 900).toDataURL('image/jpeg', .82);
       /* print/imagem limpa: procura mais QR na mesma imagem; foto grande de câmera só se já achou um (fica rápida) */
       var grande = (im.width || 0) * (im.height || 0) > 6e6;
-      return lerImagem(im, { intenso: grande ? false : true, max: 12 }).then(function (cs) { return { codigos: cs, previa: previa }; });
+      return lerImagem(im, { intenso: grande ? false : true, max: 12 }).then(function (cs) { return { codigos: cs, previa: previa, paginas: [{ img: previa, n: cs.length }] }; });
     }).catch(function () { return { codigos: [], erro: 'ilegivel' }; });
   }
-  function lerPdf(file) {
+  function lerPdf(file, op) {
+    op = op || {};
     return Promise.all([carregarPdf(), file.arrayBuffer()]).then(function (r) {
       return r[0].getDocument({ data: new Uint8Array(r[1]), isEvalSupported: false }).promise;
     }).then(function (doc) {
-      var n = Math.min(doc.numPages, 10), todos = [], vistos = {}, previa = null, texto = '';
+      var n = Math.min(doc.numPages, 10), todos = [], vistos = {}, previa = null, texto = '', paginas = [];
       function pagina(i) {
         if (i > n) return null;
+        if (op.aoProgresso) op.aoProgresso(i, n);
         return doc.getPage(i).then(function (pg) {
           var vp = pg.getViewport({ scale: 3.2 }), cv = document.createElement('canvas'); cv.width = vp.width; cv.height = vp.height;
           var cx = cv.getContext('2d', { willReadFrequently: true }); cx.fillStyle = '#fff'; cx.fillRect(0, 0, cv.width, cv.height);
           return pg.render({ canvasContext: cx, viewport: vp }).promise.then(function () {
             if (!previa) previa = paraCanvas(cv, 900).toDataURL('image/jpeg', .8);
             return pg.getTextContent().then(function (tc) { texto += tc.items.map(function (x) { return x.str; }).join(' ') + '\n'; }).catch(function () {});
-          }).then(function () { return lerImagem(cv, { intenso: true, max: 12 }); }).then(function (cs) { cs.forEach(function (c) { if (!vistos[c.texto]) { vistos[c.texto] = 1; todos.push(c); } }); return pagina(i + 1); });
+          }).then(function () { return lerImagem(cv, { intenso: true, max: 12 }); }).then(function (cs) {
+            var novos = 0; cs.forEach(function (c) { if (!vistos[c.texto]) { vistos[c.texto] = 1; todos.push(c); novos++; } });
+            paginas.push({ img: paraCanvas(cv, 420).toDataURL('image/jpeg', .72), n: novos });   /* miniatura de cada página e quantos códigos saíram dela */
+            return pagina(i + 1);
+          });
         });
       }
-      return pagina(1).then(function () { return { codigos: todos, previa: previa, texto: texto, paginas: doc.numPages }; });
+      return pagina(1).then(function () { return { codigos: todos, previa: previa, texto: texto, paginas: paginas, nPaginas: doc.numPages }; });
     }).catch(function (e) {
       var senha = e && (e.name === 'PasswordException' || /password/i.test(e.message || ''));
       return { codigos: [], erro: senha ? 'senha' : 'ilegivel' };

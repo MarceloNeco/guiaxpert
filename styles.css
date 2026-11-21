@@ -1133,3 +1133,71 @@ body.voz-app.voz-baixando .bt-voz { opacity: .75; }
 .res-cancelada { opacity: .7; }
 .res-cancelada b { text-decoration: line-through; }
 .res-cancelada-txt { color: var(--evita, #b3261e); font-weight: 700; font-size: .9rem; }
+/* Reservas: dia que já passou fica cinza (igual ao Roteiro), continua abrindo */
+.dia-sec.passado { opacity: .55; filter: grayscale(1); }
+/* cartão de reserva: ação principal + fileira de ícones (21/Nov) */
+.acoes-res-cartao { display: grid; gap: .5rem; margin-top: .4rem; }
+.acoes-res-cartao .bt-principal { width: 100%; }
+.acoes-cartao { display: grid; grid-template-columns: repeat(auto-fit, minmax(4.2rem, 1fr)); gap: .3rem; }
+.acoes-cartao .ac { all: unset; box-sizing: border-box; cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: .2rem; padding: .45rem .2rem;
+  border-radius: 12px; color: var(--rodovia); font-size: .74rem; font-weight: 700; text-align: center; }
+.acoes-cartao .ac span { color: var(--tinta); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
+.acoes-cartao .ac .sl-ic { width: 1.3rem; height: 1.3rem; }
+.acoes-cartao .ac:active { background: var(--sup2); }
+.acoes-cartao .ac:focus-visible { outline: 3px solid var(--faixa); }
+/* previsão hora a hora */
+.clima button.d { font: inherit; color: inherit; border: 0; cursor: pointer; }
+.clima .d .ph-link { font-size: .7rem; font-weight: 700; color: var(--rodovia); }
+.ph-lk { font-size: .82rem; }
+.ph { display: grid; gap: .7rem; }
+.ph-topo { display: flex; justify-content: space-between; align-items: flex-end; gap: .6rem; background: linear-gradient(160deg, var(--rodovia-claro), var(--sup2)); border-radius: 18px; padding: .9rem 1rem; }
+.ph-topo > div { display: grid; gap: .1rem; }
+.ph-grande { font-size: 3.2rem; line-height: 1; font-weight: 800; font-variant-numeric: tabular-nums; }
+.ph-dir { text-align: right; justify-items: end; }
+.ph-icone { font-size: 2.6rem; line-height: 1; }
+.ph-alerta { display: flex; justify-content: space-between; align-items: center; gap: .6rem; background: var(--faixa-claro); border-radius: 14px; padding: .6rem .8rem; }
+.ph-pct { font-size: 1.5rem; font-weight: 800; }
+.ph-tira { overflow-x: auto; overscroll-behavior-x: contain; background: var(--sup2); border-radius: 16px; padding: .5rem 0; scrollbar-width: none; }
+.ph-tira-in { position: relative; }
+.ph-cols { display: flex; }
+.ph-col { width: 58px; flex: none; display: grid; justify-items: center; gap: .15rem; font-size: .8rem; font-variant-numeric: tabular-nums; }
+.ph-col.agora .ph-h { color: var(--rodovia); font-weight: 800; }
+.ph-ic { font-size: 1.35rem; line-height: 1.2; }
+.ph-ch { color: var(--suave); font-size: .74rem; }
+.ph-linha { display: block; color: var(--faixa); margin-top: .1rem; }
+.ph-linha text { fill: var(--tinta); font: 700 12px var(--fonte); }
+/* janela do QR: escolher · lendo · resultado (21/Nov) */
+.cod-janela { display: flex; flex-direction: column; gap: .7rem; }
+.cod-espera { display: none; align-items: center; gap: .8rem; background: var(--rodovia-claro); border-radius: 16px; padding: 1rem; }
+.cod-espera b { display: block; font-size: 1.1rem; word-break: break-word; }
+.cod-espera { grid-template-columns: auto 1fr; }
+.cod-giro { width: 2.2rem; height: 2.2rem; border-radius: 50%; border: 4px solid var(--rodovia); border-right-color: transparent; animation: gx-girar .8s linear infinite; flex: none; }
+.cod-janela.lendo .cod-espera { display: grid; }
+.cod-janela.lendo > .cod-intro, .cod-janela.lendo > .acoes-nav, .cod-janela.lendo > details, .cod-janela.lendo > .cod-lista, .cod-janela.lendo > .cod-previa, .cod-janela.lendo > .cod-paginas, .cod-janela.lendo > .cod-msg { display: none; }
+.cod-outro { display: none; align-self: center; }
+.cod-janela.com-resultado > .cod-intro, .cod-janela.com-resultado > .acoes-nav, .cod-janela.com-resultado > details { display: none; }
+.cod-janela.com-resultado > .cod-outro { display: inline-block; }
+.cod-janela.com-resultado > .cod-msg { order: -3; font-size: 1.2rem; }
+.cod-janela.com-resultado > .cod-lista { order: -2; }
+.cod-janela.com-resultado > .cod-previa { max-height: 18vh; }
+.cod-pags-fila { display: flex; gap: .6rem; overflow-x: auto; padding-bottom: .2rem; scrollbar-width: none; }
+.cod-pag { all: unset; cursor: pointer; flex: 0 0 auto; width: 7.5rem; display: grid; gap: .25rem; text-align: center; font-size: .76rem; font-weight: 700; color: var(--suave); }
+.cod-pag img { width: 100%; height: 9.5rem; object-fit: cover; object-position: top; border-radius: 10px; background: #fff; box-shadow: 0 1px 4px rgba(0,0,0,.25); }
+.cod-pag:focus-visible { outline: 3px solid var(--faixa); border-radius: 10px; }
+/* AssistONE: um botão só, fixo, compacto (21/Nov) — não tapa o fim das listas nem os botões do mapa */
+.bt-assistente { min-height: 0; height: 2.9rem; padding: 0 .9rem 0 .55rem; gap: .35rem; font-size: .95rem; }
+.bt-assistente .ast-ic { width: 1.9rem; height: 1.9rem; border-radius: 50%; display: grid; place-items: center; background: rgba(255,255,255,.25); font-weight: 900; font-size: 1.1rem; }
+.bt-assistente .ia-rotulo { font-size: .95rem; letter-spacing: 0; }
+.tela { padding-bottom: 4.5rem; }
+body.sem-rolagem .bt-assistente { bottom: calc(var(--barra) + env(safe-area-inset-bottom, 0px) + 11rem); padding: 0; width: 2.9rem; justify-content: center; }
+body.sem-rolagem .bt-assistente .ia-rotulo { display: none; }
+body.sem-rolagem .bt-assistente .ast-ic { background: none; }
+body.sem-rolagem .tela { padding-bottom: 0; }
+.ast { display: grid; gap: .7rem; }
+.ast-sug { flex-wrap: wrap; }
+.ast-res { display: grid; gap: .6rem; }
+.ast-card { background: var(--sup2); border-radius: 14px; padding: .8rem .9rem; display: grid; gap: .4rem; }
+.ast-card p { margin: 0; line-height: 1.45; }
+.ast-card.melhor { box-shadow: inset 0 0 0 2px var(--rodovia); }
+.qr-tam { display: flex; align-items: center; gap: .6rem; }
+.qr-tam-bt { width: 3rem; height: 3rem; padding: 0; font-size: 1.6rem; font-weight: 800; display: grid; place-items: center; }

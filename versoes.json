@@ -2,6 +2,23 @@
   "app": "guiaxpert",
   "versoes": [
     {
+      "versao": "1.5.82",
+      "data": "2026-11-21",
+      "substitui": "1.5.81",
+      "itens": {
+        "pt": [
+          "Novo: AssistONE responde sem internet.",
+          "Novo: previsão do tempo hora a hora.",
+          "Melhorias na leitura de QR e nas reservas."
+        ],
+        "en": [
+          "New: AssistONE answers offline.",
+          "New: hourly weather forecast.",
+          "Improvements to QR reading and bookings."
+        ]
+      }
+    },
+    {
       "versao": "1.5.81",
       "data": "2026-11-21",
       "substitui": "1.5.80",
