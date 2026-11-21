@@ -12,7 +12,7 @@
 (function () {
   'use strict';
   var d = document, $ = function (id) { return d.getElementById(id); };
-  var VERSAO_APP = '1.5.79';
+  var VERSAO_APP = '1.5.80';
 
   /* ------------------------------------------------------------------
      1. UTILIDADES
@@ -3962,7 +3962,7 @@
     var c = x.c;
     if (c.status === 'cancelada') return h('div', { class: 'cartao res-cancelada' }, [h('span', { class: 'pequeno' }, rotuloRes(c.tipo)), h('b', { texto: c.titulo }),
       c.pessoa ? h('span', { texto: c.pessoa }) : null, c.valor ? h('span', { class: 'sub', texto: T('res_valor', { v: c.valor }) }) : null, linhaCancelada(c),
-      h('div', { class: 'linha' }, [h('button', { class: 'bt leve', type: 'button', onclick: function () { janelaReserva(x); } }, T('editar'))])]);
+      h('div', { class: 'linha' }, [h('button', { class: 'bt leve', type: 'button', onclick: function () { janelaRemarcar([x]); } }, '📅 ' + T('res_remarcar')), h('button', { class: 'bt leve', type: 'button', onclick: function () { janelaReserva(x); } }, T('editar'))])]);
     return h('div', { class: 'cartao' }, [
       h('span', { class: 'pequeno' }, rotuloRes(c.tipo)),
       h('b', { texto: c.titulo }),
@@ -3971,6 +3971,7 @@
       c.pessoa || c.assento ? h('span', { texto: [c.pessoa, c.assento].filter(Boolean).join(' · ') }) : null,
       c.codigo ? h('span', { class: 'linha' }, [T('codigo') + ': ', h('code', { texto: c.codigo, style: 'user-select:all' })]) : null,
       c.valor ? h('span', { class: 'sub', texto: T('res_valor', { v: c.valor }) }) : null,
+      c.remarcadoDe ? h('span', { class: 'sub', texto: '📅 ' + T('res_remarcadoDe', { d: semana(c.remarcadoDe) + ' ' + fData(c.remarcadoDe, true) }) }) : null,
       c.local ? h('span', { class: 'sub', texto: c.local }) : null,
       c.nota ? h('span', { class: 'sub', texto: c.nota }) : null,
       h('div', { class: 'linha' }, [
@@ -3983,7 +3984,8 @@
   function cartaoGrupo(g) {
     var c0 = g[0].c, comQR = g.filter(function (x) { return (x.c.qr || x.c.barra) && x.c.status !== 'cancelada'; }).map(function (x) { return x.c; });
     if (g.every(function (x) { return x.c.status === 'cancelada'; })) return h('div', { class: 'cartao res-cancelada' }, [
-      h('span', { class: 'pequeno' }, rotuloRes(c0.tipo, ' · ' + T(c0.tipo === 'voo' ? 'nPassageiros' : 'nIngressos', { n: g.length }))), h('b', { texto: c0.titulo }), linhaCancelada(c0)]);
+      h('span', { class: 'pequeno' }, rotuloRes(c0.tipo, ' · ' + T(c0.tipo === 'voo' ? 'nPassageiros' : 'nIngressos', { n: g.length }))), h('b', { texto: c0.titulo }), linhaCancelada(c0),
+      h('div', { class: 'linha' }, [h('button', { class: 'bt leve', type: 'button', onclick: function () { janelaRemarcar(g); } }, '📅 ' + T('res_remarcar'))])]);
     var lista = h('div', { class: 'linha', hidden: true, style: 'flex-direction:column;align-items:stretch;gap:.4rem' });
     g.forEach(function (x) {
       lista.appendChild(h('div', { class: 'linha entre', style: 'border-top:1px solid var(--linha);padding-top:.4rem' }, [
@@ -4002,6 +4004,7 @@
         comQR.length ? h('button', { class: 'bt', type: 'button', onclick: function () { mostrarQRs(comQR, 0); } }, '▦ ' + T('res_mostrarTodosQR', { n: comQR.length })) : null,
         h('button', { class: 'bt leve', type: 'button', onclick: function () { janelaCodigos({}); } }, '▦ ' + T('cod_porQR')),
         h('button', { class: 'bt leve', type: 'button', onclick: function () { janelaEditarGrupo(g); } }, '✎ ' + T('res_editarGrupo')),
+        h('button', { class: 'bt leve', type: 'button', onclick: function () { janelaRemarcar(g); } }, '📅 ' + T('res_remarcar')),
         h('button', { class: 'bt leve', type: 'button', onclick: function () { janelaCancelarReservas(g.filter(function (x) { return x.c.status !== 'cancelada'; })); } }, '✕ ' + T('res_cancelarTodos'))]),
       verUm, lista]);
   }
@@ -4107,6 +4110,53 @@
         j.fechar(function () {
           avisar(T('res_canceladaAviso', { t: c0.titulo, m: mt ? T('res_multa', { m: mt }) : T('res_semMulta') }));
           if (tirar.checked) tirarDoRoteiro(c0); else mostrar(estado.rota);
+        });
+      }).catch(function () { ok.disabled = false; avisar(T(navigator.onLine ? 'cofreErro' : 'semInternet')); });
+    });
+  }
+  /* hora de abrir do lugar (guia: "Cerca de 9h–17h") — remarcado sem hora vai para a abertura, de manhãzinha */
+  function horaAbertura(titulo) {
+    var ch = normalizar(titulo || '').split(/\s+/).filter(function (w) { return w.length >= 4 && ['parque', 'bilhete', 'ingresso', 'passeio'].indexOf(w) < 0; });
+    /* só lugares com horário conhecido ("Caracol Chocolates" não serve para "Parque do Caracol") */
+    var l = todosLugares().filter(function (x) { var t = normalizar(x.nome); return ch.some(function (w) { return t.indexOf(w) > -1; }) && horarioAberto(x.horario); })[0];
+    var hx = l && horarioAberto(l.horario);
+    if (!hx) return null;
+    var hh = Math.floor(hx.abre / 60), mm = hx.abre % 60;
+    return (hh < 10 ? '0' : '') + hh + ':' + (mm < 10 ? '0' : '') + mm;
+  }
+  /* o programa do dia antigo sai do roteiro (uma vez por remarcação, mesmo com vários ingressos) */
+  var tiradosRemarcar = {};
+  function tirarDiaAntigo(antes, novo) {
+    var dia = String(antes.quando || '').slice(0, 10), k = normalizar(antes.titulo) + '|' + dia;
+    if (!dia || dia === String(novo.quando || '').slice(0, 10) || tiradosRemarcar[k]) return;
+    tiradosRemarcar[k] = 1;
+    if (acharNoRoteiro(antes)) tirarDoRoteiro(antes);
+  }
+  /* "Remarcar" à mão (sem PDF novo): escolhe o novo dia e a hora; vale para o grupo inteiro */
+  function janelaRemarcar(g) {
+    if (!g || !g.length) return;
+    var c0 = g[0].c, dias = diasDaViagem(estado.viagem);
+    var sel = h('select', { class: 'campo', id: 'gx-rm-dia' }, dias.map(function (d) { return h('option', { value: d, selected: d === String(c0.quando || '').slice(0, 10) }, semana(d) + ' ' + fData(d, true)); }));
+    var hora = campoHora('gx-rm-hora', String(c0.quando || '').slice(11, 16) || horaAbertura(c0.titulo) || '', {});
+    var ok = h('button', { class: 'bt', type: 'button', texto: T('res_remarcarOk', { n: g.length }) });
+    var j = janela(T('res_remarcarTitulo', { t: c0.titulo }), h('div', { class: 'linha', style: 'flex-direction:column;align-items:stretch' }, [
+      h('p', { class: 'sub', texto: T('res_remarcarTexto') }), h('label', { class: 'rot', for: 'gx-rm-dia', texto: T('dia') }), sel,
+      h('label', { class: 'rot', for: 'gx-rm-hora', texto: T('hora') }), hora, ok]));
+    ok.addEventListener('click', function () {
+      if (lerHora(hora) == null) return;
+      ok.disabled = true;
+      var q = sel.value + (hora.value ? 'T' + normHora(hora.value) : ''), antes = Object.assign({}, c0);
+      g.reduce(function (p, x) {
+        return p.then(function () {
+          var c = Object.assign({}, x.c, { quando: q, remarcadoDe: String(x.c.quando || '').slice(0, 10) }); delete c.status; delete c.cancelamento;
+          x.reg.cancelada = false; x.reg.agenda = Object.assign({}, x.reg.agenda || {}, { titulo: c.titulo, quando: q, local: c.local || null });
+          return cifrarReserva(x.reg.viagem_id, c).then(function (blob) { x.reg.conteudo = blob; return Banco.gravar('reservas', x.reg); });
+        });
+      }, Promise.resolve()).then(function () {
+        j.fechar(function () {
+          avisar(T('res_remarcadoAviso', { t: c0.titulo, d: semana(sel.value) + ' ' + fData(sel.value, true) }));
+          var novo = Object.assign({}, c0, { quando: q });
+          tirarDiaAntigo(antes, novo); confirmarNoRoteiro(novo).then(function () { mostrar(estado.rota); });
         });
       }).catch(function () { ok.disabled = false; avisar(T(navigator.onLine ? 'cofreErro' : 'semInternet')); });
     });
@@ -4313,6 +4363,15 @@
     var vid = estado.viagem.id;
     function gravar(reg, dados) { return cifrarReserva(vid, dados).then(function (blob) { reg.conteudo = blob; reg.tipo = dados.tipo; return Banco.gravar('reservas', reg); }); }
     var extra = i.tipo === 'voo' ? { pessoa: i.pessoa, assento: i.assento, codigo: i.localizador } : { codigo: i.codigo, pessoa: i.pessoa || '' };
+    if (escolha.remarcar) {
+      var xr = escolha.remarcar, antes = Object.assign({}, xr.c);
+      var hr = horaNoRoteiro(xr.c.titulo, i.data) || horaAbertura(xr.c.titulo) || String(xr.c.quando || '').slice(11, 16);
+      var cr = Object.assign({}, xr.c, { qr: i.qr, codigo: i.codigo || xr.c.codigo, quando: i.data + (hr ? 'T' + hr : ''), pessoa: xr.c.pessoa || i.pessoa || '', remarcadoDe: String(antes.quando || '').slice(0, 10) });
+      delete cr.status; delete cr.cancelamento;
+      var rg = xr.reg; rg.cancelada = false;
+      rg.agenda = { titulo: cr.titulo, quando: cr.quando, local: cr.local || null, grupo: 'i-' + normalizar(i.localizador || cr.titulo).slice(0, 30) + '-' + i.data };
+      return gravar(rg, cr).then(function () { tirarDiaAntigo(antes, cr); confirmarNoRoteiro(cr); return cr; });
+    }
     if (escolha.alvo) {
       var x = escolha.alvo, c = Object.assign({}, x.c, { qr: i.qr, barra: '', barraFormato: '' });
       Object.keys(extra).forEach(function (k) { if (extra[k] && !c[k]) c[k] = extra[k]; });
@@ -4341,6 +4400,17 @@
   /* decisão padrão para um código, olhando as reservas de agora (relê depois de cada gravação: duas pessoas não caem na mesma) */
   function decidir(i) {
     return reservasDaViagem().then(function (itens) {
+      /* REMARCADO (21/Nov): mesma reserva (localizador) que estava em outro dia ou cancelada → troca data e QR nela, não cria outra */
+      if (i.tipo === 'ingresso' && i.data && i.localizador && !itens.some(function (x) { return x.c.qr === i.qr; })) {
+        var loc = normalizar(i.localizador);
+        var outros = itens.filter(function (x) { return x.c.tipo === i.tipo && normalizar([x.c.nota, x.c.codigo, x.c.titulo].join(' ')).indexOf(loc) > -1 &&
+          (String(x.c.quando || '').slice(0, 10) !== i.data || x.c.status === 'cancelada'); });
+        if (outros.length) {
+          var r = outros.filter(function (x) { return i.pessoa && x.c.pessoa && normalizar(x.c.pessoa) === normalizar(i.pessoa); })[0] || outros[0];
+          var de = String(r.c.quando || '').slice(0, 10);
+          return { remarcar: r, itens: itens, texto: T('cod_remarcar', { t: r.c.titulo, de: de ? semana(de) + ' ' + fData(de, true) : '—', para: semana(i.data) + ' ' + fData(i.data, true) }) };
+        }
+      }
       var m = casarCodigo(i, itens);
       if (m.alvo) return { alvo: m.alvo, itens: itens, m: m, texto: T('cod_juntar', { r: m.alvo.c.titulo + (m.alvo.c.pessoa ? ' · ' + m.alvo.c.pessoa : '') }) };
       if (m.grupo.length) return { irmao: m.grupo[0], itens: itens, m: m, texto: T('cod_juntarPessoa', { r: semPessoa(m.grupo[0].c.titulo, m.grupo[0].c.pessoa), p: i.pessoa || '' }) };

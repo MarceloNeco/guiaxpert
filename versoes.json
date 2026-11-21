@@ -2,6 +2,19 @@
   "app": "guiaxpert",
   "versoes": [
     {
+      "versao": "1.5.80",
+      "data": "2026-11-21",
+      "substitui": "1.5.79",
+      "itens": {
+        "pt": [
+          "Novo: remarcar reserva para outro dia."
+        ],
+        "en": [
+          "New: reschedule a booking to another day."
+        ]
+      }
+    },
+    {
       "versao": "1.5.79",
       "data": "2026-11-20",
       "substitui": "1.5.78",
