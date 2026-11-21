@@ -647,6 +647,14 @@
     return h('button', { class: 'tile' + (op.principal ? ' principal' : ''), type: 'button', 'data-tom': op.tom || null, 'aria-label': op.rotuloLongo || null, onclick: fn },
       [i, h('span', {}, [h('b', { texto: rotulo }), op.sub ? h('small', { texto: op.sub }) : null])]);
   }
+  /* texto comprido (mais de ~90 letras): mostra o começo e o resto fica atrás de ▸ (regra do texto curto) */
+  function textoCurto(t) {
+    t = String(t || '');
+    if (t.length <= 90) return t;
+    var corte = t.slice(0, 70), p = Math.max(corte.lastIndexOf('. '), corte.lastIndexOf('; '), corte.lastIndexOf(', '));
+    var ini = p > 30 ? t.slice(0, p + 1) : corte.replace(/\s+\S*$/, '') + '…';
+    return h('details', { class: 'ast-mais curto' }, [h('summary', { texto: ini }), h('span', { texto: p > 30 ? t.slice(p + 1).trim() : t })]);
+  }
   function tiles(lista, n) { var g = h('div', { class: 'tiles' }, lista.filter(Boolean)); g.style.setProperty('--n', n || lista.filter(Boolean).length); return g; }
   function placa(cat) {
     var el = h('span', { class: 'placa ' + (cat || 'atracao'), svg: PICTO[cat] || PICTO.atracao });
@@ -1772,12 +1780,12 @@
     else semPrev(T('climaSemLugar'));
 
     tela.appendChild(cartaoOffline(v));
-    var ac = h('div', { class: 'grade' }, [
-      h('button', { class: 'bt', type: 'button', onclick: function () { Nav.ir('roteiro'); } }, T('verRoteiro')),
-      h('button', { class: 'bt sec', type: 'button', onclick: function () { estado.filtro = 'perto'; Nav.ir('mapa'); } }, '📍 ' + T('pertoDeMim')),
-      h('button', { class: 'bt leve', type: 'button', onclick: function () { Nav.ir('reservas'); } }, '🎫 ' + T('rota_reservas')),
-      h('button', { class: 'bt leve', type: 'button', onclick: function () { janelaGuia(); } }, '✨ ' + T('perguntarGuia'))
-    ]);
+    var ac = tiles([
+      tile('cal', T('tl_roteiroDia'), function () { Nav.ir('roteiro'); }, { principal: true, rotuloLongo: T('verRoteiro') }),
+      tile('pino', T('pertoDeMim'), function () { estado.filtro = 'perto'; Nav.ir('mapa'); }, { tom: 'nevoa' }),
+      tile('qr', T('rota_reservas'), function () { Nav.ir('reservas'); }, { tom: 'hortensia' }),
+      tile('✦', T('tl_perguntar'), function () { janelaGuia(); }, { tom: 'trigo', rotuloLongo: T('perguntarGuia') })
+    ], 2);
     tela.appendChild(ac);
     if (estado.pacote && estado.pacote.aviso) tela.appendChild(h('p', { class: 'pequeno', texto: estado.pacote.aviso[idioma()] || estado.pacote.aviso.pt }));
   };
@@ -1845,8 +1853,9 @@
         }));
         /* instalar ≠ funcionar sem internet: deixa isso escrito (dúvida do dono, 19/Nov) */
         var instalado = (window.matchMedia && matchMedia('(display-mode: standalone)').matches) || navigator.standalone === true;
-        var det = h('details', { class: 'si-det' }, [h('summary', { texto: T('si_verLista') }), lista, h('p', { class: 'pequeno', texto: T('si_como') }),
-          h('p', { class: 'pequeno si-instalar', texto: T(instalado ? 'si_instalado' : 'si_naoInstalado') })]);
+        var det = h('details', { class: 'si-det' }, [h('summary', { texto: T('si_verLista') }), lista,
+          h('details', { class: 'ast-mais' }, [h('summary', { texto: T('ast_como') }), h('p', { class: 'pequeno', texto: T('si_como') }),
+            h('p', { class: 'pequeno si-instalar', texto: T(instalado ? 'si_instalado' : 'si_naoInstalado') })])]);
         if (!tudo) det.open = true;
         c.appendChild(det);
         var prog = h('div', { class: 'progresso', hidden: true }, h('i', { style: 'width:0%' }));
@@ -2937,7 +2946,7 @@
     if (di != null) estado.dia = di;
     var it = dmod.itens[idx]; if (!it) return;
     var l = it.lugarId ? lugarPorId(it.lugarId) : null, dt = diasDaViagem(estado.viagem)[estado.dia];
-    var kv = function (rot, val) { return val ? h('div', { class: 'kv' }, [h('span', { texto: rot }), h('span', {}, val)]) : null; };
+    var kv = function (rot, val) { return val ? h('div', { class: 'kv' }, [h('span', { texto: rot }), h('span', {}, typeof val === 'string' ? textoCurto(val) : val)]) : null; };
     var quando = (dt ? semana(dt) + ', ' + fData(dt) + ' · ' : '') + (it.hora || '—') + (it.fim ? '–' + it.fim : '');
     var ingresso = l && (l.reserva || l.preco) ? [l.reserva, l.preco].filter(Boolean).join(' · ') : (it.tipo === 'ingresso' ? T('ingresso') : null);
     var dh = l ? doHotelTexto(l) : null;
@@ -5354,7 +5363,7 @@
   TELAS.familia = function (tela) {
     tela.appendChild(h('h1', { texto: T('rota_familia') }));
     tela.appendChild(h('p', { class: 'sub', texto: T('familiaTexto') }));
-    tela.appendChild(h('button', { class: 'bt', type: 'button', onclick: function () { janelaPessoa(null); } }, '＋ ' + T('addPessoa')));
+    tela.appendChild(tiles([tile('mais', T('addPessoa'), function () { janelaPessoa(null); }, { principal: true })], 2));
     if (!estado.pessoas.length) tela.appendChild(h('p', { class: 'sub', texto: T('semPessoas') }));
     if (estado.viagem) tela.appendChild(cartaoCompartilhar(estado.viagem));
     var v = estado.viagem, naViagem = v && v.pessoas || [];
@@ -5391,18 +5400,16 @@
       });
       if (!(ms || []).length) lista.appendChild(h('p', { class: 'pequeno', texto: T('semMembros') }));
     }).catch(function () { lista.appendChild(h('p', { class: 'pequeno', texto: navigator.onLine ? T('erroRede') : T('semInternet') })); });
-    c.appendChild(h('div', { class: 'linha' }, [
-      h('button', { class: 'bt sec', type: 'button', texto: '🔗 ' + T('convidarVe'), onclick: function () { convidar(v, 've'); } }),
-      h('button', { class: 'bt sec', type: 'button', texto: '🔗 ' + T('convidarEdita'), onclick: function () { convidar(v, 'edita'); } })
-    ]));
+    c.appendChild(tiles([
+      tile('compartilhar', T('tl_paraVer'), function () { convidar(v, 've'); }, { tom: 'hortensia', rotuloLongo: T('convidarVe') }),
+      tile('lapis', T('tl_paraEditar'), function () { convidar(v, 'edita'); }, { principal: true, rotuloLongo: T('convidarEdita') })], 2));
     c.appendChild(h('p', { class: 'pequeno', texto: T('convitePrivacidade') }));
     c.appendChild(h('h3', { texto: T('quemFicaEmCasa'), style: 'margin-top:.5rem' }));
     c.appendChild(h('p', { class: 'sub', texto: T('quemFicaEmCasaTexto') }));
-    c.appendChild(h('div', { class: 'linha' }, [
-      h('button', { class: 'bt leve', type: 'button', texto: '🏨 ' + T('compartilharHotel'), onclick: function () { compartilharCartao(v, 'hotel'); } }),
-      h('button', { class: 'bt leve', type: 'button', texto: '📄 ' + T('cmp_roteiroCasa'), onclick: function () { janelaCompartilharRoteiro(v); } }),
-      h('button', { class: 'bt leve', type: 'button', texto: '✈ ' + T('compartilharVoos'), onclick: function () { compartilharCartao(v, 'voo'); } })
-    ]));
+    c.appendChild(tiles([
+      tile('🛏', T('compartilharHotel'), function () { compartilharCartao(v, 'hotel'); }, { tom: 'nevoa' }),
+      tile('cal', T('tl_roteiro'), function () { janelaCompartilharRoteiro(v); }, { tom: 'hortensia', rotuloLongo: T('cmp_roteiroCasa') }),
+      tile('✈', T('compartilharVoos'), function () { compartilharCartao(v, 'voo'); }, { tom: 'trigo' })], 3));
     return c;
   }
   function convidar(v, papel) {
