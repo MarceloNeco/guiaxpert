@@ -2,6 +2,19 @@
   "app": "guiaxpert",
   "versoes": [
     {
+      "versao": "1.5.89",
+      "data": "2026-11-21",
+      "substitui": "1.5.88",
+      "itens": {
+        "pt": [
+          "Melhorias: reservas do dia recolhidas."
+        ],
+        "en": [
+          "Improved: collapsed bookings per day."
+        ]
+      }
+    },
+    {
       "versao": "1.5.88",
       "data": "2026-11-21",
       "substitui": "1.5.87",

@@ -26,7 +26,7 @@
       risco: function () { return null; }, avisos: function () { return []; }, linkCompleto: function () { return 'https://www.windy.com/'; } };
   }
   var Clima = window.Clima;
-  var VERSAO_APP = '1.5.88';
+  var VERSAO_APP = '1.5.89';
 
   /* ------------------------------------------------------------------
      1. UTILIDADES
@@ -4057,6 +4057,32 @@
     });
     return h('div', { class: 'etapa-bloco' }, [bt, corpo]);
   }
+  /* reserva recolhida numa linha (dono, 21/Nov/2026: "abre o dia e tem que rolar muito"): nome, hora e ▦ direto para o QR;
+     tocar abre o cartão inteiro. O que ficou aberto continua aberto ao voltar. */
+  var resAbertas = {};
+  function blocoReserva(g, padrao) {
+    var c0 = g[0].c, hh = c0.quando && c0.quando.length > 10 ? c0.quando.slice(11, 16) : '';
+    var chave = g.map(function (x) { return x.reg.id; }).join(' ');
+    var aberto = resAbertas[chave] != null ? resAbertas[chave] : !!padrao;
+    var canc = g.every(function (x) { return x.c.status === 'cancelada'; });
+    var qrs = g.map(function (x) { return x.c; }).filter(function (c) { return (c.qr || c.barra) && c.status !== 'cancelada'; });
+    var corpo = h('div', { class: 'etapa-corpo', hidden: !aberto });
+    var bt = h('button', { class: 'etapa res-dobra', type: 'button', 'aria-expanded': aberto ? 'true' : 'false' }, [
+      h('span', { class: 'etapa-l1' }, [h('span', { class: 'chev', 'aria-hidden': 'true', texto: '›' }),
+        h('b', { class: 'etapa-tit' }, [iconeRes(c0.tipo || 'outro'), c0.titulo || T('res_' + (c0.tipo || 'outro'))]),
+        h('span', { class: 'etapa-hora', texto: hh })]),
+      g.length > 1 || canc ? h('span', { class: 'etapa-l2' }, [canc ? h('span', { class: 'etq', texto: T('res_cancelada') }) : null,
+        g.length > 1 ? h('span', { texto: T(c0.tipo === 'ingresso' ? 'nIngressos' : 'nReservas', { n: g.length }) }) : null]) : null]);
+    function encher() { if (!corpo.childNodes.length) corpo.appendChild(cartaoDe(g)); }
+    if (aberto) encher();
+    bt.addEventListener('click', function () {
+      aberto = !aberto; resAbertas[chave] = aberto;
+      bt.setAttribute('aria-expanded', aberto ? 'true' : 'false'); if (aberto) encher(); corpo.hidden = !aberto;
+    });
+    var qr = qrs.length ? h('button', { class: 'res-qr-rapido', type: 'button', 'aria-label': T(qrs.length > 1 ? 'res_mostrarTodosQR' : 'mostrarQRIngresso', { n: qrs.length }), title: T('mostrarQRIngresso'),
+      onclick: function () { mostrarQRs(qrs, 0); } }, [Seletor.icone('qr')]) : null;
+    return h('div', { class: 'etapa-bloco res-bloco' + (canc ? ' res-cancelada' : ''), 'data-res-bloco': chave }, [h('div', { class: 'res-dobra-linha' }, [bt, qr]), corpo]);
+  }
   TELAS.reservas = function (tela) {
     tela.appendChild(h('h1', { texto: T('rota_reservas') }));
     if (!estado.viagem) return semViagem(tela);
@@ -4169,6 +4195,9 @@
             caixa.appendChild(h('section', { class: 'dia-sec' + (dia !== 'sem' && dia < hjIso ? ' passado' : '') }, [h('div', { class: 'dia-linha' }, [bt, mais]), corpo]));
             sec = { corpo: corpo, resumo: resumo, icones: [] };
           }
+          /* quantas reservas (não logística) cada dia tem: com 2 ou mais, cada uma vira uma linha recolhida */
+          var porDia = {};
+          cartoes.forEach(function (g) { var c = g[0].c; if (LOGISTICA[c.tipo]) return; var dd = (c.quando || '').slice(0, 10) || 'sem'; porDia[dd] = (porDia[dd] || 0) + 1; });
           /* veio do roteiro ("Ver reserva do carro"): abre o dia e a etapa dessa reserva */
           if (foco) cartoes.forEach(function (g) {
             if (!g.some(function (x) { return foco.ids.indexOf(x.reg.id) > -1; })) return;
@@ -4189,7 +4218,10 @@
               fecharBloco(); bloco = { chave: chave, etapa: et, grupos: [g] }; return;
             }
             fecharBloco();
-            alvo().appendChild(cartaoDe(g));
+            /* dia com uma reserva só, busca ou filtro: cartão aberto; com várias, uma linha cada (abre ao tocar) */
+            var alvoFoco = foco && g.some(function (x) { return foco.ids.indexOf(x.reg.id) > -1; });
+            if ((porDia[dia] || 0) <= 1 || filtro !== 'todos' || busca) alvo().appendChild(cartaoDe(g));
+            else alvo().appendChild(blocoReserva(g, alvoFoco));
             sec.icones.push(c0.tipo || 'outro');
           });
           fecharDia();

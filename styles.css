@@ -1288,3 +1288,14 @@ body.rolando #dgo-aone:not(.dgo-falando) { opacity: 0; pointer-events: none; }
 .tile.principal .ti { background: none; color: var(--rodovia); }
 .acoes-nav .an { background: color-mix(in srgb, var(--sup2) 70%, transparent); border: 0; font-weight: 600; }
 .acoes-nav .an.principal { background: color-mix(in srgb, var(--rodovia-claro) 85%, transparent); border: 0; }
+/* reserva recolhida numa linha (abre ao tocar) + ▦ direto para o QR */
+.res-dobra-linha { display: flex; align-items: stretch; gap: .4rem; }
+.res-dobra-linha .etapa { flex: 1; min-width: 0; }
+.res-dobra .etapa-tit { display: flex; align-items: center; gap: .4rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.res-dobra .etapa-tit .ic-res { flex: none; }
+.res-qr-rapido { all: unset; box-sizing: border-box; cursor: pointer; flex: none; width: 3rem; display: grid; place-items: center; border-radius: 14px;
+  background: color-mix(in srgb, var(--hortensia-claro) 85%, transparent); color: var(--hortensia); }
+.res-qr-rapido .sl-ic { width: 1.4rem; height: 1.4rem; }
+.res-qr-rapido:active { transform: scale(.95); }
+.res-qr-rapido:focus-visible { outline: 3px solid var(--rodovia); outline-offset: 2px; }
+.res-bloco.res-cancelada .etapa { opacity: .6; }
