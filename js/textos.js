@@ -789,6 +789,7 @@ window.TEXTOS = (function () {
     hotelAjustar: ['Ajustar o ponto do hotel', 'Adjust the hotel pin'], hotelPeloEndereco: ['Ponto achado pelo endereço da reserva. Se estiver errado, ajuste acima.', 'Pin found from the booking address. If it’s wrong, adjust it above.'],
     hotelMarcado: ['Ponto marcado por você.', 'Pin set by you.'], legHotel: ['hotel', 'hotel'], legRoteiro: ['roteiro do dia, na ordem', 'today’s plan, in order'], legGuardado: ['guardados', 'saved'], legOutros: ['outros', 'others'], nDoDia: ['{n}º do dia · {h}', 'Stop {n} of the day · {h}'], legendaNumeros: ['1, 2, 3… = ordem do roteiro do dia', '1, 2, 3… = order of the day’s plan'],
     abrirFicha: ['tocar para ver', 'tap to see'], lugarSemPonto: ['Este lugar ainda não tem ponto no mapa.', 'This place has no map point yet.'],
+    tl_prontos: ['Prontos', 'Ready-made'], tl_nRoteiros: ['{n} roteiros', '{n} plans'], tl_auto: ['Automático', 'Automatic'], tl_semIA: ['sem IA', 'no AI'], tl_ia: ['Com IA', 'With AI'], tl_branco: ['Em branco', 'Blank'],
     rotaNoApp: ['Rota', 'Route'], rotaNoAppDica: ['Ver o caminho no mapa do app, com minutos e km', 'See the way on the app map, with minutes and km'],
     rotaVoce: ['onde você está', 'where you are'], rotaDeAte: ['de {de} até {ate}', 'from {de} to {ate}'], rotaCalculando: ['Calculando a rota…', 'Getting the route…'],
     rotaReta: ['Sem internet agora: linha reta e tempo estimado', 'Offline now: straight line and estimated time'],

@@ -16,21 +16,24 @@
 }
 
 :root {
-  --fundo: #edf1ef;        /* neblina da serra */
+  --fundo: #eef1ef;        /* neblina da serra */
   --sup: #ffffff;          /* superfície (branco refletivo) */
-  --sup2: #e2e8e5;         /* chips e campos sobre branco */
-  --tinta: #172024;        /* asfalto */
-  --suave: #55636a;        /* texto secundário (≥ 4,5:1 no branco e no fundo) */
-  --linha: #d3dbd8;
-  --rodovia: #0e5a43;      /* verde da placa de rodovia */
-  --rodovia-claro: #d9eae2;
-  --placa: #6a3a1c;        /* marrom do atrativo turístico */
+  --sup2: #e6ebe8;         /* chips e campos sobre branco */
+  --tinta: #1b2427;        /* asfalto */
+  --suave: #56646a;        /* texto secundário (≥ 4,5:1 no branco e no fundo) */
+  --linha: #d6ddda;
+  --rodovia: #2f6e58;      /* verde-sálvia (antes o verde forte da placa) */
+  --rodovia-claro: #e0ede7;
+  --placa: #7b5747;        /* cacau suave do atrativo turístico */
   --placa-texto: #ffffff;
-  --faixa: #f2b705;        /* amarelo da faixa da pista */
-  --faixa-claro: #fcf1cc;
-  --faixa-tinta: #2b2100;
-  --evita: #a12b2b;
-  --evita-claro: #f7e2df;
+  --faixa: #d9a93f;        /* trigo (antes o amarelo da faixa) */
+  --faixa-claro: #f7eed6;
+  --faixa-tinta: #3a2b06;
+  --evita: #a8433b;
+  --evita-claro: #f6e3e0;
+  --hortensia: #55639f; --hortensia-claro: #e6e9f5;   /* lilás da hortênsia, a flor de Gramado */
+  --nevoa: #4f7b8e; --nevoa-claro: #e2ecf0;          /* azul-neblina da serra */
+  --sinal-verde: #2f6e58;
   --sombra-flutua: 0 10px 30px -12px rgba(23, 32, 36, .35);
   --fonte: "Overpass", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
   --r-painel: 22px; --r-bt: 16px; --r-campo: 14px; --r-placa: 18px;
@@ -39,17 +42,19 @@
 }
 @media (prefers-color-scheme: dark) {
   :root:not([data-tema="claro"]) {
-    --fundo: #0f1517; --sup: #172124; --sup2: #223033; --tinta: #e8efec; --suave: #a3b2ad; --linha: #2a3a3c;
-    --rodovia: #5cc39b; --rodovia-claro: #16362c; --placa: #7a4523; --placa-texto: #ffffff;
-    --faixa: #f2c230; --faixa-claro: #3a3114; --faixa-tinta: #fff3c4; --evita: #f19a95; --evita-claro: #3c1f1e;
+    --fundo: #101517; --sup: #172023; --sup2: #20292c; --tinta: #e7edeb; --suave: #a0b0ab; --linha: #2a3538;
+    --rodovia: #93cbb3; --rodovia-claro: #1b2b26; --placa: #5e4539; --placa-texto: #f6ebe4;
+    --faixa: #e3c47e; --faixa-claro: #2b2619; --faixa-tinta: #f5e9c8; --evita: #eaa49d; --evita-claro: #36201e;
+    --hortensia: #b3bdee; --hortensia-claro: #21263a; --nevoa: #a6c8d6; --nevoa-claro: #1b272c; --sinal-verde: #24483c;
     --sombra-flutua: 0 10px 30px -12px rgba(0, 0, 0, .7);
     color-scheme: dark;
   }
 }
 :root[data-tema="escuro"] {
-  --fundo: #0f1517; --sup: #172124; --sup2: #223033; --tinta: #e8efec; --suave: #a3b2ad; --linha: #2a3a3c;
-  --rodovia: #5cc39b; --rodovia-claro: #16362c; --placa: #7a4523; --placa-texto: #ffffff;
-  --faixa: #f2c230; --faixa-claro: #3a3114; --faixa-tinta: #fff3c4; --evita: #f19a95; --evita-claro: #3c1f1e;
+  --fundo: #101517; --sup: #172023; --sup2: #20292c; --tinta: #e7edeb; --suave: #a0b0ab; --linha: #2a3538;
+  --rodovia: #93cbb3; --rodovia-claro: #1b2b26; --placa: #5e4539; --placa-texto: #f6ebe4;
+  --faixa: #e3c47e; --faixa-claro: #2b2619; --faixa-tinta: #f5e9c8; --evita: #eaa49d; --evita-claro: #36201e;
+  --hortensia: #b3bdee; --hortensia-claro: #21263a; --nevoa: #a6c8d6; --nevoa-claro: #1b272c; --sinal-verde: #24483c;
   --sombra-flutua: 0 10px 30px -12px rgba(0, 0, 0, .7);
   color-scheme: dark;
 }
@@ -217,11 +222,11 @@ main { outline: none; }
 /* placa grande (o elemento marcante): borda branca por dentro, como a placa de verdade */
 .sinal {
   --cor: var(--placa);
-  background: var(--cor); color: #fff; border-radius: var(--r-placa); padding: 1.15rem 1.2rem 1.2rem;
-  box-shadow: inset 0 0 0 5px var(--cor), inset 0 0 0 7px rgba(255, 255, 255, .92);
+  background: var(--cor); color: var(--placa-texto); border-radius: var(--r-placa); padding: 1.15rem 1.2rem 1.2rem;
+  box-shadow: inset 0 0 0 5px var(--cor), inset 0 0 0 6px rgba(255, 255, 255, .38);
   display: flex; flex-direction: column; gap: .7rem;
 }
-.sinal.rodovia { --cor: #0e5a43; }
+.sinal.rodovia { --cor: var(--sinal-verde); }
 .sinal .topo-sinal { display: flex; align-items: center; gap: .7rem; }
 .sinal .picto { width: 2.6rem; height: 2.6rem; border-radius: 9px; background: #fff; color: var(--cor); display: grid; place-items: center; flex: none; }
 .sinal .picto svg { width: 1.5rem; height: 1.5rem; fill: currentColor; }
@@ -448,7 +453,7 @@ body.sem-rolagem main { height: calc(100% - var(--topo)); overflow: hidden; }
 .pino-caixa { background: none; border: 0; }
 .pino { display: block; border-radius: 50%; box-shadow: 0 0 0 2.5px #fff, 0 2px 6px rgba(0, 0, 0, .35); }
 .pino.num { width: 30px; height: 30px; color: #fff; font: 800 .9rem/30px var(--fonte); text-align: center; }
-.pino.num[style*="f2b705"] { color: #2b2100; }
+.pino.num[style*="e0b54f"] { color: #2b2100; }
 .pino.eu { width: 18px; height: 18px; background: var(--rodovia); box-shadow: 0 0 0 3px #fff, 0 0 0 9px rgba(14, 90, 67, .25); }
 .item.confirmado .h::before { content: "✓ "; color: var(--rodovia); }
 .conf { border: 0; background: none; cursor: pointer; font-size: 1rem; min-width: 2.5rem; min-height: 2.5rem; border-radius: 50%; color: var(--suave); font-weight: 800; }
@@ -1067,12 +1072,12 @@ body.voz-app.voz-baixando .bt-voz { opacity: .75; }
 .legenda-mapa { order: 5; }
 .painel { height: 6.2rem; } .mapa-tela .leaflet-bottom { bottom: 6.3rem; } .mapa-tela .bt-mapa { bottom: 7.9rem; }
 /* hotel: pino de cama, escuro e grande, com o nome sempre à vista */
-.pino-hotel { display: grid; place-items: center; width: 36px; height: 36px; border-radius: 10px; background: #1f3a8a; color: #fff;
+.pino-hotel { display: grid; place-items: center; width: 36px; height: 36px; border-radius: 10px; background: var(--hortensia-hotel, #55639f); color: #fff;
   box-shadow: 0 0 0 3px #fff, 0 3px 8px rgba(0, 0, 0, .4); }
 .pino-hotel svg { width: 22px; height: 22px; fill: currentColor; }
 .pino-hotel.sel { box-shadow: 0 0 0 3px #fff, 0 0 0 7px var(--faixa), 0 3px 10px rgba(0, 0, 0, .45); }
-.pino-nome.hotel { color: #1f3a8a; font-size: .8rem; }
-.legenda-mapa .lg.hotel { width: 1rem; height: 1rem; border-radius: 4px; background: #1f3a8a; color: #fff; display: inline-grid; place-items: center; }
+.pino-nome.hotel { color: var(--hortensia-hotel, #55639f); font-size: .8rem; }
+.legenda-mapa .lg.hotel { width: 1rem; height: 1rem; border-radius: 4px; background: var(--hortensia-hotel, #55639f); color: #fff; display: inline-grid; place-items: center; }
 .legenda-mapa .lg.hotel svg { width: .75rem; height: .75rem; fill: currentColor; }
 .mapa-tela:has(.painel[data-estado="cartao"]) .leaflet-bottom, .mapa-tela:has(.painel[data-estado="lista"]) .leaflet-bottom { display: none; }
 
@@ -1221,3 +1226,49 @@ body.sem-rolagem { --dgo-aone-sobe: calc(var(--barra, 4.4rem) + 10.4rem); --dgo-
 .ast-mais > p { margin: .1rem 0 0; font-size: .88rem; color: var(--suave); }
 .ast-outra { all: unset; box-sizing: border-box; display: block; width: 100%; padding: .55rem .2rem; border-top: 1px solid var(--linha); cursor: pointer; font-size: .9rem; }
 .ast-outra::after { content: " ›"; color: var(--suave); }
+
+/* =====================================================================
+   Serra & Hortênsia (21/Nov/2026, dono: "verde menos chumbado, tons pastéis, cards em vez de botões grandes")
+   sálvia = ação principal · hortênsia = informação/ingresso · trigo = agora/atenção · neblina = transporte
+   ===================================================================== */
+/* etiqueta de categoria: tom pastel por tipo, em vez do marrom pesado */
+.placa { background: var(--hortensia-claro); color: var(--hortensia); box-shadow: none; border-radius: 8px; }
+.placa.logistica { background: var(--nevoa-claro); color: var(--nevoa); box-shadow: none; }
+.placa.comer { background: var(--faixa-claro); color: var(--faixa-tinta); }
+:root[data-tema="claro"] .placa.comer, :root:not([data-tema]) .placa.comer { color: #7a5612; }
+/* "A seguir": o sinal continua (é a marca do app), mais leve */
+.sinal .picto { background: rgba(255, 255, 255, .9); }
+
+/* cards de ação: ícone num quadrinho de cor + nome curto (no lugar dos botões compridos) */
+.tiles { display: grid; grid-template-columns: repeat(var(--n, 3), minmax(0, 1fr)); gap: .5rem; }
+.tile { all: unset; box-sizing: border-box; cursor: pointer; display: flex; flex-direction: column; align-items: flex-start; justify-content: space-between; gap: .55rem;
+  min-height: 5.1rem; padding: .7rem .75rem .75rem; border-radius: 18px; background: var(--sup); border: 1px solid var(--linha);
+  --t: var(--rodovia); --t-claro: var(--rodovia-claro); -webkit-tap-highlight-color: transparent; }
+.cartao .tile, .janela .tile { background: var(--sup2); border-color: transparent; }
+.tile .ti { width: 2.25rem; height: 2.25rem; border-radius: 12px; display: grid; place-items: center; background: var(--t-claro); color: var(--t); font-size: 1.15rem; font-weight: 800; line-height: 1; }
+.tile .ti .sl-ic { width: 1.25rem; height: 1.25rem; }
+.tile b { font-size: .95rem; font-weight: 700; color: var(--tinta); line-height: 1.15; }
+.tile small { display: block; font-size: .78rem; color: var(--suave); font-weight: 500; margin-top: .1rem; }
+.tile:active { transform: scale(.97); }
+.tile:focus-visible { outline: 3px solid var(--rodovia); outline-offset: 2px; }
+.tile[data-tom="hortensia"] { --t: var(--hortensia); --t-claro: var(--hortensia-claro); }
+.tile[data-tom="trigo"] { --t: var(--faixa-tinta); --t-claro: var(--faixa-claro); }
+.tile[data-tom="nevoa"] { --t: var(--nevoa); --t-claro: var(--nevoa-claro); }
+.tile.principal { background: var(--rodovia-claro); border-color: color-mix(in srgb, var(--rodovia) 30%, transparent); }
+.tile.principal .ti { background: var(--rodovia); color: var(--sup); }
+
+/* Rota / Google Maps / Waze / Site: os mesmos cards, menores */
+.acoes-nav .an { background: var(--sup2); border: 1px solid transparent; border-radius: 16px; }
+.acoes-nav .an .sl-ic { color: var(--hortensia); }
+.acoes-nav .an.principal { background: var(--rodovia-claro); border-color: color-mix(in srgb, var(--rodovia) 30%, transparent); }
+.acoes-nav .an.principal span, .acoes-nav .an.principal .sl-ic { color: var(--rodovia); }
+.sinal .acoes-nav { margin: .2rem 0 0; }
+.sinal .acoes-nav .an { background: rgba(255, 255, 255, .14); }
+.sinal .acoes-nav .an span, .sinal .acoes-nav .an .sl-ic { color: var(--placa-texto); }
+.sinal .acoes-nav .an.principal { background: rgba(255, 255, 255, .9); }
+.sinal .acoes-nav .an.principal span, .sinal .acoes-nav .an.principal .sl-ic { color: var(--cor); }
+.acoes-res > .tiles { flex: 1 1 100%; }
+/* o AssistONE sai da frente enquanto a tela rola (volta quando para) */
+#dgo-aone { transition: opacity .2s ease; }
+body.rolando #dgo-aone:not(.dgo-falando) { opacity: 0; pointer-events: none; }
+@media (prefers-reduced-motion: reduce) { #dgo-aone { transition: none; } }

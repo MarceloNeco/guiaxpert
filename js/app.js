@@ -638,8 +638,18 @@
     doces: '<svg viewBox="0 0 24 24"><path d="M5 9h14l-1.5 12h-11zM8 9a4 4 0 0 1 8 0z"/></svg>',
     logistica: '<svg viewBox="0 0 24 24"><path d="M3 21V8l9-5 9 5v13h-6v-7H9v7z"/></svg>'
   };
+  /* card de ação (21/Nov/2026): ícone num quadrinho de cor + nome curto. ic: nome do Seletor.icone ou um caractere.
+     op: { tom: 'hortensia'|'trigo'|'nevoa', principal, sub, rotuloLongo (para leitor de tela) } */
+  function tile(ic, rotulo, fn, op) {
+    op = op || {};
+    var i = h('span', { class: 'ti', 'aria-hidden': 'true' });
+    if (/^[a-z]+$/.test(ic)) i.appendChild(Seletor.icone(ic)); else i.textContent = ic;
+    return h('button', { class: 'tile' + (op.principal ? ' principal' : ''), type: 'button', 'data-tom': op.tom || null, 'aria-label': op.rotuloLongo || null, onclick: fn },
+      [i, h('span', {}, [h('b', { texto: rotulo }), op.sub ? h('small', { texto: op.sub }) : null])]);
+  }
+  function tiles(lista, n) { var g = h('div', { class: 'tiles' }, lista.filter(Boolean)); g.style.setProperty('--n', n || lista.filter(Boolean).length); return g; }
   function placa(cat) {
-    var el = h('span', { class: 'placa' + (cat === 'logistica' ? ' logistica' : ''), svg: PICTO[cat] || PICTO.atracao });
+    var el = h('span', { class: 'placa ' + (cat || 'atracao'), svg: PICTO[cat] || PICTO.atracao });
     el.appendChild(d.createTextNode(T('cat_' + cat)));
     return el;
   }
@@ -1875,11 +1885,7 @@
       h('p', { class: 'grande' }, [h('span', { class: 'hora', texto: it.hora }), ' ', it.titulo])
     ]);
     if (it.nota) c.appendChild(h('p', { class: 'nota', texto: it.nota }));
-    if (l && l.lat != null) c.appendChild(h('div', { class: 'acoes-sinal' }, [
-      h('button', { type: 'button', texto: T('rotaNoApp'), onclick: function () { irAoMapa(l, { rota: true }); } }),
-      h('a', { href: Geo.linkRota(l, estado.pos), target: '_blank', rel: 'noopener', texto: 'Google Maps' }),
-      h('a', { href: Geo.linkWaze(l), target: '_blank', rel: 'noopener', texto: 'Waze' })
-    ]));
+    if (l && l.lat != null) c.appendChild(acoesNavegar(l, { semSite: true }));
     return c;
   }
   /* ---------- previsão HORA A HORA de um dia (como o app de tempo do celular), sem chave e sem IA ---------- */
@@ -2623,14 +2629,16 @@
      (senão a ação abriria outra janela e o fechar levaria a nova embora) */
   function botoesNovaOpcao(fecharAntes) {
     var agir = function (fn) { return function () { if (fecharAntes) fecharAntes(fn); else fn(); }; };
-    var g = h('div', { class: 'grade' });
-    if (estado.pacote && estado.pacote.roteiros.length) g.appendChild(h('button', { class: 'bt', type: 'button', onclick: agir(function () {
-      criarOpcoesDoPacote(estado.viagem, estado.pacote).then(recarregar); }) }, T('usarDoPacote', { n: estado.pacote.roteiros.length })));
-    /* sem IA: monta pelos lugares que o app conhece (guia, Wikivoyage, Wikidata, OpenStreetMap) */
-    g.appendChild(h('button', { class: estado.pacote && estado.pacote.roteiros.length ? 'bt sec' : 'bt', type: 'button', onclick: agir(montarRoteiroAuto) }, '🧭 ' + T('montarAuto')));
-    g.appendChild(h('button', { class: 'bt sec', type: 'button', onclick: agir(gerarComIA) }, '✨ ' + T('gerarIA')));
-    g.appendChild(h('button', { class: 'bt leve', type: 'button', onclick: agir(function () { janelaNomeOpcao(T('meuRoteiro') + ' ' + (estado.roteiros.length + 1), criarOpcaoEmBranco); }) }, T('emBranco')));
-    return g;
+    var temPacote = estado.pacote && estado.pacote.roteiros.length;
+    /* cards 2×2 (dono, 21/Nov/2026): nome curto; o nome completo vai para o leitor de tela */
+    return tiles([
+      temPacote ? tile('estrela', T('tl_prontos'), agir(function () { criarOpcoesDoPacote(estado.viagem, estado.pacote).then(recarregar); }),
+        { principal: true, sub: T('tl_nRoteiros', { n: estado.pacote.roteiros.length }), rotuloLongo: T('usarDoPacote', { n: estado.pacote.roteiros.length }) }) : null,
+      /* sem IA: monta pelos lugares que o app conhece (guia, Wikivoyage, Wikidata, OpenStreetMap) */
+      tile('mapa', T('tl_auto'), agir(montarRoteiroAuto), { principal: !temPacote, tom: temPacote ? 'nevoa' : null, sub: T('tl_semIA'), rotuloLongo: T('montarAuto') }),
+      tile('✦', T('tl_ia'), agir(gerarComIA), { tom: 'hortensia', rotuloLongo: T('gerarIA') }),
+      tile('mais', T('tl_branco'), agir(function () { janelaNomeOpcao(T('meuRoteiro') + ' ' + (estado.roteiros.length + 1), criarOpcaoEmBranco); }), { tom: 'trigo', rotuloLongo: T('emBranco') })
+    ], 2);
   }
   /* ---------- roteiro montado SEM IA (montador.js) ---------- */
   function montarRoteiroAuto() {
@@ -2913,14 +2921,15 @@
     }, 900);
   }
   /* botões de ir até o lugar: 1º o mapa do app (principal), 2º Google Maps (já com a rota), 3º Waze, 4º site */
-  function acoesNavegar(l) {
+  function acoesNavegar(l, op) {
+    op = op || {};
     var ic = Seletor.icone, b = [];
     var ext = function (href, icone, txt, dica) { return h('a', { class: 'an', href: href, target: '_blank', rel: 'noopener', title: dica || txt, 'aria-label': dica || txt }, [ic(icone), h('span', { texto: txt })]); };
     /* 1º a ROTA dentro do app (mapa com o caminho, km e minutos); o lugar aparece junto */
     b.push(h('button', { class: 'an principal', type: 'button', title: T('rotaNoAppDica'), onclick: function () { irAoMapa(l, l.lat != null ? { rota: true } : {}); } }, [ic(l.lat != null ? 'navegar' : 'pino'), h('span', { texto: l.lat != null ? T('rotaNoApp') : T('verNoApp') })]));
     b.push(ext(Geo.linkRota(l), 'mapa', 'Google Maps', T('comoChegarCom', { app: 'Google Maps' })));
     b.push(ext(Geo.linkWaze(l), 'waze', 'Waze', T('comoChegarCom', { app: 'Waze' })));
-    if (l.site && /^https?:\/\//.test(l.site)) b.push(ext(l.site, 'globo', T('site'), T('siteOficial')));
+    if (!op.semSite && l.site && /^https?:\/\//.test(l.site)) b.push(ext(l.site, 'globo', T('site'), T('siteOficial')));
     return h('div', { class: 'acoes-nav' + (b.length === 3 ? ' tres' : ''), role: 'group', 'aria-label': T('rotaAte', { nome: l.nome }) }, b);
   }
   /* tocar numa atividade: primeiro LER (o quê, quando, onde, observação, ingresso); o lápis leva à edição */
@@ -4071,10 +4080,10 @@
           });
         }
         /* uma linha só, discreta: adicionar, escanear, colar e-mail */
-        tela.appendChild(h('div', { class: 'acoes-res' }, [
-          h('button', { class: 'bt', type: 'button', 'aria-label': T('novaReserva'), onclick: function () { janelaReserva(null); } }, '＋ ' + T('res_nova')),
-          h('button', { class: 'bt sec', type: 'button', 'aria-label': T('cod_titulo'), onclick: function () { janelaCodigos({}); } }, '▦ ' + T('res_escanearCurto')),
-          h('button', { class: 'bt leve', type: 'button', 'aria-label': T('colarEmail'), onclick: function () { janelaImportar(''); } }, '✉ ' + T('res_emailCurto'))]));
+        tela.appendChild(h('div', { class: 'acoes-res' }, [tiles([
+          tile('mais', T('res_nova'), function () { janelaReserva(null); }, { principal: true, rotuloLongo: T('novaReserva') }),
+          tile('qr', T('res_escanearCurto'), function () { janelaCodigos({}); }, { tom: 'hortensia', rotuloLongo: T('cod_titulo') }),
+          tile('✉', T('res_emailCurto'), function () { janelaImportar(''); }, { tom: 'nevoa', rotuloLongo: T('colarEmail') })], 3)]));
         if (!itens.length) { tela.appendChild(h('p', { class: 'sub', texto: T('semReservas') })); return; }
         /* grupos: ingressos do mesmo evento (mesmo grupo, ou mesmo título e horário) viram um cartão só */
         var grupos = {}, ordem = [];

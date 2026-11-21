@@ -13,7 +13,7 @@
 (function () {
   'use strict';
   var mapa = null, camadas = [], L = null, leafletPromessa = null;
-  var CORES = { confirmado: '#0e5a43', sugerido: '#f2b705', salvo: '#6a3a1c', outro: '#8a9aa0', logistica: '#172024', eu: '#0e5a43' };
+  var CORES = { confirmado: '#2f6e58', sugerido: '#e0b54f', salvo: '#6f63a6', outro: '#8a9aa0', logistica: '#3f5f6e', eu: '#2f6e58' };   /* Serra & Hortênsia */
 
   function carregarLeaflet() {
     if (window.L) return Promise.resolve(window.L);
