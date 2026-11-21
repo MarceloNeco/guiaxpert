@@ -30,6 +30,12 @@
     return h;
   }
   function voltaPara() { return location.origin + location.pathname; }
+  /* rede com prazo (21/Nov/2026): com sinal fraco, o fetch ficava pendurado e o app demorava a abrir */
+  function comPrazo(url, op, ms) {
+    var ctl = window.AbortController ? new AbortController() : null, t = null;
+    if (ctl) { op = Object.assign({}, op || {}, { signal: ctl.signal }); t = setTimeout(function () { ctl.abort(); }, ms || 9000); }
+    return fetch(url, op).then(function (r) { clearTimeout(t); return r; }, function (e) { clearTimeout(t); var x = new Error('sem-rede'); x.rede = true; throw x; });
+  }
   function json(r) {
     return r.text().then(function (t) {
       var j = null; try { j = t ? JSON.parse(t) : null; } catch (e) {}
@@ -96,7 +102,7 @@
       if (!s) return Promise.resolve(null);
       if (Date.now() < s.expira) return Promise.resolve(s.access_token);
       if (renovando) return renovando;
-      renovando = fetch(base() + '/auth/v1/token?grant_type=refresh_token', { method: 'POST', headers: cab(), body: JSON.stringify({ refresh_token: s.refresh_token }) })
+      renovando = comPrazo(base() + '/auth/v1/token?grant_type=refresh_token', { method: 'POST', headers: cab(), body: JSON.stringify({ refresh_token: s.refresh_token }) }, 9000)
         .then(json).then(function (j) {
           var atual = ler(CHAVE);
           /* outra aba já renovou enquanto isso: fica com a dela */
@@ -166,7 +172,7 @@
     rpc: function (nome, args) {
       return Conta.token().then(function (t) {
         if (!t) throw new Error('sem-sessao');
-        return fetch(base() + '/rest/v1/rpc/' + nome, { method: 'POST', headers: cab(t), body: JSON.stringify(args || {}) }).then(json);
+        return comPrazo(base() + '/rest/v1/rpc/' + nome, { method: 'POST', headers: cab(t), body: JSON.stringify(args || {}) }, 12000).then(json);
       });
     },
 
@@ -182,6 +188,15 @@
       }
       if (!Conta.sessao()) return Promise.resolve({ liberado: false, motivo: 'sem-conta' });
       if (!navigator.onLine) return Promise.resolve(doCache());
+      /* já liberado e conferido há pouco: abre NA HORA e confere em segundo plano (sinal fraco não segura a abertura) */
+      var jaPode = doCache();
+      if (jaPode.liberado) {
+        Conta.rpc('acesso_app', { p_app: APP }).then(function (r) {
+          var x = Array.isArray(r) ? r[0] : r;
+          gravar(ACESSO, { liberado: !!(x && x.liberado), origem: x && x.origem, ate: x && x.valida_ate, plano: x && x.plano, conferido: Date.now() });
+        }).catch(function () {});
+        return Promise.resolve(Object.assign({}, jaPode, { offline: false }));
+      }
       return Conta.rpc('acesso_app', { p_app: APP }).then(function (r) {
         var x = Array.isArray(r) ? r[0] : r;
         var res = { liberado: !!(x && x.liberado), origem: x && x.origem, ate: x && x.valida_ate, plano: x && x.plano, conferido: Date.now() };

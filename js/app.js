@@ -26,7 +26,7 @@
       risco: function () { return null; }, avisos: function () { return []; }, linkCompleto: function () { return 'https://www.windy.com/'; } };
   }
   var Clima = window.Clima;
-  var VERSAO_APP = '1.5.90';
+  var VERSAO_APP = '1.5.91';
 
   /* ------------------------------------------------------------------
      1. UTILIDADES
@@ -7234,7 +7234,8 @@
     window.addEventListener('online', function () { if (!estado.acesso || !estado.acesso.liberado || estado.acesso.offline) iniciarAcesso(); });
     Trava.iniciar();
     estado.pronto = true;
-    var ab = $('abertura'); if (ab) { ab.classList.add('sai'); setTimeout(function () { ab.remove(); }, 600); }
+    var ab = $('abertura');
+    if (ab) (window.GX_ABERTURA_PRONTA || Promise.resolve()).then(function () { ab.classList.add('sai'); setTimeout(function () { ab.remove(); }, 600); });
     mostrar('entrar');
     Conta.lerVolta(hashChegada.indexOf('access_token=') > -1 ? hashChegada : '').then(function (volta) {
       if (!volta) return;

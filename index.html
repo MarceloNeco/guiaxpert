@@ -20,7 +20,9 @@
     #abertura.sai { opacity: 0; pointer-events: none; }
     .ab-colagem { position: absolute; inset: 0; }
     .ab-f { position: absolute; left: 0; right: 0; overflow: hidden; }
-    .ab-f img { width: 100%; height: 100%; object-fit: cover; display: block; animation: ab-kb 14s ease-in-out infinite alternate; transform-origin: center; }
+    .ab-f img { width: 100%; height: 100%; object-fit: cover; display: block; animation: ab-kb 14s ease-in-out infinite alternate; transform-origin: center; opacity: 0; transition: opacity .6s ease; }
+    .ab-f img.ok { opacity: 1; }
+    @media (prefers-reduced-motion: reduce) { .ab-f img { transition: none; } }
     /* celular (retrato): 2 fotos em cima e 2 embaixo, fundidas (sem linha); o meio fica calmo para o ícone, sem atração escondida atrás dele */
     .ab-f:nth-child(1) { top: 0; height: 28%; -webkit-mask-image: linear-gradient(to bottom, #000 72%, transparent); mask-image: linear-gradient(to bottom, #000 72%, transparent); }
     .ab-f:nth-child(2) { top: 18%; height: 27%; -webkit-mask-image: linear-gradient(to bottom, transparent, #000 26%, #000 74%, transparent); mask-image: linear-gradient(to bottom, transparent, #000 26%, #000 74%, transparent); }
@@ -93,6 +95,7 @@
   <script src="js/banco.js"></script>
   <script src="js/biometria.js"></script>
   <script src="js/digital.js"></script>
+  <link rel="prefetch" href="vendor/qr/qrcode.js"><link rel="prefetch" href="vendor/qr/jsqr.js">
   <script src="js/barras.js"></script>
   <script src="js/cofre.js"></script>
   <script src="js/pacotes.js"></script>

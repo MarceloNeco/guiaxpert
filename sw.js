@@ -2,7 +2,7 @@
    como app no celular e no computador.
    Ao publicar uma versao nova do seu site, troque o numero de VERSAO
    abaixo (ex.: 'v1' -> 'v2') para o aparelho pegar os arquivos novos. */
-var VERSAO = 'guiaxpert-v1.5.90';
+var VERSAO = 'guiaxpert-v1.5.91';
 /* Todos os apps moram no mesmo endereco (marceloneco.github.io) e dividem
    os caches. Por isso o nome leva a pasta do app: assim um app nunca apaga
    o modo sem internet de outro. A pasta vem do proprio endereco, entao este
@@ -29,6 +29,19 @@ self.addEventListener('install', function (e) {
       var lista = ['./', './index.html', './manifest.json'], m, re = /(?:src|href)="([^"#:?]+\.(?:js|css|json|png|svg|webp))"/g;
       while ((m = re.exec(html))) if (lista.indexOf('./' + m[1]) < 0 && lista.indexOf(m[1]) < 0) lista.push(m[1].indexOf('./') === 0 ? m[1] : './' + m[1]);
       return Promise.all(lista.map(guardar));
+    }).then(function () {
+      /* bibliotecas e fotos já guardadas (mapa, leitor de PDF, QR, fotos) passam para a versão nova sem baixar de novo */
+      return caches.keys().then(function (nomes) {
+        return Promise.all(nomes.filter(function (n) { return n.indexOf(PREFIXO) === 0 && n !== CACHE && n.indexOf('compartilhado') < 0; }).map(function (n) {
+          return caches.open(n).then(function (velho) {
+            return velho.keys().then(function (reqs) {
+              return Promise.all(reqs.filter(function (r) { return /\/(vendor|img)\/|\.(png|webp|svg|jpg)$/i.test(new URL(r.url).pathname); }).map(function (r) {
+                return c.match(r).then(function (ja) { return ja ? null : velho.match(r).then(function (resp) { return resp ? c.put(r, resp) : null; }); });
+              }));
+            });
+          });
+        }));
+      });
     }).catch(function () {});
   }));
 });
@@ -74,7 +87,21 @@ self.addEventListener('fetch', function (e) {
      Assim, com sinal, sempre roda a versao nova inteira; sem sinal (ou se a
      rede demorar mais de 4 s), usa a copia guardada. Antes, pagina nova com
      .js antigo podia rodar misturada no primeiro recarregar depois de um release. */
-  var codigo = req.mode === 'navigate' || /\.(js|css|json|html)$/i.test(url.pathname) || /\/$/.test(url.pathname);
+  /* .js e .css: a cópia guardada DESTA versão primeiro (abre na hora, até com sinal fraco). Cada versão nova vem
+     inteira pela instalação do service worker novo (sw.js mudou), nunca misturada (21/Nov/2026: "demorou muito para carregar"). */
+  if (/\.(js|css)$/i.test(url.pathname) && url.pathname.indexOf('/sw.js') < 0) {
+    e.respondWith(caches.open(CACHE).then(function (c) {
+      return c.match(req, { ignoreSearch: true }).then(function (r) {
+        if (r) return r;
+        return fetch(req, { cache: 'no-cache' }).then(function (rr) {
+          if (rr && rr.status === 200) c.put(req, rr.clone());
+          return rr;
+        }).catch(function () { return caches.match(req, { ignoreSearch: true }).then(function (v) { return v || Response.error(); }); });
+      });
+    }));
+    return;
+  }
+  var codigo = req.mode === 'navigate' || /\.(json|html)$/i.test(url.pathname) || /\/$/.test(url.pathname);
   if (codigo) {
     e.respondWith(new Promise(function (ok) {
       var feito = false;
@@ -85,7 +112,7 @@ self.addEventListener('fetch', function (e) {
         });
       }
       /* abrir rápido: a página espera a rede no máximo 2,5 s (os outros arquivos, 4 s); a conferência de versão nova vem logo depois */
-      var prazo = setTimeout(reserva, req.mode === 'navigate' ? 2500 : 4000);
+      var prazo = setTimeout(reserva, req.mode === 'navigate' ? 1500 : 3000);
       fetch(req, { cache: 'no-cache' }).then(function (r) {
         clearTimeout(prazo);
         if (r && r.status === 200) {

@@ -2,6 +2,21 @@
   "app": "guiaxpert",
   "versoes": [
     {
+      "versao": "1.5.91",
+      "data": "2026-11-21",
+      "substitui": "1.5.90",
+      "itens": {
+        "pt": [
+          "Melhorias: abre rápido com sinal fraco.",
+          "Melhorias na abertura com fotos."
+        ],
+        "en": [
+          "Improved: fast start on weak signal.",
+          "Improved photo opening screen."
+        ]
+      }
+    },
+    {
       "versao": "1.5.90",
       "data": "2026-11-21",
       "substitui": "1.5.89",

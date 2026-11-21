@@ -10,4 +10,13 @@
   window.GX_FOTO_DO_DIA = id;
   var f = document.getElementById('fundo-foto'); if (f) f.src = 'img/fundos/' + id + '-fundo.webp';
   setTimeout(function () { var a = document.getElementById('abertura'); if (a) a.classList.add('sai'); }, 6000);
+  /* fotos da abertura entram suaves quando chegam; o app espera elas aparecerem e deixa à vista um instante
+     (dono, 21/Nov/2026: "aparece a foto e já desaparece") — GX_ABERTURA_PRONTA diz quando já pode sair */
+  var imgs = [].slice.call(document.querySelectorAll('#abertura .ab-f img')), faltam = imgs.length, t0 = Date.now();
+  window.GX_ABERTURA_PRONTA = new Promise(function (ok) {
+    function uma(img) { img.classList.add('ok'); if (--faltam <= 0) setTimeout(ok, 1400); }
+    if (!faltam) ok();
+    imgs.forEach(function (img) { if (img.complete && img.naturalWidth) uma(img); else { img.addEventListener('load', function () { uma(img); }); img.addEventListener('error', function () { if (--faltam <= 0) ok(); }); } });
+    setTimeout(ok, 2600);   /* nunca segura mais que isso */
+  });
 })();
