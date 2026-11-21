@@ -26,7 +26,7 @@
       risco: function () { return null; }, avisos: function () { return []; }, linkCompleto: function () { return 'https://www.windy.com/'; } };
   }
   var Clima = window.Clima;
-  var VERSAO_APP = '1.5.92';
+  var VERSAO_APP = '1.5.93';
 
   /* ------------------------------------------------------------------
      1. UTILIDADES
@@ -4068,7 +4068,9 @@
     var qrs = g.map(function (x) { return x.c; }).filter(function (c) { return (c.qr || c.barra) && c.status !== 'cancelada'; });
     var corpo = h('div', { class: 'etapa-corpo', hidden: !aberto });
     /* 1ª linha: hora (é ela que dá a ordem) e quantos; 2ª: o nome inteiro, na largura toda */
-    var extra = [canc ? T('res_cancelada') : null, g.length > 1 ? T(c0.tipo === 'ingresso' ? 'nIngressos' : 'nReservas', { n: g.length }) : null].filter(Boolean).join(' · ');
+    var lr = c0.tipo !== 'voo' && lugarDaReserva(c0), hxr = lr && horarioDoDia(lr.horario, String(c0.quando || '').slice(0, 10));
+    var extra = [canc ? T('res_cancelada') : null, g.length > 1 ? T(c0.tipo === 'ingresso' ? 'nIngressos' : 'nReservas', { n: g.length }) : null,
+      hxr && hxr.entrada != null ? T('hor_entradaAte', { h: hTxt(hxr.entrada) }) : null].filter(Boolean).join(' · ');
     var bt = h('button', { class: 'etapa res-dobra', type: 'button', 'aria-expanded': aberto ? 'true' : 'false' }, [
       h('span', { class: 'res-l1' }, [h('span', { class: 'chev', 'aria-hidden': 'true', texto: '›' }),
         h('b', { class: 'res-hora', texto: hh || '—' }), extra ? h('span', { class: 'res-extra', texto: extra }) : null]),
@@ -4312,6 +4314,7 @@
       h('b', { texto: c.titulo }),
       linhaQuando(c) ? h('span', { texto: linhaQuando(c) }) : null,
       c._chegaCedo ? h('span', { class: 'sub', texto: 'ℹ️ ' + T('chegaCedo', { h: c._chegaCedo }) }) : null,
+      ['ingresso', 'passeio', 'restaurante', 'outro'].indexOf(c.tipo) > -1 ? linhaHorario(c) : null,
       c.pessoa || c.assento ? h('span', { texto: [c.pessoa, c.assento].filter(Boolean).join(' · ') }) : null,
       c.codigo ? h('span', { class: 'linha' }, [T('codigo') + ': ', h('code', { texto: c.codigo, style: 'user-select:all' })]) : null,
       c.valor ? h('span', { class: 'sub', texto: T('res_valor', { v: c.valor }) }) : null,
@@ -4342,6 +4345,7 @@
       h('span', { class: 'pequeno' }, rotuloRes(c0.tipo, ' · ' + T(c0.tipo === 'voo' ? 'nPassageiros' : 'nIngressos', { n: g.length }))),
       h('b', { texto: c0.titulo }),
       linhaQuando(c0) ? h('span', { texto: linhaQuando(c0) }) : null,
+      c0.tipo !== 'voo' ? linhaHorario(c0) : null,
       h('span', { texto: resumoPessoas(g) }),
       c0.local ? h('span', { class: 'sub pequeno', texto: c0.local }) : null,
       c0.nota ? h('span', { class: 'sub pequeno', texto: c0.nota }) : null,
@@ -4473,6 +4477,55 @@
         });
       }).catch(function () { ok.disabled = false; avisar(T(navigator.onLine ? 'cofreErro' : 'semInternet')); });
     });
+  }
+  /* o lugar do guia que corresponde a uma reserva (pelo nome; só lugares com horário ou site, para "Caracol Chocolates"
+     não passar pelo "Parque do Caracol") */
+  function lugarDaReserva(c) {
+    if (!c) return null;
+    if (c.lugarId) { var l0 = lugarPorId(c.lugarId); if (l0) return l0; }
+    var ch = normalizar(c.titulo || '').split(/[^a-z0-9]+/).filter(function (w) { return w.length >= 4 && ['parque', 'bilhete', 'ingresso', 'ingressos', 'passeio', 'entrada', 'adulto', 'crianca'].indexOf(w) < 0; });
+    if (!ch.length) return null;
+    var melhor = null, nota = 0;
+    todosLugares().forEach(function (x) {
+      if (!x.horario && !x.site) return;
+      var t = normalizar(x.nome), n = ch.filter(function (w) { return t.indexOf(w) > -1; }).length;
+      if (n > nota) { nota = n; melhor = x; }
+    });
+    return melhor;
+  }
+  /* horário do DIA da reserva: "Seg a sex 9h às 17h (entrada até 16h30); fim de semana… 9h às 18h (entrada até 17h30)" */
+  function horarioDoDia(txt, diaIso) {
+    if (!txt) return null;
+    var partes = String(txt).split(/;\s*/), dow = diaIso ? new Date(diaIso + 'T12:00').getDay() : -1, fds = dow === 0 || dow === 6;
+    var escolha = partes.filter(function (p) {
+      var n = normalizar(p);
+      if (fds) return /fim de semana|sab|dom|feriado/.test(n);
+      return /seg|dia de semana|dias uteis/.test(n);
+    })[0] || partes.filter(function (p) { return horarioAberto(p); })[0];
+    var hx = horarioAberto(escolha); if (!hx) return null;
+    var m = /entrada at[eé]\s*(\d{1,2})h(\d{2})?/i.exec(escolha) || /[uú]ltima entrada[^0-9]*(\d{1,2})h(\d{2})?/i.exec(escolha);
+    hx.entrada = m ? (+m[1]) * 60 + (+m[2] || 0) : null;
+    hx.incerto = /cerca|n[aã]o confirmado|diverg|blogs?/i.test(String(txt));
+    return hx;
+  }
+  function hTxt(min) { var hh = Math.floor(min / 60), mm = min % 60; return hh + 'h' + (mm ? (mm < 10 ? '0' : '') + mm : ''); }
+  /* linha curta do cartão: "🕘 9h–18h · entrada até 17h30" + (hoje) "faltam 2h50 para a última entrada" + Site */
+  function linhaHorario(c) {
+    var l = lugarDaReserva(c); if (!l) return null;
+    var dia = String(c.quando || '').slice(0, 10), hx = horarioDoDia(l.horario, dia);
+    var itens = [];
+    if (hx) {
+      itens.push(h('span', { class: 'hor-faixa', texto: '🕘 ' + (hx.incerto ? '~' : '') + hTxt(hx.abre) + '–' + hTxt(hx.fecha) + (hx.entrada != null ? ' · ' + T('hor_entradaAte', { h: hTxt(hx.entrada) }) : '') }));
+      if (dia === hojeIso()) {
+        var agora = new Date(), min = agora.getHours() * 60 + agora.getMinutes(), lim = hx.entrada != null ? hx.entrada : hx.fecha - 60, falta = lim - min;
+        var cls = 'hor-hoje ' + (min < hx.abre ? 'ok' : falta <= 0 ? 'fim' : falta <= 60 ? 'atencao' : 'ok');
+        var tx = min < hx.abre ? T('hor_abreAs', { h: hTxt(hx.abre) }) : falta <= 0 ? T(min >= hx.fecha ? 'hor_fechado' : 'hor_entradaEncerrada') : T('hor_faltam', { t: (falta >= 60 ? Math.floor(falta / 60) + 'h' + (falta % 60 ? (falta % 60 < 10 ? '0' : '') + (falta % 60) : '') : falta + ' min') });
+        itens.push(h('span', { class: cls, texto: tx }));
+      }
+    }
+    if (l.site && /^https?:\/\//.test(l.site)) itens.push(h('a', { class: 'hor-site', href: l.site, target: '_blank', rel: 'noopener', texto: T('site') + ' ↗' }));
+    if (!itens.length) return null;
+    return h('div', { class: 'hor-linha' }, itens.concat(l.horario && hx ? [h('details', { class: 'ast-mais hor-mais' }, [h('summary', { texto: T('hor_detalhe') }), h('span', { texto: l.horario })])] : []));
   }
   /* hora de abrir do lugar (guia: "Cerca de 9h–17h") — remarcado sem hora vai para a abertura, de manhãzinha */
   function horaAbertura(titulo) {

@@ -1311,3 +1311,14 @@ body.rolando #dgo-aone:not(.dgo-falando) { opacity: 0; pointer-events: none; }
 .res-qr-rapido { width: 2.75rem; border-radius: 14px; background: color-mix(in srgb, var(--hortensia-claro) 62%, transparent); }
 .res-bloco .etapa-corpo { margin-left: 0; padding-left: 0; border-left: 0; }
 .dia-cab .dia-titulo { white-space: nowrap; }
+/* horário do lugar no cartão da reserva: uma linha, o "hoje" em destaque, o texto completo atrás de ▸ */
+.hor-linha { display: flex; flex-wrap: wrap; align-items: center; gap: .35rem .6rem; font-size: .9rem; }
+.hor-faixa { color: var(--tinta); font-variant-numeric: tabular-nums; }
+.hor-hoje { font-weight: 700; border-radius: 999px; padding: .1rem .55rem; font-size: .85rem; }
+.hor-hoje.ok { background: var(--rodovia-claro); color: var(--rodovia); }
+.hor-hoje.atencao { background: var(--faixa-claro); color: var(--faixa-tinta); }
+.hor-hoje.fim { background: var(--evita-claro); color: var(--evita); }
+.hor-site { color: var(--hortensia); font-weight: 700; text-decoration: none; }
+.hor-mais { flex-basis: 100%; margin: 0; }
+.hor-mais > summary { font-size: .8rem; }
+.hor-mais > span { display: block; font-size: .82rem; color: var(--suave); }
