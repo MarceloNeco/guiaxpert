@@ -26,7 +26,7 @@
       risco: function () { return null; }, avisos: function () { return []; }, linkCompleto: function () { return 'https://www.windy.com/'; } };
   }
   var Clima = window.Clima;
-  var VERSAO_APP = '1.5.87';
+  var VERSAO_APP = '1.5.88';
 
   /* ------------------------------------------------------------------
      1. UTILIDADES
@@ -2642,9 +2642,9 @@
     /* cards 2×2 (dono, 21/Nov/2026): nome curto; o nome completo vai para o leitor de tela */
     return tiles([
       temPacote ? tile('estrela', T('tl_prontos'), agir(function () { criarOpcoesDoPacote(estado.viagem, estado.pacote).then(recarregar); }),
-        { principal: true, sub: T('tl_nRoteiros', { n: estado.pacote.roteiros.length }), rotuloLongo: T('usarDoPacote', { n: estado.pacote.roteiros.length }) }) : null,
+        { principal: true, rotuloLongo: T('usarDoPacote', { n: estado.pacote.roteiros.length }) }) : null,
       /* sem IA: monta pelos lugares que o app conhece (guia, Wikivoyage, Wikidata, OpenStreetMap) */
-      tile('mapa', T('tl_auto'), agir(montarRoteiroAuto), { principal: !temPacote, tom: temPacote ? 'nevoa' : null, sub: T('tl_semIA'), rotuloLongo: T('montarAuto') }),
+      tile('mapa', T('tl_auto'), agir(montarRoteiroAuto), { principal: !temPacote, tom: temPacote ? 'nevoa' : null, rotuloLongo: T('montarAuto') }),
       tile('✦', T('tl_ia'), agir(gerarComIA), { tom: 'hortensia', rotuloLongo: T('gerarIA') }),
       tile('mais', T('tl_branco'), agir(function () { janelaNomeOpcao(T('meuRoteiro') + ' ' + (estado.roteiros.length + 1), criarOpcaoEmBranco); }), { tom: 'trigo', rotuloLongo: T('emBranco') })
     ], 2);

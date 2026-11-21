@@ -2,6 +2,19 @@
   "app": "guiaxpert",
   "versoes": [
     {
+      "versao": "1.5.88",
+      "data": "2026-11-21",
+      "substitui": "1.5.87",
+      "itens": {
+        "pt": [
+          "Melhorias: cards mais leves, textos curtos."
+        ],
+        "en": [
+          "Improved: lighter cards, shorter text."
+        ]
+      }
+    },
+    {
       "versao": "1.5.87",
       "data": "2026-11-21",
       "substitui": "1.5.86",
