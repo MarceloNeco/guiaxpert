@@ -2,7 +2,7 @@
    como app no celular e no computador.
    Ao publicar uma versao nova do seu site, troque o numero de VERSAO
    abaixo (ex.: 'v1' -> 'v2') para o aparelho pegar os arquivos novos. */
-var VERSAO = 'guiaxpert-v1.5.83';
+var VERSAO = 'guiaxpert-v1.5.84';
 /* Todos os apps moram no mesmo endereco (marceloneco.github.io) e dividem
    os caches. Por isso o nome leva a pasta do app: assim um app nunca apaga
    o modo sem internet de outro. A pasta vem do proprio endereco, entao este
@@ -12,10 +12,24 @@ var APP = (self.registration && self.registration.scope || '')
 var PREFIXO = 'dgo-' + APP + '-';
 var CACHE = PREFIXO + VERSAO;
 
+/* Ao instalar uma versao nova, guarda o app INTEIRO de uma vez: a pagina e todos os .js/.css que ela chama
+   (lidos do proprio index.html, entao serve para qualquer app). Arquivo que nao chegar pela rede (sinal fraco)
+   e copiado da versao anterior, que so e apagada depois. Antes, o cache novo nascia quase vazio e, com sinal
+   fraco, um .js podia faltar e derrubar uma tela (GuiaXpert, 21/Nov/2026: "Clima is not defined"). */
 self.addEventListener('install', function (e) {
   self.skipWaiting();
   e.waitUntil(caches.open(CACHE).then(function (c) {
-    return c.addAll(['./', './index.html', './diretrizes.js']).catch(function () {});
+    function guardar(u) {
+      return fetch(u, { cache: 'no-cache' }).then(function (r) { if (!r || r.status !== 200) throw new Error(u); return c.put(u, r); })
+        .catch(function () { return caches.match(u).then(function (v) { return v ? c.put(u, v) : null; }); });
+    }
+    return fetch('./index.html', { cache: 'no-cache' }).then(function (r) { return r.text(); }).catch(function () {
+      return caches.match('./index.html').then(function (v) { return v ? v.text() : ''; });
+    }).then(function (html) {
+      var lista = ['./', './index.html', './manifest.json'], m, re = /(?:src|href)="([^"#:?]+\.(?:js|css|json|png|svg|webp))"/g;
+      while ((m = re.exec(html))) if (lista.indexOf('./' + m[1]) < 0 && lista.indexOf(m[1]) < 0) lista.push(m[1].indexOf('./') === 0 ? m[1] : './' + m[1]);
+      return Promise.all(lista.map(guardar));
+    }).catch(function () {});
   }));
 });
 

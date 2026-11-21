@@ -125,10 +125,69 @@
         else if (dy > 40) { estadoPainel('resumo'); if (e0 === 'cartao') mostrarLista(); }
       }, { passive: true });
 
+      /* ---- ROTA dentro do app: de onde você está (ou do hotel) até o lugar, pelas ruas ---- */
+      var rota = null, camadaRota = null;
+      function apagarRota() { if (camadaRota && mapa) { try { mapa.removeLayer(camadaRota); } catch (e) {} } camadaRota = null; rota = null; mostrarLista(); }
+      function origemDaRota(l) {
+        var hot = op.lugares().filter(function (x) { return x._hotel && x._ativo && x.lat != null && x.id !== l.id; })[0];
+        var perto = function (p) { return p && p.lat != null && Geo.distancia(p, l) <= 80; };
+        var doHotel = function () { return hot ? { lat: hot.lat, lng: hot.lng, nome: hot.nome } : null; };
+        var eu = function (p) { return { lat: p.lat, lng: p.lng, nome: T('rotaVoce'), eu: true }; };
+        if (perto(estado.pos)) return Promise.resolve(eu(estado.pos));
+        if (estado.pos) return Promise.resolve(doHotel());   /* longe do lugar (ex.: planejando de casa): sai do hotel */
+        return new Promise(function (ok) {
+          var t = setTimeout(function () { ok(null); }, 8000);
+          GX.pegarPosicao().then(function (p) { clearTimeout(t); ok(p); }, function () { clearTimeout(t); ok(null); });
+        }).then(function (p) { return perto(p) ? eu(p) : doHotel(); });
+      }
+      function tracarRota(l, modo) {
+        if (!l || l.lat == null) { GX.avisar(T('lugarSemPonto')); return; }
+        modo = modo || (rota && rota.l.id === l.id && rota.modo) || 'carro';
+        escolhido = l; rota = { l: l, modo: modo }; var minha = rota;
+        estadoPainel('resumo'); desenharMapa(); mostrarLista();
+        if (mapa) centrarAcima(l, Math.max(mapa.getZoom(), 14));
+        origemDaRota(l).then(function (o) {
+          if (rota !== minha) return;
+          if (!o) { rota = null; mostrarLista(); GX.avisar(T('rotaSemOrigem')); return; }
+          if (Geo.distancia(o, l) < 0.04) { rota = null; mostrarLista(); GX.avisar(T('rotaJaAqui')); return; }
+          return Geo.rota(o, l, modo).then(function (r) {
+            if (rota !== minha) return;
+            rota.r = r; rota.de = o;
+            desenharRota(); mostrarLista();
+          });
+        });
+      }
+      function desenharRota() {
+        if (camadaRota && mapa) { try { mapa.removeLayer(camadaRota); } catch (e) {} }
+        camadaRota = null;
+        if (!rota || !rota.r || !mapa) return;
+        var cor = rota.modo === 'pe' ? '#2e7d32' : '#1a73e8', ln = rota.r.linha;
+        camadaRota = L.layerGroup([
+          L.polyline(ln, { color: '#fff', weight: 10, opacity: .95, lineCap: 'round', lineJoin: 'round', interactive: false }),
+          L.polyline(ln, { color: cor, weight: 6, opacity: 1, dashArray: rota.r.reta ? '10 12' : null, lineCap: 'round', lineJoin: 'round', interactive: false }),
+          L.circleMarker(ln[0], { radius: 8, color: '#fff', weight: 3, fillColor: cor, fillOpacity: 1, interactive: false })
+        ]).addTo(mapa);
+        var r0 = caixa.getBoundingClientRect(), cima = Math.max(0, topo.getBoundingClientRect().bottom - r0.top);
+        mapa.fitBounds(L.latLngBounds(ln), { paddingTopLeft: [36, cima + 36], paddingBottomRight: [72, painel.offsetHeight + 36], maxZoom: 17 });
+      }
+      function resumoRota() {
+        var r = rota.r, l = rota.l, pe = rota.modo === 'pe';
+        var txt = h('button', { class: 'rota-txt', type: 'button', title: T('abrirFicha'), onclick: function () { abrirLugar(l); } }, [
+          h('b', { class: 'rota-tempo', texto: r ? (pe ? '🚶 ' : '🚗 ') + Geo.tempoTxt(r.min) + ' · ' + Geo.formatarKm(r.km) : T('rotaCalculando') }),
+          h('span', { class: 'pequeno', texto: r ? T('rotaDeAte', { de: rota.de.nome, ate: l.nome }) : l.nome }),
+          r && r.reta ? h('span', { class: 'pequeno rota-reta', texto: T('rotaReta') }) : null]);
+        var fechar = h('button', { class: 'ic', type: 'button', 'aria-label': T('rotaSair'), title: T('rotaSair'), texto: '✕', onclick: apagarRota });
+        var troca = h('button', { class: 'bt leve', type: 'button', texto: pe ? '🚗 ' + T('rotaCarro') : '🚶 ' + T('rotaPe'), onclick: function () { tracarRota(l, pe ? 'carro' : 'pe'); } });
+        var gm = h('a', { class: 'bt sec', href: Geo.linkRota(l, rota.de && rota.de.eu ? null : rota.de, rota.modo), target: '_blank', rel: 'noopener', texto: '🔊 ' + T('rotaComVoz') });
+        return h('div', { class: 'rota-resumo', role: 'status', 'aria-live': 'polite' }, [h('div', { class: 'rota-cab' }, [txt, fechar]), h('div', { class: 'rota-acoes' }, [troca, gm]),
+          h('span', { class: 'rota-fonte', texto: T('rotaFonte') })]);
+      }
       function mostrarLista() {
         var itens = filtrados();
         resumo.textContent = '';
-        if (escolhido) {
+        if (rota) {
+          resumo.appendChild(resumoRota());
+        } else if (escolhido) {
           /* ficha recolhida: o lugar escolhido continua à vista (nome + abrir de novo) */
           resumo.appendChild(h('button', { class: 'escolhido-peek', type: 'button', onclick: function () { abrirLugar(escolhido); } }, [h('span', { class: 'bolinha', style: 'background:' + corDe(escolhido) }),
             h('span', { class: 'peek-txt' }, [h('b', { texto: escolhido.nome }), h('span', { class: 'pequeno', texto: T('abrirFicha') })])]));
@@ -143,7 +202,7 @@
             h('span', {}, [h('i', { class: 'lg', style: 'background:' + CORES.salvo }), T('legGuardado')]),
             h('span', {}, [h('i', { class: 'lg', style: 'background:' + CORES.outro }), T('legOutros')])]));
         }
-        resumo.appendChild(h('button', { class: 'bt leve', type: 'button', style: 'margin-left:auto;min-height:2.5rem', onclick: function () { estadoPainel('lista'); } }, T('lista')));
+        if (!rota) resumo.appendChild(h('button', { class: 'bt leve', type: 'button', style: 'margin-left:auto;min-height:2.5rem', onclick: function () { estadoPainel('lista'); } }, T('lista')));
         corpo.textContent = '';
         var lista = h('div', { class: 'lista-lugares' });
         itens.slice(0, 200).forEach(function (l) {
@@ -361,10 +420,15 @@
           else GX.avisar(T('lugarSemPonto'));
           estado.abrirPeek = false;
         }
+        if (estado.abrirRota) {   /* "Rota" tocado fora do mapa */
+          var ar = op.lugares().filter(function (l) { return l.id === estado.abrirRota; })[0];
+          estado.abrirRota = null;
+          if (ar) tracarRota(ar);
+        }
         if (op.aoPronto) op.aoPronto(mapa, { redesenhar: redesenhar });
       }).catch(function () { caixa.textContent = T('mapaErro'); });
 
-      var api = { redesenhar: redesenhar, abrir: abrirLugar, focar: focar, mapa: function () { return mapa; }, tela: tela };
+      var api = { redesenhar: redesenhar, abrir: abrirLugar, focar: focar, rota: function (id) { var l = op.lugares().filter(function (x) { return x.id === id; })[0]; if (!l || !mapa) return false; tracarRota(l); return true; }, mapa: function () { return mapa; }, tela: tela };
       atual = api;
       return api;
     },
@@ -409,6 +473,7 @@
     /* "Ver no mapa" com a tela de mapa já aberta: centra e destaca o pino sem recarregar */
     atualizar: function () { if (atual && atual.tela && atual.tela.isConnected) atual.redesenhar(); },
     focar: function (id, ficha) { return !!(atual && atual.tela && atual.tela.isConnected && mapa && atual.focar(id, ficha)); },
+    rota: function (id) { return !!(atual && atual.tela && atual.tela.isConnected && mapa && atual.rota(id)); },
     destruir: function () { if (mapa) { try { mapa.remove(); } catch (e) {} mapa = null; camadas = []; } }
   };
 

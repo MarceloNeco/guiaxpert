@@ -2,6 +2,23 @@
   "app": "guiaxpert",
   "versoes": [
     {
+      "versao": "1.5.84",
+      "data": "2026-11-21",
+      "substitui": "1.5.83",
+      "itens": {
+        "pt": [
+          "Novo: rota dentro do Mapa.",
+          "Correção na abertura do Roteiro.",
+          "Melhorias no uso sem internet."
+        ],
+        "en": [
+          "New: in-app route on the Map.",
+          "Fix when opening the Itinerary.",
+          "Better offline use."
+        ]
+      }
+    },
+    {
       "versao": "1.5.83",
       "data": "2026-11-21",
       "substitui": "1.5.82",

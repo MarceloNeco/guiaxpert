@@ -206,3 +206,6 @@ almoço perto do programa da hora e jantar perto do hotel; dia de chegada à tar
 Lisboa (sem guia). Próximos (propostos): considerar chuva (passeios cobertos), horário de funcionamento e dia da semana fechado,
 e montar "só o resto da viagem" a partir de hoje.
 
+## Integração nova aprovada (regra zero) — 21/Nov/2026
+- **Rota dentro do app (Mapa):** serviço aberto de rotas do OpenStreetMap (routing.openstreetmap.de, FOSSGIS; perfis carro e a pé), sem chave e sem custo. Só vão os dois pontos arredondados a ~10 m; nenhum nome ou dado pessoal. Sem internet: linha reta com km e tempo estimado. Aprovado pelo dono em 21/Nov/2026 (opção "serviço aberto e grátis").
+

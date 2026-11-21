@@ -12,7 +12,21 @@
 (function () {
   'use strict';
   var d = document, $ = function (id) { return d.getElementById(id); };
-  var VERSAO_APP = '1.5.83';
+  /* rede de segurança (21/Nov/2026: "Clima is not defined" no Roteiro do dono, com sinal fraco logo depois de uma versão nova):
+     se algum arquivo do app não chegou, recarrega uma vez quando houver sinal; enquanto isso, a previsão some
+     em vez de derrubar a tela. */
+  (function () {
+    var faltam = ['Clima', 'Geo', 'Mapa', 'Banco', 'Contexto', 'Codigos', 'Montador', 'AssistONE'].filter(function (n) { return !window[n]; });
+    if (!faltam.length) return;
+    try { if (navigator.onLine && !sessionStorage.getItem('gx-recarregou')) { sessionStorage.setItem('gx-recarregou', String(Date.now())); setTimeout(function () { location.reload(); }, 300); } } catch (e) {}
+  })();
+  if (!window.Clima) {
+    var semPrev = function () { return Promise.reject(new Error('clima indisponivel')); };
+    window.Clima = { previsao: semPrev, porHora: semPrev, icone: function () { return '·'; }, periodo: function () { return null; }, periodoDaHora: function () { return null; },
+      risco: function () { return null; }, avisos: function () { return []; }, linkCompleto: function () { return 'https://www.windy.com/'; } };
+  }
+  var Clima = window.Clima;
+  var VERSAO_APP = '1.5.84';
 
   /* ------------------------------------------------------------------
      1. UTILIDADES
@@ -1862,9 +1876,9 @@
     ]);
     if (it.nota) c.appendChild(h('p', { class: 'nota', texto: it.nota }));
     if (l && l.lat != null) c.appendChild(h('div', { class: 'acoes-sinal' }, [
-      h('a', { href: Geo.linkRota(l, estado.pos), target: '_blank', rel: 'noopener', texto: T('rota') }),
-      h('a', { href: Geo.linkWaze(l), target: '_blank', rel: 'noopener', texto: 'Waze' }),
-      h('button', { type: 'button', texto: T('verNoMapa'), onclick: function () { irAoMapa(l); } })
+      h('button', { type: 'button', texto: T('rotaNoApp'), onclick: function () { irAoMapa(l, { rota: true }); } }),
+      h('a', { href: Geo.linkRota(l, estado.pos), target: '_blank', rel: 'noopener', texto: 'Google Maps' }),
+      h('a', { href: Geo.linkWaze(l), target: '_blank', rel: 'noopener', texto: 'Waze' })
     ]));
     return c;
   }
@@ -2882,7 +2896,9 @@
   function irAoMapa(l, op) {
     if (!l) return;
     op = op || {};
-    if (estado.rota === 'mapa' && !Nav.camadas.length && window.Mapa && Mapa.focar(l.id, op.ficha)) return;
+    if (op.rota && estado.rota === 'mapa' && !Nav.camadas.length && window.Mapa && Mapa.rota(l.id)) return;
+    if (!op.rota && estado.rota === 'mapa' && !Nav.camadas.length && window.Mapa && Mapa.focar(l.id, op.ficha)) return;
+    estado.abrirRota = op.rota && l.lat != null ? l.id : null;
     /* ficha: veio da busca, quer ver detalhes e "Pôr no dia" já aberto; senão, o mapa com o pino em destaque */
     estado.abrirLugar = l.id; estado.abrirPeek = l.lat != null && !op.ficha; estado.filtro = 'todos'; estado.busca = ''; estado.soDia = false;
     if (!estado.viagem) { estado.abrirPeek = false; Nav.ir('explorar'); return; }
@@ -2900,8 +2916,9 @@
   function acoesNavegar(l) {
     var ic = Seletor.icone, b = [];
     var ext = function (href, icone, txt, dica) { return h('a', { class: 'an', href: href, target: '_blank', rel: 'noopener', title: dica || txt, 'aria-label': dica || txt }, [ic(icone), h('span', { texto: txt })]); };
-    b.push(h('button', { class: 'an principal', type: 'button', title: T('abrirMapaDoApp'), onclick: function () { irAoMapa(l); } }, [ic('pino'), h('span', { texto: T('verNoApp') })]));
-    b.push(ext(Geo.linkRota(l), 'navegar', 'Google Maps', T('comoChegarCom', { app: 'Google Maps' })));
+    /* 1º a ROTA dentro do app (mapa com o caminho, km e minutos); o lugar aparece junto */
+    b.push(h('button', { class: 'an principal', type: 'button', title: T('rotaNoAppDica'), onclick: function () { irAoMapa(l, l.lat != null ? { rota: true } : {}); } }, [ic(l.lat != null ? 'navegar' : 'pino'), h('span', { texto: l.lat != null ? T('rotaNoApp') : T('verNoApp') })]));
+    b.push(ext(Geo.linkRota(l), 'mapa', 'Google Maps', T('comoChegarCom', { app: 'Google Maps' })));
     b.push(ext(Geo.linkWaze(l), 'waze', 'Waze', T('comoChegarCom', { app: 'Waze' })));
     if (l.site && /^https?:\/\//.test(l.site)) b.push(ext(l.site, 'globo', T('site'), T('siteOficial')));
     return h('div', { class: 'acoes-nav' + (b.length === 3 ? ' tres' : ''), role: 'group', 'aria-label': T('rotaAte', { nome: l.nome }) }, b);
@@ -3343,9 +3360,9 @@
         t: L('Instalar o app e fazer ele aparecer no "Compartilhar"', 'Install the app and show it in "Share"'),
         r: L('No Chrome: menu ⋮ → "Instalar app" (não "Adicionar à tela inicial"). Instalado, o GuiaXpert aparece no Compartilhar do WhatsApp e da galeria. Para funcionar sem internet não precisa instalar.', 'In Chrome: ⋮ → "Install app". Once installed, GuiaXpert shows in the Share menu. Working offline doesn’t need it.'),
         acao: null },
-      { id: 'chegar', chaves: ['como chegar', 'rota', 'waze', 'google maps', 'onde fica', 'endereço', 'navegar', 'ver no mapa', 'directions', 'route', 'where is'],
+      { id: 'chegar', chaves: ['como chegar', 'rota', 'rota no mapa', 'caminho', 'quanto tempo leva', 'é longe', 'distância', 'a pé', 'de carro', 'waze', 'google maps', 'onde fica', 'endereço', 'navegar', 'ver no mapa', 'directions', 'route', 'how far', 'where is'],
         t: L('Ver no mapa e como chegar', 'See on the map and get there'),
-        r: L('Toque no programa do roteiro (ou no lugar no mapa): os botões "Ver no mapa", "Google Maps" e "Waze" levam até lá. No cartão do roteiro também há os ícones de mapa e de rota.', 'Tap the plan item (or the place on the map): "On the map", "Google Maps" and "Waze" take you there.'),
+        r: L('Toque no programa do roteiro (ou no lugar no mapa) → "Rota": o mapa do app mostra o caminho pelas ruas, de onde você está (ou do hotel) até lá, com minutos e km; troque entre carro e a pé. Para ir com voz, "Ir com voz" abre o Google Maps; o Waze também está lá. Sem internet, o app mostra a linha reta com o tempo estimado.', 'Tap the plan item (or the place on the map) → "Route": the app map shows the way by road, from where you are (or the hotel), with minutes and km; switch between car and walking. "Voice navigation" opens Google Maps; Waze is there too. Offline, you get a straight line with an estimate.'),
         acao: [L('Abrir o Mapa', 'Open the Map'), function () { Nav.ir('mapa'); }] },
       { id: 'adicionar', chaves: ['adicionar programa', 'pôr no dia', 'incluir passeio', 'novo programa', 'acrescentar', 'colocar no roteiro', 'add to plan', 'add activity'],
         t: L('Pôr um passeio ou restaurante no roteiro', 'Add a place to the plan'),
