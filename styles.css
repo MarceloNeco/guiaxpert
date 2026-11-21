@@ -1322,3 +1322,14 @@ body.rolando #dgo-aone:not(.dgo-falando) { opacity: 0; pointer-events: none; }
 .hor-mais { flex-basis: 100%; margin: 0; }
 .hor-mais > summary { font-size: .8rem; }
 .hor-mais > span { display: block; font-size: .82rem; color: var(--suave); }
+/* reserva aberta (dono, 21/Nov/2026: "muito apagado"): azul-hortênsia mais presente; linha e cartão viram um bloco só */
+.res-dobra, .res-qr-rapido { background: color-mix(in srgb, var(--hortensia) 22%, var(--sup)); }
+.res-bloco .etapa-corpo { gap: 0; }
+.res-bloco .etapa-corpo .cartao { background: color-mix(in srgb, var(--hortensia) 14%, var(--sup)); border: 1.5px solid color-mix(in srgb, var(--hortensia) 45%, transparent); border-top: 0;
+  border-radius: 0 0 16px 16px; margin-top: -2px; }
+.res-dobra[aria-expanded="true"] { background: color-mix(in srgb, var(--hortensia) 32%, var(--sup)); border: 1.5px solid color-mix(in srgb, var(--hortensia) 45%, transparent); border-bottom: 0; border-radius: 16px 16px 0 0; }
+.res-dobra[aria-expanded="true"] .res-nome { color: var(--tinta); }
+.res-dobra-linha:has(.res-dobra[aria-expanded="true"]) .res-qr-rapido { display: none; }
+.res-dobra, .res-qr-rapido { background: color-mix(in srgb, var(--hortensia) 28%, var(--sup)); }
+.res-dobra[aria-expanded="true"] { background: color-mix(in srgb, var(--hortensia) 40%, var(--sup)); }
+.res-bloco .etapa-corpo .cartao { background: color-mix(in srgb, var(--hortensia) 18%, var(--sup)); }

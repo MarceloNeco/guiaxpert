@@ -2,6 +2,19 @@
   "app": "guiaxpert",
   "versoes": [
     {
+      "versao": "1.5.94",
+      "data": "2026-11-21",
+      "substitui": "1.5.93",
+      "itens": {
+        "pt": [
+          "Melhorias nas cores das reservas."
+        ],
+        "en": [
+          "Improved booking colors."
+        ]
+      }
+    },
+    {
       "versao": "1.5.93",
       "data": "2026-11-21",
       "substitui": "1.5.92",
