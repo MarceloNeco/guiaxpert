@@ -1,5 +1,7 @@
 /* =====================================================================
-   assistone.js — AssistONE sem internet e sem IA (pedido do dono, 21/Nov/2026)
+   ajuda-busca.js — o "cérebro" das respostas do AssistONE, sem internet e sem IA
+   (pedido do dono, 21/Nov/2026). O personagem e o balão são o AssistONE oficial da
+   plataforma (assistone.js, cópia do master do RootifyONE); este arquivo só acha a resposta.
 
    Entende uma pergunta digitada ou falada e sugere a resposta pelas
    palavras-chave, tolerando:
@@ -9,7 +11,7 @@
      "remarcando" → "remarc"), plural e diminutivo simples.
    Tudo no aparelho. A IA, quando existir, é só uma opção a mais.
 
-   Uso: var m = AssistONE.motor([{ id, chaves: ['remarcar', 'mudar data'], ... }]);
+   Uso: var m = AssistBusca.motor([{ id, chaves: ['remarcar', 'mudar data'], ... }]);
         m.buscar('como remarco o ingresso?') → [{ item, nota }] (melhores primeiro)
    Feito para ser levado aos outros apps da plataforma (componente comum).
    ===================================================================== */
@@ -112,5 +114,5 @@
       }
     };
   }
-  window.AssistONE = { motor: motor, _palavras: palavras, _raiz: raiz, _dist: dist };
+  window.AssistBusca = { motor: motor, _palavras: palavras, _raiz: raiz, _dist: dist };
 })();

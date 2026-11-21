@@ -490,12 +490,8 @@ body.sem-rolagem main { height: calc(100% - var(--topo)); overflow: hidden; }
 .pino-centro { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -100%); font-size: 2.4rem; z-index: 500; pointer-events: none; filter: drop-shadow(0 2px 2px rgba(0,0,0,.35)); }
 
 /* ---------- ✦ assistente: sempre no mesmo lugar ---------- */
-.bt-assistente { position: fixed; right: max(.9rem, env(safe-area-inset-right)); bottom: calc(var(--barra) + env(safe-area-inset-bottom, 0px) + .8rem); z-index: 40;
   height: 3.4rem; padding: 0 1.05rem 0 .85rem; border-radius: 999px; border: 0; background: var(--rodovia); color: #fff; font-size: 1.5rem; font-weight: 900; cursor: pointer;
   box-shadow: 0 6px 18px rgba(0, 0, 0, .28); display: inline-flex; align-items: center; gap: .35rem; }
-.bt-assistente .ia-rotulo { font-size: 1.05rem; font-weight: 800; letter-spacing: .04em; }
-.bt-assistente:active { transform: scale(.95); }
-body.sem-rolagem .bt-assistente { bottom: calc(var(--barra) + env(safe-area-inset-bottom, 0px) + .8rem); }
 .bt.mic { flex: none; min-width: 3.25rem; font-size: 1.3rem; }
 
 /* ---------- faixa de fotos (home) ---------- */
@@ -787,8 +783,6 @@ table.comparar .bom { color: var(--rodovia); margin-top: .25rem; }
 .tela[data-rota="roteiro"] > .chips.rolar { -webkit-mask-image: linear-gradient(90deg, #000 85%, transparent); mask-image: linear-gradient(90deg, #000 85%, transparent); }
 @media (min-width: 700px) { .tela[data-rota="roteiro"] > .chips.rolar { -webkit-mask-image: none; mask-image: none; } }
 @media (max-width: 699px) {
-  .bt-assistente { transition: opacity .2s ease, transform .2s ease; }
-  body.rolando .bt-assistente { opacity: 0; transform: translateY(1rem); pointer-events: none; }
 }
 .etq.no-roteiro { background: var(--rodovia-claro); color: var(--rodovia); }
 .busca-caixa > svg { z-index: 2; pointer-events: none; }
@@ -1185,13 +1179,7 @@ body.voz-app.voz-baixando .bt-voz { opacity: .75; }
 .cod-pag img { width: 100%; height: 9.5rem; object-fit: cover; object-position: top; border-radius: 10px; background: #fff; box-shadow: 0 1px 4px rgba(0,0,0,.25); }
 .cod-pag:focus-visible { outline: 3px solid var(--faixa); border-radius: 10px; }
 /* AssistONE: um botão só, fixo, compacto (21/Nov) — não tapa o fim das listas nem os botões do mapa */
-.bt-assistente { min-height: 0; height: 2.9rem; padding: 0 .9rem 0 .55rem; gap: .35rem; font-size: .95rem; }
-.bt-assistente .ast-ic { width: 1.9rem; height: 1.9rem; border-radius: 50%; display: grid; place-items: center; background: rgba(255,255,255,.25); font-weight: 900; font-size: 1.1rem; }
-.bt-assistente .ia-rotulo { font-size: .95rem; letter-spacing: 0; }
 .tela { padding-bottom: 4.5rem; }
-body.sem-rolagem .bt-assistente { bottom: calc(var(--barra) + env(safe-area-inset-bottom, 0px) + 11rem); padding: 0; width: 2.9rem; justify-content: center; }
-body.sem-rolagem .bt-assistente .ia-rotulo { display: none; }
-body.sem-rolagem .bt-assistente .ast-ic { background: none; }
 body.sem-rolagem .tela { padding-bottom: 0; }
 .ast { display: grid; gap: .7rem; }
 .ast-sug { flex-wrap: wrap; }
@@ -1214,3 +1202,22 @@ body.sem-rolagem .tela { padding-bottom: 0; }
 .painel[data-estado="resumo"]:has(.rota-resumo) { height: auto; }
 .painel-resumo:has(.rota-resumo) { padding-bottom: .7rem; }
 .mapa-tela:has(.rota-resumo) .leaflet-bottom, .mapa-tela:has(.rota-resumo) .bt-mapa { display: none; }   /* com rota, o crédito do mapa vai para dentro do painel */
+/* AssistONE oficial (assistone.js do master): acima da barra de baixo; no mapa, acima do painel e do ⌖ */
+:root { --dgo-aone-sobe: var(--barra, 4.4rem); --dgo-aone-sobe-pc: var(--barra, 0px); }
+body.sem-rolagem { --dgo-aone-sobe: calc(var(--barra, 4.4rem) + 10.4rem); --dgo-aone-sobe-pc: calc(var(--barra, 0px) + 10.4rem); }
+.ast .ast-dica { margin: 0 0 .4rem; }
+.ast .ast-sug { margin: .45rem 0; }
+.ast .ast-card p { margin: .25rem 0 .45rem; }
+/* AssistONE: resposta curta; explicação só atrás de ▸ */
+.ast .ast-sug { display: flex; flex-wrap: wrap; gap: .35rem; }
+.ast .ast-card { padding: .6rem .7rem; }
+.ast .ast-caminho { margin: .2rem 0 .5rem; font-weight: 700; color: var(--rodovia); }
+.ast .ast-card .bt { width: 100%; }
+.ast-mais { margin-top: .35rem; }
+.ast-mais > summary { list-style: none; cursor: pointer; color: var(--suave); font-size: .85rem; padding: .3rem 0; }
+.ast-mais > summary::-webkit-details-marker { display: none; }
+.ast-mais > summary::before { content: "▸ "; }
+.ast-mais[open] > summary::before { content: "▾ "; }
+.ast-mais > p { margin: .1rem 0 0; font-size: .88rem; color: var(--suave); }
+.ast-outra { all: unset; box-sizing: border-box; display: block; width: 100%; padding: .55rem .2rem; border-top: 1px solid var(--linha); cursor: pointer; font-size: .9rem; }
+.ast-outra::after { content: " ›"; color: var(--suave); }

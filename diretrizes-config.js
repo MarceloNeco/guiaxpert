@@ -25,6 +25,9 @@ DGO.iniciar({
   login: { ativo: false, permitirVisitante: false, permitirPagante: false, permitirAnunciante: false, biometria: false },
   niveis: { ativo: false, arquivo: '' },
   ocr: { ativo: false },
+  /* AssistONE oficial (assistone.js, master do RootifyONE): o app liga e diz o que ele sabe depois de entrar
+     (AssistONE.configurar em js/app.js); antes disso, na tela de entrar, ele não aparece */
+  assistente: { ativo: false },
 
   ia: {
     ativo: true,

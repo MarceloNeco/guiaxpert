@@ -18,6 +18,11 @@ toques chego ao que preciso? Sei onde estou e o que está selecionado? Vale para
 Testes no fuso do dono: rodar o navegador de teste com `timezoneId: 'America/Sao_Paulo'` (o servidor de testes está em UTC; em 20/Nov um
 teste mostrou 18:00 em vez de 15:00). No código, data de "hoje" sempre pelo relógio local do aparelho, nunca `toISOString()`.
 
+## Regra permanente — texto curto (dono, 21/Nov/2026)
+Nada de texto longo na tela. Frases curtas, direto ao ponto, pensadas para o celular. Explicação só quando precisa, e
+recolhida atrás de ▸/chevron (`<details>`), nunca ocupando a tela. Ajuda (AssistONE) responde à dúvida digitada: título,
+caminho em uma linha (ex.: "Reservas › cartão › Remarcar"), um botão que leva lá; o "como" fica em "▸ Como".
+
 ## Regras permanentes do app
 - **Idioma** (diretriz geral do dono, 14/Nov/2026): textos para o usuário em PT (Brasil), EN (EUA) e ES (Espanha), tradução
   humanizada; um seletor só em todo lugar, bandeira em SVG + sigla (PT · EN · ES), componente do módulo comum, nunca emoji nem botão

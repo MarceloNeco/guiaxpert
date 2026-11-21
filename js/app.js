@@ -16,7 +16,7 @@
      se algum arquivo do app não chegou, recarrega uma vez quando houver sinal; enquanto isso, a previsão some
      em vez de derrubar a tela. */
   (function () {
-    var faltam = ['Clima', 'Geo', 'Mapa', 'Banco', 'Contexto', 'Codigos', 'Montador', 'AssistONE'].filter(function (n) { return !window[n]; });
+    var faltam = ['Clima', 'Geo', 'Mapa', 'Banco', 'Contexto', 'Codigos', 'Montador', 'AssistBusca'].filter(function (n) { return !window[n]; });
     if (!faltam.length) return;
     try { if (navigator.onLine && !sessionStorage.getItem('gx-recarregou')) { sessionStorage.setItem('gx-recarregou', String(Date.now())); setTimeout(function () { location.reload(); }, 300); } } catch (e) {}
   })();
@@ -26,7 +26,7 @@
       risco: function () { return null; }, avisos: function () { return []; }, linkCompleto: function () { return 'https://www.windy.com/'; } };
   }
   var Clima = window.Clima;
-  var VERSAO_APP = '1.5.84';
+  var VERSAO_APP = '1.5.85';
 
   /* ------------------------------------------------------------------
      1. UTILIDADES
@@ -3316,12 +3316,109 @@
   }, { passive: true });
   /* ---------- AssistONE (21/Nov): UM botão fixo de ajuda em todas as telas (antes o ✦ IA aparecia e sumia ao navegar).
      Responde SEM internet e SEM IA, pelas palavras-chave (assistone.js); a IA fica lá dentro como opção, se existir. ---------- */
+  /* AssistONE OFICIAL da plataforma (21/Nov/2026, dono: "o AssistONE é assim"): o personagem redondo do master
+     (assistone.js + ajuda-botao.png, copiados do RootifyONE). Aqui o app só diz o que ele sabe de cada tela; dentro do
+     balão vai o campo "Pergunte", que responde sem internet e sem IA (ajuda-busca.js). Antes era um botão "? Ajuda" próprio. */
+  var aoneFeito = false;
   function botaoAssistente() {
-    var antigo = $('bt-assistente');
-    if (antigo) { var r = antigo.querySelector('.ia-rotulo'); if (r) r.textContent = T('ast_botao'); return; }
-    var b = h('button', { class: 'bt-assistente', id: 'bt-assistente', type: 'button', 'aria-label': 'AssistONE · ' + T('ast_botao'), title: 'AssistONE', onclick: function () { janelaAssistONE(''); } },
-      [h('span', { 'aria-hidden': 'true', class: 'ast-ic', texto: '?' }), h('span', { class: 'ia-rotulo', 'aria-hidden': 'true', texto: T('ast_botao') })]);
-    d.body.appendChild(b);
+    var velho = $('bt-assistente'); if (velho) velho.remove();
+    if (!window.AssistONE || !AssistONE.configurar) return;
+    var P = function (pt, en) { return { pt: pt, en: en }; };
+    var bloco = function () { return blocoPergunta(function (fn) { try { AssistONE.fechar(); } catch (e) {} setTimeout(fn, 80); }); };
+    var irRes = function (fn) { return function () { Nav.ir('reservas'); if (fn) setTimeout(fn, 250); }; };
+    var telas = {
+      inicio: { titulo: P('Hoje', 'Today'), frase: P('Agenda, próximo programa, tempo.', 'Plan, what’s next, weather.'), montar: bloco,
+        atalhos: [{ rotulo: P('Ver o roteiro', 'See the plan'), acao: function () { Nav.ir('roteiro'); }, principal: true }, { rotulo: P('Abrir o mapa', 'Open the map'), acao: function () { Nav.ir('mapa'); } }] },
+      roteiro: { titulo: P('Roteiro', 'Plan'), frase: P('Toque num programa para ver ou mudar.', 'Tap an activity to see or change it.'), montar: bloco },
+      mapa: { titulo: P('Mapa', 'Map'), frase: P('Lugar › Rota: caminho, minutos e km.', 'Place › Route: way, minutes, km.'), montar: bloco },
+      reservas: { titulo: P('Reservas', 'Bookings'), frase: P('Ingressos, hotel, voos e QR.', 'Tickets, hotel, flights, QR.'), montar: bloco,
+        atalhos: [{ rotulo: P('＋ Nova reserva', '＋ New booking'), acao: irRes(function () { janelaReserva(null); }), principal: true }, { rotulo: P('QR / cartão', 'QR / pass'), acao: irRes(function () { janelaCodigos({}); }) }] },
+      familia: { titulo: P('Quem vai', 'Who’s going'), frase: P('Quem vai e o que cada um gosta.', 'Who’s going and what they like.'), montar: bloco }
+    };
+    ['viagens', 'explorar', 'lugares', 'salvos', 'conta', 'config', 'nova', 'ia', 'oquetem'].forEach(function (r) {
+      telas[r] = { titulo: P(T('rota_' + r) !== 'rota_' + r ? T('rota_' + r) : 'GuiaXpert', T('rota_' + r) !== 'rota_' + r ? T('rota_' + r) : 'GuiaXpert'), montar: bloco };
+    });
+    AssistONE.configurar({ app: 'guiaxpert', nome: { pt: 'GuiaXpert', en: 'GuiaXpert' }, versao: VERSAO_APP, assistente: {
+      ativo: true, imagem: 'ajuda-botao.png',
+      tela: function () { return estado.rota; },
+      esconderCom: ['.janela-fundo', '#trava', '.painel[data-estado="cartao"]', '.painel[data-estado="lista"]'],
+      telas: telas,
+      tour: [
+        { seletor: '#barra', titulo: P('As telas da viagem', 'Trip screens'), texto: P('Hoje, Roteiro, Mapa, Reservas e Quem vai. Um toque troca de tela.', 'Today, Plan, Map, Bookings and Who. One tap switches.') },
+        { seletor: '.topo .chip-viagem, #chip-viagem, .chip-viagem', titulo: P('A viagem', 'The trip'), texto: P('Toque aqui para trocar de viagem ou criar outra.', 'Tap to switch trips or create one.') },
+        { seletor: '#bt-busca, .topo [aria-label*="Buscar"], .topo [aria-label*="Search"]', titulo: P('Buscar', 'Search'), texto: P('Procure um lugar, restaurante ou endereço, até sem internet.', 'Find a place, restaurant or address, even offline.') }
+      ],
+      busca: ajudaGuia().map(function (x) { return { termo: P(x.t, x.t), sinonimos: x.chaves, icone: '💡', descricao: P(x.r.slice(0, 90) + '…', x.r.slice(0, 90) + '…'), destino: x.acao ? x.acao[1] : null }; })
+    } });
+    aoneFeito = true;
+  }
+  /* respostas CURTAS (dono, 21/Nov/2026: "conciso, direcionado; explicação só atrás de ▸"):
+     [rótulo do atalho PT, EN, caminho em uma linha PT, EN]. O texto longo fica recolhido em "▸ Como". */
+  var AJUDA_CURTA = {
+    qr: ['Pôr QR', 'Add QR', 'Reservas › ▦ QR / cartão', 'Bookings › ▦ QR / pass'],
+    mostrar: ['Mostrar QR', 'Show QR', 'Reservas › ▦ Mostrar · − + muda o tamanho', 'Bookings › ▦ Show · − + resizes'],
+    remarcar: ['Remarcar', 'Reschedule', 'Reservas › cartão › Remarcar', 'Bookings › card › Reschedule'],
+    cancelar: ['Cancelar', 'Cancel', 'Reservas › cartão › Cancelar', 'Bookings › card › Cancel'],
+    reservar: ['Nova reserva', 'New booking', 'Reservas › ＋ Nova', 'Bookings › ＋ New'],
+    comprei: ['Comprei agora', 'Just bought', '🔍 lugar › 🎟 Comprei o ingresso agora', '🔍 place › 🎟 I just bought it'],
+    semnet: ['Sem internet', 'Offline', 'Hoje › "Funciona sem internet?"', 'Today › "Works offline?"'],
+    instalar: ['Instalar', 'Install', 'Chrome ⋮ › Instalar app', 'Chrome ⋮ › Install app'],
+    chegar: ['Como chegar', 'Directions', 'Toque no lugar › Rota', 'Tap the place › Route'],
+    adicionar: ['Pôr no roteiro', 'Add to plan', '🔍 lugar › Pôr no dia', '🔍 place › Add to day'],
+    mudarhora: ['Mudar hora', 'Change time', 'Roteiro › programa › ✎', 'Plan › activity › ✎'],
+    auto: ['Montar roteiro', 'Build plan', 'Roteiro › ＋ Novo › Automático', 'Plan › ＋ New › Automatic'],
+    tempo: ['Tempo', 'Weather', 'Hoje › toque no dia', 'Today › tap the day'],
+    hotel: ['Hotel', 'Hotel', 'Mapa › 🛏 › Ajustar o ponto', 'Map › 🛏 › Adjust pin'],
+    semponto: ['Sem ponto no mapa', 'Not on map', 'Ficha › Marcar no mapa', 'Card › Mark on map'],
+    alternativa: ['Em dúvida', 'Two options', 'Programa › ✎ › Mais opções › Em dúvida', 'Activity › ✎ › More › Undecided'],
+    hoje: ['Hoje', 'Today', 'Roteiro › aba de hoje', 'Plan › today’s tab'],
+    perto: ['Perto de mim', 'Near me', 'Mapa › ⌖ › Perto', 'Map › ⌖ › Near'],
+    email: ['Do e-mail', 'From email', 'Reservas › ✉ E-mail › colar', 'Bookings › ✉ Email › paste'],
+    cupom: ['Cupons', 'Coupons', 'Reservas › Sem data', 'Bookings › No date'],
+    desfazer: ['Desfazer', 'Undo', '"Desfazer" embaixo, logo depois', '"Undo" at the bottom, right after'],
+    voz: ['Falar', 'Speak', '🎤 dentro do campo', '🎤 inside the field'],
+    familia: ['Família', 'Family', 'Quem › Convidar', 'Who › Invite'],
+    trava: ['Trava', 'Lock', 'Configurações › Trava', 'Settings › Lock']
+  };
+  /* "Pergunte": o campo que responde sem internet e sem IA (no balão do AssistONE e na janela de ajuda) */
+  function blocoPergunta(executar, textoInicial) {
+    if (!window.AssistBusca) return null;
+    if (!motorAjuda || motorIdioma !== idioma()) { motorAjuda = AssistBusca.motor(ajudaGuia()); motorIdioma = idioma(); }
+    var campo = h('input', { class: 'campo', type: 'search', id: 'gx-assist', placeholder: T('ast_pergunte'), 'aria-label': T('ast_pergunte'), autocomplete: 'off', maxlength: '200', value: textoInicial || '' });
+    var res = h('div', { class: 'ast-res', 'aria-live': 'polite' });
+    var en = idioma() === 'en', curta = function (id) { return AJUDA_CURTA[id] || null; };
+    var sug = h('div', { class: 'chips ast-sug' }, ['remarcar', 'qr', 'chegar', 'tempo', 'semnet', 'cancelar'].map(function (id) {
+      var it = ajudaGuia().filter(function (x) { return x.id === id; })[0], c = curta(id);
+      return h('button', { class: 'chip', type: 'button', texto: c ? c[en ? 1 : 0] : it.t, onclick: function () { mostrarUm(it); } });
+    }));
+    var caixaCampo = h('div', { class: 'ast-campo' }, [campo]);
+    var el = h('div', { class: 'ast' }, [caixaCampo, sug, res]);
+    /* a melhor resposta: título + caminho em uma linha + botão que já leva lá; o "como" fica recolhido */
+    function cartao(it) {
+      var c = curta(it.id);
+      return h('div', { class: 'ast-card melhor' }, [h('b', { texto: it.t }),
+        c ? h('p', { class: 'ast-caminho', texto: c[en ? 3 : 2] }) : null,
+        it.acao ? h('button', { class: 'bt', type: 'button', texto: it.acao[0] + ' ›', onclick: function () { executar(it.acao[1]); } }) : null,
+        h('details', { class: 'ast-mais' }, [h('summary', { texto: T('ast_como') }), h('p', { texto: it.r })])]);
+    }
+    /* as outras: só o título, um toque abre */
+    function outra(it) { return h('button', { class: 'ast-outra', type: 'button', texto: it.t, onclick: function () { mostrarUm(it); } }); }
+    function mostrarUm(it) { res.textContent = ''; sug.hidden = true; res.appendChild(cartao(it)); }
+    function responder() {
+      var q = campo.value.trim(); res.textContent = '';
+      sug.hidden = !!q;
+      if (q.length < 2) return;
+      var r = motorAjuda.buscar(q, 3);
+      if (r.length) r.forEach(function (x, k) { res.appendChild(k === 0 ? cartao(x.item) : outra(x.item)); });
+      else res.appendChild(h('div', { class: 'ast-card' }, [h('b', { texto: T('ast_naoEntendi') }), h('p', { class: 'pequeno', texto: T('ast_tente') })]));
+      if (iaParaMim()) res.appendChild(h('button', { class: 'bt sec', type: 'button', texto: '✦ ' + T('ast_perguntarIA'), onclick: function () { executar(function () { janelaAssistente(q); }); } }));
+    }
+    var espera = null;
+    campo.addEventListener('input', function () { clearTimeout(espera); espera = setTimeout(responder, 250); });
+    campo.addEventListener('keydown', function (e) { if (e.key === 'Enter') { e.preventDefault(); responder(); } });
+    try { comVoz(caixaCampo); } catch (e) {}
+    if (textoInicial) responder();
+    return el;
   }
   /* perguntas e respostas do GuiaXpert: chaves em PT e EN; cada uma leva a pessoa direto ao lugar certo */
   function ajudaGuia() {
@@ -3424,33 +3521,10 @@
   }
   var motorAjuda = null, motorIdioma = null;
   function janelaAssistONE(textoInicial) {
-    if (!window.AssistONE) return;
-    if (!motorAjuda || motorIdioma !== idioma()) { motorAjuda = AssistONE.motor(ajudaGuia()); motorIdioma = idioma(); }
-    var campo = h('input', { class: 'campo', type: 'search', id: 'gx-assist', placeholder: T('ast_pergunte'), autocomplete: 'off', maxlength: '200', value: textoInicial || '' });
-    var res = h('div', { class: 'ast-res', 'aria-live': 'polite' });
-    var sug = h('div', { class: 'chips ast-sug' }, ['qr', 'remarcar', 'cancelar', 'semnet', 'tempo', 'chegar'].map(function (id) {
-      var it = ajudaGuia().filter(function (x) { return x.id === id; })[0];
-      return h('button', { class: 'chip', type: 'button', texto: it.t, onclick: function () { campo.value = it.t; responder(); } });
-    }));
-    var corpo = h('div', { class: 'ast' }, [h('p', { class: 'sub', texto: T('ast_texto') }), campo, sug, res]);
-    var j = janela('AssistONE', corpo);
-    function cartao(it, k) {
-      return h('div', { class: 'ast-card' + (k === 0 ? ' melhor' : '') }, [h('b', { texto: it.t }), h('p', { texto: it.r }),
-        it.acao ? h('button', { class: k === 0 ? 'bt' : 'bt leve', type: 'button', texto: it.acao[0] + ' ›', onclick: function () { j.fechar(function () { it.acao[1](); }); } }) : null]);
-    }
-    function responder() {
-      var q = campo.value.trim(); res.textContent = '';
-      sug.hidden = !!q;
-      if (q.length < 2) return;
-      var r = motorAjuda.buscar(q, 3);
-      if (r.length) r.forEach(function (x, k) { res.appendChild(cartao(x.item, k)); });
-      else res.appendChild(h('div', { class: 'ast-card' }, [h('b', { texto: T('ast_naoEntendi') }), h('p', { class: 'pequeno', texto: T('ast_tente') })]));
-      if (iaParaMim()) res.appendChild(h('button', { class: 'bt sec', type: 'button', texto: '✦ ' + T('ast_perguntarIA'), onclick: function () { j.fechar(function () { janelaAssistente(q); }); } }));
-    }
-    var espera = null;
-    campo.addEventListener('input', function () { clearTimeout(espera); espera = setTimeout(responder, 250); });
-    campo.addEventListener('keydown', function (e) { if (e.key === 'Enter') { e.preventDefault(); responder(); } });
-    if (textoInicial) responder();
+    var j = null;
+    var b = blocoPergunta(function (fn) { if (j) j.fechar(fn); else fn(); }, textoInicial);
+    if (!b) return;
+    j = janela('AssistONE', b);
   }
 
   /* ---------- Mapa da viagem (mapa + lista + cartão: mapa.js) ---------- */
