@@ -26,7 +26,7 @@
       risco: function () { return null; }, avisos: function () { return []; }, linkCompleto: function () { return 'https://www.windy.com/'; } };
   }
   var Clima = window.Clima;
-  var VERSAO_APP = '1.5.89';
+  var VERSAO_APP = '1.5.90';
 
   /* ------------------------------------------------------------------
      1. UTILIDADES
@@ -4067,12 +4067,12 @@
     var canc = g.every(function (x) { return x.c.status === 'cancelada'; });
     var qrs = g.map(function (x) { return x.c; }).filter(function (c) { return (c.qr || c.barra) && c.status !== 'cancelada'; });
     var corpo = h('div', { class: 'etapa-corpo', hidden: !aberto });
+    /* 1ª linha: hora (é ela que dá a ordem) e quantos; 2ª: o nome inteiro, na largura toda */
+    var extra = [canc ? T('res_cancelada') : null, g.length > 1 ? T(c0.tipo === 'ingresso' ? 'nIngressos' : 'nReservas', { n: g.length }) : null].filter(Boolean).join(' · ');
     var bt = h('button', { class: 'etapa res-dobra', type: 'button', 'aria-expanded': aberto ? 'true' : 'false' }, [
-      h('span', { class: 'etapa-l1' }, [h('span', { class: 'chev', 'aria-hidden': 'true', texto: '›' }),
-        h('b', { class: 'etapa-tit' }, [iconeRes(c0.tipo || 'outro'), c0.titulo || T('res_' + (c0.tipo || 'outro'))]),
-        h('span', { class: 'etapa-hora', texto: hh })]),
-      g.length > 1 || canc ? h('span', { class: 'etapa-l2' }, [canc ? h('span', { class: 'etq', texto: T('res_cancelada') }) : null,
-        g.length > 1 ? h('span', { texto: T(c0.tipo === 'ingresso' ? 'nIngressos' : 'nReservas', { n: g.length }) }) : null]) : null]);
+      h('span', { class: 'res-l1' }, [h('span', { class: 'chev', 'aria-hidden': 'true', texto: '›' }),
+        h('b', { class: 'res-hora', texto: hh || '—' }), extra ? h('span', { class: 'res-extra', texto: extra }) : null]),
+      h('span', { class: 'res-nome', texto: c0.titulo || T('res_' + (c0.tipo || 'outro')) })]);
     function encher() { if (!corpo.childNodes.length) corpo.appendChild(cartaoDe(g)); }
     if (aberto) encher();
     bt.addEventListener('click', function () {
@@ -4190,7 +4190,7 @@
             }
             var bt = h('button', { class: 'dia-cab', type: 'button', 'aria-expanded': aberto ? 'true' : 'false' }, [
               h('span', { class: 'chev', 'aria-hidden': 'true', texto: '›' }),
-              h('span', { class: 'dia-titulo', texto: dia === 'sem' ? T('res_semData') : semana(dia) + ', ' + fData(dia) }), resumo]);
+              h('span', { class: 'dia-titulo', texto: dia === 'sem' ? T('res_semData') : semana(dia) + ' ' + fData(dia, true) }), resumo]);
             bt.addEventListener('click', function () { aberto = !aberto; diasAbertos[chave] = aberto; bt.setAttribute('aria-expanded', aberto ? 'true' : 'false'); corpo.hidden = !aberto; });
             caixa.appendChild(h('section', { class: 'dia-sec' + (dia !== 'sem' && dia < hjIso ? ' passado' : '') }, [h('div', { class: 'dia-linha' }, [bt, mais]), corpo]));
             sec = { corpo: corpo, resumo: resumo, icones: [] };

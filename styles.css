@@ -1299,3 +1299,15 @@ body.rolando #dgo-aone:not(.dgo-falando) { opacity: 0; pointer-events: none; }
 .res-qr-rapido:active { transform: scale(.95); }
 .res-qr-rapido:focus-visible { outline: 3px solid var(--rodovia); outline-offset: 2px; }
 .res-bloco.res-cancelada .etapa { opacity: .6; }
+/* linhas de reserva dentro do dia (dono, 21/Nov/2026): mesmo alinhamento do dia, tom de subseção, hora primeiro, nome inteiro */
+.res-bloco { margin: 0; }
+.dia-corpo:has(.res-bloco) { gap: .35rem; }
+.res-dobra { background: color-mix(in srgb, var(--hortensia-claro) 62%, transparent); padding: .5rem .8rem .55rem; min-height: 0; gap: .1rem; border-radius: 14px; }
+.res-l1 { display: flex; align-items: center; gap: .45rem; font-size: .85rem; color: var(--suave); }
+.res-l1 .res-hora { color: var(--hortensia); font-variant-numeric: tabular-nums; font-weight: 800; font-size: .95rem; }
+.res-l1 .chev { width: .7rem; font-size: 1.15em; color: var(--hortensia); }
+.res-extra { white-space: nowrap; }
+.res-nome { display: block; font-weight: 700; font-size: 1rem; color: var(--tinta); line-height: 1.25; overflow-wrap: anywhere; }
+.res-qr-rapido { width: 2.75rem; border-radius: 14px; background: color-mix(in srgb, var(--hortensia-claro) 62%, transparent); }
+.res-bloco .etapa-corpo { margin-left: 0; padding-left: 0; border-left: 0; }
+.dia-cab .dia-titulo { white-space: nowrap; }
