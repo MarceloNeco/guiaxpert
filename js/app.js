@@ -12,7 +12,7 @@
 (function () {
   'use strict';
   var d = document, $ = function (id) { return d.getElementById(id); };
-  var VERSAO_APP = '1.5.80';
+  var VERSAO_APP = '1.5.81';
 
   /* ------------------------------------------------------------------
      1. UTILIDADES
@@ -4325,9 +4325,12 @@
     if (i.tipo === 'ingresso' && i.titulo) {
       var chaves = normalizar(i.titulo).split(/\s+/).filter(function (w) { return w.length >= 4 && ['parque', 'bilhete', 'ingresso', 'passeio'].indexOf(w) < 0; });
       var ps = itens.map(function (x) {
-        var c = x.c, t = normalizar([c.titulo, c.nota, c.codigo, c.local].join(' ')), p = 0;
-        if (i.localizador && t.indexOf(normalizar(i.localizador)) > -1) p += 6;
-        if (chaves.some(function (w) { return t.indexOf(w) > -1; })) p += 4;
+        /* só título e nota: o endereço não vale (o Florybal fica na "Estrada do Caracol" e levou os ingressos do Caracol, 20/Nov) */
+        var c = x.c, t = normalizar([c.titulo, c.nota, c.codigo].join(' ')), p = 0, porNome = chaves.some(function (w) { return normalizar(c.titulo || '').indexOf(w) > -1; });
+        var porLoc = i.localizador && t.indexOf(normalizar(i.localizador)) > -1;
+        if (!porNome && !porLoc) return { x: x, p: 0 };
+        if (porLoc) p += 6;
+        if (porNome) p += 4;
         if (i.data && String(c.quando || '').slice(0, 10) === i.data) p += 2;
         if (c.tipo === 'ingresso' || c.tipo === 'outro') p += 1;
         return { x: x, p: p >= 5 ? p : 0 };
@@ -4363,6 +4366,17 @@
     var vid = estado.viagem.id;
     function gravar(reg, dados) { return cifrarReserva(vid, dados).then(function (blob) { reg.conteudo = blob; reg.tipo = dados.tipo; return Banco.gravar('reservas', reg); }); }
     var extra = i.tipo === 'voo' ? { pessoa: i.pessoa, assento: i.assento, codigo: i.localizador } : { codigo: i.codigo, pessoa: i.pessoa || '' };
+    if (escolha.corrigir) {
+      /* estava na reserva errada (ou sem nome/data): vira a reserva certa, com o grupo do mesmo localizador e dia */
+      var xc = escolha.corrigir, antesC = Object.assign({}, xc.c);
+      var hrC = i.data ? (horaNoRoteiro(i.titulo, i.data) || horaAbertura(i.titulo) || '') : '';
+      var notaC = [i.detalhe, i.localizador ? T('cod_reserva', { r: i.localizador }) : null, i.nota].filter(Boolean).join(' · ');
+      var cc = Object.assign({}, xc.c, { tipo: i.tipo, titulo: i.titulo, quando: i.data ? i.data + (hrC ? 'T' + hrC : '') : '', pessoa: i.pessoa || '', nota: notaC, codigo: i.codigo || xc.c.codigo, qr: i.qr, local: '' });
+      delete cc.status; delete cc.cancelamento;
+      var rc = xc.reg; rc.cancelada = false; rc.tipo = i.tipo; rc.marca = 'cod:' + (i.codigo || '') + (i.pessoa ? '|' + normalizar(i.pessoa) : '');
+      rc.agenda = cc.quando ? { titulo: cc.titulo, quando: cc.quando, local: null, grupo: i.tipo === 'ingresso' ? 'i-' + normalizar(i.localizador || i.titulo).slice(0, 30) + '-' + (i.data || '') : null } : null;
+      return gravar(rc, cc).then(function () { if (antesC.quando && normalizar(antesC.titulo || '') !== normalizar(cc.titulo)) { /* não mexe no roteiro do lugar errado */ } confirmarNoRoteiro(cc); return cc; });
+    }
     if (escolha.remarcar) {
       var xr = escolha.remarcar, antes = Object.assign({}, xr.c);
       var hr = horaNoRoteiro(xr.c.titulo, i.data) || horaAbertura(xr.c.titulo) || String(xr.c.quando || '').slice(11, 16);
@@ -4400,6 +4414,20 @@
   /* decisão padrão para um código, olhando as reservas de agora (relê depois de cada gravação: duas pessoas não caem na mesma) */
   function decidir(i) {
     return reservasDaViagem().then(function (itens) {
+      /* o mesmo QR já está guardado: não duplica; se está na reserva errada (título de outro lugar), corrige */
+      var mesmoQR = itens.filter(function (x) { return x.c.qr === i.qr && x.c.status !== 'cancelada'; });
+      if (mesmoQR.length) {
+        /* se há mais de uma com o mesmo QR, a que já está certa (mesmo título) vem primeiro; as outras viram sobras */
+        var chv0 = normalizar(i.titulo || '').split(/\s+/).filter(function (w) { return w.length >= 4; });
+        mesmoQR.sort(function (a, b) { var fa = chv0.some(function (w) { return normalizar(a.c.titulo || '').indexOf(w) > -1; }), fb = chv0.some(function (w) { return normalizar(b.c.titulo || '').indexOf(w) > -1; }); return (fb ? 1 : 0) - (fa ? 1 : 0); });
+        var x0 = mesmoQR[0];
+        if (i.titulo && i.tipo !== 'voo') {
+          var chv = normalizar(i.titulo).split(/\s+/).filter(function (w) { return w.length >= 4 && ['parque', 'bilhete', 'ingresso', 'passeio', 'cupom'].indexOf(w) < 0; });
+          var bate = chv.some(function (w) { return normalizar(x0.c.titulo || '').indexOf(w) > -1; });
+          if (!bate || (i.data && String(x0.c.quando || '').slice(0, 10) !== i.data)) return { corrigir: x0, itens: itens, texto: T('cod_corrigir', { t: i.titulo, era: x0.c.titulo || T('res_ingresso') }) };
+        }
+        return { alvo: x0, itens: itens, texto: T('cod_jaGuardado', { r: x0.c.titulo + (x0.c.pessoa ? ' · ' + x0.c.pessoa : '') }) };
+      }
       /* REMARCADO (21/Nov): mesma reserva (localizador) que estava em outro dia ou cancelada → troca data e QR nela, não cria outra */
       if (i.tipo === 'ingresso' && i.data && i.localizador && !itens.some(function (x) { return x.c.qr === i.qr; })) {
         var loc = normalizar(i.localizador);
@@ -4456,6 +4484,7 @@
         lista.appendChild(todos);
       }
       cartoes.forEach(function (k) { lista.appendChild(k.el); });
+      oferecerLimpeza(infos);
     }
     function cartaoCodigo(i) {
       var img = h('img', { class: 'cod-mini', alt: '' });
@@ -4519,6 +4548,28 @@
       }).catch(function () { msg.className = 'cod-msg erro'; msg.textContent = T('cod_nada'); });
     }
     /* veio texto em vez de imagem: mostra O QUE veio (a pessoa entende) e o caminho certo; e-mail comprido ainda pode ser lido */
+    /* sobras de leituras antigas: "Ingresso" sem nome nem data (versões antes de 20/Nov) e cupons repetidos; a pessoa decide apagar */
+    function oferecerLimpeza(infos) {
+      var qrs = {}; infos.forEach(function (i) { qrs[i.qr] = i; });
+      var temIngressoComNome = infos.some(function (i) { return i.tipo === 'ingresso' && i.titulo; });
+      reservasDaViagem().then(function (itens) {
+        var porQR = {}; itens.forEach(function (x) { if (x.c.qr) (porQR[x.c.qr] = porQR[x.c.qr] || []).push(x); });
+        var sobras = itens.filter(function (x) {
+          var c = x.c, generico = c.tipo === 'ingresso' && !c.quando && !c.pessoa && (!c.titulo || c.titulo === T('res_ingresso'));
+          var cupomRepetido = c.qr && qrs[c.qr] && qrs[c.qr].cupom && c.tipo !== 'outro' && (porQR[c.qr] || []).some(function (y) { return y.c.tipo === 'outro'; });
+          return (generico && temIngressoComNome && !qrs[c.qr]) || cupomRepetido;
+        });
+        if (!sobras.length) return;
+        var bt = h('button', { class: 'bt leve', type: 'button', texto: '🗑 ' + T('cod_apagarSobras', { n: sobras.length }) });
+        var cx = h('div', { class: 'cod-aviso' }, [h('b', { texto: T('cod_sobrasTitulo', { n: sobras.length }) }),
+          h('span', { class: 'pequeno', texto: sobras.map(function (x) { return (x.c.titulo || T('res_ingresso')) + (x.c.codigo ? ' ' + x.c.codigo : ''); }).join(' · ') }), bt]);
+        bt.addEventListener('click', function () {
+          bt.disabled = true;
+          Promise.all(sobras.map(function (x) { return Banco.apagar('reservas', x.reg.id); })).then(function () { salvou++; cx.textContent = ''; cx.appendChild(h('b', { texto: '✓ ' + T('cod_sobrasApagadas', { n: sobras.length }) })); });
+        });
+        lista.appendChild(cx);
+      });
+    }
     function oferecerTexto(t, doColar) {
       var curto = String(t).replace(/\s+/g, ' ').trim();
       msg.className = 'cod-msg'; msg.textContent = '';

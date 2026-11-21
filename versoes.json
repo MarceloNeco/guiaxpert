@@ -2,6 +2,21 @@
   "app": "guiaxpert",
   "versoes": [
     {
+      "versao": "1.5.81",
+      "data": "2026-11-21",
+      "substitui": "1.5.80",
+      "itens": {
+        "pt": [
+          "Correção na leitura de ingressos parecidos.",
+          "Novo: conserto de ingressos guardados errado."
+        ],
+        "en": [
+          "Fix for reading similar tickets.",
+          "New: repair of misfiled tickets."
+        ]
+      }
+    },
+    {
       "versao": "1.5.80",
       "data": "2026-11-21",
       "substitui": "1.5.79",
