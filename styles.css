@@ -1333,3 +1333,8 @@ body.rolando #dgo-aone:not(.dgo-falando) { opacity: 0; pointer-events: none; }
 .res-dobra, .res-qr-rapido { background: color-mix(in srgb, var(--hortensia) 28%, var(--sup)); }
 .res-dobra[aria-expanded="true"] { background: color-mix(in srgb, var(--hortensia) 40%, var(--sup)); }
 .res-bloco .etapa-corpo .cartao { background: color-mix(in srgb, var(--hortensia) 18%, var(--sup)); }
+/* data do ingresso na tela do QR */
+.qr-quando { font-size: 1.05rem; font-weight: 800; padding: .2rem .7rem; border-radius: 999px; background: var(--sup2); color: var(--tinta); }
+.qr-quando.hoje { background: var(--rodovia-claro); color: var(--rodovia); }
+.qr-quando.passou { background: var(--evita-claro); color: var(--evita); }
+.qr-remarcado { color: var(--suave); }

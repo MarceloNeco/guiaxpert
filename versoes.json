@@ -2,6 +2,19 @@
   "app": "guiaxpert",
   "versoes": [
     {
+      "versao": "1.5.95",
+      "data": "2026-11-21",
+      "substitui": "1.5.94",
+      "itens": {
+        "pt": [
+          "Novo: data do ingresso no QR."
+        ],
+        "en": [
+          "New: ticket date on the QR."
+        ]
+      }
+    },
+    {
       "versao": "1.5.94",
       "data": "2026-11-21",
       "substitui": "1.5.93",

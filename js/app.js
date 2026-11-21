@@ -26,7 +26,7 @@
       risco: function () { return null; }, avisos: function () { return []; }, linkCompleto: function () { return 'https://www.windy.com/'; } };
   }
   var Clima = window.Clima;
-  var VERSAO_APP = '1.5.94';
+  var VERSAO_APP = '1.5.95';
 
   /* ------------------------------------------------------------------
      1. UTILIDADES
@@ -4359,6 +4359,8 @@
   /* QR em tela cheia, um atrás do outro: arrastar para o lado ou ‹ › (a pessoa da fila vai mostrando) */
   function mostrarQRs(lista, inicio) {
     var i = inicio || 0;
+    /* data do ingresso sempre à vista (dono, 21/Nov/2026: "cadê a data do ingresso?"), com "Hoje" e, se remarcado, a data antiga */
+    var quandoQR = h('div', { class: 'qr-quando' }), remarcadoQR = h('span', { class: 'pequeno qr-remarcado' });
     var titulo = h('b', {}), quem = h('span', {}), img = h('img', { alt: '', style: 'width:min(86vw,22rem);height:auto;border-radius:12px;background:#fff;image-rendering:pixelated;touch-action:pan-y' });
     var EST_QR = img.getAttribute('style'), EST_BARRA = 'width:min(92vw,30rem);height:9rem;border-radius:8px;background:#fff;padding:.6rem;touch-action:pan-y';
     var cod = h('code', { style: 'font-size:1.3rem;user-select:all' }), pos = h('span', { class: 'sub' });
@@ -4379,7 +4381,7 @@
     }
     menor.addEventListener('click', function () { if (tam > 0) { tam--; aplicarTam(); } });
     maior.addEventListener('click', function () { if (tam < TAMS.length - 1) { tam++; aplicarTam(); } });
-    var corpo = h('div', { class: 'linha', style: 'flex-direction:column;align-items:center;gap:.5rem;text-align:center' }, [titulo, quem, img, cod,
+    var corpo = h('div', { class: 'linha', style: 'flex-direction:column;align-items:center;gap:.5rem;text-align:center' }, [titulo, quandoQR, remarcadoQR, quem, img, cod,
       h('div', { class: 'qr-tam' }, [menor, tamTxt, maior]), pos,
       lista.length > 1 ? h('div', { class: 'acoes' }, [ant, prox]) : null, h('p', { class: 'pequeno', texto: T('qrBrilho') })]);
     var j = janela(T('qrIngresso'), corpo);
@@ -4387,6 +4389,11 @@
     function mostrar() {
       var c = lista[i];
       titulo.textContent = c.titulo; quem.textContent = [c.pessoa, c.assento].filter(Boolean).join(' · ');
+      var dq = String(c.quando || '').slice(0, 10), hq = String(c.quando || '').slice(11, 16), hj = hojeIso();
+      quandoQR.textContent = dq ? (dq === hj ? T('qr_hoje') + ' · ' : '') + semana(dq) + ', ' + fData(dq) + (hq ? ' · ' + hq : '') : T('res_semData');
+      quandoQR.className = 'qr-quando' + (dq === hj ? ' hoje' : dq && dq < hj ? ' passou' : '');
+      remarcadoQR.textContent = c.remarcadoDe ? T('res_remarcadoDe', { d: semana(c.remarcadoDe) + ' ' + fData(c.remarcadoDe, true) }) : '';
+      remarcadoQR.hidden = !c.remarcadoDe;
       cod.textContent = c.barra || c.codigo || ''; pos.textContent = lista.length > 1 ? T('nDeN', { i: i + 1, n: lista.length }) : '';
       ant.disabled = i === 0; prox.disabled = i === lista.length - 1;
       img.hidden = false;
