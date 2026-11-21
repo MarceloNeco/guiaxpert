@@ -2,6 +2,21 @@
   "app": "guiaxpert",
   "versoes": [
     {
+      "versao": "1.5.86",
+      "data": "2026-11-21",
+      "substitui": "1.5.85",
+      "itens": {
+        "pt": [
+          "Novo: cores mais suaves.",
+          "Novo: botões em cards."
+        ],
+        "en": [
+          "New: softer colors.",
+          "New: card-style buttons."
+        ]
+      }
+    },
+    {
       "versao": "1.5.85",
       "data": "2026-11-21",
       "substitui": "1.5.84",
