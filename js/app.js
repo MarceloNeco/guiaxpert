@@ -26,7 +26,7 @@
       risco: function () { return null; }, avisos: function () { return []; }, linkCompleto: function () { return 'https://www.windy.com/'; } };
   }
   var Clima = window.Clima;
-  var VERSAO_APP = '1.5.86';
+  var VERSAO_APP = '1.5.87';
 
   /* ------------------------------------------------------------------
      1. UTILIDADES
