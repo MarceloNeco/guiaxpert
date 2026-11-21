@@ -2,6 +2,19 @@
   "app": "guiaxpert",
   "versoes": [
     {
+      "versao": "1.5.92",
+      "data": "2026-11-21",
+      "substitui": "1.5.91",
+      "itens": {
+        "pt": [
+          "Melhorias: abertura com fotos mais rápida."
+        ],
+        "en": [
+          "Improved: faster photo opening."
+        ]
+      }
+    },
+    {
       "versao": "1.5.91",
       "data": "2026-11-21",
       "substitui": "1.5.90",
