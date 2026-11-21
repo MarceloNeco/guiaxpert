@@ -44,7 +44,8 @@
     if (SIN_EXATA[w]) return SIN_EXATA[w];
     for (var i = 0; i < SIN_INICIO.length; i++) if (w.indexOf(SIN_INICIO[i][0]) === 0) return SIN_INICIO[i][1];
     /* com erro de digitação ("reagnedar", "resevar", "cancelr"): uma letra a mais, a menos, trocada ou invertida */
-    if (w.length >= 5) for (var j = 0; j < SIN_INICIO.length; j++) { var p = SIN_INICIO[j][0]; if (p.length >= 5 && dist(w.slice(0, p.length + 1), p, 1) <= 1 || p.length >= 5 && dist(w.slice(0, p.length), p, 1) <= 1) return SIN_INICIO[j][1]; }
+    /* só palavras do tamanho da raiz: "compartilhar" não é erro de "comprar" */
+    if (w.length >= 5) for (var j = 0; j < SIN_INICIO.length; j++) { var p = SIN_INICIO[j][0]; if (p.length < 5 || w.length > p.length + 2) continue; if (dist(w.slice(0, p.length + 1), p, 1) <= 1 || dist(w.slice(0, p.length), p, 1) <= 1) return SIN_INICIO[j][1]; }
     return w;
   }
   function raiz(w) {

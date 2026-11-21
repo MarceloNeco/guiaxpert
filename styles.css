@@ -1338,3 +1338,5 @@ body.rolando #dgo-aone:not(.dgo-falando) { opacity: 0; pointer-events: none; }
 .qr-quando.hoje { background: var(--rodovia-claro); color: var(--rodovia); }
 .qr-quando.passou { background: var(--evita-claro); color: var(--evita); }
 .qr-remarcado { color: var(--suave); }
+.qr-enviar { display: inline-flex; align-items: center; gap: .4rem; }
+.qr-enviar .sl-ic { width: 1.2rem; height: 1.2rem; }

@@ -2,6 +2,21 @@
   "app": "guiaxpert",
   "versoes": [
     {
+      "versao": "1.5.96",
+      "data": "2026-11-21",
+      "substitui": "1.5.95",
+      "itens": {
+        "pt": [
+          "Novo: enviar ingressos para outro celular.",
+          "Correção no uso sem internet."
+        ],
+        "en": [
+          "New: send tickets to another phone.",
+          "Fix for offline use."
+        ]
+      }
+    },
+    {
       "versao": "1.5.95",
       "data": "2026-11-21",
       "substitui": "1.5.94",

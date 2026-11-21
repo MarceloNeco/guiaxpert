@@ -26,7 +26,7 @@
       risco: function () { return null; }, avisos: function () { return []; }, linkCompleto: function () { return 'https://www.windy.com/'; } };
   }
   var Clima = window.Clima;
-  var VERSAO_APP = '1.5.95';
+  var VERSAO_APP = '1.5.96';
 
   /* ------------------------------------------------------------------
      1. UTILIDADES
@@ -520,13 +520,24 @@
       }))));
     }).catch(function () { avisar(T('semInternet')); });
   }
-  /* o celular está com a versão mais nova? compara com versoes.json do servidor; "Atualizar agora" limpa a cópia guardada e recarrega */
+  /* "Atualizar agora": pede a versão nova ao service worker e só recarrega quando ela está INTEIRA no celular.
+     NUNCA apaga a cópia guardada antes (21/Nov/2026: apagar e baixar com sinal fraco deixava o app sem abrir no modo avião). */
   function atualizarAgora() {
     if (!navigator.onLine) { avisar(T('semInternet')); return; }
     avisar(T('atualizando'));
-    var p1 = window.caches ? caches.keys().then(function (ns) { return Promise.all(ns.filter(function (n) { return /^dgo-guiaxpert-/.test(n); }).map(function (n) { return caches.delete(n); })); }) : Promise.resolve();
-    var p2 = navigator.serviceWorker && navigator.serviceWorker.getRegistrations ? navigator.serviceWorker.getRegistrations().then(function (rs) { return Promise.all(rs.map(function (r) { return r.update().catch(function () {}); })); }) : Promise.resolve();
-    Promise.all([p1, p2]).catch(function () {}).then(function () { location.reload(); });
+    var feito = false, fim = function () { if (!feito) { feito = true; location.reload(); } };
+    if (!navigator.serviceWorker || !navigator.serviceWorker.getRegistration) { fim(); return; }
+    navigator.serviceWorker.addEventListener('controllerchange', fim);
+    navigator.serviceWorker.getRegistration().then(function (reg) {
+      if (!reg) return fim();
+      return reg.update().then(function () {
+        var novo = reg.installing || reg.waiting;
+        if (!novo) return fim();
+        novo.addEventListener('statechange', function () { if (novo.state === 'activated') fim(); if (novo.state === 'redundant') feito = true; });
+      });
+    }).catch(fim);
+    /* sinal ruim demais: desiste em 45 s sem mexer na cópia que já funciona */
+    setTimeout(function () { if (!feito) { feito = true; avisar(T('atualizarDepois')); } }, 45000);
   }
   function procurarAtualizacao(manual) {
     if (!navigator.onLine) { if (manual) avisar(T('semInternet')); return Promise.resolve(false); }
@@ -3374,6 +3385,7 @@
      [rótulo do atalho PT, EN, caminho em uma linha PT, EN]. O texto longo fica recolhido em "▸ Como". */
   var AJUDA_CURTA = {
     qr: ['Pôr QR', 'Add QR', 'Reservas › ▦ QR / cartão', 'Bookings › ▦ QR / pass'],
+    enviarqr: ['Enviar ingressos', 'Send tickets', 'Reservas › cartão › Enviar', 'Bookings › card › Send'],
     mostrar: ['Mostrar QR', 'Show QR', 'Reservas › ▦ Mostrar · − + muda o tamanho', 'Bookings › ▦ Show · − + resizes'],
     remarcar: ['Remarcar', 'Reschedule', 'Reservas › cartão › Remarcar', 'Bookings › card › Reschedule'],
     cancelar: ['Cancelar', 'Cancel', 'Reservas › cartão › Cancelar', 'Bookings › card › Cancel'],
@@ -3450,6 +3462,10 @@
       { id: 'mostrar', chaves: ['mostrar qr', 'mostrar ingresso', 'embarcar', 'entrada', 'catraca', 'portão', 'qr grande', 'qr pequeno', 'diminuir qr', 'tamanho do qr', 'nao le', 'leitor nao leu', 'show qr', 'gate', 'entrance', 'qr size', 'smaller'],
         t: L('Mostrar o QR na entrada ou no embarque', 'Show the QR at the gate'),
         r: L('Reservas → no cartão, "Mostrar os N códigos": um QR por vez, em tela cheia; passe para o lado para o próximo. Aumente o brilho da tela. A catraca não leu? Use − e + embaixo do código para diminuir ou aumentar; o app lembra o tamanho. Funciona sem internet.', 'Bookings → on the card, "Show all codes": one QR at a time, full screen; swipe for the next. Turn up the brightness. Scanner didn’t read it? Use − and + under the code to resize; the app remembers. Works offline.'),
+        acao: [L('Ir para Reservas', 'Go to Bookings'), irRes()] },
+      { id: 'enviarqr', chaves: ['enviar ingresso', 'mandar ingresso', 'compartilhar ingresso', 'passar ingresso', 'enviar qr', 'mandar qr', 'outro celular', 'celular da sogra', 'bateria acabando', 'whatsapp ingresso', 'send ticket', 'share ticket'],
+        t: L('Enviar ingressos para outro celular', 'Send tickets to another phone'),
+        r: L('No cartão da reserva, "Enviar": vira uma imagem por ingresso (QR, nome, data) e abre o Compartilhar do celular. Escolha o WhatsApp de quem vai usar. Quem receber consegue entrar com eles.', 'On the booking card, "Send": one image per ticket (QR, name, date) and the phone share sheet opens. Pick who will use them.'),
         acao: [L('Ir para Reservas', 'Go to Bookings'), irRes()] },
       { id: 'remarcar', chaves: ['remarcar', 'remarcação', 'reagendar', 'reagendamento', 'adiar', 'adiamento', 'mudar data', 'mudança de data', 'trocar data', 'trocar dia', 'outro dia', 'mudar o dia da reserva', 'remarcar ingresso', 'reagendar reserva', 'reschedule', 'change date'],
         t: L('Remarcar uma reserva para outro dia', 'Reschedule a booking'),
@@ -4322,6 +4338,7 @@
       c.local ? h('span', { class: 'sub', texto: c.local }) : null,
       c.nota ? h('span', { class: 'sub', texto: c.nota }) : null,
       acoesCartao(c.qr || c.barra ? h('button', { class: 'bt bt-principal', type: 'button', onclick: function () { mostrarQRs([c], 0); } }, '▦ ' + T('mostrarQRIngresso')) : null, [
+        c.qr || c.barra ? ['compartilhar', T('qr_enviar'), function () { enviarCodigos([c]); }] : null,
         !x.trancada ? ['qr', T(c.qr || c.barra ? 'cod_trocarQR' : 'cod_porQR'), function () { janelaCodigos({ alvo: x }); }] : null,
         !x.trancada ? ['cal', T('res_remarcar'), function () { janelaRemarcar([x]); }] : null,
         ['lapis', T('editar'), function () { janelaReserva(x); }],
@@ -4350,11 +4367,49 @@
       c0.local ? h('span', { class: 'sub pequeno', texto: c0.local }) : null,
       c0.nota ? h('span', { class: 'sub pequeno', texto: c0.nota }) : null,
       acoesCartao(comQR.length ? h('button', { class: 'bt bt-principal', type: 'button', onclick: function () { mostrarQRs(comQR, 0); } }, '▦ ' + T('res_mostrarTodosQR', { n: comQR.length })) : null, [
+        comQR.length ? ['compartilhar', T('qr_enviar'), function () { enviarCodigos(comQR); }] : null,
         ['qr', T('cod_porQR'), function () { janelaCodigos({}); }],
         ['cal', T('res_remarcar'), function () { janelaRemarcar(g); }],
         ['lapis', T('editar'), function () { janelaEditarGrupo(g); }],
         ['fechar', T('res_cancelarTodos'), function () { janelaCancelarReservas(g.filter(function (x) { return x.c.status !== 'cancelada'; })); }]]),
       verUm, lista]);
+  }
+  /* ENVIAR ingressos para outro celular (dono, 21/Nov/2026: "bateria acabando, mandar os QR do Caracol para a sogra"):
+     uma imagem por ingresso (nome, data, pessoa, QR ou código de barras, código) e o Compartilhar do celular (WhatsApp etc.).
+     Sem celular que compartilhe arquivo: baixa as imagens. Nada sai sem a pessoa escolher para quem. */
+  function imagemDoCodigo(c, i, n) {
+    return new Promise(function (ok, erro) {
+      var W = 720, H = 1000, cv = d.createElement('canvas'); cv.width = W; cv.height = H;
+      var x = cv.getContext('2d'), F = 'system-ui, -apple-system, "Segoe UI", Roboto, sans-serif';
+      x.fillStyle = '#ffffff'; x.fillRect(0, 0, W, H); x.textAlign = 'center'; x.fillStyle = '#1b2427';
+      var tit = String(c.titulo || ''); x.font = '800 ' + (tit.length > 26 ? 32 : 40) + 'px ' + F; x.fillText(tit, W / 2, 78, W - 60);
+      var dq = String(c.quando || '').slice(0, 10), hq = String(c.quando || '').slice(11, 16);
+      x.font = '700 34px ' + F; x.fillStyle = '#2f6e58'; x.fillText(dq ? semana(dq) + ', ' + fData(dq) + (hq ? ' · ' + hq : '') : '', W / 2, 132, W - 60);
+      x.font = '500 30px ' + F; x.fillStyle = '#1b2427'; x.fillText([c.pessoa, c.assento].filter(Boolean).join(' · '), W / 2, 180, W - 60);
+      var img = new Image();
+      img.onload = function () {
+        if (c.barra) x.drawImage(img, 50, 300, 620, 240); else { x.imageSmoothingEnabled = false; x.drawImage(img, 90, 215, 540, 540); }
+        x.font = '600 36px ui-monospace, monospace'; x.fillStyle = '#1b2427'; x.fillText(String(c.barra || c.codigo || ''), W / 2, 830, W - 60);
+        x.font = '400 24px ' + F; x.fillStyle = '#56646a'; x.fillText((n > 1 ? (i + 1) + '/' + n + ' · ' : '') + 'GuiaXpert', W / 2, 940);
+        var nome = normalizar(tit).replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 30) || 'ingresso';
+        cv.toBlob(function (b) { b ? ok(new File([b], nome + '-' + (i + 1) + '.png', { type: 'image/png' })) : erro(new Error('png')); }, 'image/png');
+      };
+      img.onerror = function () { erro(new Error('img')); };
+      if (c.barra && window.Barras) img.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(Barras.svg(c.barra, c.barraFormato));
+      else { var q = qrcode(0, 'M'); q.addData(String(c.qr || c.codigo)); q.make(); img.src = q.createDataURL(10, 8); }
+    });
+  }
+  function enviarCodigos(lista) {
+    lista = (lista || []).filter(function (c) { return c && (c.qr || c.barra || c.codigo); });
+    if (!lista.length) return;
+    avisar(T('qr_preparando'));
+    carregarQR().then(function () { return Promise.all(lista.map(function (c, i) { return imagemDoCodigo(c, i, lista.length); })); }).then(function (files) {
+      var c0 = lista[0], dq = String(c0.quando || '').slice(0, 10);
+      var texto = c0.titulo + (dq ? ' · ' + semana(dq) + ' ' + fData(dq, true) + (c0.quando.length > 10 ? ' ' + c0.quando.slice(11, 16) : '') : '') + ' · ' + T('qr_nIngressosTxt', { n: files.length });
+      if (navigator.canShare && navigator.canShare({ files: files })) return navigator.share({ files: files, title: c0.titulo, text: texto });
+      files.forEach(function (f) { var a = h('a', { href: URL.createObjectURL(f), download: f.name }); d.body.appendChild(a); a.click(); a.remove(); });
+      avisar(T('qr_baixados', { n: files.length }));
+    }).catch(function (e) { if (e && e.name === 'AbortError') return; avisar(T('qr_erroEnviar')); });
   }
   /* QR em tela cheia, um atrás do outro: arrastar para o lado ou ‹ › (a pessoa da fila vai mostrando) */
   function mostrarQRs(lista, inicio) {
@@ -4383,7 +4438,8 @@
     maior.addEventListener('click', function () { if (tam < TAMS.length - 1) { tam++; aplicarTam(); } });
     var corpo = h('div', { class: 'linha', style: 'flex-direction:column;align-items:center;gap:.5rem;text-align:center' }, [titulo, quandoQR, remarcadoQR, quem, img, cod,
       h('div', { class: 'qr-tam' }, [menor, tamTxt, maior]), pos,
-      lista.length > 1 ? h('div', { class: 'acoes' }, [ant, prox]) : null, h('p', { class: 'pequeno', texto: T('qrBrilho') })]);
+      lista.length > 1 ? h('div', { class: 'acoes' }, [ant, prox]) : null, h('p', { class: 'pequeno', texto: T('qrBrilho') }),
+      h('button', { class: 'bt leve qr-enviar', type: 'button', onclick: function () { enviarCodigos(lista); } }, [Seletor.icone('compartilhar'), ' ' + (lista.length > 1 ? T('qr_enviarTodos', { n: lista.length }) : T('qr_enviar'))])]);
     var j = janela(T('qrIngresso'), corpo);
     j.caixa.classList.add('cheia');
     function mostrar() {
@@ -7294,6 +7350,8 @@
     window.addEventListener('online', function () { if (!estado.acesso || !estado.acesso.liberado || estado.acesso.offline) iniciarAcesso(); });
     Trava.iniciar();
     estado.pronto = true;
+    /* pede ao celular para não apagar a cópia guardada quando faltar espaço (o app precisa abrir no modo avião) */
+    try { if (navigator.storage && navigator.storage.persist) navigator.storage.persisted().then(function (p) { if (!p) navigator.storage.persist(); }); } catch (e) {}
     var ab = $('abertura');
     if (ab) (window.GX_ABERTURA_PRONTA || Promise.resolve()).then(function () { ab.classList.add('sai'); setTimeout(function () { ab.remove(); }, 600); });
     mostrar('entrar');

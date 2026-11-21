@@ -2,7 +2,7 @@
    como app no celular e no computador.
    Ao publicar uma versao nova do seu site, troque o numero de VERSAO
    abaixo (ex.: 'v1' -> 'v2') para o aparelho pegar os arquivos novos. */
-var VERSAO = 'guiaxpert-v1.5.95';
+var VERSAO = 'guiaxpert-v1.5.96';
 /* Todos os apps moram no mesmo endereco (marceloneco.github.io) e dividem
    os caches. Por isso o nome leva a pasta do app: assim um app nunca apaga
    o modo sem internet de outro. A pasta vem do proprio endereco, entao este
@@ -16,14 +16,19 @@ var CACHE = PREFIXO + VERSAO;
    (lidos do proprio index.html, entao serve para qualquer app). Arquivo que nao chegar pela rede (sinal fraco)
    e copiado da versao anterior, que so e apagada depois. Antes, o cache novo nascia quase vazio e, com sinal
    fraco, um .js podia faltar e derrubar uma tela (GuiaXpert, 21/Nov/2026: "Clima is not defined"). */
+/* fetch com prazo: com sinal fraco, a instalacao nao pode ficar pendurada para sempre */
+function buscarComPrazo(u, ms) {
+  var ctl = self.AbortController ? new AbortController() : null, t = ctl ? setTimeout(function () { ctl.abort(); }, ms || 15000) : null;
+  return fetch(u, ctl ? { cache: 'no-cache', signal: ctl.signal } : { cache: 'no-cache' }).then(function (r) { clearTimeout(t); return r; }, function (e) { clearTimeout(t); throw e; });
+}
 self.addEventListener('install', function (e) {
   self.skipWaiting();
   e.waitUntil(caches.open(CACHE).then(function (c) {
     function guardar(u) {
-      return fetch(u, { cache: 'no-cache' }).then(function (r) { if (!r || r.status !== 200) throw new Error(u); return c.put(u, r); })
+      return buscarComPrazo(u).then(function (r) { if (!r || r.status !== 200 || r.redirected) throw new Error(u); return c.put(u, r); })
         .catch(function () { return caches.match(u).then(function (v) { return v ? c.put(u, v) : null; }); });
     }
-    return fetch('./index.html', { cache: 'no-cache' }).then(function (r) { return r.text(); }).catch(function () {
+    return buscarComPrazo('./index.html').then(function (r) { return r.text(); }).catch(function () {
       return caches.match('./index.html').then(function (v) { return v ? v.text() : ''; });
     }).then(function (html) {
       var lista = ['./', './index.html', './manifest.json'], m, re = /(?:src|href)="([^"#:?]+\.(?:js|css|json|png|svg|webp))"/g;
@@ -47,13 +52,40 @@ self.addEventListener('install', function (e) {
 });
 
 self.addEventListener('activate', function (e) {
-  e.waitUntil(caches.keys().then(function (nomes) {
-    return Promise.all(nomes.map(function (n) {
-      /* so apaga versoes antigas DESTE app */
-      return (n.indexOf(PREFIXO) === 0 && n !== CACHE) ? caches.delete(n) : null;
-    }));
+  /* so apaga as versoes antigas DESTE app quando a nova ja tem a pagina e o app.js (senao, sem internet, nada abriria) */
+  e.waitUntil(caches.open(CACHE).then(function (c) {
+    return Promise.all([c.match('./index.html'), c.match('./js/app.js'), c.match('./styles.css')]);
+  }).then(function (tem) {
+    if (!tem[0] || !tem[1] || !tem[2]) return null;
+    return caches.keys().then(function (nomes) {
+      return Promise.all(nomes.map(function (n) {
+        return (n.indexOf(PREFIXO) === 0 && n !== CACHE && n.indexOf('compartilhado') < 0) ? caches.delete(n) : null;
+      }));
+    });
   }).then(function () { return self.clients.claim(); }));
 });
+/* pagina simples quando nao ha internet E nenhuma copia guardada (melhor que o erro do navegador) */
+function paginaSemCopia() {
+  return new Response('<!doctype html><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">' +
+    '<title>GuiaXpert</title><body style="font:18px/1.4 system-ui,sans-serif;background:#101517;color:#e7edeb;display:grid;place-items:center;min-height:90vh;margin:0;padding:1.5rem;text-align:center">' +
+    '<div><p style="font-size:2.4rem;margin:0">📶</p><h1 style="font-size:1.3rem">Sem internet</h1><p>Abra o GuiaXpert uma vez com sinal para ele ficar guardado neste celular.</p>' +
+    '<p style="color:#a0b0ab;font-size:.95rem">No internet. Open GuiaXpert once online to save it on this phone.</p>' +
+    '<button onclick="location.reload()" style="font:inherit;padding:.7rem 1.4rem;border-radius:14px;border:0;background:#93cbb3;color:#10261d;font-weight:700">Tentar de novo</button></div>',
+    { headers: { 'Content-Type': 'text/html; charset=utf-8' } });
+}
+/* a pagina guardada: nesta versao ou em qualquer copia anterior deste app */
+function paginaGuardada(req) {
+  return caches.match(req, { ignoreSearch: true }).then(function (r) {
+    return r || caches.match('./index.html') || null;
+  }).then(function (r) {
+    if (r) return r;
+    return caches.keys().then(function (nomes) {
+      return nomes.filter(function (n) { return n.indexOf(PREFIXO) === 0; }).reduce(function (p, n) {
+        return p.then(function (achou) { return achou || caches.open(n).then(function (c) { return c.match('./index.html').then(function (x) { return x || c.match('./'); }); }); });
+      }, Promise.resolve(null));
+    });
+  });
+}
 
 /* "Compartilhar" do celular (manifest share_target, POST): foto, PDF ou texto vindos de outro app (ex.: WhatsApp).
    Guarda os arquivos num cache temporario e abre o app com ?compartilhado=...; o app le e apaga. Generico para os apps. */
@@ -107,9 +139,8 @@ self.addEventListener('fetch', function (e) {
       var feito = false;
       function reserva() {
         if (feito) return; feito = true;
-        caches.match(req).then(function (r) {
-          ok(r || (req.mode === 'navigate' ? caches.match('./index.html') : fetch(req)));
-        });
+        if (req.mode === 'navigate') { paginaGuardada(req).then(function (r) { ok(r || paginaSemCopia()); }); return; }
+        caches.match(req, { ignoreSearch: true }).then(function (r) { ok(r || fetch(req)); });
       }
       /* abrir rápido: a página espera a rede no máximo 2,5 s (os outros arquivos, 4 s); a conferência de versão nova vem logo depois */
       var prazo = setTimeout(reserva, req.mode === 'navigate' ? 1500 : 3000);
