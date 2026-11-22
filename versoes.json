@@ -2,6 +2,23 @@
   "app": "guiaxpert",
   "versoes": [
     {
+      "versao": "1.6.10",
+      "data": "2026-11-22",
+      "substitui": "1.6.9",
+      "itens": {
+        "pt": [
+          "Novo: grupo e portão no QR do voo.",
+          "Novo: cartão de embarque original guardado.",
+          "Melhoria no filtro das reservas."
+        ],
+        "en": [
+          "New: group and gate on flight QR.",
+          "New: original boarding pass saved.",
+          "Improved booking filter."
+        ]
+      }
+    },
+    {
       "versao": "1.6.9",
       "data": "2026-11-22",
       "substitui": "1.6.8",

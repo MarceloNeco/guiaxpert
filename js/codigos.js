@@ -136,7 +136,12 @@
       var previa = paraCanvas(im, 900).toDataURL('image/jpeg', .82);
       /* print/imagem limpa: procura mais QR na mesma imagem; foto grande de câmera só se já achou um (fica rápida) */
       var grande = (im.width || 0) * (im.height || 0) > 6e6;
-      return lerImagem(im, { intenso: grande ? false : true, max: 12 }).then(function (cs) { return { codigos: cs, previa: previa, paginas: [{ img: previa, n: cs.length }] }; });
+      return lerImagem(im, { intenso: grande ? false : true, max: 12 }).then(function (cs) {
+        /* print do cartão de embarque: guarda a imagem original junto (o grupo e o portão só aparecem nela) */
+        var img = null;
+        cs.forEach(function (c) { if (/^M[1-4]/.test(c.texto)) c.cartao = img = img || paraCanvas(im, 1300).toDataURL('image/jpeg', .7); });
+        return { codigos: cs, previa: previa, paginas: [{ img: previa, n: cs.length }] };
+      });
     }).catch(function () { return { codigos: [], erro: 'ilegivel' }; });
   }
   function lerPdf(file, op) {
@@ -148,14 +153,22 @@
       function pagina(i) {
         if (i > n) return null;
         if (op.aoProgresso) op.aoProgresso(i, n);
+        var tp = '';
         return doc.getPage(i).then(function (pg) {
           var vp = pg.getViewport({ scale: 3.2 }), cv = document.createElement('canvas'); cv.width = vp.width; cv.height = vp.height;
           var cx = cv.getContext('2d', { willReadFrequently: true }); cx.fillStyle = '#fff'; cx.fillRect(0, 0, cv.width, cv.height);
           return pg.render({ canvasContext: cx, viewport: vp }).promise.then(function () {
             if (!previa) previa = paraCanvas(cv, 900).toDataURL('image/jpeg', .8);
-            return pg.getTextContent().then(function (tc) { texto += tc.items.map(function (x) { return x.str; }).join(' ') + '\n'; }).catch(function () {});
+            return pg.getTextContent().then(function (tc) { tp = tc.items.map(function (x) { return x.str; }).join(' '); texto += tp + '\n'; }).catch(function () {});
           }).then(function () { return lerImagem(cv, { intenso: true, max: 12 }); }).then(function (cs) {
-            var novos = 0; cs.forEach(function (c) { if (!vistos[c.texto]) { vistos[c.texto] = 1; todos.push(c); novos++; } });
+            /* cartão de embarque: cada código leva o texto e a imagem da SUA página (grupo, embarque, portão não estão no QR) */
+            var novos = 0, img = null;
+            cs.forEach(function (c) {
+              if (vistos[c.texto]) return;
+              vistos[c.texto] = 1; c.textoPag = tp; c.pagina = i;
+              if (/^M[1-4]/.test(c.texto)) c.cartao = img = img || paraCanvas(cv, 1300).toDataURL('image/jpeg', .7);
+              todos.push(c); novos++;
+            });
             paginas.push({ img: paraCanvas(cv, 420).toDataURL('image/jpeg', .72), n: novos });   /* miniatura de cada página e quantos códigos saíram dela */
             return pagina(i + 1);
           });

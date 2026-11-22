@@ -1359,3 +1359,9 @@ body.rolando #dgo-aone:not(.dgo-falando) { opacity: 0; pointer-events: none; }
 .av-campo { display: flex; flex-direction: column; gap: .2rem; }
 .voo-anotar { font-weight: 700; color: var(--hortensia); }
 .voo-fa { color: var(--suave); text-decoration: underline; }
+/* cartão de embarque no QR: grupo e assento grandes; o resto pequeno; cartão original com zoom ao toque */
+.qr-cartao-forte { font-size: 1.35rem; font-weight: 800; color: var(--tinta); }
+.qr-cartao-fraco { color: var(--tinta-2, var(--tinta)); opacity: .85; }
+.cartao-original-caixa { overflow: auto; max-height: 78vh; border-radius: 12px; background: #fff; }
+.cartao-original { display: block; width: 100%; height: auto; cursor: zoom-in; }
+.cartao-original-caixa.ampliado .cartao-original { width: 220%; max-width: none; cursor: zoom-out; }

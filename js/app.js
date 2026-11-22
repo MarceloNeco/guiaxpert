@@ -26,7 +26,7 @@
       risco: function () { return null; }, avisos: function () { return []; }, linkCompleto: function () { return 'https://www.windy.com/'; } };
   }
   var Clima = window.Clima;
-  var VERSAO_APP = '1.6.9';
+  var VERSAO_APP = '1.6.10';
 
   /* ------------------------------------------------------------------
      1. UTILIDADES
@@ -3386,6 +3386,7 @@
   var AJUDA_CURTA = {
     qr: ['Pôr QR', 'Add QR', 'Reservas › ▦ QR / cartão', 'Bookings › ▦ QR / pass'],
     enviarqr: ['Compartilhar', 'Share', 'Reservas › cartão › Compartilhar', 'Bookings › card › Share'],
+    grupo: ['Grupo e portão do voo', 'Flight group and gate', 'Reservas › ▦ QR › Cartão original', 'Bookings › ▦ QR › Original pass'],
     mostrar: ['Mostrar QR', 'Show QR', 'Reservas › ▦ Mostrar · − + muda o tamanho', 'Bookings › ▦ Show · − + resizes'],
     remarcar: ['Remarcar', 'Reschedule', 'Reservas › cartão › Remarcar', 'Bookings › card › Reschedule'],
     cancelar: ['Cancelar', 'Cancel', 'Reservas › cartão › Cancelar', 'Bookings › card › Cancel'],
@@ -3466,6 +3467,10 @@
       { id: 'enviarqr', chaves: ['compartilhar', 'mandar horario do voo', 'avisar chegada', 'quem vai buscar', 'horario de chegada', 'mandar roteiro', 'imprimir ingresso', 'backup do qr', 'enviar ingresso', 'mandar ingresso', 'compartilhar ingresso', 'passar ingresso', 'enviar qr', 'mandar qr', 'outro celular', 'celular da sogra', 'bateria acabando', 'whatsapp ingresso', 'send ticket', 'share ticket'],
         t: L('Compartilhar ingressos, voo, roteiro ou hotel', 'Share tickets, flight, plan or hotel'),
         r: L('No cartão da reserva (ou em Quem), "Compartilhar". Para quem vai junto: os QR viram imagens (quem receber entra; serve de backup e para imprimir). Para quem fica em casa: horário do voo, roteiro e hotel, sem códigos.', 'On the booking card (or in Who), "Share". For who goes with you: QR as images. For who stays home: flight times, plan and hotel, no codes.'),
+        acao: [L('Ir para Reservas', 'Go to Bookings'), irRes()] },
+      { id: 'grupo', chaves: ['grupo', 'grupo de embarque', 'zona', 'portao', 'portão', 'portao de embarque', 'hora do embarque', 'horario de embarque', 'cartao original', 'cartão de embarque', 'passagem original', 'sequencia', 'boarding group', 'gate', 'boarding pass'],
+        t: L('Grupo, portão e cartão original', 'Group, gate and original pass'),
+        r: L('Na tela do QR do voo: grupo, assento, embarque e portão. "Cartão original" mostra a passagem como veio. Faltou algo? "✎ Completar". Leia de novo o cartão para guardar o que falta.', 'On the flight QR screen: group, seat, boarding and gate. "Original pass" shows it as it came. Missing something? "✎ Fill in".'),
         acao: [L('Ir para Reservas', 'Go to Bookings'), irRes()] },
       { id: 'remarcar', chaves: ['remarcar', 'remarcação', 'reagendar', 'reagendamento', 'adiar', 'adiamento', 'mudar data', 'mudança de data', 'trocar data', 'trocar dia', 'outro dia', 'mudar o dia da reserva', 'remarcar ingresso', 'reagendar reserva', 'reschedule', 'change date'],
         t: L('Remarcar uma reserva para outro dia', 'Reschedule a booking'),
@@ -4208,7 +4213,9 @@
           }
           function abrirDia(dia) {
             fecharDia();
-            var chave = v.id + '|' + dia, aberto = abrirTudo || umDiaSo || (diasAbertos[chave] != null ? diasAbertos[chave] : dia === diaFoco || dia === 'sem');
+            var chave = v.id + '|' + dia, passou = dia !== 'sem' && dia < hjIso;
+            /* filtro (ex.: Voo): dias que já passaram vêm recolhidos (dono, 22/Nov/2026); busca abre tudo */
+            var aberto = busca || umDiaSo ? true : diasAbertos[chave] != null ? diasAbertos[chave] : filtro !== 'todos' ? !passou : dia === diaFoco || dia === 'sem';
             var corpo = h('div', { class: 'dia-corpo', hidden: !aberto });
             var resumo = h('span', { class: 'dia-resumo' });
             var mais = dia === 'sem' ? null : h('button', { class: 'dia-mais', type: 'button', 'aria-label': T('addNesteDia'), title: T('addNesteDia'), texto: '＋', onclick: function () { janelaAddNoDia(v, dia); } });
@@ -4494,7 +4501,9 @@
       linhaQuando(c) ? h('span', { texto: linhaQuando(c) }) : null,
       c._chegaCedo ? h('span', { class: 'sub', texto: 'ℹ️ ' + T('chegaCedo', { h: c._chegaCedo }) }) : null,
       ['ingresso', 'passeio', 'restaurante', 'outro'].indexOf(c.tipo) > -1 ? linhaHorario(c) : c.tipo === 'voo' ? linhaVoo(c) : null,
-      c.pessoa || c.assento ? h('span', { texto: [c.pessoa, c.assento].filter(Boolean).join(' · ') }) : null,
+      c.pessoa || c.assento ? h('span', { texto: [c.pessoa, c.assento ? (c.tipo === 'voo' ? T('qr_assento', { a: c.assento }) : c.assento) : null, c.grupo ? T('qr_grupo', { g: c.grupo }) : null].filter(Boolean).join(' · ') }) : null,
+      c.tipo === 'voo' && c.embarque ? h('span', { class: 'sub', texto: T('qr_embarque', { h: c.embarque }) }) : null,
+      c.cartao ? h('button', { class: 'lk', type: 'button', style: 'align-self:flex-start', texto: '🖼 ' + T('qr_original'), onclick: function () { verCartaoOriginal(c); } }) : null,
       c.codigo ? h('span', { class: 'linha' }, [T('codigo') + ': ', h('code', { texto: c.codigo, style: 'user-select:all' })]) : null,
       c.valor ? h('span', { class: 'sub', texto: T('res_valor', { v: c.valor }) }) : null,
       c.remarcadoDe ? h('span', { class: 'sub', texto: '📅 ' + T('res_remarcadoDe', { d: semana(c.remarcadoDe) + ' ' + fData(c.remarcadoDe, true) }) }) : null,
@@ -4517,7 +4526,7 @@
     var lista = h('div', { class: 'linha', hidden: true, style: 'flex-direction:column;align-items:stretch;gap:.4rem' });
     g.forEach(function (x) {
       lista.appendChild(h('div', { class: 'linha entre', style: 'border-top:1px solid var(--linha);padding-top:.4rem' }, [
-        h('span', {}, [h('b', { texto: x.c.pessoa || '—' }), x.c.assento ? h('span', { class: 'sub', texto: ' · ' + x.c.assento }) : null, x.c.codigo ? h('code', { class: 'pequeno', style: 'display:block;user-select:all', texto: x.c.codigo }) : null]),
+        h('span', {}, [h('b', { texto: x.c.pessoa || '—' }), x.c.assento ? h('span', { class: 'sub', texto: ' · ' + x.c.assento }) : null, x.c.grupo ? h('span', { class: 'sub', texto: ' · ' + T('qr_grupo', { g: x.c.grupo }) }) : null, x.c.codigo ? h('code', { class: 'pequeno', style: 'display:block;user-select:all', texto: x.c.codigo }) : null]),
         h('button', { class: 'bt leve', type: 'button', onclick: function () { janelaReserva(x); } }, T('editar'))]));
     });
     var verUm = h('button', { class: 'lk', type: 'button', texto: T('res_verUmPorUm'), 'aria-expanded': 'false', onclick: function () { lista.hidden = !lista.hidden; verUm.setAttribute('aria-expanded', lista.hidden ? 'false' : 'true'); } });
@@ -4548,10 +4557,20 @@
       var tit = String(c.titulo || ''); x.font = '800 ' + (tit.length > 26 ? 32 : 40) + 'px ' + F; x.fillText(tit, W / 2, 78, W - 60);
       var dq = String(c.quando || '').slice(0, 10), hq = String(c.quando || '').slice(11, 16);
       x.font = '700 34px ' + F; x.fillStyle = '#2f6e58'; x.fillText(dq ? semana(dq) + ', ' + fData(dq) + (hq ? ' · ' + hq : '') : '', W / 2, 132, W - 60);
-      x.font = '500 30px ' + F; x.fillStyle = '#1b2427'; x.fillText([c.pessoa, c.assento].filter(Boolean).join(' · '), W / 2, 180, W - 60);
+      var voo = c.tipo === 'voo' || (c.qr && /^M[1-4]/.test(c.qr)), lc = voo ? linhasCartao(c) : null, dy = 0;
+      x.font = '500 30px ' + F; x.fillStyle = '#1b2427'; x.fillText(voo ? (c.pessoa || '') : [c.pessoa, c.assento].filter(Boolean).join(' · '), W / 2, 180, W - 60);
+      /* voo: grupo, assento, embarque, portão, seq. e trecho também na imagem (quem recebe não precisa do cartão original) */
+      if (lc) {
+        if (lc.forte) { x.font = '800 36px ' + F; x.fillText(lc.forte, W / 2, 228, W - 60); dy += 48; }
+        x.font = '500 24px ' + F; x.fillStyle = '#56646a';
+        if (lc.fraca) { x.fillText(lc.fraca, W / 2, 228 + dy, W - 40); dy += 34; }
+        if (lc.trecho) { x.fillText(lc.trecho, W / 2, 228 + dy, W - 40); dy += 34; }
+        x.fillStyle = '#1b2427';
+      }
+      var lado = 540 - Math.min(dy, 120);
       var img = new Image();
       img.onload = function () {
-        if (c.barra) x.drawImage(img, 50, 300, 620, 240); else { x.imageSmoothingEnabled = false; x.drawImage(img, 90, 215, 540, 540); }
+        if (c.barra) x.drawImage(img, 50, 300 + dy, 620, 240); else { x.imageSmoothingEnabled = false; x.drawImage(img, (W - lado) / 2, 215 + dy, lado, lado); }
         x.font = '600 36px ui-monospace, monospace'; x.fillStyle = '#1b2427'; x.fillText(String(c.barra || c.codigo || ''), W / 2, 830, W - 60);
         x.font = '400 24px ' + F; x.fillStyle = '#56646a'; x.fillText((n > 1 ? (i + 1) + '/' + n + ' · ' : '') + 'GuiaXpert', W / 2, 940);
         var nome = normalizar(tit).replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 30) || 'ingresso';
@@ -4579,7 +4598,12 @@
     var i = inicio || 0;
     /* data do ingresso sempre à vista (dono, 21/Nov/2026: "cadê a data do ingresso?"), com "Hoje" e, se remarcado, a data antiga */
     var quandoQR = h('div', { class: 'qr-quando' }), remarcadoQR = h('span', { class: 'pequeno qr-remarcado' });
-    var titulo = h('b', {}), quem = h('span', {}), img = h('img', { alt: '', style: 'width:min(86vw,22rem);height:auto;border-radius:12px;background:#fff;image-rendering:pixelated;touch-action:pan-y' });
+    var titulo = h('b', {}), quem = h('span', {}), cartaoForte = h('b', { class: 'qr-cartao-forte' }), cartaoFraco = h('span', { class: 'pequeno qr-cartao-fraco' }), trecho = h('span', { class: 'pequeno' });
+    var btOriginal = h('button', { class: 'bt leve', type: 'button' }, '🖼 ' + T('qr_original'));
+    var btCompletar = h('button', { class: 'lk', type: 'button', texto: '✎ ' + T('qr_completar') });
+    btOriginal.addEventListener('click', function () { verCartaoOriginal(lista[i]); });
+    btCompletar.addEventListener('click', function () { janelaCompletarCartao(lista[i], mostrar); });
+    var img = h('img', { alt: '', style: 'width:min(86vw,22rem);height:auto;border-radius:12px;background:#fff;image-rendering:pixelated;touch-action:pan-y' });
     var EST_QR = img.getAttribute('style'), EST_BARRA = 'width:min(92vw,30rem);height:9rem;border-radius:8px;background:#fff;padding:.6rem;touch-action:pan-y';
     var cod = h('code', { style: 'font-size:1.3rem;user-select:all' }), pos = h('span', { class: 'sub' });
     var ant = h('button', { class: 'bt leve', type: 'button', 'aria-label': T('anterior'), texto: '‹ ' + T('anterior') });
@@ -4599,7 +4623,8 @@
     }
     menor.addEventListener('click', function () { if (tam > 0) { tam--; aplicarTam(); } });
     maior.addEventListener('click', function () { if (tam < TAMS.length - 1) { tam++; aplicarTam(); } });
-    var corpo = h('div', { class: 'linha', style: 'flex-direction:column;align-items:center;gap:.5rem;text-align:center' }, [titulo, quandoQR, remarcadoQR, quem, img, cod,
+    var corpo = h('div', { class: 'linha', style: 'flex-direction:column;align-items:center;gap:.5rem;text-align:center' }, [titulo, quandoQR, remarcadoQR, quem, cartaoForte, cartaoFraco, trecho, img, cod,
+      h('div', { class: 'linha', style: 'justify-content:center;gap:.6rem' }, [btOriginal, btCompletar]),
       h('div', { class: 'qr-tam' }, [menor, tamTxt, maior]),
       /* ‹ Anterior · 2 de 4 · Próximo › numa linha só (dono, 22/Nov/2026) */
       lista.length > 1 ? h('div', { class: 'qr-nav' }, [ant, pos, prox]) : null, h('p', { class: 'pequeno', texto: T('qrBrilho') }),
@@ -4608,7 +4633,14 @@
     j.caixa.classList.add('cheia');
     function mostrar() {
       var c = lista[i];
-      titulo.textContent = c.titulo; quem.textContent = [c.pessoa, c.assento].filter(Boolean).join(' · ');
+      titulo.textContent = c.titulo;
+      /* voo: tudo do cartão de embarque à vista (grupo, assento, embarque, portão, seq.…) e o cartão original a um toque */
+      var voo = c.tipo === 'voo' || (c.qr && /^M[1-4]/.test(c.qr)), lc = voo ? linhasCartao(c) : null;
+      quem.textContent = voo ? (c.pessoa || '') : [c.pessoa, c.assento].filter(Boolean).join(' · ');
+      cartaoForte.textContent = lc ? lc.forte : ''; cartaoForte.hidden = !(lc && lc.forte);
+      cartaoFraco.textContent = lc ? lc.fraca : ''; cartaoFraco.hidden = !(lc && lc.fraca);
+      trecho.textContent = lc ? lc.trecho : ''; trecho.hidden = !(lc && lc.trecho);
+      btOriginal.hidden = !c.cartao; btCompletar.hidden = !voo;
       var dq = String(c.quando || '').slice(0, 10), hq = String(c.quando || '').slice(11, 16), hj = hojeIso();
       quandoQR.textContent = dq ? (dq === hj ? T('qr_hoje') + ' · ' : '') + semana(dq) + ', ' + fData(dq) + (hq ? ' · ' + hq : '') : T('res_semData');
       quandoQR.className = 'qr-quando' + (dq === hj ? ' hoje' : dq && dq < hj ? ' passou' : '');
@@ -4923,10 +4955,112 @@
       .then(function (lista) { return Promise.all(lista.map(function (r) { return Cofre.decifrarReserva(r.conteudo).then(function (c) { return { reg: r, c: c }; }, function () { return null; }); })); })
       .then(function (ls) { return ls.filter(Boolean); });
   }
-  function infoCodigo(texto, bloco) {
+  /* CARTÃO DE EMBARQUE (dono, 22/Nov/2026: "o grupo 4… tive que recorrer à passagem original"). O QR (padrão BCBP) traz
+     nome, localizador, trecho, voo, data, classe, assento e sequência; grupo, hora do embarque, portão e terminal só estão
+     impressos no cartão. Lê o texto do PDF quando há; senão a imagem original fica guardada para conferir. */
+  var CAMPOS_CARTAO = ['grupo', 'embarque', 'portao', 'terminal', 'fecha', 'partida'];
+  function lerCartaoEmbarque(txt) {
+    var t = String(txt || '').replace(/\s+/g, ' '), o = {}, m;
+    var HORA = '(\\d{1,2}[:hH]\\d{2})';
+    function hora(x) { return x.replace(/[hH]/, ':').replace(/^(\d):/, '0$1:'); }
+    function um(re, k, f) { if (o[k]) return; var r = re.exec(t), v = r && (r[1] || r[2]); if (v) o[k] = f ? f(v) : v.toUpperCase(); }
+    um(/(?:Grupo|Group|Zona|Zone)(?: de embarque| do embarque|\s*\/\s*Group)?\s*:?\s*([A-Z]|\d{1,2})(?![\wÀ-ú:])/i, 'grupo');
+    um(new RegExp('Port[aã]o fecha(?:m)?(?: [àa]s)?\\s*:?\\s*' + HORA + '|Gate clos(?:es|ing)(?: at)?\\s*:?\\s*' + HORA, 'i'), 'fecha', hora);
+    if (!o.fecha) { m = new RegExp('Gate clos(?:es|ing)(?: at)?\\s*:?\\s*' + HORA, 'i').exec(t); if (m) o.fecha = hora(m[1]); }
+    um(new RegExp('(?:Hor[aá]rio de embarque|Hora (?:de|do) embarque|In[ií]cio do embarque|Boarding time|Boarding starts?|Embarque|Boarding)(?: [àa]s| at)?\\s*:?\\s*' + HORA, 'i'), 'embarque', hora);
+    um(/(?:Port[aã]o(?: de embarque)?|Gate)\s*:?\s*([A-Z]?\d{1,3}[A-Z]?)(?![\w:])/i, 'portao');
+    um(/Terminal\s*:?\s*([A-Z]?\d{1,2}[A-Z]?|[A-Z])(?![\w:])/i, 'terminal');
+    um(new RegExp('(?:Partida|Sa[ií]da|Departure|Hor[aá]rio do voo)(?: [àa]s| at)?\\s*:?\\s*' + HORA, 'i'), 'partida', hora);
+    /* layout em colunas: "Embarque Portão Assento Grupo 19:35 5 10D 4" (rótulos numa linha, valores na outra) */
+    var R = /((?:(?:Hor[aá]rio de |Hora de )?Embarque|Boarding|Port[aã]o|Gate|Assento|Seat|Grupo|Group|Zona|Zone|Terminal|Seq\.?|Partida|Sa[ií]da)(?:\s+|$)){2,7}/gi;
+    while ((m = R.exec(t))) {
+      var rot = m[0].trim().split(/\s+/).filter(function (w) { return !/^(Hor[aá]rio|Hora|de)$/i.test(w); });
+      var vals = t.slice(m.index + m[0].length).trim().split(' ').slice(0, rot.length);
+      if (vals.length < rot.length) continue;
+      rot.forEach(function (r, k) {
+        var v = vals[k], n = normalizar(r);
+        if (/^(embarque|boarding)$/.test(n) && /^\d{1,2}[:hH]\d{2}$/.test(v) && !o.embarque) o.embarque = hora(v);
+        else if (/^(partida|saida)$/.test(n) && /^\d{1,2}[:hH]\d{2}$/.test(v) && !o.partida) o.partida = hora(v);
+        else if (/^(portao|gate)$/.test(n) && /^[A-Z]?\d{1,3}[A-Z]?$/i.test(v) && !o.portao) o.portao = v.toUpperCase();
+        else if (/^(grupo|group|zona|zone)$/.test(n) && /^([A-Z]|\d{1,2})$/i.test(v) && !o.grupo) o.grupo = v.toUpperCase();
+        else if (n === 'terminal' && /^[A-Z0-9]{1,3}$/i.test(v) && !o.terminal) o.terminal = v.toUpperCase();
+      });
+    }
+    return o;
+  }
+  /* tudo o que o cartão tem, para mostrar: o que foi guardado + o que dá para tirar do QR (reservas antigas não tinham) */
+  function dadosCartao(c) {
+    var b = c && c.tipo === 'voo' && c.qr && window.Codigos ? Codigos.bcbp(c.qr) : null, o = {};
+    ['pessoa', 'assento', 'seq', 'classe', 'de', 'para', 'cia', 'voo'].forEach(function (k) { o[k] = c[k] || (b && b[k]) || ''; });
+    var an = c.vooAnotado || {};
+    CAMPOS_CARTAO.forEach(function (k) { o[k] = c[k] || ''; });
+    if (an.portao) o.portao = an.portao;   /* anotado à mão é mais novo que o impresso */
+    if (an.terminal) o.terminal = an.terminal;
+    return o;
+  }
+  /* linhas do cartão no QR: [grande: grupo e assento] [pequena: embarque, portão, terminal, seq., classe] [trecho] */
+  function linhasCartao(c) {
+    var o = dadosCartao(c);
+    return {
+      forte: [o.grupo ? T('qr_grupo', { g: o.grupo }) : null, o.assento ? T('qr_assento', { a: o.assento }) : null].filter(Boolean).join(' · '),
+      fraca: [o.embarque ? T('qr_embarque', { h: o.embarque }) : null, o.fecha ? T('qr_fecha', { h: o.fecha }) : null, o.portao ? T('qr_portao', { p: o.portao }) : null,
+        o.terminal ? T('qr_terminal', { t: o.terminal }) : null, o.partida ? T('qr_partida', { h: o.partida }) : null, o.seq ? T('qr_seq', { s: o.seq }) : null,
+        o.classe ? T('qr_classe', { c: o.classe }) : null].filter(Boolean).join(' · '),
+      /* trecho só quando o título não diz (o título já costuma ser "Voo GOL 1287 · POA → CGH") */
+      trecho: o.de && o.para && String(c.titulo || '').indexOf(o.para) < 0 ? [o.cia && o.voo ? o.cia + ' ' + o.voo : null, o.de + ' → ' + o.para].filter(Boolean).join(' · ') : ''
+    };
+  }
+  /* a imagem original do cartão (print ou página do PDF), em tela cheia; tocar amplia */
+  function verCartaoOriginal(c) {
+    var img = h('img', { src: c.cartao, alt: T('qr_original'), class: 'cartao-original' });
+    var caixa = h('div', { class: 'cartao-original-caixa' }, [img]);
+    img.addEventListener('click', function () { caixa.classList.toggle('ampliado'); });
+    var j = janela(T('qr_original') + (c.pessoa ? ' · ' + c.pessoa : ''), h('div', {}, [caixa, h('p', { class: 'pequeno', style: 'text-align:center', texto: T('qr_tocarAmpliar') })]));
+    j.caixa.classList.add('cheia');
+  }
+  /* completar à mão o que não veio (print sem texto): grupo é da pessoa; embarque, portão e terminal valem para o voo todo */
+  function janelaCompletarCartao(c0, depois) {
+    var o = dadosCartao(c0);
+    var grupo = h('input', { class: 'campo', id: 'gx-cc-grupo', maxlength: '3', autocomplete: 'off', value: o.grupo || '', placeholder: '4', style: 'text-transform:uppercase' });
+    var emb = campoHora('gx-cc-emb', o.embarque || '', {});
+    var portao = h('input', { class: 'campo', id: 'gx-cc-portao', maxlength: '8', autocomplete: 'off', value: o.portao || '', placeholder: '5' });
+    var terminal = h('input', { class: 'campo', id: 'gx-cc-term', maxlength: '6', autocomplete: 'off', value: o.terminal || '', placeholder: '1' });
+    var todos = h('input', { type: 'checkbox', id: 'gx-cc-todos' });
+    var ok = h('button', { class: 'bt cheio', type: 'button', texto: '✓ ' + T('salvar') });
+    var campo = function (id, rot, el) { return h('div', { class: 'av-campo' }, [h('label', { class: 'rot', for: id, texto: rot }), el]); };
+    var j = janela(T('qr_completar') + (c0.pessoa ? ' · ' + c0.pessoa : ''), h('div', { class: 'linha', style: 'flex-direction:column;align-items:stretch;gap:.6rem' }, [
+      h('div', { class: 'av-grade' }, [campo('gx-cc-grupo', T('qr_grupoRot'), grupo), campo('gx-cc-emb', T('qr_embarqueRot'), emb), campo('gx-cc-portao', T('voo_portaoRot'), portao), campo('gx-cc-term', T('voo_terminalRot'), terminal)]),
+      h('label', { class: 'linha', for: 'gx-cc-todos', style: 'flex-wrap:nowrap;gap:.5rem' }, [todos, h('span', { texto: T('qr_grupoTodos') })]), ok]));
+    ok.addEventListener('click', function () {
+      ok.disabled = true;
+      var g = grupo.value.trim().toUpperCase(), e = normHora(emb.value) || '', p = portao.value.trim().toUpperCase(), t = terminal.value.trim().toUpperCase();
+      reservasDoMesmoVoo(c0).then(function (xs) {
+        if (!xs.some(function (x) { return x.c.qr === c0.qr; })) return reservasDecifradas(estado.viagem).then(function (ys) { return xs.concat(ys.filter(function (x) { return x.c.qr && x.c.qr === c0.qr; })); });
+        return xs;
+      }).then(function (xs) {
+        return xs.reduce(function (pr, x) {
+          return pr.then(function () {
+            var dados = Object.assign({}, x.c, { embarque: e, portao: p, terminal: t });
+            if (x.c.qr === c0.qr || todos.checked) dados.grupo = g;
+            if (dados.vooAnotado) dados.vooAnotado = Object.assign({}, dados.vooAnotado, { portao: p || null, terminal: t || null });
+            if (x.c.qr === c0.qr) Object.assign(c0, { grupo: dados.grupo, embarque: e, portao: p, terminal: t, vooAnotado: dados.vooAnotado });
+            return cifrarReserva(x.reg.viagem_id, dados).then(function (blob) { x.reg.conteudo = blob; return Banco.gravar('reservas', x.reg); });
+          });
+        }, Promise.resolve());
+      }).then(function () { j.fechar(function () { avisar(T('salvo')); if (depois) depois(); }); })
+        .catch(function () { ok.disabled = false; avisar(T('cofreFechou')); });
+    });
+  }
+  function infoCodigo(texto, bloco, cod) {
     var ano = estado.viagem && estado.viagem.inicio ? +estado.viagem.inicio.slice(0, 4) : null;
     var b = window.Codigos ? Codigos.bcbp(texto, ano) : null;
-    if (b) return Object.assign({ tipo: 'voo', qr: texto }, b);
+    if (b) {
+      var iv = Object.assign({ tipo: 'voo', qr: texto }, b);
+      var pc = lerCartaoEmbarque(cod && cod.textoPag || bloco || '');
+      CAMPOS_CARTAO.forEach(function (k) { if (pc[k]) iv[k] = pc[k]; });
+      if (cod && cod.cartao) iv.cartao = cod.cartao;
+      return iv;
+    }
     var i = { tipo: 'ingresso', qr: String(texto).slice(0, 2000), codigo: String(texto).length <= 40 ? String(texto) : '' };
     return bloco ? Object.assign(i, lerBlocoIngresso(bloco)) : i;
   }
@@ -4962,7 +5096,8 @@
     if (i.tipo !== 'voo' && i.titulo) return ['🎟 ' + i.titulo, i.pessoa, i.data ? semana(i.data) + ' ' + fData(i.data, true) : null, i.localizador ? T('cod_reserva', { r: i.localizador }) : null].filter(Boolean).join(' · ');
     if (i.tipo !== 'voo') return T('cod_generico', { c: String(i.qr).slice(0, 40) + (String(i.qr).length > 40 ? '…' : '') });
     return ['✈ ' + (i.pessoa || ''), T('cod_voo', { cia: CIAS[i.cia] || i.cia, voo: i.voo }), i.de + ' → ' + i.para, i.data ? semana(i.data) + ' ' + fData(i.data, true) : null,
-      i.assento ? T('cod_assento', { a: i.assento }) : null, i.localizador ? T('cod_reserva', { r: i.localizador }) : null].filter(Boolean).join(' · ');
+      i.assento ? T('cod_assento', { a: i.assento }) : null, i.grupo ? T('qr_grupo', { g: i.grupo }) : null, i.embarque ? T('qr_embarque', { h: i.embarque }) : null,
+      i.portao ? T('qr_portao', { p: i.portao }) : null, i.localizador ? T('cod_reserva', { r: i.localizador }) : null].filter(Boolean).join(' · ');
   }
   /* mesma pessoa = mesmo PRIMEIRO nome (a família divide o sobrenome: "Ana Teste" não é "Bruno Teste") */
   function pessoaBate(a, b) {
@@ -5015,6 +5150,9 @@
     var vid = estado.viagem.id;
     function gravar(reg, dados) { return cifrarReserva(vid, dados).then(function (blob) { reg.conteudo = blob; reg.tipo = dados.tipo; return Banco.gravar('reservas', reg); }); }
     var extra = i.tipo === 'voo' ? { pessoa: i.pessoa, assento: i.assento, codigo: i.localizador } : { codigo: i.codigo, pessoa: i.pessoa || '' };
+    /* tudo do cartão de embarque: o que veio do QR e do texto impresso, e a imagem original */
+    var doCartao = {};
+    if (i.tipo === 'voo') ['seq', 'classe', 'de', 'para', 'cia', 'voo', 'cartao'].concat(CAMPOS_CARTAO).forEach(function (k) { if (i[k]) doCartao[k] = i[k]; });
     if (escolha.corrigir) {
       /* estava na reserva errada (ou sem nome/data): vira a reserva certa, com o grupo do mesmo localizador e dia */
       var xc = escolha.corrigir, antesC = Object.assign({}, xc.c);
@@ -5038,6 +5176,7 @@
     if (escolha.alvo) {
       var x = escolha.alvo, c = Object.assign({}, x.c, { qr: i.qr, barra: '', barraFormato: '' });
       Object.keys(extra).forEach(function (k) { if (extra[k] && !c[k]) c[k] = extra[k]; });
+      Object.assign(c, doCartao);   /* ler de novo o cartão completa grupo, embarque e a imagem */
       if (!c.quando && i.data) c.quando = i.data;
       var reg = x.reg;
       if (!reg.agenda && c.quando) reg.agenda = { titulo: c.titulo, quando: c.quando, local: c.local || null };
@@ -5047,7 +5186,8 @@
       var b = escolha.irmao, ag = Object.assign({}, b.reg.agenda || { titulo: b.c.titulo, quando: b.c.quando || i.data || '', local: b.c.local || null });
       var grupo = ag.grupo || ('g-' + b.reg.id);
       var antes = b.reg.agenda && b.reg.agenda.grupo ? Promise.resolve() : (b.reg.agenda = Object.assign({}, ag, { grupo: grupo }), Banco.gravar('reservas', b.reg));
-      var dados = Object.assign({}, b.c, { titulo: semPessoa(b.c.titulo, b.c.pessoa), qr: i.qr, barra: '', barraFormato: '', pessoa: i.pessoa || '', assento: i.assento || '', codigo: i.localizador || b.c.codigo || '', nota: '' });
+      var dados = Object.assign({}, b.c, { titulo: semPessoa(b.c.titulo, b.c.pessoa), qr: i.qr, barra: '', barraFormato: '', pessoa: i.pessoa || '', assento: i.assento || '', codigo: i.localizador || b.c.codigo || '', nota: '' }, doCartao);
+      CAMPOS_CARTAO.concat(['cartao']).forEach(function (k) { if (!doCartao[k]) delete dados[k]; });   /* não herda o grupo nem o cartão da outra pessoa */
       return antes.then(function () { return gravar({ viagem_id: vid, agenda: Object.assign({}, ag, { grupo: grupo }) }, dados); }).then(function () { confirmarNoRoteiro(dados); return dados; });
     }
     var titulo = i.tipo === 'voo' ? T('cod_tituloVoo', { cia: CIAS[i.cia] || i.cia, voo: i.voo, de: i.de, para: i.para }) : (i.titulo || T('res_ingresso'));
@@ -5056,6 +5196,7 @@
     var quando = i.data || '';
     if (quando && quando.length === 10 && i.tipo === 'ingresso') { var hr = horaNoRoteiro(titulo, quando) || horaAbertura(titulo); if (hr) quando += 'T' + hr; }
     var novo = { tipo: i.tipo, titulo: titulo, quando: quando, codigo: extra.codigo || '', local: '', nota: nota, pessoa: i.pessoa || extra.pessoa || '', assento: extra.assento || '', qr: i.qr };
+    Object.assign(novo, doCartao);
     var g = i.tipo === 'voo' ? 'v-' + i.cia + i.voo + '-' + (i.data || '') : i.tipo === 'ingresso' && i.titulo ? 'i-' + normalizar(i.localizador || i.titulo).slice(0, 30) + '-' + (i.data || '') : null;
     return gravar({ viagem_id: vid, marca: novo.codigo ? 'cod:' + novo.codigo + (novo.pessoa ? '|' + normalizar(novo.pessoa) : '') : null,
       agenda: novo.quando ? { titulo: titulo, quando: novo.quando, local: null, grupo: g } : null }, novo).then(function () { confirmarNoRoteiro(novo); return novo; });
@@ -5139,7 +5280,7 @@
       fimLendo(true);
       msg.className = 'cod-msg ok'; msg.textContent = '✓ ' + (cs.length === 1 ? T('cod_achei1') : T('cod_acheiN', { n: cs.length }));
       try { if (navigator.vibrate) navigator.vibrate(40); } catch (e) {}
-      var infos = cs.map(function (c) { return infoCodigo(c.texto, ctxTexto ? blocoDoCodigo(ctxTexto, c.texto) : null); });
+      var infos = cs.map(function (c) { return infoCodigo(c.texto, ctxTexto ? (cs.length === 1 && /^M[1-4]/.test(c.texto) ? ctxTexto : blocoDoCodigo(ctxTexto, c.texto)) : null, c); });
       var cartoes = cartoesAbertos = infos.map(function (i) { return cartaoCodigo(i); });
       if (infos.length > 1 && !op.alvo) {
         var todos = h('button', { class: 'bt', type: 'button', texto: '✓ ' + T('cod_guardarTodos', { n: infos.length }) });
