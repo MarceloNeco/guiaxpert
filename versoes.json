@@ -2,6 +2,19 @@
   "app": "guiaxpert",
   "versoes": [
     {
+      "versao": "1.6.9",
+      "data": "2026-11-22",
+      "substitui": "1.6.8",
+      "itens": {
+        "pt": [
+          "Correção no link do voo enviado."
+        ],
+        "en": [
+          "Fix in the shared flight link."
+        ]
+      }
+    },
+    {
       "versao": "1.6.8",
       "data": "2026-11-22",
       "substitui": "1.6.7",

@@ -26,7 +26,7 @@
       risco: function () { return null; }, avisos: function () { return []; }, linkCompleto: function () { return 'https://www.windy.com/'; } };
   }
   var Clima = window.Clima;
-  var VERSAO_APP = '1.6.8';
+  var VERSAO_APP = '1.6.9';
 
   /* ------------------------------------------------------------------
      1. UTILIDADES
@@ -6144,7 +6144,8 @@
       else if (vivo && vivo.partida && (+vivo.partida.atraso >= 5 || vivo.status === 'atrasado')) sit = '*' + T('voo_atrasadoCurto') + '*' + (vivo.partida.estimada ? '\n' + T('cv_novaSaida') + ': *' + hhmmDe(vivo.partida.estimada) + '*' : '') + (vivo.chegada && vivo.chegada.estimada ? '\n' + T('cv_novaChegada') + ': *' + hhmmDe(vivo.chegada.estimada) + '*' : '');
       else if (vivo && vivo.status) sit = T(vivo.status === 'voando' ? 'voo_decolou' : vivo.status === 'pousou' ? 'voo_pousouCurto' : vivo.status === 'embarque' ? 'voo_embarque' : 'voo_noHorario');
       ls.push('ℹ️ *' + T('cv_situacao') + '*\n' + (sit || T('cv_vejaLink')));
-      if (iata) ls.push('🔎 *' + T('cv_acompanhe') + '*\n' + 'https://www.google.com/search?q=' + encodeURIComponent(iata.slice(0, 2) + ' ' + iata.slice(2) + ' status'));
+      /* link limpo, sem "%20" (o WhatsApp cortava o link no meio): espaços como "+" */
+      if (iata) ls.push('🔎 *' + T('cv_acompanhe') + '*\n' + 'https://www.google.com/search?q=' + iata.slice(0, 2) + '+' + iata.slice(2) + '+status');
       var linha = ls.join('\n\n');
       return linha;
     });
