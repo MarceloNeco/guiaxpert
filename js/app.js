@@ -26,7 +26,7 @@
       risco: function () { return null; }, avisos: function () { return []; }, linkCompleto: function () { return 'https://www.windy.com/'; } };
   }
   var Clima = window.Clima;
-  var VERSAO_APP = '1.6.10';
+  var VERSAO_APP = '1.6.11';
 
   /* ------------------------------------------------------------------
      1. UTILIDADES
@@ -3470,7 +3470,7 @@
         acao: [L('Ir para Reservas', 'Go to Bookings'), irRes()] },
       { id: 'grupo', chaves: ['grupo', 'grupo de embarque', 'zona', 'portao', 'portão', 'portao de embarque', 'hora do embarque', 'horario de embarque', 'cartao original', 'cartão de embarque', 'passagem original', 'sequencia', 'boarding group', 'gate', 'boarding pass'],
         t: L('Grupo, portão e cartão original', 'Group, gate and original pass'),
-        r: L('Na tela do QR do voo: grupo, assento, embarque e portão. "Cartão original" mostra a passagem como veio. Faltou algo? "✎ Completar". Leia de novo o cartão para guardar o que falta.', 'On the flight QR screen: group, seat, boarding and gate. "Original pass" shows it as it came. Missing something? "✎ Fill in".'),
+        r: L('Na tela do QR do voo: embarque, grupo, portão, terminal e assento. O app lê do print ou do PDF. "Cartão original" mostra a passagem como veio. Faltou algo? Toque em ✎.', 'On the flight QR screen: boarding, group, gate, terminal and seat, read from the screenshot or PDF. "Original pass" shows it as it came. Missing something? Tap ✎.'),
         acao: [L('Ir para Reservas', 'Go to Bookings'), irRes()] },
       { id: 'remarcar', chaves: ['remarcar', 'remarcação', 'reagendar', 'reagendamento', 'adiar', 'adiamento', 'mudar data', 'mudança de data', 'trocar data', 'trocar dia', 'outro dia', 'mudar o dia da reserva', 'remarcar ingresso', 'reagendar reserva', 'reschedule', 'change date'],
         t: L('Remarcar uma reserva para outro dia', 'Reschedule a booking'),
@@ -4598,10 +4598,12 @@
     var i = inicio || 0;
     /* data do ingresso sempre à vista (dono, 21/Nov/2026: "cadê a data do ingresso?"), com "Hoje" e, se remarcado, a data antiga */
     var quandoQR = h('div', { class: 'qr-quando' }), remarcadoQR = h('span', { class: 'pequeno qr-remarcado' });
-    var titulo = h('b', {}), quem = h('span', {}), cartaoForte = h('b', { class: 'qr-cartao-forte' }), cartaoFraco = h('span', { class: 'pequeno qr-cartao-fraco' }), trecho = h('span', { class: 'pequeno' });
-    var btOriginal = h('button', { class: 'bt leve', type: 'button' }, '🖼 ' + T('qr_original'));
-    var btCompletar = h('button', { class: 'lk', type: 'button', texto: '✎ ' + T('qr_completar') });
-    btOriginal.addEventListener('click', function () { verCartaoOriginal(lista[i]); });
+    var titulo = h('b', { class: 'qr-titulo' }), quem = h('b', { class: 'qr-quem' });
+    /* voo: grade como no cartão da companhia (dono, 22/Nov/2026: "as informações vitais… igual no original", sem rolar) */
+    var grade = h('div', { class: 'qr-grade' }), cartaoFraco = h('span', { class: 'pequeno qr-cartao-fraco' }), lendoOcr = h('span', { class: 'pequeno qr-lendo', hidden: true });
+    var btOriginal = h('button', { class: 'bt leve qr-bt-mini', type: 'button' }, '🖼 ' + T('qr_original'));
+    var btCompletar = h('button', { class: 'bt leve qr-bt-mini', type: 'button', 'aria-label': T('qr_completar'), title: T('qr_completar'), texto: '✎' });
+    btOriginal.addEventListener('click', function () { verCartaoOriginal(lista[i], lista); });
     btCompletar.addEventListener('click', function () { janelaCompletarCartao(lista[i], mostrar); });
     var img = h('img', { alt: '', style: 'width:min(86vw,22rem);height:auto;border-radius:12px;background:#fff;image-rendering:pixelated;touch-action:pan-y' });
     var EST_QR = img.getAttribute('style'), EST_BARRA = 'width:min(92vw,30rem);height:9rem;border-radius:8px;background:#fff;padding:.6rem;touch-action:pan-y';
@@ -4613,7 +4615,7 @@
     try { var tg = localStorage.getItem('guiaxpert.qrTamanho'); if (tg != null && /^[0-9]$/.test(tg) && +tg < TAMS.length) tam = +tg; } catch (e) {}
     var menor = h('button', { class: 'bt leve qr-tam-bt', type: 'button', 'aria-label': T('qrMenor'), title: T('qrMenor'), texto: '−' });
     var maior = h('button', { class: 'bt leve qr-tam-bt', type: 'button', 'aria-label': T('qrMaior'), title: T('qrMaior'), texto: '+' });
-    var tamTxt = h('span', { class: 'pequeno', texto: T('qrTamanho') });
+    var tamTxt = h('span', { class: 'pequeno', texto: 'QR' });
     function aplicarTam() {
       var base = Math.min(window.innerWidth * 0.92, 440), w = Math.round(base * TAMS[tam]);
       img.style.width = w + 'px';
@@ -4623,9 +4625,9 @@
     }
     menor.addEventListener('click', function () { if (tam > 0) { tam--; aplicarTam(); } });
     maior.addEventListener('click', function () { if (tam < TAMS.length - 1) { tam++; aplicarTam(); } });
-    var corpo = h('div', { class: 'linha', style: 'flex-direction:column;align-items:center;gap:.5rem;text-align:center' }, [titulo, quandoQR, remarcadoQR, quem, cartaoForte, cartaoFraco, trecho, img, cod,
-      h('div', { class: 'linha', style: 'justify-content:center;gap:.6rem' }, [btOriginal, btCompletar]),
-      h('div', { class: 'qr-tam' }, [menor, tamTxt, maior]),
+    var corpo = h('div', { class: 'linha qr-corpo', style: 'flex-direction:column;align-items:center;gap:.4rem;text-align:center' }, [titulo,
+      h('div', { class: 'qr-topo' }, [quandoQR, quem]), remarcadoQR, grade, lendoOcr, img, cod, cartaoFraco,
+      h('div', { class: 'qr-tam' }, [btOriginal, btCompletar, h('span', { class: 'qr-tam-par' }, [menor, tamTxt, maior])]),
       /* ‹ Anterior · 2 de 4 · Próximo › numa linha só (dono, 22/Nov/2026) */
       lista.length > 1 ? h('div', { class: 'qr-nav' }, [ant, pos, prox]) : null, h('p', { class: 'pequeno', texto: T('qrBrilho') }),
       h('button', { class: 'bt leve qr-enviar', type: 'button', onclick: function () { enviarCodigos(lista); } }, [Seletor.icone('compartilhar'), ' ' + (lista.length > 1 ? T('qr_enviarTodos', { n: lista.length }) : T('qr_enviar'))])]);
@@ -4635,12 +4637,26 @@
       var c = lista[i];
       titulo.textContent = c.titulo;
       /* voo: tudo do cartão de embarque à vista (grupo, assento, embarque, portão, seq.…) e o cartão original a um toque */
-      var voo = c.tipo === 'voo' || (c.qr && /^M[1-4]/.test(c.qr)), lc = voo ? linhasCartao(c) : null;
+      var voo = c.tipo === 'voo' || (c.qr && /^M[1-4]/.test(c.qr)), o = voo ? dadosCartao(c) : null;
       quem.textContent = voo ? (c.pessoa || '') : [c.pessoa, c.assento].filter(Boolean).join(' · ');
-      cartaoForte.textContent = lc ? lc.forte : ''; cartaoForte.hidden = !(lc && lc.forte);
-      cartaoFraco.textContent = lc ? lc.fraca : ''; cartaoFraco.hidden = !(lc && lc.fraca);
-      trecho.textContent = lc ? lc.trecho : ''; trecho.hidden = !(lc && lc.trecho);
+      grade.textContent = ''; grade.hidden = !voo;
+      if (voo) {
+        [['embarque', 'qr_rEmbarque'], ['fecha', 'qr_rFim'], ['grupo', 'qr_rGrupo', 1], ['terminal', 'qr_rTerminal'], ['portao', 'qr_rPortao'], ['assento', 'qr_rAssento', 1]].forEach(function (k) {
+          grade.appendChild(h('div', { class: 'qr-celula' + (k[2] ? ' forte' : '') + (o[k[0]] ? '' : ' vazia') }, [h('b', { texto: o[k[0]] || '—' }), h('span', { texto: T(k[1]) })]));
+        });
+      }
+      var fr = voo ? [o.partida ? T('qr_partida', { h: o.partida }) : null, o.seq ? T('qr_seq', { s: o.seq }) : null, o.classe ? T('qr_classe', { c: o.classe }) : null,
+        o.de && o.para && String(c.titulo || '').indexOf(o.para) < 0 ? o.de + ' → ' + o.para : null].filter(Boolean).join(' · ') : '';
+      cartaoFraco.textContent = fr; cartaoFraco.hidden = !fr;
       btOriginal.hidden = !c.cartao; btCompletar.hidden = !voo;
+      lendoOcr.hidden = true;
+      /* print guardado sem grupo: lê o texto da imagem original agora (uma vez só) e completa a reserva */
+      if (voo && c.cartao && !o.grupo && !c.ocrLido && !c._ocrFalhou) completarPorOcr(c, function (ok) {
+        if (lista[i] !== c) return;
+        if (ok === 'lendo') { lendoOcr.textContent = T('qr_lendoCartao'); lendoOcr.hidden = false; return; }
+        if (!ok) c._ocrFalhou = true;   /* sem internet na 1ª vez: tenta de novo só na próxima abertura */
+        mostrar();
+      });
       var dq = String(c.quando || '').slice(0, 10), hq = String(c.quando || '').slice(11, 16), hj = hojeIso();
       quandoQR.textContent = dq ? (dq === hj ? T('qr_hoje') + ' · ' : '') + semana(dq) + ', ' + fData(dq) + (hq ? ' · ' + hq : '') : T('res_semData');
       quandoQR.className = 'qr-quando' + (dq === hj ? ' hoje' : dq && dq < hj ? ' passou' : '');
@@ -4660,9 +4676,12 @@
     }
     ant.addEventListener('click', function () { if (i > 0) { i--; mostrar(); } });
     prox.addEventListener('click', function () { if (i < lista.length - 1) { i++; mostrar(); } });
-    var x0 = null;
-    img.addEventListener('pointerdown', function (e) { x0 = e.clientX; });
-    img.addEventListener('pointerup', function (e) { if (x0 == null) return; var dx = e.clientX - x0; x0 = null; if (dx < -50) prox.click(); else if (dx > 50) ant.click(); });
+    /* arrastar com o dedo para os lados em QUALQUER ponto da tela (dono, 22/Nov/2026), não só em cima do QR */
+    img.draggable = false;
+    arrastarLados(j.caixa, function (passo) {
+      var k = i + passo; if (k < 0 || k >= lista.length) return;
+      i = k; mostrar(); deslizar(img, passo);
+    });
     mostrar();
     if (navigator.wakeLock && navigator.wakeLock.request) navigator.wakeLock.request('screen').catch(function () {});
   }
@@ -4961,6 +4980,7 @@
   var CAMPOS_CARTAO = ['grupo', 'embarque', 'portao', 'terminal', 'fecha', 'partida'];
   function lerCartaoEmbarque(txt) {
     var t = String(txt || '').replace(/\s+/g, ' '), o = {}, m;
+    lerCartaoPorLinhas(String(txt || ''), o);
     var HORA = '(\\d{1,2}[:hH]\\d{2})';
     function hora(x) { return x.replace(/[hH]/, ':').replace(/^(\d):/, '0$1:'); }
     function um(re, k, f) { if (o[k]) return; var r = re.exec(t), v = r && (r[1] || r[2]); if (v) o[k] = f ? f(v) : v.toUpperCase(); }
@@ -4988,6 +5008,39 @@
     }
     return o;
   }
+  /* print do app da companhia (lido por OCR): o valor fica na linha de CIMA do rótulo, em colunas
+     ("1  --  3  10A" / "Terminal Portão Grupo Assento"; "19h30 19h55" / "Início do embarque Fim do embarque") */
+  var ROTULOS_CARTAO = [
+    [/in[ií]cio do embarque|hor[aá]rio de embarque|hora do embarque|boarding time/i, 'embarque', 'h'],
+    [/fim do embarque|port[aã]o fecha|gate closes/i, 'fecha', 'h'],
+    [/data de partida|data de chegada|n[uú]mero do voo|tipo de voo|c[oó]digo da reserva/i, '', ''],
+    [/terminal/i, 'terminal', 'c'], [/port[aã]o|gate/i, 'portao', 'c'], [/grupo|group|zona|zone/i, 'grupo', 'c'],
+    [/assento|seat/i, 'assento', 'c'], [/embarque|boarding/i, 'embarque', 'h'], [/partida|sa[ií]da|departure/i, 'partida', 'h']];
+  function lerCartaoPorLinhas(txt, o) {
+    var linhas = txt.split(/\r?\n/).map(function (l) { return l.trim(); }).filter(Boolean);
+    var RE = new RegExp(ROTULOS_CARTAO.map(function (r) { return r[0].source; }).join('|'), 'gi');
+    function hora(v) { var m = /^(\d{1,2})[:hH.](\d{2})$/.exec(v); return m ? ('0' + m[1]).slice(-2) + ':' + m[2] : null; }
+    linhas.forEach(function (l, k) {
+      var achados = l.match(RE) || [];
+      if (!achados.length) return;
+      var sobra = l.replace(RE, ' ').replace(/[^0-9A-Za-zÀ-ú]+/g, '');
+      if (sobra.length > 3) return;   /* a linha tem de ser só de rótulos */
+      var rot = achados.map(function (a) { for (var i = 0; i < ROTULOS_CARTAO.length; i++) if (ROTULOS_CARTAO[i][0].test(a)) return ROTULOS_CARTAO[i]; return null; });
+      [k - 1, k + 1].some(function (j) {
+        if (j < 0 || j >= linhas.length) return false;
+        var vals = linhas[j].split(/\s+/).filter(function (v) { return /^(\d{1,2}[:hH.]\d{2}|[A-Z]?\d{1,3}[A-Z]?|[A-Z]|[-—–=_~.]+)$/i.test(v); });   /* "--" (vazio) às vezes sai "=-" na leitura */
+        if (vals.length !== rot.length) return false;
+        rot.forEach(function (r, i) {
+          if (!r || !r[1] || o[r[1]]) return;
+          var v = vals[i]; if (/^[-—–=_~.]+$/.test(v)) return;
+          if (r[2] === 'h') { var hh = hora(v); if (hh) o[r[1]] = hh; }
+          else if (!/[:hH.]\d{2}$/.test(v)) o[r[1]] = v.toUpperCase();
+        });
+        return true;
+      });
+    });
+    return o;
+  }
   /* tudo o que o cartão tem, para mostrar: o que foi guardado + o que dá para tirar do QR (reservas antigas não tinham) */
   function dadosCartao(c) {
     var b = c && c.tipo === 'voo' && c.qr && window.Codigos ? Codigos.bcbp(c.qr) : null, o = {};
@@ -5011,12 +5064,82 @@
     };
   }
   /* a imagem original do cartão (print ou página do PDF), em tela cheia; tocar amplia */
-  function verCartaoOriginal(c) {
-    var img = h('img', { src: c.cartao, alt: T('qr_original'), class: 'cartao-original' });
+  /* gesto de passar para o lado (toque; mouse no computador). Só conta se for mais de lado que para cima/baixo */
+  function arrastarLados(el, aoPassar, podeAgora) {
+    var x0 = null, y0 = null;
+    el.addEventListener('touchstart', function (e) {
+      if (e.touches.length !== 1 || (podeAgora && !podeAgora())) { x0 = null; return; }
+      x0 = e.touches[0].clientX; y0 = e.touches[0].clientY;
+    }, { passive: true });
+    el.addEventListener('touchend', function (e) {
+      if (x0 == null) return; var t = e.changedTouches[0], dx = t.clientX - x0, dy = t.clientY - y0; x0 = null;
+      if (Math.abs(dx) > 45 && Math.abs(dx) > Math.abs(dy) * 1.3) aoPassar(dx < 0 ? 1 : -1);
+    }, { passive: true });
+    el.addEventListener('touchcancel', function () { x0 = null; }, { passive: true });
+    var mx = null;
+    el.addEventListener('pointerdown', function (e) { mx = e.pointerType === 'mouse' && (!podeAgora || podeAgora()) ? e.clientX : null; });
+    el.addEventListener('pointerup', function (e) { if (mx == null) return; var dx = e.clientX - mx; mx = null; if (Math.abs(dx) > 60) aoPassar(dx < 0 ? 1 : -1); });
+  }
+  function deslizar(el, passo) {
+    el.classList.remove('desliza-esq', 'desliza-dir'); void el.offsetWidth;
+    el.classList.add(passo > 0 ? 'desliza-esq' : 'desliza-dir');
+  }
+  /* a imagem original do cartão (print ou página do PDF), em tela cheia; tocar amplia; com vários, passa para o lado */
+  function verCartaoOriginal(c, lista) {
+    var cs = (lista || [c]).filter(function (x) { return x && x.cartao; }), i = Math.max(0, cs.indexOf(c));
+    if (!cs.length) return;
+    var img = h('img', { alt: T('qr_original'), class: 'cartao-original', draggable: 'false' });
     var caixa = h('div', { class: 'cartao-original-caixa' }, [img]);
+    var pos = h('span', { class: 'sub' });
+    var ant = h('button', { class: 'bt leve', type: 'button', texto: '‹ ' + T('anterior') }), prox = h('button', { class: 'bt', type: 'button', texto: T('proximo') + ' ›' });
     img.addEventListener('click', function () { caixa.classList.toggle('ampliado'); });
-    var j = janela(T('qr_original') + (c.pessoa ? ' · ' + c.pessoa : ''), h('div', {}, [caixa, h('p', { class: 'pequeno', style: 'text-align:center', texto: T('qr_tocarAmpliar') })]));
+    var j = janela(T('qr_original'), h('div', {}, [caixa, h('p', { class: 'pequeno', style: 'text-align:center', texto: T('qr_tocarAmpliar') }),
+      cs.length > 1 ? h('div', { class: 'qr-nav' }, [ant, pos, prox]) : null]));
     j.caixa.classList.add('cheia');
+    var tit = j.caixa.querySelector('h2, .janela-titulo, b');
+    function ver(k, passo) {
+      i = k; var x = cs[i]; img.src = x.cartao; caixa.classList.remove('ampliado');
+      if (tit) tit.textContent = T('qr_original') + (x.pessoa ? ' · ' + x.pessoa : '');
+      pos.textContent = T('nDeN', { i: i + 1, n: cs.length }); ant.disabled = i === 0; prox.disabled = i === cs.length - 1;
+      if (passo) deslizar(img, passo);
+    }
+    function passar(p) { var k = i + p; if (k >= 0 && k < cs.length) ver(k, p); }
+    ant.addEventListener('click', function () { passar(-1); }); prox.addEventListener('click', function () { passar(1); });
+    /* ampliado: o dedo serve para andar pela imagem, não para trocar de passagem */
+    arrastarLados(j.caixa, passar, function () { return !caixa.classList.contains('ampliado'); });
+    ver(i);
+  }
+  /* grava campos numa reserva achada pelo QR (o objeto da tela também recebe) */
+  function gravarNaReservaDoQR(c0, campos) {
+    Object.assign(c0, campos);
+    var v = estado.viagem; if (!v || !c0.qr) return Promise.resolve();
+    return reservasDecifradas(v).then(function (xs) {
+      return xs.filter(function (x) { return x.c.qr === c0.qr; }).reduce(function (pr, x) {
+        return pr.then(function () {
+          var dados = Object.assign({}, x.c, campos);
+          return cifrarReserva(x.reg.viagem_id, dados).then(function (blob) { x.reg.conteudo = blob; return Banco.gravar('reservas', x.reg); });
+        });
+      }, Promise.resolve());
+    });
+  }
+  var ocrEmCurso = {};
+  function completarPorOcr(c, avisarTela) {
+    if (!window.Codigos || !Codigos.lerTexto || ocrEmCurso[c.qr]) return;
+    ocrEmCurso[c.qr] = 1; avisarTela('lendo');
+    var im = new Image();
+    im.onload = function () {
+      /* print pequeno: amplia para as letras ficarem legíveis */
+      var k = Math.min(2.5, Math.max(1, 1800 / Math.max(im.width, im.height))), cv = d.createElement('canvas');
+      cv.width = Math.round(im.width * k); cv.height = Math.round(im.height * k);
+      var x = cv.getContext('2d'); x.imageSmoothingQuality = 'high'; x.drawImage(im, 0, 0, cv.width, cv.height);
+      Codigos.lerTexto(cv).then(function (t) {
+        var pc = lerCartaoEmbarque(t), campos = { ocrLido: true };
+        CAMPOS_CARTAO.forEach(function (k2) { if (pc[k2] && !c[k2]) campos[k2] = pc[k2]; });
+        return gravarNaReservaDoQR(c, campos);
+      }).then(function () { delete ocrEmCurso[c.qr]; avisarTela(true); }, function () { delete ocrEmCurso[c.qr]; avisarTela(false); });
+    };
+    im.onerror = function () { delete ocrEmCurso[c.qr]; avisarTela(false); };
+    im.src = c.cartao;
   }
   /* completar à mão o que não veio (print sem texto): grupo é da pessoa; embarque, portão e terminal valem para o voo todo */
   function janelaCompletarCartao(c0, depois) {
@@ -5344,7 +5467,7 @@
       files.reduce(function (p, f, fi) {
         return p.then(function () {
           estadoLendo(f.name || '');
-          return Codigos.lerArquivo(f, { aoProgresso: function (pg, n) { espera.querySelector('.cod-espera-p').textContent = T('cod_pagina', { p: pg, n: n }) + (files.length > 1 ? ' · ' + T('cod_arquivoN', { a: fi + 1, n: files.length }) : ''); } });
+          return Codigos.lerArquivo(f, { aoLerTexto: function () { espera.querySelector('.cod-espera-p').textContent = T('cod_lendoCartao'); }, aoProgresso: function (pg, n) { espera.querySelector('.cod-espera-p').textContent = T('cod_pagina', { p: pg, n: n }) + (files.length > 1 ? ' · ' + T('cod_arquivoN', { a: fi + 1, n: files.length }) : ''); } });
         }).then(function (r) {
           (r.paginas || (r.previa ? [{ img: r.previa, n: (r.codigos || []).length }] : [])).forEach(function (pg) { pags.push(pg); });
           if (r.erro === 'senha') textos.push('senha');

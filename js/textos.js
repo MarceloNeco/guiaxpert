@@ -784,6 +784,8 @@ window.TEXTOS = (function () {
     qr_grupo: ['Grupo {g}', 'Group {g}'], qr_assento: ['Assento {a}', 'Seat {a}'], qr_embarque: ['Embarque {h}', 'Boarding {h}'], qr_fecha: ['Portão fecha {h}', 'Gate closes {h}'],
     qr_portao: ['Portão {p}', 'Gate {p}'], qr_terminal: ['Terminal {t}', 'Terminal {t}'], qr_seq: ['Seq. {s}', 'Seq. {s}'], qr_classe: ['Classe {c}', 'Class {c}'], qr_partida: ['sai {h}', 'departs {h}'],
     qr_original: ['Cartão original', 'Original pass'], qr_tocarAmpliar: ['Toque para ampliar.', 'Tap to zoom.'], qr_completar: ['Completar', 'Fill in'],
+    qr_rEmbarque: ['Início do embarque', 'Boarding starts'], qr_rFim: ['Fim do embarque', 'Boarding ends'], qr_rGrupo: ['Grupo', 'Group'], qr_rTerminal: ['Terminal', 'Terminal'],
+    qr_rPortao: ['Portão', 'Gate'], qr_rAssento: ['Assento', 'Seat'], qr_lendoCartao: ['Lendo grupo e portão do cartão…', 'Reading group and gate from the pass…'], cod_lendoCartao: ['Lendo grupo e portão…', 'Reading group and gate…'],
     qr_grupoRot: ['Grupo', 'Group'], qr_embarqueRot: ['Embarque', 'Boarding'], qr_grupoTodos: ['Mesmo grupo para todos do voo', 'Same group for everyone on the flight'],
     ast_botao: ['Ajuda', 'Help'], ast_pergunte: ['Sua dúvida (digite ou 🎤)', 'Your question (type or 🎤)'], ast_como: ['Como', 'How'],
     ast_texto: ['Digite ou fale (🎤) sua dúvida. Funciona sem internet.', 'Type or speak (🎤) your question. Works offline.'],

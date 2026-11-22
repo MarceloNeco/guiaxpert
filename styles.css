@@ -1365,3 +1365,26 @@ body.rolando #dgo-aone:not(.dgo-falando) { opacity: 0; pointer-events: none; }
 .cartao-original-caixa { overflow: auto; max-height: 78vh; border-radius: 12px; background: #fff; }
 .cartao-original { display: block; width: 100%; height: auto; cursor: zoom-in; }
 .cartao-original-caixa.ampliado .cartao-original { width: 220%; max-width: none; cursor: zoom-out; }
+/* passar de passagem com o dedo: um deslize curto mostra para que lado foi */
+.desliza-esq { animation: desliza-esq .22s ease-out; }
+.desliza-dir { animation: desliza-dir .22s ease-out; }
+@keyframes desliza-esq { from { transform: translateX(28%); opacity: .3; } to { transform: none; opacity: 1; } }
+@keyframes desliza-dir { from { transform: translateX(-28%); opacity: .3; } to { transform: none; opacity: 1; } }
+@media (prefers-reduced-motion: reduce) { .desliza-esq, .desliza-dir { animation: none; } }
+/* QR do voo compacto, como o cartão da companhia: grade 3×2 (embarque, fim, grupo / terminal, portão, assento) */
+.qr-titulo { font-size: .95rem; }
+.qr-topo { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: .3rem .6rem; }
+.qr-quem { font-size: 1.1rem; }
+.qr-grade { display: grid; grid-template-columns: repeat(3, 1fr); gap: .35rem; width: min(94vw, 25rem); }
+.qr-grade[hidden] { display: none; }
+.qr-celula { display: flex; flex-direction: column; align-items: center; padding: .3rem .2rem; border-radius: 10px; background: var(--sup2); line-height: 1.15; }
+.qr-celula b { font-size: 1.2rem; font-weight: 800; color: var(--tinta); }
+.qr-celula span { font-size: .72rem; color: var(--tinta); opacity: .75; }
+.qr-celula.forte { background: var(--rodovia-claro); }
+.qr-celula.forte b { font-size: 1.45rem; color: var(--rodovia); }
+.qr-celula.vazia b { opacity: .45; }
+.qr-lendo { color: var(--rodovia); }
+.qr-bt-mini { min-height: 2.6rem; padding: .3rem .7rem; }
+.qr-tam { flex-wrap: wrap; justify-content: center; }
+.qr-tam-par { display: inline-flex; align-items: center; gap: .3rem; }
+.qr-tam-par .qr-tam-bt { width: 2.6rem; height: 2.6rem; font-size: 1.4rem; }

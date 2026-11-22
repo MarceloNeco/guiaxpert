@@ -2,6 +2,23 @@
   "app": "guiaxpert",
   "versoes": [
     {
+      "versao": "1.6.11",
+      "data": "2026-11-22",
+      "substitui": "1.6.10",
+      "itens": {
+        "pt": [
+          "Novo: grupo lido do print da passagem.",
+          "Melhoria na tela do QR do voo.",
+          "Novo: arrastar entre as passagens."
+        ],
+        "en": [
+          "New: group read from pass screenshot.",
+          "Improved flight QR screen.",
+          "New: swipe between passes."
+        ]
+      }
+    },
+    {
       "versao": "1.6.10",
       "data": "2026-11-22",
       "substitui": "1.6.9",

@@ -137,10 +137,13 @@
       /* print/imagem limpa: procura mais QR na mesma imagem; foto grande de câmera só se já achou um (fica rápida) */
       var grande = (im.width || 0) * (im.height || 0) > 6e6;
       return lerImagem(im, { intenso: grande ? false : true, max: 12 }).then(function (cs) {
-        /* print do cartão de embarque: guarda a imagem original junto (o grupo e o portão só aparecem nela) */
-        var img = null;
-        cs.forEach(function (c) { if (/^M[1-4]/.test(c.texto)) c.cartao = img = img || paraCanvas(im, 1300).toDataURL('image/jpeg', .7); });
-        return { codigos: cs, previa: previa, paginas: [{ img: previa, n: cs.length }] };
+        /* print do cartão de embarque: guarda a imagem original junto e LÊ o texto dela (grupo, embarque, portão,
+           terminal só estão impressos; dono, 22/Nov/2026: "tem que mostrar o grupo") */
+        var img = null, voos = cs.filter(function (c) { return /^M[1-4]/.test(c.texto); });
+        voos.forEach(function (c) { c.cartao = img = img || paraCanvas(im, 1300).toDataURL('image/jpeg', .7); });
+        var r = { codigos: cs, previa: previa, paginas: [{ img: previa, n: cs.length }] };
+        if (!voos.length) return r;
+        return lerTexto(paraCanvas(im, 2000), op.aoLerTexto).then(function (t) { voos.forEach(function (c) { c.textoPag = t; }); return r; }, function () { return r; });
       });
     }).catch(function () { return { codigos: [], erro: 'ilegivel' }; });
   }
@@ -183,6 +186,30 @@
 
   /* ---------- cartão de embarque (IATA BCBP, parte obrigatória) ----------
      M1 NOME/SOBRENOME(20) E PNR(7) DE(3) PARA(3) CIA(3) VOO(5) DIA-DO-ANO(3) CLASSE(1) ASSENTO(4) SEQ(5) STATUS(1)… */
+  /* LER TEXTO DE IMAGEM (OCR) no próprio aparelho: Tesseract (Apache 2.0) hospedado em vendor/ocr (a segurança da
+     página não deixa rodar código de fora). Baixa só quando precisa (≈9 MB na primeira vez; o idioma fica guardado). */
+  var ocrMotor = null;
+  function motorOcr(aoProgresso) {
+    if (ocrMotor) return ocrMotor;
+    var base = new URL('vendor/ocr/', document.baseURI).href;
+    ocrMotor = new Promise(function (ok, erro) {
+      if (window.Tesseract) return ok(window.Tesseract);
+      var s = document.createElement('script'); s.src = base + 'tesseract.min.js';
+      s.onload = function () { window.Tesseract ? ok(window.Tesseract) : erro(new Error('ocr')); }; s.onerror = function () { erro(new Error('ocr')); };
+      document.head.appendChild(s);
+    }).then(function (T) {
+      return T.createWorker('por', 1, { workerPath: base + 'worker.min.js', corePath: base, langPath: base, gzip: true, workerBlobURL: false,
+        logger: function (m) { if (ocrMotor && ocrMotor.aoProgresso && m && typeof m.progress === 'number') ocrMotor.aoProgresso(m.progress, m.status); } });
+    });
+    ocrMotor.catch(function () { ocrMotor = null; });
+    return ocrMotor;
+  }
+  function lerTexto(fonte, aoProgresso) {
+    var m = motorOcr(); m.aoProgresso = aoProgresso;
+    var tempo = new Promise(function (ok, erro) { setTimeout(function () { erro(new Error('ocr-tempo')); }, 90000); });
+    return Promise.race([m.then(function (w) { return w.recognize(fonte); }).then(function (r) { return String(r && r.data && r.data.text || ''); }), tempo]);
+  }
+
   function bcbp(txt, anoRef) {
     var t = String(txt || '');
     if (!/^M[1-4]/.test(t) || t.length < 58) return null;
@@ -201,5 +228,5 @@
     return { pessoa: pessoa, localizador: pnr, de: de, para: para, cia: cia, voo: voo, data: data, classe: classe, assento: assento, seq: seq };
   }
 
-  window.Codigos = { lerImagem: lerImagem, lerArquivo: lerArquivo, bcbp: bcbp, nativo: nativo, paraCanvas: paraCanvas };
+  window.Codigos = { lerImagem: lerImagem, lerArquivo: lerArquivo, lerTexto: lerTexto, bcbp: bcbp, nativo: nativo, paraCanvas: paraCanvas };
 })();

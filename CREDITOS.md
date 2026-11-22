@@ -7,6 +7,7 @@
 | Recorte de mapa `mapas/gramado.pmtiles` | OpenStreetMap via build diário do Protomaps (2026-10-29) | ODbL 1.0 — "© OpenStreetMap contributors" | arquivo no repositório e em `solverone-dados/conteudo/guiaxpert/mapas/` |
 | QR: `qrcode-generator` 2.0.4 (Kazuhiko Arase, MIT) e `jsQR` 1.4.0 (Cosmo Wolfe, Apache-2.0) | npm | MIT / Apache-2.0 | `vendor/qr/`, carregados só ao transferir o cofre |
 | Ler PDF de cartão de embarque/ingresso: `pdf.js` 3.11.174 (Mozilla, pdfjs-dist, build legacy) | npm | Apache-2.0 (`vendor/pdfjs/LICENSE`) | `vendor/pdfjs/`, carregado só quando a pessoa escolhe um PDF |
+| Ler texto de print do cartão de embarque (grupo, portão): `tesseract.js` 5.1.1 + `tesseract.js-core` 5.1.1 (Apache-2.0) e idioma `por` do `@tesseract.js-data/por` 1.0.0 (Apache-2.0) | npm | Apache-2.0 (`vendor/ocr/LICENSE-*.txt`) | `vendor/ocr/` (≈9 MB), carregado só quando lê um print de passagem; roda no aparelho, nada sai dele |
 | PDF do roteiro: `jsPDF` 2.5.1 (James Hall, yWorks) e `html2canvas` 1.4.1 (Niklas von Hertzen) | npm | MIT (`vendor/pdf/LICENSE-*.txt`) | `vendor/pdf/`, carregados só quando a pessoa gera um PDF |
 | Leaflet 1.9.4 (mapa) | https://leafletjs.com | BSD-2-Clause | arquivo no repositório (`vendor/leaflet/`), carregado só quando o mapa abre |
 | Dados de mapa, lugares e endereços (Descobrir, mapa, coordenadas do pacote) | OpenStreetMap | ODbL 1.0 — "© OpenStreetMap contributors" | consultados na hora (Overpass, Nominatim, tiles) e coordenadas guardadas no pacote |
