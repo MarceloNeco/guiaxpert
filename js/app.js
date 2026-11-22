@@ -26,7 +26,7 @@
       risco: function () { return null; }, avisos: function () { return []; }, linkCompleto: function () { return 'https://www.windy.com/'; } };
   }
   var Clima = window.Clima;
-  var VERSAO_APP = '1.6.2';
+  var VERSAO_APP = '1.6.3';
 
   /* ------------------------------------------------------------------
      1. UTILIDADES
@@ -4324,7 +4324,7 @@
     return null;
   }
   var ICAO_CIA = { G3: 'GLO', AD: 'AZU', LA: 'TAM', JJ: 'TAM', '2Z': 'PTB', TP: 'TAP', AR: 'ARG', CM: 'CMP', AA: 'AAL', UA: 'UAL', DL: 'DAL', AF: 'AFR', KL: 'KLM', IB: 'IBE', UX: 'AEA', LH: 'DLH' };
-  var vooCache = {};
+  var vooCache = {}, vooAoVivo = {};
   var adminPromessa = null;
   function conferirAdmin() {
     if (estado.souAdmin != null) return Promise.resolve(estado.souAdmin);
@@ -4342,7 +4342,7 @@
         vooCache[k] = null;
         if (r.j && r.j.erro === 'sem-chave') return g || { semChave: true };
         if (r.status !== 200 || !r.j || !r.j.status) return g;
-        var x = Object.assign({}, r.j, { em: Date.now() });
+        var x = Object.assign({}, r.j, { em: Date.now() }); vooAoVivo[iata + '|' + dia] = x;
         return Banco.definirMeta(k, x).then(function () { return x; });
       }).catch(function () { vooCache[k] = null; return g; });
       return vooCache[k];
@@ -4472,6 +4472,7 @@
       c0.nota ? h('span', { class: 'sub pequeno', texto: c0.nota }) : null,
       acoesCartao(comQR.length ? h('button', { class: 'bt bt-principal', type: 'button', onclick: function () { mostrarQRs(comQR, 0); } }, '▦ ' + T('res_mostrarTodosQR', { n: comQR.length })) : null, [
         comQR.length ? ['compartilhar', T('qr_enviar'), function () { enviarCodigos(comQR); }] : null,
+        c0.tipo === 'voo' ? ['relogio', T('cv_enviarHorario'), function () { enviarHorarioVoo(g); }] : null,
         ['qr', T('cod_porQR'), function () { janelaCodigos({}); }],
         ['cal', T('res_remarcar'), function () { janelaRemarcar(g); }],
         ['lapis', T('editar'), function () { janelaEditarGrupo(g); }],
@@ -6030,8 +6031,7 @@
           if (e && e.nome) linhas.push('🏨 ' + e.nome + (e.endereco ? ' · ' + e.endereco : ''));
           cs.forEach(function (c) { linhas.push('🏨 ' + c.titulo + (c.local ? ' · ' + c.local : '') + (c.quando ? ' · ' + fData(c.quando.slice(0, 10), true) : '') + (c.nota ? ' · ' + c.nota : '')); });
         } else {
-          cs.sort(function (a, b) { return (a.quando || '') < (b.quando || '') ? -1 : 1; });
-          cs.forEach(function (c) { linhas.push('✈ ' + c.titulo + (c.quando ? ' · ' + fData(c.quando.slice(0, 10), true) + (c.quando.length > 10 ? ' ' + c.quando.slice(11, 16) : '') : '')); });
+          textoVoos(cs.filter(function (c) { return c.status !== 'cancelada'; })).forEach(function (l) { linhas.push(l); });
         }
         if (linhas.length === 1) linhas.push(T('cartaoVazio'));
         linhas.push(T('cartaoRodape'));
@@ -6042,6 +6042,42 @@
         corpo.appendChild(h('button', { class: 'bt', type: 'button', texto: T('enviar'), onclick: function () { enviarTexto(v.nome, texto); } }));
       });
     });
+  }
+  /* voos para quem fica em casa (dono, 22/Nov/2026: "meu pai perguntou em qual aeroporto e que horas chegamos"):
+     UMA linha por voo (o mesmo voo de 5 pessoas não repete), com saída, CHEGADA e quantas pessoas; sem códigos.
+     Se o estado ao vivo já foi consultado, entra o atraso e a chegada prevista. */
+  function textoVoos(cs) {
+    var porVoo = {}, ordem = [];
+    cs.forEach(function (c) {
+      var k = (vooIata(c) || normalizar(String(c.titulo || '').split('·').slice(0, 2).join('·'))) + '|' + String(c.quando || '').slice(0, 10);
+      if (!porVoo[k]) { porVoo[k] = []; ordem.push(k); } porVoo[k].push(c);
+    });
+    ordem.sort(function (a, b) { var x = porVoo[a][0].quando || '', y = porVoo[b][0].quando || ''; return x < y ? -1 : 1; });
+    return ordem.map(function (k) {
+      var g = porVoo[k], c = g[0], dia = String(c.quando || '').slice(0, 10), hs = String(c.quando || '').slice(11, 16);
+      var tx = [c.titulo, c.local, c.nota].filter(Boolean).join(' · ');
+      var ch = /chegada\s+(?:em\s+)?([^·,;]+?)\s*(\d{1,2}[:h]\d{2})/i.exec(tx);
+      var partes = String(c.titulo || '').split(/\s*·\s*/), iSeta = -1; partes.forEach(function (p, i) { if (iSeta < 0 && /→/.test(p)) iSeta = i; });
+      var nome = iSeta >= 0 ? partes.slice(0, iSeta + 1).join(' · ') : partes[0];   /* sem o nome de quem viaja ("· Leia") */
+      var linha = '✈ ' + nome.replace(/^Voo\s+/i, '') + (dia ? '\n   ' + semana(dia) + ' ' + fData(dia, true) : '') + (hs ? ' · ' + T('cv_sai', { h: hs }) : '') +
+        (ch ? ' · ' + T('cv_chega', { h: ch[2].replace('h', ':'), onde: ch[1].trim() }) : '');
+      var n = pessoasDistintas(g).length; if (n > 1) linha += ' · ' + T('nPassageiros', { n: n });
+      var vivo = vooAoVivo[vooIata(c) + '|' + dia];
+      if (vivo && vivo.partida && +vivo.partida.atraso >= 5) linha += '\n   ⚠ ' + T('voo_atrasado', { m: vivo.partida.atraso, h: hhmmDe(vivo.partida.estimada) }) + (vivo.chegada && vivo.chegada.estimada ? ' · ' + T('cv_chegaPrev', { h: hhmmDe(vivo.chegada.estimada) }) : '');
+      return linha;
+    });
+  }
+  /* "Enviar horário" no cartão do voo: junta TODAS as reservas desse voo na viagem (família + quem tem reserva à parte) */
+  function enviarHorarioVoo(g) {
+    var c0 = g[0].c, k = (vooIata(c0) || c0.titulo) + '|' + String(c0.quando || '').slice(0, 10), v = estado.viagem;
+    var mandar = function (cs) { enviarTexto(c0.titulo, textoVoos(cs).join('\n') + '\n' + T('cartaoRodape')); };
+    if (!v) return mandar(g.map(function (x) { return x.c; }));
+    Banco.listar('reservas', function (r) { return r.viagem_id === v.id && r.tipo === 'voo'; }).then(function (rs) {
+      return Promise.all(rs.map(function (r) { return Cofre.decifrarReserva(r.conteudo).catch(function () { return null; }); }));
+    }).then(function (cs) {
+      cs = cs.filter(function (c) { return c && c.status !== 'cancelada' && ((vooIata(c) || c.titulo) + '|' + String(c.quando || '').slice(0, 10)) === k; });
+      mandar(cs.length ? cs : g.map(function (x) { return x.c; }));
+    }).catch(function () { mandar(g.map(function (x) { return x.c; })); });
   }
   function enviarTexto(titulo, texto) {
     if (navigator.share) return navigator.share({ title: titulo, text: texto }).catch(function () {});

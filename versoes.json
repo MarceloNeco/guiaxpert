@@ -2,6 +2,21 @@
   "app": "guiaxpert",
   "versoes": [
     {
+      "versao": "1.6.3",
+      "data": "2026-11-22",
+      "substitui": "1.6.2",
+      "itens": {
+        "pt": [
+          "Novo: enviar horário do voo.",
+          "Melhorias no cartão de voos."
+        ],
+        "en": [
+          "New: send flight times.",
+          "Improved flights card."
+        ]
+      }
+    },
+    {
       "versao": "1.6.2",
       "data": "2026-11-22",
       "substitui": "1.6.1",
