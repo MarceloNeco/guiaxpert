@@ -2,6 +2,21 @@
   "app": "guiaxpert",
   "versoes": [
     {
+      "versao": "1.6.14",
+      "data": "2026-11-22",
+      "substitui": "1.6.13",
+      "itens": {
+        "pt": [
+          "Novo: aviso de voo que não decolou.",
+          "Novo: trocar portão tocando na caixa."
+        ],
+        "en": [
+          "New: flight not departed yet alert.",
+          "New: tap to change the gate."
+        ]
+      }
+    },
+    {
       "versao": "1.6.13",
       "data": "2026-11-22",
       "substitui": "1.6.12",

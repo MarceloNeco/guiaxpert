@@ -26,7 +26,7 @@
       risco: function () { return null; }, avisos: function () { return []; }, linkCompleto: function () { return 'https://www.windy.com/'; } };
   }
   var Clima = window.Clima;
-  var VERSAO_APP = '1.6.13';
+  var VERSAO_APP = '1.6.14';
 
   /* ------------------------------------------------------------------
      1. UTILIDADES
@@ -4406,6 +4406,28 @@
         .catch(function () { ok.disabled = false; avisar(T('cofreFechou')); });
     });
   }
+  /* situação do voo para mostrar: o que o serviço ou a anotação dizem e, por cima, o RELÓGIO (dono, 22/Nov/2026, 20:23:
+     "o voo está de fato atrasado, ainda não decolamos" — o Google seguia dizendo "no horário"). Passou 5 min da saída
+     e ninguém disse que decolou: "Ainda não decolou · +8 min". → { tx, cls } ou null */
+  function situacaoVoo(c, x) {
+    var dia = String(c.quando || '').slice(0, 10), prev = String(c.quando || '').slice(11, 16);
+    var p = (x && x.partida) || {}, ch = (x && x.chegada) || {}, atraso = +p.atraso || 0, st = x ? x.status : '';
+    var tx = null, cls = 'ok';
+    if (x) {
+      cls = st === 'cancelado' || st === 'desviado' ? 'fim' : atraso >= 15 ? 'atencao' : 'ok';
+      tx = st === 'cancelado' ? T('voo_cancelado') : st === 'desviado' ? T('voo_desviado') : st === 'pousou' ? T('voo_pousou', { h: hhmmDe(ch.real || ch.estimada) }) :
+        st === 'voando' ? T('voo_voando', { h: hhmmDe(ch.estimada || ch.prevista) }) :
+        atraso >= 5 ? T('voo_atrasado', { m: atraso, h: hhmmDe(p.estimada) }) : st === 'atrasado' ? T('voo_atrasadoCurto') : st === 'embarque' ? T('voo_embarque') : T('voo_noHorario');
+      if (st === 'atrasado' && cls === 'ok') cls = 'atencao';
+      if (x.anotado && ch.estimada && st !== 'pousou') tx += ' · ' + T('cv_chegaPrev', { h: hhmmDe(ch.estimada) });
+    }
+    if (['voando', 'pousou', 'cancelado', 'desviado'].indexOf(st) < 0 && dia && prev) {
+      var prevista = new Date(dia + 'T' + prev).getTime(), est = p.estimada ? Date.parse(String(p.estimada).length <= 16 ? String(p.estimada) : p.estimada) : NaN;
+      var conta = Math.max(prevista, isNaN(est) ? 0 : est), agora = Date.now();
+      if (agora - conta >= 5 * 60000 && agora - prevista < 4 * 3600000) { tx = T('voo_naoDecolou', { m: Math.round((agora - prevista) / 60000) }); cls = 'atencao'; }
+    }
+    return tx ? { tx: tx, cls: cls } : null;
+  }
   function linhaVoo(c) {
     var iata = vooIata(c), dia = String(c.quando || '').slice(0, 10);
     /* página do voo direto (FlightAware, pelo código internacional da companhia), igual no Android e no iPhone; sem código: busca */
@@ -4419,26 +4441,21 @@
     var fa = icao ? h('a', { class: 'pequeno voo-fa', href: 'https://www.flightaware.com/live/flight/' + icao + iata.slice(2), target: '_blank', rel: 'noopener', texto: 'FlightAware' }) : null;
     var anotar = h('button', { class: 'lk pequeno voo-anotar', type: 'button', texto: '✎ ' + T('voo_anotarCurto'), onclick: function () { janelaAnotarVoo(c); } });
     var caixa = h('div', { class: 'hor-linha voo-linha' }, [link, fa, anotar].filter(Boolean));
-    var anot = anotadoComoEstado([c]);
+    var anot = anotadoComoEstado([c]), vivos = [];
     if (!iata || !dia) { if (anot) setTimeout(function () { pintar(anot); }, 0); return caixa; }
     var hj = hojeIso(), dif = (new Date(dia + 'T12:00') - new Date(hj + 'T12:00')) / 86400000;
     if (dif < -1 || dif > 2) return caixa;   /* só perto do voo (economiza a cota grátis) */
     /* ao vivo: pinta agora e se atualiza sozinho enquanto o cartão está na tela (5 min nas 6 h antes do voo; 30 min fora) */
-    var vivos = [];
+    var ultimo = null;
     function pintar(x) {
+      ultimo = x;
       vivos.forEach(function (n) { n.remove(); }); vivos = [];
-      if (x && x.semChave) {
-        if (estado.souAdmin) { var av = h('button', { class: 'lk pequeno voo-fonte', type: 'button', texto: T('voo_faltaChave'), onclick: function () { Nav.ir('config'); } }); caixa.appendChild(av); vivos.push(av); }
-        return;
-      }
-      if (!x || !x.status) return;
-      var p = x.partida || {}, ch = x.chegada || {}, atraso = +p.atraso || 0, st = x.status;
-      var cls = st === 'cancelado' || st === 'desviado' ? 'fim' : atraso >= 15 ? 'atencao' : 'ok';
-      var tx = st === 'cancelado' ? T('voo_cancelado') : st === 'desviado' ? T('voo_desviado') : st === 'pousou' ? T('voo_pousou', { h: hhmmDe(ch.real || ch.estimada) }) :
-        st === 'voando' ? T('voo_voando', { h: hhmmDe(ch.estimada || ch.prevista) }) :
-        atraso >= 5 ? T('voo_atrasado', { m: atraso, h: hhmmDe(p.estimada) }) : st === 'atrasado' ? T('voo_atrasadoCurto') : st === 'embarque' ? T('voo_embarque') : T('voo_noHorario');
-      if (st === 'atrasado' && cls === 'ok') cls = 'atencao';
-      if (x.anotado && ch.estimada && st !== 'pousou') tx += ' · ' + T('cv_chegaPrev', { h: hhmmDe(ch.estimada) });
+      var semChave = x && x.semChave;
+      if (semChave && estado.souAdmin) { var av = h('button', { class: 'lk pequeno voo-fonte', type: 'button', texto: T('voo_faltaChave'), onclick: function () { Nav.ir('config'); } }); caixa.appendChild(av); vivos.push(av); }
+      var sv = situacaoVoo(c, x && x.status ? x : null);
+      if (!sv) return;
+      var p = (x && x.partida) || {}, tx = sv.tx, cls = sv.cls;
+      if (!x || !x.status) { var a0 = h('span', { class: 'hor-hoje ' + cls, texto: '✈ ' + tx }); caixa.insertBefore(a0, link); vivos.push(a0); return; }
       var extra = [p.terminal ? T('voo_terminal', { t: p.terminal }) : null, p.portao ? T('voo_portao', { g: p.portao }) : null].filter(Boolean).join(' · ');
       var a1 = h('span', { class: 'hor-hoje ' + cls, texto: '✈ ' + tx }); caixa.insertBefore(a1, link); vivos.push(a1);
       if (extra) { var a2 = h('span', { class: 'hor-faixa', texto: extra }); caixa.insertBefore(a2, link); vivos.push(a2); }
@@ -4446,6 +4463,8 @@
     }
     Promise.all([estadoVoo(iata, dia), conferirAdmin()]).then(function (r) { pintar(r[0] && r[0].semChave && anot ? anot : maisRecente(r[0] && r[0].status ? r[0] : null, anot) || r[0]); });
     var saida = Date.parse(String(c.quando).slice(0, 16));
+    /* a cada minuto refaz a conta do "ainda não decolou" (sem gastar consulta) */
+    var minuto = setInterval(function () { if (!caixa.isConnected) { clearInterval(minuto); return; } if (!d.hidden && Math.abs(saida - Date.now()) < 5 * 3600000) pintar(ultimo); }, 60000);
     var relogio = setInterval(function () {
       if (!caixa.isConnected) { clearInterval(relogio); return; }
       if (d.hidden) return;
@@ -4650,7 +4669,7 @@
     var btOriginal = h('button', { class: 'bt leve qr-bt-mini', type: 'button' }, '🖼 ' + T('qr_original'));
     var btCompletar = h('button', { class: 'bt leve qr-bt-mini', type: 'button', 'aria-label': T('qr_completar'), title: T('qr_completar'), texto: '✎' });
     btOriginal.addEventListener('click', function () { verCartaoOriginal(lista[i], lista); });
-    btCompletar.addEventListener('click', function () { janelaCompletarCartao(lista[i], mostrar); });
+    btCompletar.addEventListener('click', function () { janelaCompletarCartao(lista[i], mostrar, lista); });
     var img = h('img', { alt: '', draggable: 'false', style: 'width:min(86vw,22rem);height:auto;border-radius:12px;background:#fff;image-rendering:pixelated' });
     var EST_QR = img.getAttribute('style'), EST_BARRA = 'width:min(92vw,30rem);height:9rem;border-radius:8px;background:#fff;padding:.6rem';
     var pos = h('span', { class: 'sub' });
@@ -4684,7 +4703,13 @@
     var j = janela(T('qrIngresso'), corpo);
     j.caixa.classList.add('cheia');
     var zoom = zoomComDedos(palco, folha);
-    function celula(v, rot, forte) { return h('div', { class: 'qr-celula' + (forte ? ' forte' : '') + (v ? '' : ' vazia') }, [h('b', { texto: v || '—' }), h('span', { texto: rot })]); }
+    /* tocar numa caixa (portão, grupo, embarque…) abre para corrigir na hora (portão mudou no painel do aeroporto) */
+    function celula(v, rot, forte) {
+      return h('button', { type: 'button', class: 'qr-celula' + (forte ? ' forte' : '') + (v ? '' : ' vazia'), 'aria-label': rot + ': ' + (v || '—') + ' · ' + T('qr_completar'),
+        onclick: function () { janelaCompletarCartao(lista[i], mostrar, lista); } }, [h('b', { texto: v || '—' }), h('span', { texto: rot })]);
+    }
+    var situacao = h('span', { class: 'hor-hoje qr-situacao', hidden: true });
+    var vivoPedido = {};
     function campoLado(v, rot, copiar) { return v ? h('div', { class: 'qr-lado-campo' }, [h('b', { texto: v, style: copiar ? 'user-select:all' : '' }), h('span', { texto: rot })]) : null; }
     function mostrar() {
       var c = lista[i];
@@ -4708,7 +4733,19 @@
         folha.appendChild(h('div', { class: 'qr-gol-cab' }, [h('b', { class: 'qr-quem', texto: c.pessoa || '' }), o.cia ? h('span', { class: 'qr-cia', texto: CIAS[o.cia] || o.cia }) : null]));
         folha.appendChild(h('div', { class: 'qr-gol-meio' }, [
           h('div', { class: 'qr-caixa' }, [img, o.seq ? h('span', { class: 'qr-seq', texto: T('qr_seq', { s: o.seq }) }) : null]),
-          h('div', { class: 'qr-lado' }, [quandoQR, remarcadoQR, campoLado(o.cia && o.voo ? o.cia + ' ' + o.voo : '', T('qr_rVoo')), campoLado(c.codigo || '', T('qr_rReserva'), true)])]));
+          h('div', { class: 'qr-lado' }, [quandoQR, situacao, remarcadoQR, campoLado(o.cia && o.voo ? o.cia + ' ' + o.voo : '', T('qr_rVoo')), campoLado(c.codigo || '', T('qr_rReserva'), true)])]));
+        /* situação do voo (serviço, anotação ou relógio: "Ainda não decolou · +8 min") e portão ao vivo */
+        var sv = situacaoVoo(c, maisRecente(c._vivo && c._vivo.status ? c._vivo : null, anotadoComoEstado([c])));
+        situacao.hidden = !sv; if (sv) { situacao.textContent = '✈ ' + sv.tx; situacao.className = 'hor-hoje qr-situacao ' + sv.cls; }
+        var iataV = vooIata(c), diaV = String(c.quando || '').slice(0, 10);
+        if (iataV && diaV && !vivoPedido[iataV + diaV]) {
+          vivoPedido[iataV + diaV] = 1;
+          estadoVoo(iataV, diaV).then(function (x) {
+            if (!x || !x.status) return;
+            lista.forEach(function (y) { if (vooIata(y) === iataV && String(y.quando || '').slice(0, 10) === diaV) y._vivo = x; });
+            if (j.caixa.isConnected) mostrar();
+          });
+        }
         if (o.de && o.para) folha.appendChild(h('div', { class: 'qr-rota' }, [
           h('div', {}, [h('b', { texto: o.de }), h('span', { texto: AEROPORTOS[o.de] || '' })]), h('span', { class: 'qr-aviao', 'aria-hidden': 'true', texto: '✈' }),
           h('div', { class: 'dir' }, [h('b', { texto: o.para }), h('span', { texto: AEROPORTOS[o.para] || '' })])]));
@@ -4777,6 +4814,14 @@
       i = k; mostrar(); deslizar(folha, passo);
     }, function () { return !zoom.ampliado(); });
     mostrar();
+    /* o "ainda não decolou" anda sozinho a cada minuto */
+    var tique = setInterval(function () {
+      if (!j.caixa.isConnected) { clearInterval(tique); return; }
+      var c = lista[i]; if (c && (c.tipo === 'voo' || /^M[1-4]/.test(c.qr || ''))) {
+        var sv = situacaoVoo(c, maisRecente(c._vivo && c._vivo.status ? c._vivo : null, anotadoComoEstado([c])));
+        situacao.hidden = !sv; if (sv) { situacao.textContent = '✈ ' + sv.tx; situacao.className = 'hor-hoje qr-situacao ' + sv.cls; }
+      }
+    }, 60000);
     if (navigator.wakeLock && navigator.wakeLock.request) navigator.wakeLock.request('screen').catch(function () {});
   }
   function mostrarQRIngresso(c) { mostrarQRs([c], 0); }
@@ -5141,8 +5186,13 @@
     ['pessoa', 'assento', 'seq', 'classe', 'de', 'para', 'cia', 'voo'].forEach(function (k) { o[k] = c[k] || (b && b[k]) || ''; });
     var an = c.vooAnotado || {};
     CAMPOS_CARTAO.forEach(function (k) { o[k] = c[k] || ''; });
-    if (an.portao) o.portao = an.portao;   /* anotado à mão é mais novo que o impresso */
-    if (an.terminal) o.terminal = an.terminal;
+    /* portão e terminal: o mais novo entre o estado do voo (serviço) e o anotado à mão; ambos valem mais que o impresso */
+    var vivo = c._vivo && c._vivo.partida ? c._vivo : null, anEm = an.em ? Date.parse(an.em) : 0;
+    var fonte = vivo && (!anEm || (vivo.em || 0) > anEm) ? { portao: vivo.partida.portao, terminal: vivo.partida.terminal } : an;
+    var maoEm = c.portaoEm ? Date.parse(c.portaoEm) : 0;   /* corrigido na caixa da tela do QR */
+    if (maoEm && maoEm >= anEm && (!vivo || maoEm >= (vivo.em || 0))) fonte = { portao: c.portao, terminal: c.terminal };
+    if (fonte.portao || an.portao) o.portao = fonte.portao || an.portao;
+    if (fonte.terminal || an.terminal) o.terminal = fonte.terminal || an.terminal;
     return o;
   }
   /* linhas do cartão no QR: [grande: grupo e assento] [pequena: embarque, portão, terminal, seq., classe] [trecho] */
@@ -5236,7 +5286,7 @@
     im.src = c.cartao;
   }
   /* completar à mão o que não veio (print sem texto): grupo é da pessoa; embarque, portão e terminal valem para o voo todo */
-  function janelaCompletarCartao(c0, depois) {
+  function janelaCompletarCartao(c0, depois, naTela) {
     var o = dadosCartao(c0);
     var grupo = h('input', { class: 'campo', id: 'gx-cc-grupo', maxlength: '3', autocomplete: 'off', value: o.grupo || '', placeholder: '4', style: 'text-transform:uppercase' });
     var emb = campoHora('gx-cc-emb', o.embarque || '', {});
@@ -5257,10 +5307,11 @@
       }).then(function (xs) {
         return xs.reduce(function (pr, x) {
           return pr.then(function () {
-            var dados = Object.assign({}, x.c, { embarque: e, portao: p, terminal: t });
+            var dados = Object.assign({}, x.c, { embarque: e, portao: p, terminal: t, portaoEm: new Date().toISOString() });
             if (x.c.qr === c0.qr || todos.checked) dados.grupo = g;
             if (dados.vooAnotado) dados.vooAnotado = Object.assign({}, dados.vooAnotado, { portao: p || null, terminal: t || null });
-            if (x.c.qr === c0.qr) Object.assign(c0, { grupo: dados.grupo, embarque: e, portao: p, terminal: t, vooAnotado: dados.vooAnotado });
+            if (x.c.qr === c0.qr) Object.assign(c0, { grupo: dados.grupo, embarque: e, portao: p, terminal: t, portaoEm: dados.portaoEm, vooAnotado: dados.vooAnotado });
+            (naTela || []).forEach(function (y) { if (y !== c0 && y.qr && y.qr === x.c.qr) Object.assign(y, { grupo: dados.grupo, embarque: e, portao: p, terminal: t, portaoEm: dados.portaoEm, vooAnotado: dados.vooAnotado }); });
             return cifrarReserva(x.reg.viagem_id, dados).then(function (blob) { x.reg.conteudo = blob; return Banco.gravar('reservas', x.reg); });
           });
         }, Promise.resolve());

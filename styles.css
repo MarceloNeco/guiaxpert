@@ -1427,3 +1427,6 @@ body.rolando #dgo-aone:not(.dgo-falando) { opacity: 0; pointer-events: none; }
 .qr-folha.voo .qr-celula b { font-size: 1.1rem; }
 .qr-folha.voo .qr-celula.forte b { font-size: 1.3rem; }
 .qr-ler-print { width: 100%; }
+/* caixas do cartão tocáveis (corrigir portão etc.) e situação do voo ao lado do QR */
+button.qr-celula { border: 0; font: inherit; color: inherit; cursor: pointer; width: 100%; }
+.qr-situacao { align-self: flex-start; font-size: .8rem; }
