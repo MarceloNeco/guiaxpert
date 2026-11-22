@@ -1349,3 +1349,12 @@ body.rolando #dgo-aone:not(.dgo-falando) { opacity: 0; pointer-events: none; }
 .qr-nav .sub { font-variant-numeric: tabular-nums; white-space: nowrap; }
 .qr-nav .bt:disabled { opacity: .35; }
 .voo-fonte { flex-basis: 100%; color: var(--suave); font-size: .78rem; }
+/* Compartilhar: duas seções curtas (vai junto · fica em casa), cada uma com seus cards */
+.cmp-janela { display: flex; flex-direction: column; gap: 1rem; }
+.cmp-sec h3 { margin: 0; font-size: 1rem; }
+.cmp-sec > .pequeno { margin: .1rem 0 .5rem; color: var(--suave); }
+.cmp-sec .tile small { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 100%; }
+/* anotar o estado do voo à mão */
+.av-grade { display: grid; grid-template-columns: 1fr 1fr; gap: .5rem .7rem; }
+.av-campo { display: flex; flex-direction: column; gap: .2rem; }
+.voo-anotar { font-weight: 700; color: var(--hortensia); }

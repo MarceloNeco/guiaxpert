@@ -33,3 +33,6 @@ testando como a persona (CLAUDE.md), no fuso America/Sao_Paulo.
 | 22 | **Voo de volta com "6 reservas" para 5 pessoas.** A reserva da família do e-mail ("Marcelo, Roberta, Lara e Júlia") contava como mais um passageiro. Agora conta pessoas diferentes pelo primeiro nome: bloco "5 passageiros", cartão "4 passageiros" com os nomes sem repetir. | feito (1.5.99) |
 | 23 | Tela do QR: Anterior, posição e Próximo na mesma linha. | feito (1.5.98) |
 | 24 | Estado do voo: 3 serviços se cobrindo (AirLabs, aviationstack, AeroDataBox) + link "Estado do voo ↗"; atraso também na linha fechada. Carteira do Google: integração da plataforma, aguardando o dono criar a conta de emissor. | voo feito (1.6.0) · carteira aguardando dono |
+| 25 | **Compartilhar: uma função só, "o quê e para quem"** (persona). Cartão da reserva e Quem → Compartilhar: *Para quem vai junto* (com QR: estes, de hoje, todos; convidar) e *Para quem fica em casa* (horário deste voo / dos voos, roteiro, hotel; sem códigos). Jornadas testadas: QR para a sogra (2 toques), chegada para o pai (2), roteiro para casa (2). | feito (1.6.4) |
+| 26 | **Estado do voo sem integração**: "✎ Anotar" no voo (status, saída, chegada, portão, terminal); vale para todas as reservas do voo, sincroniza com a família e entra no "Horário deste voo". Vale o mais recente entre anotado e ao vivo. | feito (1.6.4) |
+

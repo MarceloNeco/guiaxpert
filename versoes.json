@@ -2,6 +2,21 @@
   "app": "guiaxpert",
   "versoes": [
     {
+      "versao": "1.6.4",
+      "data": "2026-11-22",
+      "substitui": "1.6.3",
+      "itens": {
+        "pt": [
+          "Novo: Compartilhar com quem vai ou fica.",
+          "Novo: anotar o estado do voo."
+        ],
+        "en": [
+          "New: share with who goes or stays.",
+          "New: note the flight status."
+        ]
+      }
+    },
+    {
       "versao": "1.6.3",
       "data": "2026-11-22",
       "substitui": "1.6.2",

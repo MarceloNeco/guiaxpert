@@ -26,7 +26,7 @@
       risco: function () { return null; }, avisos: function () { return []; }, linkCompleto: function () { return 'https://www.windy.com/'; } };
   }
   var Clima = window.Clima;
-  var VERSAO_APP = '1.6.3';
+  var VERSAO_APP = '1.6.4';
 
   /* ------------------------------------------------------------------
      1. UTILIDADES
@@ -3385,7 +3385,7 @@
      [rótulo do atalho PT, EN, caminho em uma linha PT, EN]. O texto longo fica recolhido em "▸ Como". */
   var AJUDA_CURTA = {
     qr: ['Pôr QR', 'Add QR', 'Reservas › ▦ QR / cartão', 'Bookings › ▦ QR / pass'],
-    enviarqr: ['Enviar ingressos', 'Send tickets', 'Reservas › cartão › Enviar', 'Bookings › card › Send'],
+    enviarqr: ['Compartilhar', 'Share', 'Reservas › cartão › Compartilhar', 'Bookings › card › Share'],
     mostrar: ['Mostrar QR', 'Show QR', 'Reservas › ▦ Mostrar · − + muda o tamanho', 'Bookings › ▦ Show · − + resizes'],
     remarcar: ['Remarcar', 'Reschedule', 'Reservas › cartão › Remarcar', 'Bookings › card › Reschedule'],
     cancelar: ['Cancelar', 'Cancel', 'Reservas › cartão › Cancelar', 'Bookings › card › Cancel'],
@@ -3463,9 +3463,9 @@
         t: L('Mostrar o QR na entrada ou no embarque', 'Show the QR at the gate'),
         r: L('Reservas → no cartão, "Mostrar os N códigos": um QR por vez, em tela cheia; passe para o lado para o próximo. Aumente o brilho da tela. A catraca não leu? Use − e + embaixo do código para diminuir ou aumentar; o app lembra o tamanho. Funciona sem internet.', 'Bookings → on the card, "Show all codes": one QR at a time, full screen; swipe for the next. Turn up the brightness. Scanner didn’t read it? Use − and + under the code to resize; the app remembers. Works offline.'),
         acao: [L('Ir para Reservas', 'Go to Bookings'), irRes()] },
-      { id: 'enviarqr', chaves: ['enviar ingresso', 'mandar ingresso', 'compartilhar ingresso', 'passar ingresso', 'enviar qr', 'mandar qr', 'outro celular', 'celular da sogra', 'bateria acabando', 'whatsapp ingresso', 'send ticket', 'share ticket'],
-        t: L('Enviar ingressos para outro celular', 'Send tickets to another phone'),
-        r: L('No cartão da reserva, "Enviar": vira uma imagem por ingresso (QR, nome, data) e abre o Compartilhar do celular. Escolha o WhatsApp de quem vai usar. Quem receber consegue entrar com eles.', 'On the booking card, "Send": one image per ticket (QR, name, date) and the phone share sheet opens. Pick who will use them.'),
+      { id: 'enviarqr', chaves: ['compartilhar', 'mandar horario do voo', 'avisar chegada', 'quem vai buscar', 'horario de chegada', 'mandar roteiro', 'imprimir ingresso', 'backup do qr', 'enviar ingresso', 'mandar ingresso', 'compartilhar ingresso', 'passar ingresso', 'enviar qr', 'mandar qr', 'outro celular', 'celular da sogra', 'bateria acabando', 'whatsapp ingresso', 'send ticket', 'share ticket'],
+        t: L('Compartilhar ingressos, voo, roteiro ou hotel', 'Share tickets, flight, plan or hotel'),
+        r: L('No cartão da reserva (ou em Quem), "Compartilhar". Para quem vai junto: os QR viram imagens (quem receber entra; serve de backup e para imprimir). Para quem fica em casa: horário do voo, roteiro e hotel, sem códigos.', 'On the booking card (or in Who), "Share". For who goes with you: QR as images. For who stays home: flight times, plan and hotel, no codes.'),
         acao: [L('Ir para Reservas', 'Go to Bookings'), irRes()] },
       { id: 'remarcar', chaves: ['remarcar', 'remarcação', 'reagendar', 'reagendamento', 'adiar', 'adiamento', 'mudar data', 'mudança de data', 'trocar data', 'trocar dia', 'outro dia', 'mudar o dia da reserva', 'remarcar ingresso', 'reagendar reserva', 'reschedule', 'change date'],
         t: L('Remarcar uma reserva para outro dia', 'Reschedule a booking'),
@@ -4349,14 +4349,66 @@
     });
   }
   function hhmmDe(iso) { var m = /T?(\d{2}):(\d{2})/.exec(String(iso || '').replace(/^\d{4}-\d{2}-\d{2}[ T]/, 'T')); return m ? m[1] + ':' + m[2] : ''; }
+  /* ---- ANOTAR o estado do voo à mão (dono, 22/Nov/2026: "algo manual enquanto a integração não está pronta"):
+     a pessoa olha o cartão do Google ou o link, e em 2–3 toques diz como está (no horário / atrasado / embarque /
+     cancelado), a nova hora, o portão. Fica em TODAS as reservas desse voo, sincroniza com a família e entra no
+     "Horário deste voo". Sem chave, sem integração. */
+  function anotadoComoEstado(cs) {
+    var a = null; (cs || []).forEach(function (c) { var x = c && (c.c || c).vooAnotado; if (x && (!a || x.em > a.em)) a = x; });
+    if (!a) return null;
+    var c0 = (cs[0].c || cs[0]), dia = String(c0.quando || '').slice(0, 10), prev = String(c0.quando || '').slice(11, 16);
+    var mm = function (hh) { var p = String(hh || '').split(':'); return (+p[0]) * 60 + (+p[1] || 0); };
+    var atraso = a.sai && prev ? Math.max(0, mm(a.sai) - mm(prev)) : 0;
+    return { status: a.status, fonte: T('voo_anotado'), em: Date.parse(a.em), anotado: true,
+      partida: { prevista: prev ? dia + 'T' + prev : null, estimada: a.sai ? dia + 'T' + a.sai : null, atraso: a.status === 'atrasado' ? atraso : 0, portao: a.portao || null, terminal: a.terminal || null },
+      chegada: { estimada: a.chega ? dia + 'T' + a.chega : null } };
+  }
+  function maisRecente(a, b) { if (!a) return b; if (!b) return a; return (b.em || 0) > (a.em || 0) ? b : a; }
+  function reservasDoMesmoVoo(c0) {
+    var v = estado.viagem, k = (vooIata(c0) || c0.titulo) + '|' + String(c0.quando || '').slice(0, 10);
+    if (!v) return Promise.resolve([]);
+    return reservasDecifradas(v).then(function (xs) { return xs.filter(function (x) { return x.c.tipo === 'voo' && x.c.status !== 'cancelada' && ((vooIata(x.c) || x.c.titulo) + '|' + String(x.c.quando || '').slice(0, 10)) === k; }); });
+  }
+  function janelaAnotarVoo(c0) {
+    var antes = c0.vooAnotado || {}, escolha = antes.status || 'nohorario';
+    var OPS = [['nohorario', T('voo_noHorario')], ['atrasado', T('voo_atrasadoCurto')], ['embarque', T('voo_embarque')], ['cancelado', T('voo_cancelado')], ['voando', T('voo_decolou')], ['pousou', T('voo_pousouCurto')]];
+    var chips = h('div', { class: 'chips' }, OPS.map(function (o) {
+      return h('button', { class: 'chip', type: 'button', 'aria-pressed': o[0] === escolha ? 'true' : 'false', texto: o[1], onclick: function (e) {
+        escolha = o[0]; [].forEach.call(chips.children, function (b) { b.setAttribute('aria-pressed', 'false'); }); e.currentTarget.setAttribute('aria-pressed', 'true'); } });
+    }));
+    var sai = campoHora('gx-av-sai', antes.sai || String(c0.quando || '').slice(11, 16), {}), chega = campoHora('gx-av-chega', antes.chega || '', {});
+    var portao = h('input', { class: 'campo', id: 'gx-av-portao', maxlength: '8', autocomplete: 'off', value: antes.portao || '', placeholder: '118' });
+    var terminal = h('input', { class: 'campo', id: 'gx-av-term', maxlength: '6', autocomplete: 'off', value: antes.terminal || '', placeholder: '1' });
+    var ok = h('button', { class: 'bt cheio', type: 'button', texto: '✓ ' + T('salvar') });
+    var campo = function (id, rot, el) { return h('div', { class: 'av-campo' }, [h('label', { class: 'rot', for: id, texto: rot }), el]); };
+    var corpo = h('div', { class: 'linha', style: 'flex-direction:column;align-items:stretch;gap:.6rem' }, [
+      h('p', { class: 'pequeno', texto: T('voo_anotarDica') }), chips,
+      h('div', { class: 'av-grade' }, [campo('gx-av-sai', T('voo_saida'), sai), campo('gx-av-chega', T('voo_chegada'), chega), campo('gx-av-portao', T('voo_portaoRot'), portao), campo('gx-av-term', T('voo_terminalRot'), terminal)]), ok]);
+    var j = janela(T('voo_anotar'), corpo);
+    ok.addEventListener('click', function () {
+      ok.disabled = true;
+      var nota = { status: escolha, sai: normHora(sai.value) || null, chega: normHora(chega.value) || null, portao: portao.value.trim() || null, terminal: terminal.value.trim() || null, em: new Date().toISOString() };
+      reservasDoMesmoVoo(c0).then(function (xs) {
+        return xs.reduce(function (p, x) {
+          return p.then(function () {
+            var dados = Object.assign({}, x.c, { vooAnotado: nota });
+            return cifrarReserva(x.reg.viagem_id, dados).then(function (blob) { x.reg.conteudo = blob; return Banco.gravar('reservas', x.reg); });
+          });
+        }, Promise.resolve());
+      }).then(function () { j.fechar(function () { avisar(T('salvo')); mostrar('reservas'); }); })
+        .catch(function () { ok.disabled = false; avisar(T('cofreFechou')); });
+    });
+  }
   function linhaVoo(c) {
     var iata = vooIata(c), dia = String(c.quando || '').slice(0, 10);
     /* página do voo direto (FlightAware, pelo código internacional da companhia), igual no Android e no iPhone; sem código: busca */
     var icao = iata && ICAO_CIA[iata.slice(0, 2)];
     var href = icao ? 'https://www.flightaware.com/live/flight/' + icao + iata.slice(2) : 'https://www.google.com/search?q=' + encodeURIComponent(T('voo_buscaPrefixo') + ' ' + (iata ? iata.replace(/^([A-Z0-9]{2})/, '$1 ') : c.titulo));
     var link = h('a', { class: 'hor-site', href: href, target: '_blank', rel: 'noopener', texto: T('voo_estado') + ' ↗' });
-    var caixa = h('div', { class: 'hor-linha voo-linha' }, [link]);
-    if (!iata || !dia) return caixa;
+    var anotar = h('button', { class: 'lk pequeno voo-anotar', type: 'button', texto: '✎ ' + T('voo_anotarCurto'), onclick: function () { janelaAnotarVoo(c); } });
+    var caixa = h('div', { class: 'hor-linha voo-linha' }, [link, anotar]);
+    var anot = anotadoComoEstado([c]);
+    if (!iata || !dia) { if (anot) setTimeout(function () { pintar(anot); }, 0); return caixa; }
     var hj = hojeIso(), dif = (new Date(dia + 'T12:00') - new Date(hj + 'T12:00')) / 86400000;
     if (dif < -1 || dif > 2) return caixa;   /* só perto do voo (economiza a cota grátis) */
     /* ao vivo: pinta agora e se atualiza sozinho enquanto o cartão está na tela (5 min nas 6 h antes do voo; 30 min fora) */
@@ -4372,18 +4424,20 @@
       var cls = st === 'cancelado' || st === 'desviado' ? 'fim' : atraso >= 15 ? 'atencao' : 'ok';
       var tx = st === 'cancelado' ? T('voo_cancelado') : st === 'desviado' ? T('voo_desviado') : st === 'pousou' ? T('voo_pousou', { h: hhmmDe(ch.real || ch.estimada) }) :
         st === 'voando' ? T('voo_voando', { h: hhmmDe(ch.estimada || ch.prevista) }) :
-        atraso >= 5 ? T('voo_atrasado', { m: atraso, h: hhmmDe(p.estimada) }) : st === 'embarque' ? T('voo_embarque') : T('voo_noHorario');
+        atraso >= 5 ? T('voo_atrasado', { m: atraso, h: hhmmDe(p.estimada) }) : st === 'atrasado' ? T('voo_atrasadoCurto') : st === 'embarque' ? T('voo_embarque') : T('voo_noHorario');
+      if (st === 'atrasado' && cls === 'ok') cls = 'atencao';
+      if (x.anotado && ch.estimada && st !== 'pousou') tx += ' · ' + T('cv_chegaPrev', { h: hhmmDe(ch.estimada) });
       var extra = [p.terminal ? T('voo_terminal', { t: p.terminal }) : null, p.portao ? T('voo_portao', { g: p.portao }) : null].filter(Boolean).join(' · ');
       var a1 = h('span', { class: 'hor-hoje ' + cls, texto: '✈ ' + tx }); caixa.insertBefore(a1, link); vivos.push(a1);
       if (extra) { var a2 = h('span', { class: 'hor-faixa', texto: extra }); caixa.insertBefore(a2, link); vivos.push(a2); }
       var a3 = h('span', { class: 'pequeno voo-fonte', texto: T('voo_atualizado', { h: new Date(x.em).toTimeString().slice(0, 5), f: x.fonte || '' }) }); caixa.appendChild(a3); vivos.push(a3);
     }
-    Promise.all([estadoVoo(iata, dia), conferirAdmin()]).then(function (r) { pintar(r[0]); });
+    Promise.all([estadoVoo(iata, dia), conferirAdmin()]).then(function (r) { pintar(r[0] && r[0].semChave && anot ? anot : maisRecente(r[0] && r[0].status ? r[0] : null, anot) || r[0]); });
     var saida = Date.parse(String(c.quando).slice(0, 16));
     var relogio = setInterval(function () {
       if (!caixa.isConnected) { clearInterval(relogio); return; }
       if (d.hidden) return;
-      estadoVoo(iata, dia, true).then(pintar);
+      estadoVoo(iata, dia, true).then(function (x) { pintar(maisRecente(x && x.status ? x : null, anot) || x); });
     }, Math.abs(saida - Date.now()) < 6 * 3600000 ? 5 * 60000 : 30 * 60000);
     return caixa;
   }
@@ -4442,7 +4496,7 @@
       c.local ? h('span', { class: 'sub', texto: c.local }) : null,
       c.nota ? h('span', { class: 'sub', texto: c.nota }) : null,
       acoesCartao(c.qr || c.barra ? h('button', { class: 'bt bt-principal', type: 'button', onclick: function () { mostrarQRs([c], 0); } }, '▦ ' + T('mostrarQRIngresso')) : null, [
-        c.qr || c.barra ? ['compartilhar', T('qr_enviar'), function () { enviarCodigos([c]); }] : null,
+        ['compartilhar', T('cmp_compartilhar'), function () { janelaCompartilhar({ grupo: [x] }); }],
         !x.trancada ? ['qr', T(c.qr || c.barra ? 'cod_trocarQR' : 'cod_porQR'), function () { janelaCodigos({ alvo: x }); }] : null,
         !x.trancada ? ['cal', T('res_remarcar'), function () { janelaRemarcar([x]); }] : null,
         ['lapis', T('editar'), function () { janelaReserva(x); }],
@@ -4471,8 +4525,7 @@
       c0.local ? h('span', { class: 'sub pequeno', texto: c0.local }) : null,
       c0.nota ? h('span', { class: 'sub pequeno', texto: c0.nota }) : null,
       acoesCartao(comQR.length ? h('button', { class: 'bt bt-principal', type: 'button', onclick: function () { mostrarQRs(comQR, 0); } }, '▦ ' + T('res_mostrarTodosQR', { n: comQR.length })) : null, [
-        comQR.length ? ['compartilhar', T('qr_enviar'), function () { enviarCodigos(comQR); }] : null,
-        c0.tipo === 'voo' ? ['relogio', T('cv_enviarHorario'), function () { enviarHorarioVoo(g); }] : null,
+        ['compartilhar', T('cmp_compartilhar'), function () { janelaCompartilhar({ grupo: g }); }],
         ['qr', T('cod_porQR'), function () { janelaCodigos({}); }],
         ['cal', T('res_remarcar'), function () { janelaRemarcar(g); }],
         ['lapis', T('editar'), function () { janelaEditarGrupo(g); }],
@@ -5667,12 +5720,8 @@
       tile('compartilhar', T('tl_paraVer'), function () { convidar(v, 've'); }, { tom: 'hortensia', rotuloLongo: T('convidarVe') }),
       tile('lapis', T('tl_paraEditar'), function () { convidar(v, 'edita'); }, { principal: true, rotuloLongo: T('convidarEdita') })], 2));
     c.appendChild(h('p', { class: 'pequeno', texto: T('convitePrivacidade') }));
-    c.appendChild(h('h3', { texto: T('quemFicaEmCasa'), style: 'margin-top:.5rem' }));
-    c.appendChild(h('p', { class: 'sub', texto: T('quemFicaEmCasaTexto') }));
-    c.appendChild(tiles([
-      tile('🛏', T('compartilharHotel'), function () { compartilharCartao(v, 'hotel'); }, { tom: 'nevoa' }),
-      tile('cal', T('tl_roteiro'), function () { janelaCompartilharRoteiro(v); }, { tom: 'hortensia', rotuloLongo: T('cmp_roteiroCasa') }),
-      tile('✈', T('compartilharVoos'), function () { compartilharCartao(v, 'voo'); }, { tom: 'trigo' })], 3));
+    c.appendChild(h('h3', { texto: T('cmp_compartilhar'), style: 'margin-top:.5rem' }));
+    c.appendChild(tiles([tile('compartilhar', T('cmp_oQueParaQuem'), function () { janelaCompartilhar({}); }, { principal: true, sub: T('cmp_oQueParaQuemSub') })], 1));
     return c;
   }
   function convidar(v, papel) {
@@ -6055,16 +6104,60 @@
     ordem.sort(function (a, b) { var x = porVoo[a][0].quando || '', y = porVoo[b][0].quando || ''; return x < y ? -1 : 1; });
     return ordem.map(function (k) {
       var g = porVoo[k], c = g[0], dia = String(c.quando || '').slice(0, 10), hs = String(c.quando || '').slice(11, 16);
-      var tx = [c.titulo, c.local, c.nota].filter(Boolean).join(' · ');
+      var tx = g.map(function (x) { return [x.titulo, x.local, x.nota].filter(Boolean).join(' · '); }).join(' · ');
       var ch = /chegada\s+(?:em\s+)?([^·,;]+?)\s*(\d{1,2}[:h]\d{2})/i.exec(tx);
       var partes = String(c.titulo || '').split(/\s*·\s*/), iSeta = -1; partes.forEach(function (p, i) { if (iSeta < 0 && /→/.test(p)) iSeta = i; });
       var nome = iSeta >= 0 ? partes.slice(0, iSeta + 1).join(' · ') : partes[0];   /* sem o nome de quem viaja ("· Leia") */
       var linha = '✈ ' + nome.replace(/^Voo\s+/i, '') + (dia ? '\n   ' + semana(dia) + ' ' + fData(dia, true) : '') + (hs ? ' · ' + T('cv_sai', { h: hs }) : '') +
         (ch ? ' · ' + T('cv_chega', { h: ch[2].replace('h', ':'), onde: ch[1].trim() }) : '');
       var n = pessoasDistintas(g).length; if (n > 1) linha += ' · ' + T('nPassageiros', { n: n });
-      var vivo = vooAoVivo[vooIata(c) + '|' + dia];
+      var vivo = maisRecente(vooAoVivo[vooIata(c) + '|' + dia], anotadoComoEstado(g));
       if (vivo && vivo.partida && +vivo.partida.atraso >= 5) linha += '\n   ⚠ ' + T('voo_atrasado', { m: vivo.partida.atraso, h: hhmmDe(vivo.partida.estimada) }) + (vivo.chegada && vivo.chegada.estimada ? ' · ' + T('cv_chegaPrev', { h: hhmmDe(vivo.chegada.estimada) }) : '');
       return linha;
+    });
+  }
+  /* ---------- COMPARTILHAR (dono, 22/Nov/2026: "uma função só; compartilhar o quê e para quem?") ----------
+     Duas perguntas que a pessoa já tem na cabeça, em cards:
+       Para quem VAI JUNTO (com QR: quem receber entra) — estes QR, os de hoje, todos da viagem, convidar para o Guia;
+       Para quem FICA EM CASA (sem códigos) — horário deste voo / dos voos, roteiro, hotel.
+     Aberta do cartão de uma reserva, já mostra primeiro o que é dela. */
+  function reservasDecifradas(v) {
+    return abrirReservas(v).then(function () { return Banco.listar('reservas', function (r) { return r.viagem_id === v.id && !!r.conteudo; }); }).then(function (rs) {
+      return Promise.all(rs.map(function (r) { return Cofre.decifrarReserva(r.conteudo).then(function (c) { return c ? { reg: r, c: c } : null; }).catch(function () { return null; }); }));
+    }).then(function (xs) { return xs.filter(Boolean); });
+  }
+  function janelaCompartilhar(op) {
+    op = op || {};
+    var v = estado.viagem; if (!v) return;
+    var g = op.grupo || null, c0 = g && g[0] && g[0].c;
+    var comQR = function (cs) { return cs.filter(function (c) { return (c.qr || c.barra) && c.status !== 'cancelada'; }); };
+    var corpo = h('div', { class: 'cmp-janela' });
+    var j = janela(T('cmp_compartilhar'), corpo);
+    var acao = function (fn) { return function () { j.fechar(fn); }; };
+    var secJunto = h('section', { class: 'cmp-sec' }, [h('h3', { texto: T('cmp_vaiJunto') }), h('p', { class: 'pequeno', texto: T('cmp_vaiJuntoSub') })]);
+    var secCasa = h('section', { class: 'cmp-sec' }, [h('h3', { texto: T('cmp_ficaEmCasa') }), h('p', { class: 'pequeno', texto: T('cmp_ficaEmCasaSub') })]);
+    corpo.appendChild(secJunto); corpo.appendChild(secCasa);
+    var espera = h('p', { class: 'pequeno', texto: '…' }); secJunto.appendChild(espera);
+    /* em casa: na hora (não precisa abrir as reservas) */
+    var casa = [];
+    if (c0 && c0.tipo === 'voo') casa.push(tile('✈', T('cmp_horarioEsteVoo'), acao(function () { enviarHorarioVoo(g); }), { principal: true }));
+    casa.push(tile('✈', T('cmp_horarioVoos'), acao(function () { compartilharCartao(v, 'voo'); }), { tom: 'trigo' }));
+    casa.push(tile('cal', T('tl_roteiro'), acao(function () { janelaCompartilharRoteiro(v); }), { tom: 'hortensia', rotuloLongo: T('cmp_roteiroCasa') }));
+    casa.push(tile('🛏', T('compartilharHotel'), acao(function () { compartilharCartao(v, 'hotel'); }), { tom: 'nevoa' }));
+    secCasa.appendChild(tiles(casa, 2));
+    /* junto: precisa saber quantos QR existem (deste cartão, de hoje, da viagem) */
+    reservasDecifradas(v).then(function (xs) {
+      espera.remove();
+      var todos = comQR(xs.map(function (x) { return x.c; })).sort(function (a, b) { return (a.quando || '') < (b.quando || '') ? -1 : 1; });
+      var hj = hojeIso(), deHoje = todos.filter(function (c) { return String(c.quando || '').slice(0, 10) === hj; });
+      var deste = g ? comQR(g.map(function (x) { return x.c; })) : [];
+      var junto = [];
+      if (deste.length) junto.push(tile('qr', T('cmp_estesQR', { n: deste.length }), acao(function () { enviarCodigos(deste); }), { principal: true, sub: c0.titulo }));
+      if (deHoje.length) junto.push(tile('qr', T('cmp_qrHoje', { n: deHoje.length }), acao(function () { enviarCodigos(deHoje); }), { tom: 'hortensia' }));
+      if (todos.length) junto.push(tile('qr', T('cmp_qrTodos', { n: todos.length }), acao(function () { enviarCodigos(todos); }), { tom: 'hortensia' }));
+      if (papelViagem() === 'dono' && Conta.sessao()) junto.push(tile('compartilhar', T('cmp_convidar'), acao(function () { convidar(v, 've'); }), { tom: 'nevoa' }));
+      if (junto.length) secJunto.appendChild(tiles(junto, 2));
+      else secJunto.appendChild(h('p', { class: 'sub', texto: T('cmp_semQR') }));
     });
   }
   /* "Enviar horário" no cartão do voo: junta TODAS as reservas desse voo na viagem (família + quem tem reserva à parte) */
