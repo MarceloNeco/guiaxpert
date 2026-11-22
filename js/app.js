@@ -26,7 +26,7 @@
       risco: function () { return null; }, avisos: function () { return []; }, linkCompleto: function () { return 'https://www.windy.com/'; } };
   }
   var Clima = window.Clima;
-  var VERSAO_APP = '1.6.6';
+  var VERSAO_APP = '1.6.7';
 
   /* ------------------------------------------------------------------
      1. UTILIDADES
@@ -6088,8 +6088,9 @@
           textoVoos(cs.filter(function (c) { return c.status !== 'cancelada'; })).forEach(function (l) { linhas.push(l); });
         }
         if (linhas.length === 1) linhas.push(T('cartaoVazio'));
-        linhas.push(T('cartaoRodape'));
-        var texto = linhas.join('\n');
+        linhas[0] = '*' + linhas[0] + '*';
+        linhas.push(rodapeGuia());
+        var texto = linhas.join('\n\n');
         corpo.textContent = '';
         corpo.appendChild(h('pre', { class: 'cartao-texto', texto: texto }));
         corpo.appendChild(h('p', { class: 'pequeno', texto: T('cartaoSemCodigo') }));
@@ -6113,11 +6114,19 @@
       var ch = /chegada\s+(?:em\s+)?([^·,;]+?)\s*(\d{1,2}[:h]\d{2})/i.exec(tx);
       var partes = String(c.titulo || '').split(/\s*·\s*/), iSeta = -1; partes.forEach(function (p, i) { if (iSeta < 0 && /→/.test(p)) iSeta = i; });
       var nome = iSeta >= 0 ? partes.slice(0, iSeta + 1).join(' · ') : partes[0];   /* sem o nome de quem viaja ("· Leia") */
-      var linha = '✈ ' + nome.replace(/^Voo\s+/i, '') + (dia ? '\n   ' + semana(dia) + ' ' + fData(dia, true) : '') + (hs ? ' · ' + T('cv_sai', { h: hs }) : '') +
-        (ch ? ' · ' + T('cv_chega', { h: ch[2].replace('h', ':'), onde: ch[1].trim() }) : '');
-      var n = pessoasDistintas(g).length; if (n > 1) linha += ' · ' + T('nPassageiros', { n: n });
+      /* mensagem para o WhatsApp (dono, 22/Nov/2026: "confusa, não estruturada"): uma informação por linha, negrito do WhatsApp */
+      var sa = /sa[ií]da\s+(?:de\s+)?([^·,;]+?)\s*(?:\d{1,2}[:h]\d{2})/i.exec(tx), rota = nome.split(/\s*·\s*/);
+      var cia = rota[0].replace(/^Voo\s+/i, ''), trecho = rota.slice(1).join(' · ');
       var vivo = maisRecente(vooAoVivo[vooIata(c) + '|' + dia], anotadoComoEstado(g));
-      if (vivo && vivo.partida && +vivo.partida.atraso >= 5) linha += '\n   ⚠ ' + T('voo_atrasado', { m: vivo.partida.atraso, h: hhmmDe(vivo.partida.estimada) }) + (vivo.chegada && vivo.chegada.estimada ? ' · ' + T('cv_chegaPrev', { h: hhmmDe(vivo.chegada.estimada) }) : '');
+      var ls = ['✈️ *' + T('cv_voo', { v: cia }) + '*' + (trecho ? '\n' + trecho : '')];
+      if (dia) ls.push('📅 ' + semana(dia) + ', ' + fData(dia, true));
+      if (hs) ls.push('🛫 ' + T('cv_saiL', { h: '*' + hs + '*' }) + (sa ? ' · ' + sa[1].trim() : ''));
+      if (ch) ls.push('🛬 ' + T('cv_chegaL', { h: '*' + ch[2].replace('h', ':') + '*' }) + ' · ' + ch[1].trim());
+      var n = pessoasDistintas(g).length; if (n > 1) ls.push('👥 ' + T('nPassageiros', { n: n }));
+      if (vivo && vivo.status === 'cancelado') ls.push('⚠️ *' + T('voo_cancelado') + '*');
+      else if (vivo && vivo.partida && (+vivo.partida.atraso >= 5 || vivo.status === 'atrasado')) ls.push('⚠️ *' + T('voo_atrasadoCurto') + '*' + (vivo.partida.estimada ? ' · ' + T('cv_saiL', { h: hhmmDe(vivo.partida.estimada) }) : '') + (vivo.chegada && vivo.chegada.estimada ? ' · ' + T('cv_chegaL', { h: hhmmDe(vivo.chegada.estimada) }) : ''));
+      if (vivo && vivo.partida && vivo.partida.portao) ls.push('🚪 ' + T('voo_portao', { g: vivo.partida.portao }));
+      var linha = ls.join('\n');
       return linha;
     });
   }
@@ -6168,7 +6177,7 @@
   /* "Enviar horário" no cartão do voo: junta TODAS as reservas desse voo na viagem (família + quem tem reserva à parte) */
   function enviarHorarioVoo(g) {
     var c0 = g[0].c, k = (vooIata(c0) || c0.titulo) + '|' + String(c0.quando || '').slice(0, 10), v = estado.viagem;
-    var mandar = function (cs) { enviarTexto(c0.titulo, textoVoos(cs).join('\n') + '\n' + T('cartaoRodape')); };
+    var mandar = function (cs) { enviarTexto(c0.titulo, textoVoos(cs).join('\n\n') + '\n\n' + rodapeGuia()); };
     if (!v) return mandar(g.map(function (x) { return x.c; }));
     Banco.listar('reservas', function (r) { return r.viagem_id === v.id && r.tipo === 'voo'; }).then(function (rs) {
       return Promise.all(rs.map(function (r) { return Cofre.decifrarReserva(r.conteudo).catch(function () { return null; }); }));
@@ -6177,6 +6186,7 @@
       mandar(cs.length ? cs : g.map(function (x) { return x.c; }));
     }).catch(function () { mandar(g.map(function (x) { return x.c; })); });
   }
+  function rodapeGuia() { return '— ' + T('cartaoRodape') + '\n' + new URL('./', location.href).href.replace(/[?#].*$/, ''); }
   function enviarTexto(titulo, texto) {
     if (navigator.share) return navigator.share({ title: titulo, text: texto }).catch(function () {});
     return navigator.clipboard.writeText(texto).then(function () { avisar(T('copiadoCole')); }).catch(function () { prompt(T('copieManual'), texto); });
