@@ -26,7 +26,7 @@
       risco: function () { return null; }, avisos: function () { return []; }, linkCompleto: function () { return 'https://www.windy.com/'; } };
   }
   var Clima = window.Clima;
-  var VERSAO_APP = '1.6.7';
+  var VERSAO_APP = '1.6.8';
 
   /* ------------------------------------------------------------------
      1. UTILIDADES
@@ -6085,7 +6085,7 @@
           if (e && e.nome) linhas.push('🏨 ' + e.nome + (e.endereco ? ' · ' + e.endereco : ''));
           cs.forEach(function (c) { linhas.push('🏨 ' + c.titulo + (c.local ? ' · ' + c.local : '') + (c.quando ? ' · ' + fData(c.quando.slice(0, 10), true) : '') + (c.nota ? ' · ' + c.nota : '')); });
         } else {
-          textoVoos(cs.filter(function (c) { return c.status !== 'cancelada'; })).forEach(function (l) { linhas.push(l); });
+          textoVoos(cs.filter(function (c) { return c.status !== 'cancelada'; })).forEach(function (l, i) { if (i) linhas.push('━━━━━━━━━━'); linhas.push(l); });
         }
         if (linhas.length === 1) linhas.push(T('cartaoVazio'));
         linhas[0] = '*' + linhas[0] + '*';
@@ -6114,19 +6114,38 @@
       var ch = /chegada\s+(?:em\s+)?([^·,;]+?)\s*(\d{1,2}[:h]\d{2})/i.exec(tx);
       var partes = String(c.titulo || '').split(/\s*·\s*/), iSeta = -1; partes.forEach(function (p, i) { if (iSeta < 0 && /→/.test(p)) iSeta = i; });
       var nome = iSeta >= 0 ? partes.slice(0, iSeta + 1).join(' · ') : partes[0];   /* sem o nome de quem viaja ("· Leia") */
-      /* mensagem para o WhatsApp (dono, 22/Nov/2026: "confusa, não estruturada"): uma informação por linha, negrito do WhatsApp */
-      var sa = /sa[ií]da\s+(?:de\s+)?([^·,;]+?)\s*(?:\d{1,2}[:h]\d{2})/i.exec(tx), rota = nome.split(/\s*·\s*/);
-      var cia = rota[0].replace(/^Voo\s+/i, ''), trecho = rota.slice(1).join(' · ');
+      /* mensagem para quem NÃO acompanha a viagem (dono, 22/Nov/2026): blocos rotulados e espaçados, companhia e número,
+         saída e chegada com aeroporto, data, hora, terminal e portão ("ainda não informado" quando não se sabe),
+         nomes dos passageiros, situação e o link para acompanhar o voo */
       var vivo = maisRecente(vooAoVivo[vooIata(c) + '|' + dia], anotadoComoEstado(g));
-      var ls = ['✈️ *' + T('cv_voo', { v: cia }) + '*' + (trecho ? '\n' + trecho : '')];
-      if (dia) ls.push('📅 ' + semana(dia) + ', ' + fData(dia, true));
-      if (hs) ls.push('🛫 ' + T('cv_saiL', { h: '*' + hs + '*' }) + (sa ? ' · ' + sa[1].trim() : ''));
-      if (ch) ls.push('🛬 ' + T('cv_chegaL', { h: '*' + ch[2].replace('h', ':') + '*' }) + ' · ' + ch[1].trim());
-      var n = pessoasDistintas(g).length; if (n > 1) ls.push('👥 ' + T('nPassageiros', { n: n }));
-      if (vivo && vivo.status === 'cancelado') ls.push('⚠️ *' + T('voo_cancelado') + '*');
-      else if (vivo && vivo.partida && (+vivo.partida.atraso >= 5 || vivo.status === 'atrasado')) ls.push('⚠️ *' + T('voo_atrasadoCurto') + '*' + (vivo.partida.estimada ? ' · ' + T('cv_saiL', { h: hhmmDe(vivo.partida.estimada) }) : '') + (vivo.chegada && vivo.chegada.estimada ? ' · ' + T('cv_chegaL', { h: hhmmDe(vivo.chegada.estimada) }) : ''));
-      if (vivo && vivo.partida && vivo.partida.portao) ls.push('🚪 ' + T('voo_portao', { g: vivo.partida.portao }));
-      var linha = ls.join('\n');
+      var rota = nome.split(/\s*·\s*/), iata = vooIata(c);
+      var cia = iata ? (CIAS[iata.slice(0, 2)] || iata.slice(0, 2)) : rota[0].replace(/^Voo\s+/i, '').replace(/\s*\d+\s*$/, '');
+      var numero = iata ? iata.slice(0, 2) + ' ' + iata.slice(2) : (rota[0].match(/\d{2,4}/) || [''])[0];
+      var trecho = (rota.slice(1).join(' · ') || '').split(/\s*→\s*/);
+      var sa = /sa[ií]da\s+(?:de\s+)?([^·,;]+?)\s*(\d{1,2}[:h]\d{2})?(?:[,·;]|$)/i.exec(tx);
+      var codDe = (sa && /\(([A-Z]{3})\)/.exec(sa[1])) || null, codPara = (ch && /\(([A-Z]{3})\)/.exec(ch[1])) || null;
+      var origem = (trecho[0] || (sa ? sa[1].replace(/\s*\([A-Z]{3}\)/, '') : '')).trim() + (codDe ? ' (' + codDe[1] + ')' : '');
+      var destino = (trecho[1] || (ch ? ch[1].replace(/\s*\([A-Z]{3}\)/, '') : '')).trim() + (codPara && !/\(/.test(trecho[1] || '') ? ' (' + codPara[1] + ')' : codPara ? ' · ' + codPara[1] : '');
+      var termDe = (/terminal\s*([0-9A-Z]{1,3})/i.exec(tx) || [])[1] || (vivo && vivo.partida && vivo.partida.terminal) || null;
+      var portaoDe = (vivo && vivo.partida && vivo.partida.portao) || null;
+      var termPara = (vivo && vivo.chegada && vivo.chegada.terminal) || null;
+      var horaCh = ch ? ch[2].replace('h', ':') : null;
+      var diaCh = dia && horaCh && hs && horaCh < hs ? iso(new Date(new Date(dia + 'T12:00').getTime() + 86400000)) : dia;
+      var ni = T('cv_naoInformado'), quando = function (d, hh) { return (d ? semana(d) + ', ' + fData(d, true) : '') + (hh ? ' ' + T('cv_as') + ' *' + hh + '*' : ''); };
+      var ls = [];
+      ls.push('✈️ *' + T('cv_tituloVoo') + '*');
+      ls.push(T('cv_cia') + ': *' + cia + '*\n' + T('cv_numero') + ': *' + numero + '*');
+      ls.push('🛫 *' + T('cv_saida') + '*\n' + (origem || ni) + '\n' + quando(dia, hs) + '\n' + T('cv_terminal') + ': ' + (termDe || ni) + ' · ' + T('cv_portao') + ': ' + (portaoDe || ni));
+      ls.push('🛬 *' + T('cv_chegada') + '*\n' + (destino || ni) + '\n' + (horaCh ? quando(diaCh, horaCh) : ni) + '\n' + T('cv_terminal') + ': ' + (termPara || ni));
+      var nomes = pessoasDistintas(g).sort(function (a, b) { return a.localeCompare(b, 'pt'); });
+      if (nomes.length) ls.push('👥 *' + T('cv_passageiros', { n: nomes.length }) + '*\n' + nomes.join('\n'));
+      var sit = null;
+      if (vivo && vivo.status === 'cancelado') sit = '*' + T('voo_cancelado') + '*';
+      else if (vivo && vivo.partida && (+vivo.partida.atraso >= 5 || vivo.status === 'atrasado')) sit = '*' + T('voo_atrasadoCurto') + '*' + (vivo.partida.estimada ? '\n' + T('cv_novaSaida') + ': *' + hhmmDe(vivo.partida.estimada) + '*' : '') + (vivo.chegada && vivo.chegada.estimada ? '\n' + T('cv_novaChegada') + ': *' + hhmmDe(vivo.chegada.estimada) + '*' : '');
+      else if (vivo && vivo.status) sit = T(vivo.status === 'voando' ? 'voo_decolou' : vivo.status === 'pousou' ? 'voo_pousouCurto' : vivo.status === 'embarque' ? 'voo_embarque' : 'voo_noHorario');
+      ls.push('ℹ️ *' + T('cv_situacao') + '*\n' + (sit || T('cv_vejaLink')));
+      if (iata) ls.push('🔎 *' + T('cv_acompanhe') + '*\n' + 'https://www.google.com/search?q=' + encodeURIComponent(iata.slice(0, 2) + ' ' + iata.slice(2) + ' status'));
+      var linha = ls.join('\n\n');
       return linha;
     });
   }
@@ -6177,7 +6196,7 @@
   /* "Enviar horário" no cartão do voo: junta TODAS as reservas desse voo na viagem (família + quem tem reserva à parte) */
   function enviarHorarioVoo(g) {
     var c0 = g[0].c, k = (vooIata(c0) || c0.titulo) + '|' + String(c0.quando || '').slice(0, 10), v = estado.viagem;
-    var mandar = function (cs) { enviarTexto(c0.titulo, textoVoos(cs).join('\n\n') + '\n\n' + rodapeGuia()); };
+    var mandar = function (cs) { enviarTexto(c0.titulo, textoVoos(cs).join('\n\n━━━━━━━━━━\n\n') + '\n\n' + rodapeGuia()); };
     if (!v) return mandar(g.map(function (x) { return x.c; }));
     Banco.listar('reservas', function (r) { return r.viagem_id === v.id && r.tipo === 'voo'; }).then(function (rs) {
       return Promise.all(rs.map(function (r) { return Cofre.decifrarReserva(r.conteudo).catch(function () { return null; }); }));
