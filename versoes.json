@@ -2,6 +2,19 @@
   "app": "guiaxpert",
   "versoes": [
     {
+      "versao": "1.6.1",
+      "data": "2026-11-22",
+      "substitui": "1.6.0",
+      "itens": {
+        "pt": [
+          "Melhorias: voo atualiza sozinho."
+        ],
+        "en": [
+          "Improved: flight updates by itself."
+        ]
+      }
+    },
+    {
       "versao": "1.6.0",
       "data": "2026-11-22",
       "substitui": "1.5.99",

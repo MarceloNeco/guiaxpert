@@ -26,7 +26,7 @@
       risco: function () { return null; }, avisos: function () { return []; }, linkCompleto: function () { return 'https://www.windy.com/'; } };
   }
   var Clima = window.Clima;
-  var VERSAO_APP = '1.6.0';
+  var VERSAO_APP = '1.6.1';
 
   /* ------------------------------------------------------------------
      1. UTILIDADES
@@ -4324,7 +4324,14 @@
     return null;
   }
   var vooCache = {};
+  var adminPromessa = null;
+  function conferirAdmin() {
+    if (estado.souAdmin != null) return Promise.resolve(estado.souAdmin);
+    if (!navigator.onLine) return Promise.resolve(false);
+    return adminPromessa || (adminPromessa = Conta.rpc('sou_admin_equipe', {}).then(function (sim) { estado.souAdmin = sim === true; return estado.souAdmin; }).catch(function () { adminPromessa = null; return false; }));
+  }
   function estadoVoo(iata, dia, forcar) {
+    conferirAdmin();
     var k = 'voo:' + iata + '|' + dia;
     return Banco.meta(k, null).then(function (g) {
       if (g && !forcar && (Date.now() - g.em < 10 * 60000 || !navigator.onLine)) return g;
@@ -4332,6 +4339,7 @@
       if (vooCache[k]) return vooCache[k];
       vooCache[k] = chamarFuncao('voo-status', { query: 'voo=' + encodeURIComponent(iata) + '&data=' + dia }).then(function (r) {
         vooCache[k] = null;
+        if (r.j && r.j.erro === 'sem-chave') return g || { semChave: true };
         if (r.status !== 200 || !r.j || !r.j.status) return g;
         var x = Object.assign({}, r.j, { em: Date.now() });
         return Banco.definirMeta(k, x).then(function () { return x; });
@@ -4347,7 +4355,14 @@
     if (!iata || !dia) return caixa;
     var hj = hojeIso(), dif = (new Date(dia + 'T12:00') - new Date(hj + 'T12:00')) / 86400000;
     if (dif < -1 || dif > 2) return caixa;   /* só perto do voo (economiza a cota grátis) */
-    estadoVoo(iata, dia).then(function (x) {
+    /* ao vivo: pinta agora e se atualiza sozinho enquanto o cartão está na tela (5 min nas 6 h antes do voo; 30 min fora) */
+    var vivos = [];
+    function pintar(x) {
+      vivos.forEach(function (n) { n.remove(); }); vivos = [];
+      if (x && x.semChave) {
+        if (estado.souAdmin) { var av = h('button', { class: 'lk pequeno voo-fonte', type: 'button', texto: T('voo_faltaChave'), onclick: function () { Nav.ir('config'); } }); caixa.appendChild(av); vivos.push(av); }
+        return;
+      }
       if (!x || !x.status) return;
       var p = x.partida || {}, ch = x.chegada || {}, atraso = +p.atraso || 0, st = x.status;
       var cls = st === 'cancelado' || st === 'desviado' ? 'fim' : atraso >= 15 ? 'atencao' : 'ok';
@@ -4355,10 +4370,17 @@
         st === 'voando' ? T('voo_voando', { h: hhmmDe(ch.estimada || ch.prevista) }) :
         atraso >= 5 ? T('voo_atrasado', { m: atraso, h: hhmmDe(p.estimada) }) : st === 'embarque' ? T('voo_embarque') : T('voo_noHorario');
       var extra = [p.terminal ? T('voo_terminal', { t: p.terminal }) : null, p.portao ? T('voo_portao', { g: p.portao }) : null].filter(Boolean).join(' · ');
-      caixa.insertBefore(h('span', { class: 'hor-hoje ' + cls, texto: '✈ ' + tx }), link);
-      if (extra) caixa.insertBefore(h('span', { class: 'hor-faixa', texto: extra }), link);
-      caixa.appendChild(h('span', { class: 'pequeno voo-fonte', texto: T('voo_atualizado', { h: new Date(x.em).toTimeString().slice(0, 5), f: x.fonte || '' }) }));
-    });
+      var a1 = h('span', { class: 'hor-hoje ' + cls, texto: '✈ ' + tx }); caixa.insertBefore(a1, link); vivos.push(a1);
+      if (extra) { var a2 = h('span', { class: 'hor-faixa', texto: extra }); caixa.insertBefore(a2, link); vivos.push(a2); }
+      var a3 = h('span', { class: 'pequeno voo-fonte', texto: T('voo_atualizado', { h: new Date(x.em).toTimeString().slice(0, 5), f: x.fonte || '' }) }); caixa.appendChild(a3); vivos.push(a3);
+    }
+    Promise.all([estadoVoo(iata, dia), conferirAdmin()]).then(function (r) { pintar(r[0]); });
+    var saida = Date.parse(String(c.quando).slice(0, 16));
+    var relogio = setInterval(function () {
+      if (!caixa.isConnected) { clearInterval(relogio); return; }
+      if (d.hidden) return;
+      estadoVoo(iata, dia, true).then(pintar);
+    }, Math.abs(saida - Date.now()) < 6 * 3600000 ? 5 * 60000 : 30 * 60000);
     return caixa;
   }
   function linhaCancelada(c) {

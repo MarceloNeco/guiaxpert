@@ -116,6 +116,8 @@ Deno.serve(async (req: Request) => {
     const perto = Math.abs(saida - Date.now()) < 6 * 3600_000;
     if (idade < (perto ? 5 : 30) * 60_000) return json({ ...c.dados, cache: true });
   }
+  // nenhuma chave cadastrada ainda: avisa (o app mostra o aviso só para o dono)
+  if (!(await Promise.all(["AIRLABS_KEY", "AVIATIONSTACK_KEY", "AERODATABOX_KEY"].map(chave))).some(Boolean)) return json({ erro: "sem-chave" }, 503);
   const falhas: string[] = [];
   for (const nome of ["airlabs", "aviationstack", "aerodatabox"]) {
     try {
