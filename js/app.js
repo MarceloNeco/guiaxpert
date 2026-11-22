@@ -26,7 +26,7 @@
       risco: function () { return null; }, avisos: function () { return []; }, linkCompleto: function () { return 'https://www.windy.com/'; } };
   }
   var Clima = window.Clima;
-  var VERSAO_APP = '1.5.97';
+  var VERSAO_APP = '1.5.98';
 
   /* ------------------------------------------------------------------
      1. UTILIDADES
@@ -4437,8 +4437,9 @@
     menor.addEventListener('click', function () { if (tam > 0) { tam--; aplicarTam(); } });
     maior.addEventListener('click', function () { if (tam < TAMS.length - 1) { tam++; aplicarTam(); } });
     var corpo = h('div', { class: 'linha', style: 'flex-direction:column;align-items:center;gap:.5rem;text-align:center' }, [titulo, quandoQR, remarcadoQR, quem, img, cod,
-      h('div', { class: 'qr-tam' }, [menor, tamTxt, maior]), pos,
-      lista.length > 1 ? h('div', { class: 'acoes' }, [ant, prox]) : null, h('p', { class: 'pequeno', texto: T('qrBrilho') }),
+      h('div', { class: 'qr-tam' }, [menor, tamTxt, maior]),
+      /* ‹ Anterior · 2 de 4 · Próximo › numa linha só (dono, 22/Nov/2026) */
+      lista.length > 1 ? h('div', { class: 'qr-nav' }, [ant, pos, prox]) : null, h('p', { class: 'pequeno', texto: T('qrBrilho') }),
       h('button', { class: 'bt leve qr-enviar', type: 'button', onclick: function () { enviarCodigos(lista); } }, [Seletor.icone('compartilhar'), ' ' + (lista.length > 1 ? T('qr_enviarTodos', { n: lista.length }) : T('qr_enviar'))])]);
     var j = janela(T('qrIngresso'), corpo);
     j.caixa.classList.add('cheia');

@@ -1343,3 +1343,8 @@ body.rolando #dgo-aone:not(.dgo-falando) { opacity: 0; pointer-events: none; }
 /* linha recolhida: o que não cabe desce para a linha de baixo, sem escapar do cartão */
 .res-l1 { flex-wrap: wrap; row-gap: 0; min-width: 0; }
 .res-extra { white-space: normal; min-width: 0; overflow-wrap: anywhere; }
+/* QR: anterior e próximo na mesma linha, com a posição no meio */
+.qr-nav { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: .5rem; width: 100%; }
+.qr-nav .bt { min-height: 3rem; padding: .4rem .6rem; white-space: nowrap; }
+.qr-nav .sub { font-variant-numeric: tabular-nums; white-space: nowrap; }
+.qr-nav .bt:disabled { opacity: .35; }

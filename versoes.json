@@ -2,6 +2,19 @@
   "app": "guiaxpert",
   "versoes": [
     {
+      "versao": "1.5.98",
+      "data": "2026-11-22",
+      "substitui": "1.5.97",
+      "itens": {
+        "pt": [
+          "Melhorias nos botões do QR."
+        ],
+        "en": [
+          "Improved QR buttons."
+        ]
+      }
+    },
+    {
       "versao": "1.5.97",
       "data": "2026-11-22",
       "substitui": "1.5.96",
