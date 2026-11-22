@@ -210,3 +210,13 @@ e montar "só o resto da viagem" a partir de hoje.
 - **Rota dentro do app (Mapa):** serviço aberto de rotas do OpenStreetMap (routing.openstreetmap.de, FOSSGIS; perfis carro e a pé), sem chave e sem custo. Só vão os dois pontos arredondados a ~10 m; nenhum nome ou dado pessoal. Sem internet: linha reta com km e tempo estimado. Aprovado pelo dono em 21/Nov/2026 (opção "serviço aberto e grátis").
 - **Estado do voo (atraso, portão, cancelado):** três serviços que se cobrem — AirLabs → aviationstack → AeroDataBox (RapidAPI). Função `voo-status` no Supabase; chaves no Vault (AIRLABS_KEY, AVIATIONSTACK_KEY, AERODATABOX_KEY) pela tela Configurações → Chaves do serviço; memória de 5 min perto do voo (30 min longe) em `guiaxpert_voo_cache`; só número do voo e data saem (nenhum nome). Aprovado pelo dono em 22/Nov/2026 ("integre com os 3 confirmadores"). Planos grátis: uso não comercial (aviationstack 100/mês; AeroDataBox 400 unidades/mês e pede crédito à fonte — o app mostra a fonte). Para uso comercial, rever os planos.
   - 22/Nov/2026: liberado para todo usuário logado (voo é informação pública, decisão do dono); limite de 40 consultas novas por pessoa por dia; memória compartilhada por voo.
+
+## Ideia — Assistente de feriadões (dono, 22/Nov/2026) · planilha GuiaXpert #49
+Wizard **sem IA** para planejar a próxima viagem a partir do calendário:
+1. **Quando:** escolhe o ano e o app mostra os feriadões que emendam — feriado na sexta ou segunda (3 dias), terça ou quinta + ponte (4 dias), Carnaval (4–5 dias). Começa pelo calendário nacional (Páscoa calculada); estaduais e municipais depois.
+2. **Quem e como:** quantas pessoas e idades, quantos dias, preferências (praia, serra, frio/calor, infantil, all inclusive, natureza, cidade), transporte (avião ou só terrestre, distância máxima).
+3. **Onde:** sugere destinos pela temperatura média do mês (dados abertos de clima), pelo perfil e pela distância.
+4. **Pronto:** cria a viagem e monta o roteiro com o montador sem IA (IA só opcional).
+
+Feriadões de 2027 (calculados): 1–3/jan (sex) · Carnaval 6–10/fev · Sexta Santa 26–28/mar · Corpus Christi 27–30/mai (qui + ponte) · Independência 4–7/set (ter + ponte) · Aparecida 9–12/out (ter + ponte) · Finados 30/out–2/nov (ter + ponte) · República 13–15/nov (seg). Tiradentes cai numa quarta (21/abr); Trabalho, Consciência Negra e Natal caem no sábado.
+Regra zero antes de implementar: fontes de feriados estaduais/municipais e de clima médio.
