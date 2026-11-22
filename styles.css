@@ -1348,3 +1348,4 @@ body.rolando #dgo-aone:not(.dgo-falando) { opacity: 0; pointer-events: none; }
 .qr-nav .bt { min-height: 3rem; padding: .4rem .6rem; white-space: nowrap; }
 .qr-nav .sub { font-variant-numeric: tabular-nums; white-space: nowrap; }
 .qr-nav .bt:disabled { opacity: .35; }
+.voo-fonte { flex-basis: 100%; color: var(--suave); font-size: .78rem; }

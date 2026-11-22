@@ -26,7 +26,7 @@
       risco: function () { return null; }, avisos: function () { return []; }, linkCompleto: function () { return 'https://www.windy.com/'; } };
   }
   var Clima = window.Clima;
-  var VERSAO_APP = '1.5.99';
+  var VERSAO_APP = '1.6.0';
 
   /* ------------------------------------------------------------------
      1. UTILIDADES
@@ -4065,6 +4065,18 @@
         h('b', {}, [iconeRes(ICONE_ETAPA[etapa]), T('et_' + etapa)]), h('span', { class: 'etapa-hora', texto: hora })]),
       h('span', { class: 'etapa-l2' }, [h('span', { class: 'etapa-tit', texto: c0.titulo.replace(/\s*·\s*(entrada|saída|retirada|devolução)\b.*$/i, '') }),
         n > 1 ? h('span', { class: 'etq', texto: c0.tipo === 'voo' ? T('nPassageiros', { n: nPassageiros([].concat.apply([], grupos)) }) : T('nReservas', { n: n }) }) : null])]);
+    /* voo: atraso ou cancelamento já na linha fechada, sem precisar abrir */
+    if (c0.tipo === 'voo') (function () {
+      var iata = vooIata(c0), dia = String(c0.quando || '').slice(0, 10); if (!iata || !dia) return;
+      var dif = (new Date(dia + 'T12:00') - new Date(hojeIso() + 'T12:00')) / 86400000; if (dif < -1 || dif > 2) return;
+      estadoVoo(iata, dia).then(function (x) {
+        if (!x || !x.status) return;
+        var at = +((x.partida || {}).atraso) || 0, l2 = bt.querySelector('.etapa-l2'); if (!l2) return;
+        var ruim = x.status === 'cancelado' || x.status === 'desviado';
+        if (!ruim && at < 15) return;
+        l2.appendChild(h('span', { class: 'hor-hoje ' + (ruim ? 'fim' : 'atencao'), texto: '✈ ' + (ruim ? T(x.status === 'cancelado' ? 'voo_cancelado' : 'voo_desviado') : T('voo_atrasoCurto', { m: at })) }));
+      });
+    })();
     function encher() { if (!corpo.childNodes.length) grupos.forEach(function (g) { corpo.appendChild(cartaoDe(g)); }); }
     if (aberto) encher();
     bt.addEventListener('click', function () {
@@ -4300,6 +4312,55 @@
       return d + 'T' + hh + '|' + n + '|' + normalizar(c.titulo || '');
     });
   }
+  /* ---------- ESTADO DO VOO (atraso, portão, cancelado) ----------
+     Servidor (voo-status) pergunta a AirLabs, AviationStack e AeroDataBox, um cobrindo o outro; o celular guarda
+     a última resposta 10 min (e mostra a guardada sem internet). Sem acesso às chaves ou sem resposta: só o link. */
+  function vooIata(c) {
+    if (c.cia && c.voo) return String(c.cia).toUpperCase() + String(c.voo).replace(/^0+/, '');
+    var t = String(c.titulo || '');
+    var m = /\b([A-Z0-9]{2})\s?(\d{1,4})\b/.exec(t.replace(/Voo\s+/i, ''));
+    if (m && CIAS[m[1]]) return m[1] + m[2];
+    for (var cod in CIAS) { var re = new RegExp('\\b' + CIAS[cod].replace(/[^A-Za-z ]/g, '.') + '\\s+(\\d{1,4})\\b', 'i'), mm = re.exec(t); if (mm) return (cod === 'JJ' ? 'LA' : cod) + mm[1]; }
+    return null;
+  }
+  var vooCache = {};
+  function estadoVoo(iata, dia, forcar) {
+    var k = 'voo:' + iata + '|' + dia;
+    return Banco.meta(k, null).then(function (g) {
+      if (g && !forcar && (Date.now() - g.em < 10 * 60000 || !navigator.onLine)) return g;
+      if (!navigator.onLine || !estado.acesso || !estado.acesso.liberado) return g;
+      if (vooCache[k]) return vooCache[k];
+      vooCache[k] = chamarFuncao('voo-status', { query: 'voo=' + encodeURIComponent(iata) + '&data=' + dia }).then(function (r) {
+        vooCache[k] = null;
+        if (r.status !== 200 || !r.j || !r.j.status) return g;
+        var x = Object.assign({}, r.j, { em: Date.now() });
+        return Banco.definirMeta(k, x).then(function () { return x; });
+      }).catch(function () { vooCache[k] = null; return g; });
+      return vooCache[k];
+    });
+  }
+  function hhmmDe(iso) { var m = /T?(\d{2}):(\d{2})/.exec(String(iso || '').replace(/^\d{4}-\d{2}-\d{2}[ T]/, 'T')); return m ? m[1] + ':' + m[2] : ''; }
+  function linhaVoo(c) {
+    var iata = vooIata(c), dia = String(c.quando || '').slice(0, 10);
+    var link = h('a', { class: 'hor-site', href: 'https://www.google.com/search?q=' + encodeURIComponent((iata ? iata.replace(/^([A-Z0-9]{2})/, '$1 ') : c.titulo) + ' ' + T('voo_status')), target: '_blank', rel: 'noopener', texto: T('voo_estado') + ' ↗' });
+    var caixa = h('div', { class: 'hor-linha voo-linha' }, [link]);
+    if (!iata || !dia) return caixa;
+    var hj = hojeIso(), dif = (new Date(dia + 'T12:00') - new Date(hj + 'T12:00')) / 86400000;
+    if (dif < -1 || dif > 2) return caixa;   /* só perto do voo (economiza a cota grátis) */
+    estadoVoo(iata, dia).then(function (x) {
+      if (!x || !x.status) return;
+      var p = x.partida || {}, ch = x.chegada || {}, atraso = +p.atraso || 0, st = x.status;
+      var cls = st === 'cancelado' || st === 'desviado' ? 'fim' : atraso >= 15 ? 'atencao' : 'ok';
+      var tx = st === 'cancelado' ? T('voo_cancelado') : st === 'desviado' ? T('voo_desviado') : st === 'pousou' ? T('voo_pousou', { h: hhmmDe(ch.real || ch.estimada) }) :
+        st === 'voando' ? T('voo_voando', { h: hhmmDe(ch.estimada || ch.prevista) }) :
+        atraso >= 5 ? T('voo_atrasado', { m: atraso, h: hhmmDe(p.estimada) }) : st === 'embarque' ? T('voo_embarque') : T('voo_noHorario');
+      var extra = [p.terminal ? T('voo_terminal', { t: p.terminal }) : null, p.portao ? T('voo_portao', { g: p.portao }) : null].filter(Boolean).join(' · ');
+      caixa.insertBefore(h('span', { class: 'hor-hoje ' + cls, texto: '✈ ' + tx }), link);
+      if (extra) caixa.insertBefore(h('span', { class: 'hor-faixa', texto: extra }), link);
+      caixa.appendChild(h('span', { class: 'pequeno voo-fonte', texto: T('voo_atualizado', { h: new Date(x.em).toTimeString().slice(0, 5), f: x.fonte || '' }) }));
+    });
+    return caixa;
+  }
   function linhaCancelada(c) {
     var k = c.cancelamento || {};
     return h('span', { class: 'res-cancelada-txt', texto: '✕ ' + [T('res_cancelada'), k.multa ? T('res_multa', { m: k.multa }) : T('res_semMulta'), k.reembolso ? T('res_reembolso', { v: k.reembolso }) : null, k.obs].filter(Boolean).join(' · ') });
@@ -4347,7 +4408,7 @@
       h('b', { texto: c.titulo }),
       linhaQuando(c) ? h('span', { texto: linhaQuando(c) }) : null,
       c._chegaCedo ? h('span', { class: 'sub', texto: 'ℹ️ ' + T('chegaCedo', { h: c._chegaCedo }) }) : null,
-      ['ingresso', 'passeio', 'restaurante', 'outro'].indexOf(c.tipo) > -1 ? linhaHorario(c) : null,
+      ['ingresso', 'passeio', 'restaurante', 'outro'].indexOf(c.tipo) > -1 ? linhaHorario(c) : c.tipo === 'voo' ? linhaVoo(c) : null,
       c.pessoa || c.assento ? h('span', { texto: [c.pessoa, c.assento].filter(Boolean).join(' · ') }) : null,
       c.codigo ? h('span', { class: 'linha' }, [T('codigo') + ': ', h('code', { texto: c.codigo, style: 'user-select:all' })]) : null,
       c.valor ? h('span', { class: 'sub', texto: T('res_valor', { v: c.valor }) }) : null,
@@ -4379,7 +4440,7 @@
       h('span', { class: 'pequeno' }, rotuloRes(c0.tipo, ' · ' + T(c0.tipo === 'voo' ? 'nPassageiros' : 'nIngressos', { n: c0.tipo === 'voo' ? nPassageiros(g) : g.length }))),
       h('b', { texto: c0.titulo }),
       linhaQuando(c0) ? h('span', { texto: linhaQuando(c0) }) : null,
-      c0.tipo !== 'voo' ? linhaHorario(c0) : null,
+      c0.tipo !== 'voo' ? linhaHorario(c0) : linhaVoo(c0),
       h('span', { texto: resumoPessoas(g) }),
       c0.local ? h('span', { class: 'sub pequeno', texto: c0.local }) : null,
       c0.nota ? h('span', { class: 'sub pequeno', texto: c0.nota }) : null,
@@ -6738,7 +6799,14 @@
     { nome: 'FOURSQUARE_KEY', icone: '📍', titulo: 'chv_foursquare', dica: 'chv_foursquareDica', site: 'https://foursquare.com/developers', siteNome: 'Foursquare Developers',
       passos: 'chv_foursquarePassos', formato: /^\S{20,}$/, teste: 'foursquare' },
     { nome: 'GOOGLE_PLACES_KEY', icone: 'G', titulo: 'chv_google', dica: 'chv_googleDica', site: 'https://console.cloud.google.com/apis/library/places.googleapis.com', siteNome: 'Google Cloud',
-      passos: 'chv_googlePassos', formato: /^\S{20,300}$/, teste: 'google' }
+      passos: 'chv_googlePassos', formato: /^\S{20,300}$/, teste: 'google' },
+    /* estado do voo (22/Nov/2026): três serviços, um cobre o outro (cota acabou, fora do ar, sem dado → o próximo) */
+    { nome: 'AIRLABS_KEY', icone: '✈', titulo: 'chv_airlabs', dica: 'chv_vooDica', site: 'https://airlabs.co/signup', siteNome: 'AirLabs',
+      passos: 'chv_airlabsPassos', formato: /^\S{16,200}$/, teste: 'voo:airlabs' },
+    { nome: 'AVIATIONSTACK_KEY', icone: '✈', titulo: 'chv_aviationstack', dica: 'chv_vooDica', site: 'https://aviationstack.com/signup/free', siteNome: 'aviationstack',
+      passos: 'chv_aviationstackPassos', formato: /^\S{16,200}$/, teste: 'voo:aviationstack' },
+    { nome: 'AERODATABOX_KEY', icone: '✈', titulo: 'chv_aerodatabox', dica: 'chv_vooDica', site: 'https://rapidapi.com/aedbx-aedbx/api/aerodatabox/pricing', siteNome: 'RapidAPI · AeroDataBox',
+      passos: 'chv_aerodataboxPassos', formato: /^\S{16,200}$/, teste: 'voo:aerodatabox' }
   ];
   function chamarFuncao(nome, op) {
     var cfg = window.GUIAXPERT_CONFIG || {};
@@ -6754,6 +6822,8 @@
     var p;
     if (sv.teste === 'gemini') p = chamarFuncao('ia', { corpo: { app: 'guiaxpert', limite: 300, mensagens: [{ papel: 'pessoa', texto: 'Responda apenas: ok' }] } })
       .then(function (r) { return r.status === 200 ? { ok: true } : { ok: false, status: r.status, erro: r.j.erro, motivo: r.j.motivo, detalhe: r.j.detalhe }; });
+    else if (/^voo:/.test(sv.teste)) p = chamarFuncao('voo-status', { query: 'teste=' + sv.teste.slice(4) })
+      .then(function (r) { return r.j.ok ? { ok: true } : { ok: false, status: r.j.status || r.status, erro: r.j.erro, detalhe: r.j.detalhe }; });
     else if (sv.teste === 'google') p = chamarFuncao('google-lugares', { query: 'q=Gramado' })
       .then(function (r) { return r.status === 200 ? { ok: true } : { ok: false, status: r.status, erro: r.j.erro, detalhe: r.j.detalhe }; });
     else p = chamarFuncao('lugares', { query: 'q=Gramado&teste=' + sv.teste })

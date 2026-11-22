@@ -2,6 +2,19 @@
   "app": "guiaxpert",
   "versoes": [
     {
+      "versao": "1.6.0",
+      "data": "2026-11-22",
+      "substitui": "1.5.99",
+      "itens": {
+        "pt": [
+          "Novo: atraso e portão do voo."
+        ],
+        "en": [
+          "New: flight delay and gate."
+        ]
+      }
+    },
+    {
       "versao": "1.5.99",
       "data": "2026-11-22",
       "substitui": "1.5.98",
