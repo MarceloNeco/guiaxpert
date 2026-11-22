@@ -2,6 +2,21 @@
   "app": "guiaxpert",
   "versoes": [
     {
+      "versao": "1.6.15",
+      "data": "2026-11-22",
+      "substitui": "1.6.14",
+      "itens": {
+        "pt": [
+          "Novo: atualizar embarque e saída do voo.",
+          "Melhoria: embarque acompanha o atraso."
+        ],
+        "en": [
+          "New: update boarding and departure times.",
+          "Improved: boarding follows the delay."
+        ]
+      }
+    },
+    {
       "versao": "1.6.14",
       "data": "2026-11-22",
       "substitui": "1.6.13",
