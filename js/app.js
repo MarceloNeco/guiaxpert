@@ -26,7 +26,7 @@
       risco: function () { return null; }, avisos: function () { return []; }, linkCompleto: function () { return 'https://www.windy.com/'; } };
   }
   var Clima = window.Clima;
-  var VERSAO_APP = '1.6.11';
+  var VERSAO_APP = '1.6.12';
 
   /* ------------------------------------------------------------------
      1. UTILIDADES
@@ -4593,77 +4593,139 @@
       avisar(T('qr_baixados', { n: files.length }));
     }).catch(function (e) { if (e && e.name === 'AbortError') return; avisar(T('qr_erroEnviar')); });
   }
+  /* cidades dos aeroportos mais usados (o cartão da companhia mostra "POA Porto Alegre ✈ CGH Congonhas · São Paulo") */
+  var AEROPORTOS = { POA: 'Porto Alegre', CGH: 'Congonhas · São Paulo', GRU: 'Guarulhos · São Paulo', VCP: 'Viracopos · Campinas', GIG: 'Galeão · Rio', SDU: 'Santos Dumont · Rio',
+    BSB: 'Brasília', CNF: 'Confins · BH', PLU: 'Pampulha · BH', FLN: 'Florianópolis', CWB: 'Curitiba', SSA: 'Salvador', REC: 'Recife', FOR: 'Fortaleza', NAT: 'Natal',
+    MCZ: 'Maceió', JPA: 'João Pessoa', AJU: 'Aracaju', SLZ: 'São Luís', THE: 'Teresina', BEL: 'Belém', MAO: 'Manaus', CGB: 'Cuiabá', CGR: 'Campo Grande', BYO: 'Bonito',
+    GYN: 'Goiânia', VIX: 'Vitória', NVT: 'Navegantes', IGU: 'Foz do Iguaçu', CXJ: 'Caxias do Sul', BPS: 'Porto Seguro', IOS: 'Ilhéus', UDI: 'Uberlândia', RAO: 'Ribeirão Preto',
+    LDB: 'Londrina', MGF: 'Maringá', JOI: 'Joinville', CAC: 'Cascavel', PMW: 'Palmas', FEN: 'Noronha', EZE: 'Ezeiza · Buenos Aires', AEP: 'Aeroparque · Buenos Aires',
+    SCL: 'Santiago', MVD: 'Montevidéu', LIS: 'Lisboa', MIA: 'Miami', MCO: 'Orlando' };
+  /* ZOOM COM DOIS DEDOS (dono, 22/Nov/2026): pinça amplia, um dedo arrasta a parte ampliada, toque duplo amplia/volta.
+     Sem zoom, um dedo continua rolando a tela e passando de passagem. */
+  function zoomComDedos(area, alvo) {
+    var s = 1, tx = 0, ty = 0, ini = null, pan = null, ultimoToque = 0, mexeu = false;
+    area.style.touchAction = 'pan-y'; area.style.overflow = 'hidden'; alvo.style.transformOrigin = '0 0';
+    function limitar() {
+      var W = alvo.offsetWidth, H = alvo.offsetHeight;
+      tx = Math.min(0, Math.max(W - W * s, tx)); ty = Math.min(0, Math.max(H - H * s, ty));
+    }
+    function aplicar() { if (s <= 1.01) { s = 1; tx = 0; ty = 0; } limitar(); alvo.style.transform = s === 1 ? '' : 'translate(' + tx + 'px,' + ty + 'px) scale(' + s + ')'; area.classList.toggle('com-zoom', s > 1); }
+    function base() { var r = alvo.getBoundingClientRect(); return { x: r.left - tx, y: r.top - ty }; }
+    function meio(t) { return { x: (t[0].clientX + t[1].clientX) / 2, y: (t[0].clientY + t[1].clientY) / 2, d: Math.hypot(t[0].clientX - t[1].clientX, t[0].clientY - t[1].clientY) || 1 }; }
+    area.addEventListener('touchstart', function (e) {
+      mexeu = false;
+      if (e.touches.length === 2) { var m = meio(e.touches), b = base(); ini = { d: m.d, s: s, b: b, cx: (m.x - b.x - tx) / s, cy: (m.y - b.y - ty) / s }; pan = null; }
+      else if (e.touches.length === 1 && s > 1) pan = { x: e.touches[0].clientX, y: e.touches[0].clientY, tx: tx, ty: ty };
+    }, { passive: true });
+    area.addEventListener('touchmove', function (e) {
+      mexeu = true;
+      if (e.touches.length === 2 && ini) {
+        e.preventDefault();
+        var m = meio(e.touches); s = Math.min(4, Math.max(1, ini.s * m.d / ini.d));
+        tx = m.x - ini.b.x - ini.cx * s; ty = m.y - ini.b.y - ini.cy * s; aplicar();
+      } else if (e.touches.length === 1 && pan && s > 1) {
+        e.preventDefault();
+        tx = pan.tx + e.touches[0].clientX - pan.x; ty = pan.ty + e.touches[0].clientY - pan.y; aplicar();
+      }
+    }, { passive: false });
+    area.addEventListener('touchend', function (e) {
+      if (e.touches.length < 2) ini = null;
+      if (e.touches.length) return;
+      pan = null;
+      var agora = Date.now(), t = e.changedTouches[0];
+      if (!mexeu && agora - ultimoToque < 320) {   /* toque duplo: amplia 2,5× no ponto tocado, ou volta */
+        if (s > 1) s = 1; else { var b = base(), cx = t.clientX - b.x, cy = t.clientY - b.y; s = 2.5; tx = cx - cx * s; ty = cy - cy * s; }
+        aplicar(); ultimoToque = 0; return;
+      }
+      ultimoToque = mexeu ? 0 : agora;
+    }, { passive: true });
+    return { ampliado: function () { return s > 1; }, voltar: function () { s = 1; aplicar(); } };
+  }
   /* QR em tela cheia, um atrás do outro: arrastar para o lado ou ‹ › (a pessoa da fila vai mostrando) */
   function mostrarQRs(lista, inicio) {
     var i = inicio || 0;
     /* data do ingresso sempre à vista (dono, 21/Nov/2026: "cadê a data do ingresso?"), com "Hoje" e, se remarcado, a data antiga */
     var quandoQR = h('div', { class: 'qr-quando' }), remarcadoQR = h('span', { class: 'pequeno qr-remarcado' });
-    var titulo = h('b', { class: 'qr-titulo' }), quem = h('b', { class: 'qr-quem' });
-    /* voo: grade como no cartão da companhia (dono, 22/Nov/2026: "as informações vitais… igual no original", sem rolar) */
-    var grade = h('div', { class: 'qr-grade' }), cartaoFraco = h('span', { class: 'pequeno qr-cartao-fraco' }), lendoOcr = h('span', { class: 'pequeno qr-lendo', hidden: true });
+    var lendoOcr = h('span', { class: 'pequeno qr-lendo', hidden: true });
     var btOriginal = h('button', { class: 'bt leve qr-bt-mini', type: 'button' }, '🖼 ' + T('qr_original'));
     var btCompletar = h('button', { class: 'bt leve qr-bt-mini', type: 'button', 'aria-label': T('qr_completar'), title: T('qr_completar'), texto: '✎' });
     btOriginal.addEventListener('click', function () { verCartaoOriginal(lista[i], lista); });
     btCompletar.addEventListener('click', function () { janelaCompletarCartao(lista[i], mostrar); });
-    var img = h('img', { alt: '', style: 'width:min(86vw,22rem);height:auto;border-radius:12px;background:#fff;image-rendering:pixelated;touch-action:pan-y' });
-    var EST_QR = img.getAttribute('style'), EST_BARRA = 'width:min(92vw,30rem);height:9rem;border-radius:8px;background:#fff;padding:.6rem;touch-action:pan-y';
-    var cod = h('code', { style: 'font-size:1.3rem;user-select:all' }), pos = h('span', { class: 'sub' });
+    var img = h('img', { alt: '', draggable: 'false', style: 'width:min(86vw,22rem);height:auto;border-radius:12px;background:#fff;image-rendering:pixelated' });
+    var EST_QR = img.getAttribute('style'), EST_BARRA = 'width:min(92vw,30rem);height:9rem;border-radius:8px;background:#fff;padding:.6rem';
+    var pos = h('span', { class: 'sub' });
     var ant = h('button', { class: 'bt leve', type: 'button', 'aria-label': T('anterior'), texto: '‹ ' + T('anterior') });
     var prox = h('button', { class: 'bt', type: 'button', 'aria-label': T('proximo'), texto: T('proximo') + ' ›' });
-    /* tamanho do QR (21/Nov: na catraca o QR grande demais não era lido; precisava ficar menor) — lembrado para a próxima vez */
-    var TAMS = [0.4, 0.52, 0.64, 0.78, 0.92], tam = 3;
-    try { var tg = localStorage.getItem('guiaxpert.qrTamanho'); if (tg != null && /^[0-9]$/.test(tg) && +tg < TAMS.length) tam = +tg; } catch (e) {}
+    /* tamanho do QR (21/Nov: na catraca o QR grande demais não era lido) — lembrado; o do voo é separado (começa como no cartão da companhia) */
+    var TAMS = [0.4, 0.52, 0.64, 0.78, 0.92], tams = { n: 3, v: 1 }, tipoTam = 'n';
+    try {
+      var tg = localStorage.getItem('guiaxpert.qrTamanho'); if (tg != null && /^[0-9]$/.test(tg) && +tg < TAMS.length) tams.n = +tg;
+      var tv = localStorage.getItem('guiaxpert.qrTamanhoVoo'); if (tv != null && /^[0-9]$/.test(tv) && +tv < TAMS.length) tams.v = +tv;
+    } catch (e) {}
     var menor = h('button', { class: 'bt leve qr-tam-bt', type: 'button', 'aria-label': T('qrMenor'), title: T('qrMenor'), texto: '−' });
     var maior = h('button', { class: 'bt leve qr-tam-bt', type: 'button', 'aria-label': T('qrMaior'), title: T('qrMaior'), texto: '+' });
     var tamTxt = h('span', { class: 'pequeno', texto: 'QR' });
     function aplicarTam() {
-      var base = Math.min(window.innerWidth * 0.92, 440), w = Math.round(base * TAMS[tam]);
+      var tam = tams[tipoTam], base = Math.min(window.innerWidth * 0.92, 440), w = Math.round(base * TAMS[tam]);
       img.style.width = w + 'px';
       if ((img.getAttribute('style') || '').indexOf('padding:.6rem') >= 0) img.style.height = Math.round(w * 0.4) + 'px';
       menor.disabled = tam === 0; maior.disabled = tam === TAMS.length - 1;
-      try { localStorage.setItem('guiaxpert.qrTamanho', String(tam)); } catch (e) {}
+      try { localStorage.setItem(tipoTam === 'v' ? 'guiaxpert.qrTamanhoVoo' : 'guiaxpert.qrTamanho', String(tam)); } catch (e) {}
     }
-    menor.addEventListener('click', function () { if (tam > 0) { tam--; aplicarTam(); } });
-    maior.addEventListener('click', function () { if (tam < TAMS.length - 1) { tam++; aplicarTam(); } });
-    var corpo = h('div', { class: 'linha qr-corpo', style: 'flex-direction:column;align-items:center;gap:.4rem;text-align:center' }, [titulo,
-      h('div', { class: 'qr-topo' }, [quandoQR, quem]), remarcadoQR, grade, lendoOcr, img, cod, cartaoFraco,
+    menor.addEventListener('click', function () { if (tams[tipoTam] > 0) { tams[tipoTam]--; aplicarTam(); } });
+    maior.addEventListener('click', function () { if (tams[tipoTam] < TAMS.length - 1) { tams[tipoTam]++; aplicarTam(); } });
+    /* palco (recorta) + folha (o que amplia com os dedos) */
+    var folha = h('div', { class: 'qr-folha' }), palco = h('div', { class: 'qr-palco' }, [folha]);
+    var corpo = h('div', { class: 'linha qr-corpo', style: 'flex-direction:column;align-items:center;gap:.4rem;text-align:center' }, [palco,
       h('div', { class: 'qr-tam' }, [btOriginal, btCompletar, h('span', { class: 'qr-tam-par' }, [menor, tamTxt, maior])]),
       /* ‹ Anterior · 2 de 4 · Próximo › numa linha só (dono, 22/Nov/2026) */
       lista.length > 1 ? h('div', { class: 'qr-nav' }, [ant, pos, prox]) : null, h('p', { class: 'pequeno', texto: T('qrBrilho') }),
       h('button', { class: 'bt leve qr-enviar', type: 'button', onclick: function () { enviarCodigos(lista); } }, [Seletor.icone('compartilhar'), ' ' + (lista.length > 1 ? T('qr_enviarTodos', { n: lista.length }) : T('qr_enviar'))])]);
     var j = janela(T('qrIngresso'), corpo);
     j.caixa.classList.add('cheia');
+    var zoom = zoomComDedos(palco, folha);
+    function celula(v, rot, forte) { return h('div', { class: 'qr-celula' + (forte ? ' forte' : '') + (v ? '' : ' vazia') }, [h('b', { texto: v || '—' }), h('span', { texto: rot })]); }
+    function campoLado(v, rot, copiar) { return v ? h('div', { class: 'qr-lado-campo' }, [h('b', { texto: v, style: copiar ? 'user-select:all' : '' }), h('span', { texto: rot })]) : null; }
     function mostrar() {
       var c = lista[i];
-      titulo.textContent = c.titulo;
-      /* voo: tudo do cartão de embarque à vista (grupo, assento, embarque, portão, seq.…) e o cartão original a um toque */
+      zoom.voltar();
       var voo = c.tipo === 'voo' || (c.qr && /^M[1-4]/.test(c.qr)), o = voo ? dadosCartao(c) : null;
-      quem.textContent = voo ? (c.pessoa || '') : [c.pessoa, c.assento].filter(Boolean).join(' · ');
-      grade.textContent = ''; grade.hidden = !voo;
-      if (voo) {
-        [['embarque', 'qr_rEmbarque'], ['fecha', 'qr_rFim'], ['grupo', 'qr_rGrupo', 1], ['terminal', 'qr_rTerminal'], ['portao', 'qr_rPortao'], ['assento', 'qr_rAssento', 1]].forEach(function (k) {
-          grade.appendChild(h('div', { class: 'qr-celula' + (k[2] ? ' forte' : '') + (o[k[0]] ? '' : ' vazia') }, [h('b', { texto: o[k[0]] || '—' }), h('span', { texto: T(k[1]) })]));
-        });
-      }
-      var fr = voo ? [o.partida ? T('qr_partida', { h: o.partida }) : null, o.seq ? T('qr_seq', { s: o.seq }) : null, o.classe ? T('qr_classe', { c: o.classe }) : null,
-        o.de && o.para && String(c.titulo || '').indexOf(o.para) < 0 ? o.de + ' → ' + o.para : null].filter(Boolean).join(' · ') : '';
-      cartaoFraco.textContent = fr; cartaoFraco.hidden = !fr;
-      btOriginal.hidden = !c.cartao; btCompletar.hidden = !voo;
-      lendoOcr.hidden = true;
-      /* print guardado sem grupo: lê o texto da imagem original agora (uma vez só) e completa a reserva */
-      if (voo && c.cartao && !o.grupo && !c.ocrLido && !c._ocrFalhou) completarPorOcr(c, function (ok) {
-        if (lista[i] !== c) return;
-        if (ok === 'lendo') { lendoOcr.textContent = T('qr_lendoCartao'); lendoOcr.hidden = false; return; }
-        if (!ok) c._ocrFalhou = true;   /* sem internet na 1ª vez: tenta de novo só na próxima abertura */
-        mostrar();
-      });
       var dq = String(c.quando || '').slice(0, 10), hq = String(c.quando || '').slice(11, 16), hj = hojeIso();
-      quandoQR.textContent = dq ? (dq === hj ? T('qr_hoje') + ' · ' : '') + semana(dq) + ', ' + fData(dq) + (hq ? ' · ' + hq : '') : T('res_semData');
+      quandoQR.textContent = dq ? (dq === hj ? T('qr_hoje') + ' · ' : '') + semana(dq) + ', ' + fData(dq, voo) + (hq ? ' · ' + hq : '') : T('res_semData');
       quandoQR.className = 'qr-quando' + (dq === hj ? ' hoje' : dq && dq < hj ? ' passou' : '');
       remarcadoQR.textContent = c.remarcadoDe ? T('res_remarcadoDe', { d: semana(c.remarcadoDe) + ' ' + fData(c.remarcadoDe, true) }) : '';
       remarcadoQR.hidden = !c.remarcadoDe;
-      cod.textContent = c.barra || c.codigo || ''; pos.textContent = lista.length > 1 ? T('nDeN', { i: i + 1, n: lista.length }) : '';
+      pos.textContent = lista.length > 1 ? T('nDeN', { i: i + 1, n: lista.length }) : '';
       ant.disabled = i === 0; prox.disabled = i === lista.length - 1;
+      btOriginal.hidden = !c.cartao; btCompletar.hidden = !voo;
+      lendoOcr.hidden = true;
+      folha.textContent = ''; folha.className = 'qr-folha' + (voo ? ' voo' : '');
+      if (voo) {
+        /* como o cartão da companhia: nome e companhia; QR à esquerda com voo, reserva e data ao lado; trecho grande; embarque; grade */
+        var fr = [o.partida ? T('qr_partida', { h: o.partida }) : null, o.classe ? T('qr_classe', { c: o.classe }) : null].filter(Boolean).join(' · ');
+        folha.appendChild(h('div', { class: 'qr-gol-cab' }, [h('b', { class: 'qr-quem', texto: c.pessoa || '' }), o.cia ? h('span', { class: 'qr-cia', texto: CIAS[o.cia] || o.cia }) : null]));
+        folha.appendChild(h('div', { class: 'qr-gol-meio' }, [
+          h('div', { class: 'qr-caixa' }, [img, o.seq ? h('span', { class: 'qr-seq', texto: T('qr_seq', { s: o.seq }) }) : null]),
+          h('div', { class: 'qr-lado' }, [quandoQR, remarcadoQR, campoLado(o.cia && o.voo ? o.cia + ' ' + o.voo : '', T('qr_rVoo')), campoLado(c.codigo || '', T('qr_rReserva'), true)])]));
+        if (o.de && o.para) folha.appendChild(h('div', { class: 'qr-rota' }, [
+          h('div', {}, [h('b', { texto: o.de }), h('span', { texto: AEROPORTOS[o.de] || '' })]), h('span', { class: 'qr-aviao', 'aria-hidden': 'true', texto: '✈' }),
+          h('div', { class: 'dir' }, [h('b', { texto: o.para }), h('span', { texto: AEROPORTOS[o.para] || '' })])]));
+        folha.appendChild(h('div', { class: 'qr-grade dois' }, [celula(o.embarque, T('qr_rEmbarque')), celula(o.fecha, T('qr_rFim'))]));
+        folha.appendChild(h('div', { class: 'qr-grade quatro' }, [celula(o.terminal, T('qr_rTerminal')), celula(o.portao, T('qr_rPortao')), celula(o.grupo, T('qr_rGrupo'), 1), celula(o.assento, T('qr_rAssento'), 1)]));
+        folha.appendChild(lendoOcr);
+        if (fr) folha.appendChild(h('span', { class: 'pequeno qr-cartao-fraco', texto: fr }));
+        /* print guardado sem grupo: lê o texto da imagem original agora (uma vez só) e completa a reserva */
+        if (c.cartao && !o.grupo && !c.ocrLido && !c._ocrFalhou) completarPorOcr(c, function (ok) {
+          if (lista[i] !== c) return;
+          if (ok === 'lendo') { lendoOcr.textContent = T('qr_lendoCartao'); lendoOcr.hidden = false; return; }
+          if (!ok) c._ocrFalhou = true;   /* sem internet na 1ª vez: tenta de novo só na próxima abertura */
+          mostrar();
+        });
+      } else {
+        [h('b', { class: 'qr-titulo', texto: c.titulo }), quandoQR, remarcadoQR, h('b', { class: 'qr-quem', texto: [c.pessoa, c.assento].filter(Boolean).join(' · ') }), img,
+          h('code', { style: 'font-size:1.3rem;user-select:all', texto: c.barra || c.codigo || '' })].forEach(function (x) { folha.appendChild(x); });
+      }
+      tipoTam = voo ? 'v' : 'n';
       img.hidden = false;
       if (c.barra && window.Barras) {   /* voucher com código de barras (ex.: Florybal, ITF) */
         try { img.setAttribute('style', EST_BARRA); aplicarTam(); img.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(Barras.svg(c.barra, c.barraFormato)); img.alt = T('codigoBarras') + ' ' + c.barra; }
@@ -4676,12 +4738,11 @@
     }
     ant.addEventListener('click', function () { if (i > 0) { i--; mostrar(); } });
     prox.addEventListener('click', function () { if (i < lista.length - 1) { i++; mostrar(); } });
-    /* arrastar com o dedo para os lados em QUALQUER ponto da tela (dono, 22/Nov/2026), não só em cima do QR */
-    img.draggable = false;
+    /* arrastar com o dedo para os lados em QUALQUER ponto da tela (dono, 22/Nov/2026); com zoom, o dedo anda pela parte ampliada */
     arrastarLados(j.caixa, function (passo) {
       var k = i + passo; if (k < 0 || k >= lista.length) return;
-      i = k; mostrar(); deslizar(img, passo);
-    });
+      i = k; mostrar(); deslizar(folha, passo);
+    }, function () { return !zoom.ampliado(); });
     mostrar();
     if (navigator.wakeLock && navigator.wakeLock.request) navigator.wakeLock.request('screen').catch(function () {});
   }
@@ -5092,13 +5153,13 @@
     var caixa = h('div', { class: 'cartao-original-caixa' }, [img]);
     var pos = h('span', { class: 'sub' });
     var ant = h('button', { class: 'bt leve', type: 'button', texto: '‹ ' + T('anterior') }), prox = h('button', { class: 'bt', type: 'button', texto: T('proximo') + ' ›' });
-    img.addEventListener('click', function () { caixa.classList.toggle('ampliado'); });
     var j = janela(T('qr_original'), h('div', {}, [caixa, h('p', { class: 'pequeno', style: 'text-align:center', texto: T('qr_tocarAmpliar') }),
       cs.length > 1 ? h('div', { class: 'qr-nav' }, [ant, pos, prox]) : null]));
     j.caixa.classList.add('cheia');
     var tit = j.caixa.querySelector('h2, .janela-titulo, b');
+    var z = zoomComDedos(caixa, img);   /* dois dedos ou toque duplo amplia */
     function ver(k, passo) {
-      i = k; var x = cs[i]; img.src = x.cartao; caixa.classList.remove('ampliado');
+      i = k; var x = cs[i]; img.src = x.cartao; z.voltar();
       if (tit) tit.textContent = T('qr_original') + (x.pessoa ? ' · ' + x.pessoa : '');
       pos.textContent = T('nDeN', { i: i + 1, n: cs.length }); ant.disabled = i === 0; prox.disabled = i === cs.length - 1;
       if (passo) deslizar(img, passo);
@@ -5106,7 +5167,7 @@
     function passar(p) { var k = i + p; if (k >= 0 && k < cs.length) ver(k, p); }
     ant.addEventListener('click', function () { passar(-1); }); prox.addEventListener('click', function () { passar(1); });
     /* ampliado: o dedo serve para andar pela imagem, não para trocar de passagem */
-    arrastarLados(j.caixa, passar, function () { return !caixa.classList.contains('ampliado'); });
+    arrastarLados(j.caixa, passar, function () { return !z.ampliado(); });
     ver(i);
   }
   /* grava campos numa reserva achada pelo QR (o objeto da tela também recebe) */

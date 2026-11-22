@@ -1388,3 +1388,31 @@ body.rolando #dgo-aone:not(.dgo-falando) { opacity: 0; pointer-events: none; }
 .qr-tam { flex-wrap: wrap; justify-content: center; }
 .qr-tam-par { display: inline-flex; align-items: center; gap: .3rem; }
 .qr-tam-par .qr-tam-bt { width: 2.6rem; height: 2.6rem; font-size: 1.4rem; }
+/* QR do voo no formato do cartão da companhia (dono, 22/Nov/2026), dentro de um palco que amplia com os dedos */
+.qr-palco { width: 100%; display: flex; justify-content: center; border-radius: 14px; }
+.qr-palco.com-zoom { outline: 2px solid var(--rodovia-claro); }
+.qr-folha { display: flex; flex-direction: column; align-items: center; gap: .4rem; width: 100%; will-change: transform; }
+.qr-folha.voo { align-items: stretch; text-align: left; max-width: 26rem; padding: .6rem .6rem; border-radius: 14px; background: var(--sup2); }
+.qr-gol-cab { display: flex; align-items: center; justify-content: space-between; gap: .5rem; }
+.qr-gol-cab .qr-quem { font-size: 1.2rem; }
+.qr-cia { padding: .15rem .6rem; border-radius: 8px; background: #f3b58b; color: #3a1d08; font-weight: 700; font-size: .85rem; }
+.qr-gol-meio { display: flex; flex-wrap: wrap; gap: .6rem; align-items: center; }
+.qr-caixa { display: flex; flex-direction: column; align-items: center; gap: .15rem; padding: .3rem; border-radius: 12px; background: #fff; }
+.qr-caixa img { border-radius: 4px !important; }
+.qr-seq { font-size: .8rem; color: #1b2427; }
+.qr-lado { display: flex; flex-direction: column; gap: .45rem; flex: 1 1 6.5rem; min-width: 6.5rem; }
+.qr-lado .qr-quando { align-self: flex-start; font-size: .9rem; }
+.qr-lado-campo { display: flex; flex-direction: column; line-height: 1.15; }
+.qr-lado-campo b { font-size: 1.15rem; font-weight: 800; }
+.qr-lado-campo span, .qr-rota span { font-size: .75rem; opacity: .75; }
+.qr-rota { display: flex; align-items: center; justify-content: space-between; gap: .5rem; padding: .2rem 0; border-top: 1px solid var(--linha); }
+.qr-rota > div { display: flex; flex-direction: column; line-height: 1.1; }
+.qr-rota > div.dir { text-align: right; }
+.qr-rota b { font-size: 1.9rem; font-weight: 500; letter-spacing: .02em; }
+.qr-aviao { font-size: 1.4rem; }
+.qr-grade.dois { grid-template-columns: 1fr 1fr; width: 100%; }
+.qr-grade.quatro { grid-template-columns: repeat(4, 1fr); width: 100%; }
+.qr-folha.voo .qr-celula { background: var(--sup); }
+.qr-folha.voo .qr-celula.forte { background: var(--rodovia-claro); }
+.qr-folha.voo .qr-cartao-fraco { text-align: center; }
+.qr-rota .qr-aviao { font-size: 1.5rem; opacity: .8; }

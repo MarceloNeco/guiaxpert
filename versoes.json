@@ -2,6 +2,21 @@
   "app": "guiaxpert",
   "versoes": [
     {
+      "versao": "1.6.12",
+      "data": "2026-11-22",
+      "substitui": "1.6.11",
+      "itens": {
+        "pt": [
+          "Novo: QR do voo igual ao cartão.",
+          "Novo: zoom com dois dedos."
+        ],
+        "en": [
+          "New: flight QR like the boarding pass.",
+          "New: pinch to zoom."
+        ]
+      }
+    },
+    {
       "versao": "1.6.11",
       "data": "2026-11-22",
       "substitui": "1.6.10",
