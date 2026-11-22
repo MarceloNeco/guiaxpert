@@ -26,7 +26,7 @@
       risco: function () { return null; }, avisos: function () { return []; }, linkCompleto: function () { return 'https://www.windy.com/'; } };
   }
   var Clima = window.Clima;
-  var VERSAO_APP = '1.6.12';
+  var VERSAO_APP = '1.6.13';
 
   /* ------------------------------------------------------------------
      1. UTILIDADES
@@ -4679,7 +4679,7 @@
     var corpo = h('div', { class: 'linha qr-corpo', style: 'flex-direction:column;align-items:center;gap:.4rem;text-align:center' }, [palco,
       h('div', { class: 'qr-tam' }, [btOriginal, btCompletar, h('span', { class: 'qr-tam-par' }, [menor, tamTxt, maior])]),
       /* ‹ Anterior · 2 de 4 · Próximo › numa linha só (dono, 22/Nov/2026) */
-      lista.length > 1 ? h('div', { class: 'qr-nav' }, [ant, pos, prox]) : null, h('p', { class: 'pequeno', texto: T('qrBrilho') }),
+      lista.length > 1 ? h('div', { class: 'qr-nav' }, [ant, pos, prox]) : null, h('p', { class: 'pequeno qr-dica', texto: T('qrBrilho') }),
       h('button', { class: 'bt leve qr-enviar', type: 'button', onclick: function () { enviarCodigos(lista); } }, [Seletor.icone('compartilhar'), ' ' + (lista.length > 1 ? T('qr_enviarTodos', { n: lista.length }) : T('qr_enviar'))])]);
     var j = janela(T('qrIngresso'), corpo);
     j.caixa.classList.add('cheia');
@@ -4691,7 +4691,8 @@
       zoom.voltar();
       var voo = c.tipo === 'voo' || (c.qr && /^M[1-4]/.test(c.qr)), o = voo ? dadosCartao(c) : null;
       var dq = String(c.quando || '').slice(0, 10), hq = String(c.quando || '').slice(11, 16), hj = hojeIso();
-      quandoQR.textContent = dq ? (dq === hj ? T('qr_hoje') + ' · ' : '') + semana(dq) + ', ' + fData(dq, voo) + (hq ? ' · ' + hq : '') : T('res_semData');
+      quandoQR.textContent = !dq ? T('res_semData') : voo && dq === hj ? T('qr_hoje') + (hq ? ' · ' + hq : '') :
+        (dq === hj ? T('qr_hoje') + ' · ' : '') + semana(dq) + (voo ? ' ' : ', ') + fData(dq, voo) + (hq ? ' · ' + hq : '');
       quandoQR.className = 'qr-quando' + (dq === hj ? ' hoje' : dq && dq < hj ? ' passou' : '');
       remarcadoQR.textContent = c.remarcadoDe ? T('res_remarcadoDe', { d: semana(c.remarcadoDe) + ' ' + fData(c.remarcadoDe, true) }) : '';
       remarcadoQR.hidden = !c.remarcadoDe;
@@ -4702,7 +4703,8 @@
       folha.textContent = ''; folha.className = 'qr-folha' + (voo ? ' voo' : '');
       if (voo) {
         /* como o cartão da companhia: nome e companhia; QR à esquerda com voo, reserva e data ao lado; trecho grande; embarque; grade */
-        var fr = [o.partida ? T('qr_partida', { h: o.partida }) : null, o.classe ? T('qr_classe', { c: o.classe }) : null].filter(Boolean).join(' · ');
+        /* a classe ("Y") saiu da tela: confundia com o grupo (dono, 22/Nov/2026) */
+        var fr = o.partida ? T('qr_partida', { h: o.partida }) : '';
         folha.appendChild(h('div', { class: 'qr-gol-cab' }, [h('b', { class: 'qr-quem', texto: c.pessoa || '' }), o.cia ? h('span', { class: 'qr-cia', texto: CIAS[o.cia] || o.cia }) : null]));
         folha.appendChild(h('div', { class: 'qr-gol-meio' }, [
           h('div', { class: 'qr-caixa' }, [img, o.seq ? h('span', { class: 'qr-seq', texto: T('qr_seq', { s: o.seq }) }) : null]),
@@ -4713,6 +4715,8 @@
         folha.appendChild(h('div', { class: 'qr-grade dois' }, [celula(o.embarque, T('qr_rEmbarque')), celula(o.fecha, T('qr_rFim'))]));
         folha.appendChild(h('div', { class: 'qr-grade quatro' }, [celula(o.terminal, T('qr_rTerminal')), celula(o.portao, T('qr_rPortao')), celula(o.grupo, T('qr_rGrupo'), 1), celula(o.assento, T('qr_rAssento'), 1)]));
         folha.appendChild(lendoOcr);
+        /* sem a imagem do cartão, não há de onde tirar grupo e embarque (o QR não traz): ler o print aqui mesmo */
+        if (!c.cartao && !o.grupo) folha.appendChild(h('button', { class: 'bt qr-ler-print', type: 'button', texto: '📷 ' + T('qr_lerPrint'), onclick: function () { escolherPrints(); } }));
         if (fr) folha.appendChild(h('span', { class: 'pequeno qr-cartao-fraco', texto: fr }));
         /* print guardado sem grupo: lê o texto da imagem original agora (uma vez só) e completa a reserva */
         if (c.cartao && !o.grupo && !c.ocrLido && !c._ocrFalhou) completarPorOcr(c, function (ok) {
@@ -4735,6 +4739,35 @@
       img.setAttribute('style', EST_QR); aplicarTam();
       carregarQR().then(function () { var q = qrcode(0, 'M'); q.addData(String(c.qr || c.codigo)); q.make(); img.src = q.createDataURL(8, 8); img.alt = 'QR ' + (c.codigo || ''); })
         .catch(function () { img.hidden = true; });
+    }
+    /* um ou vários prints/PDFs de uma vez: cada cartão vai para a passagem do MESMO QR (ou mesma reserva e pessoa) */
+    function escolherPrints() {
+      var arq = h('input', { type: 'file', accept: 'image/*,application/pdf,.pdf', multiple: true, hidden: true });
+      d.body.appendChild(arq);
+      arq.addEventListener('change', function () {
+        var fs = [].slice.call(arq.files || []).slice(0, 10); arq.remove();
+        if (!fs.length) return;
+        lendoOcr.textContent = T('qr_lendoCartao'); lendoOcr.hidden = false;
+        var achou = 0;
+        fs.reduce(function (pr, f) {
+          return pr.then(function () { return Codigos.lerArquivo(f, {}); }).then(function (r) {
+            return (r.codigos || []).filter(function (k) { return /^M[1-4]/.test(k.texto); }).reduce(function (p2, k) {
+              var b = Codigos.bcbp(k.texto) || {};
+              var alvo = lista.filter(function (x) { return x.qr === k.texto; })[0] ||
+                lista.filter(function (x) { var o2 = dadosCartao(x); return x.tipo === 'voo' && normalizar(x.codigo || '') === normalizar(b.localizador || '-') && pessoaBate(x.pessoa, b.pessoa) && (!o2.voo || o2.voo === b.voo); })[0];
+              if (!alvo) return p2;
+              var pc = lerCartaoEmbarque(k.textoPag || ''), campos = { ocrLido: true };
+              if (k.cartao) campos.cartao = k.cartao;
+              CAMPOS_CARTAO.forEach(function (c2) { if (pc[c2]) campos[c2] = pc[c2]; });
+              achou++;
+              return p2.then(function () { return gravarNaReservaDoQR(alvo, campos); });
+            }, Promise.resolve());
+          });
+        }, Promise.resolve()).then(function () {
+          avisar(achou ? T('qr_printsLidos', { n: achou }) : T('qr_printNaoBate')); mostrar();
+        }, function () { avisar(T('cod_nada')); mostrar(); });
+      });
+      arq.click();
     }
     ant.addEventListener('click', function () { if (i > 0) { i--; mostrar(); } });
     prox.addEventListener('click', function () { if (i < lista.length - 1) { i++; mostrar(); } });

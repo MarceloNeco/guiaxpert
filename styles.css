@@ -1416,3 +1416,14 @@ body.rolando #dgo-aone:not(.dgo-falando) { opacity: 0; pointer-events: none; }
 .qr-folha.voo .qr-celula.forte { background: var(--rodovia-claro); }
 .qr-folha.voo .qr-cartao-fraco { text-align: center; }
 .qr-rota .qr-aviao { font-size: 1.5rem; opacity: .8; }
+/* QR e dados lado a lado SEMPRE (fonte grande do celular não derruba a coluna para baixo) */
+.qr-gol-meio { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: .55rem; align-items: center; }
+.qr-lado { min-width: 0; flex: none; gap: .35rem; }
+.qr-lado .qr-quando { font-size: .8rem; padding: .15rem .5rem; white-space: normal; }
+.qr-lado-campo b { font-size: 1.05rem; overflow-wrap: anywhere; }
+.qr-folha.voo { gap: .35rem; }
+.qr-rota b { font-size: 1.6rem; }
+.qr-folha.voo .qr-celula { padding: .2rem .15rem; }
+.qr-folha.voo .qr-celula b { font-size: 1.1rem; }
+.qr-folha.voo .qr-celula.forte b { font-size: 1.3rem; }
+.qr-ler-print { width: 100%; }
