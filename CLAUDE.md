@@ -33,6 +33,8 @@ caminho em uma linha (ex.: "Reservas › cartão › Remarcar"), um botão que l
 - Nunca publicar dado pessoal (CPF, códigos de reserva, PINs) em repositório ou pacote público. No código só a chave publicável do Supabase.
 - Chaves de serviço só no Supabase Vault (tela Configurações → Chaves do serviço); nunca no chat, no código ou no Drive.
 - Outras famílias não gastam as chaves do dono; nomes de pessoas nunca vão para a IA; ACESSO 'obrigatorio'.
+  **Exceção (dono, 22/Nov/2026): estado do voo** é informação pública e vale para todo usuário logado, com memória curta
+  no servidor e limite de 40 consultas novas por pessoa por dia (função `voo-status`).
 - Não abrir PR; publicar em main (e no branch de trabalho). Versão em js/app.js (VERSAO_APP), sw.js (VERSAO), versoes.json (copiado para solverone-dados/versoes/guiaxpert.json).
 - **Novidades (versoes.json) curtas, sem explicar:** cada item é uma frase de 3 a 8 palavras dizendo só se é novo, melhoria ou correção e onde. Ex.: "Melhorias no ditado por voz.", "Correção na voz do computador.", "Novo: guia pronto de Bonito." Sem causa, sem detalhe técnico, sem nome de serviço, sem parênteses; 1 a 3 itens por versão (pedido do dono em 13/Nov/2026, igual ao Radar Judicial).
 - Pendências e testes: docs/ROADMAP.md e a planilha "0-SolverONE DIRETRIZES E BACKLOG" (aba GuiaXpert).

@@ -22,14 +22,24 @@ async function chave(nome: string): Promise<string> {
   cacheChaves.set(nome, { v, ate: Date.now() + (v ? 60_000 : 15_000) });
   return v;
 }
-const cacheAcesso = new Map<string, number>();
-async function podeUsar(req: Request): Promise<boolean> {
-  const auth = req.headers.get("Authorization") || ""; if (!auth.startsWith("Bearer ")) return false;
-  const ate = cacheAcesso.get(auth); if (ate && ate > Date.now()) return true;
+// Voo é informação pública (dono, 22/Nov/2026): qualquer pessoa LOGADA no app pode consultar (não precisa ser da equipe).
+// A cota grátis fica protegida pela memória curta e por um limite de consultas novas por pessoa por dia.
+const LIMITE_DIA = 40;
+const cacheUser = new Map<string, { id: string; ate: number }>();
+async function quem(req: Request): Promise<string | null> {
+  const auth = req.headers.get("Authorization") || ""; if (!auth.startsWith("Bearer ")) return null;
+  const c = cacheUser.get(auth); if (c && c.ate > Date.now()) return c.id;
   try {
-    const r = await fetch(URL_SB + "/rest/v1/rpc/pode_usar_chaves_servico", { method: "POST", headers: { apikey: ANON, Authorization: auth, "Content-Type": "application/json" }, body: "{}" });
-    const ok = r.ok && (await r.json()) === true; if (ok) cacheAcesso.set(auth, Date.now() + 120_000); return ok;
-  } catch (_) { return false; }
+    const r = await fetch(URL_SB + "/auth/v1/user", { headers: { apikey: ANON, Authorization: auth } });
+    if (!r.ok) return null; const u = await r.json(); if (!u || !u.id) return null;
+    cacheUser.set(auth, { id: u.id, ate: Date.now() + 300_000 }); return u.id;
+  } catch (_) { return null; }
+}
+async function dentroDoLimite(uid: string): Promise<boolean> {
+  try {
+    const r = await fetch(URL_SB + "/rest/v1/rpc/guiaxpert_voo_contar", { method: "POST", headers: { apikey: SRV, Authorization: "Bearer " + SRV, "Content-Type": "application/json" }, body: JSON.stringify({ p_user: uid, p_limite: LIMITE_DIA }) });
+    return !r.ok || (await r.json()) !== false;
+  } catch (_) { return true; }
 }
 async function comPrazo(u: string, op: RequestInit = {}, ms = 9000) {
   const ctl = new AbortController(), t = setTimeout(() => ctl.abort(), ms);
@@ -95,7 +105,8 @@ async function cacheGravar(k: string, dados: Estado) {
 
 Deno.serve(async (req: Request) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: CORS });
-  if (!(await podeUsar(req))) return json({ erro: "sem-acesso" }, 403);
+  const uid = await quem(req);
+  if (!uid) return json({ erro: "sem-acesso" }, 403);
   const u = new URL(req.url);
   const teste = u.searchParams.get("teste");
   if (teste) {   // a tela de chaves pergunta: o serviço aceitou a chave?
@@ -118,6 +129,7 @@ Deno.serve(async (req: Request) => {
   }
   // nenhuma chave cadastrada ainda: avisa (o app mostra o aviso só para o dono)
   if (!(await Promise.all(["AIRLABS_KEY", "AVIATIONSTACK_KEY", "AERODATABOX_KEY"].map(chave))).some(Boolean)) return json({ erro: "sem-chave" }, 503);
+  if (!(await dentroDoLimite(uid))) return c ? json({ ...c.dados, cache: true, velho: true }) : json({ erro: "limite" }, 429);
   const falhas: string[] = [];
   for (const nome of ["airlabs", "aviationstack", "aerodatabox"]) {
     try {
