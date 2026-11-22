@@ -26,7 +26,7 @@
       risco: function () { return null; }, avisos: function () { return []; }, linkCompleto: function () { return 'https://www.windy.com/'; } };
   }
   var Clima = window.Clima;
-  var VERSAO_APP = '1.6.5';
+  var VERSAO_APP = '1.6.6';
 
   /* ------------------------------------------------------------------
      1. UTILIDADES
@@ -4405,7 +4405,10 @@
     /* principal: quadro do voo do Google, buscando SÓ o número ("G3 1287"; a palavra "status" puxava anúncios no iPhone);
        reserva: a página do voo no FlightAware (pede cookies na 1ª vez) */
     var icao = iata && ICAO_CIA[iata.slice(0, 2)];
-    var link = h('a', { class: 'hor-site', href: 'https://www.google.com/search?q=' + encodeURIComponent(iata ? iata.replace(/^([A-Z0-9]{2})/, '$1 ') : c.titulo), target: '_blank', rel: 'noopener', texto: T('voo_estado') + ' ↗' });
+    /* Android: "G3 1287 status" é a busca que já mostrou o quadro do voo (testado pelo dono); iPhone: sem "status" (puxava anúncios) */
+    var ios = /iPhone|iPad|iPod/.test(navigator.userAgent || '');
+    var q = (iata ? iata.replace(/^([A-Z0-9]{2})/, '$1 ') : c.titulo) + (iata && !ios ? ' status' : '');
+    var link = h('a', { class: 'hor-site', href: 'https://www.google.com/search?q=' + encodeURIComponent(q), target: '_blank', rel: 'noopener', texto: T('voo_estado') + ' ↗' });
     var fa = icao ? h('a', { class: 'pequeno voo-fa', href: 'https://www.flightaware.com/live/flight/' + icao + iata.slice(2), target: '_blank', rel: 'noopener', texto: 'FlightAware' }) : null;
     var anotar = h('button', { class: 'lk pequeno voo-anotar', type: 'button', texto: '✎ ' + T('voo_anotarCurto'), onclick: function () { janelaAnotarVoo(c); } });
     var caixa = h('div', { class: 'hor-linha voo-linha' }, [link, fa, anotar].filter(Boolean));
