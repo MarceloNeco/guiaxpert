@@ -2,6 +2,19 @@
   "app": "guiaxpert",
   "versoes": [
     {
+      "versao": "1.6.2",
+      "data": "2026-11-22",
+      "substitui": "1.6.1",
+      "itens": {
+        "pt": [
+          "Correção no link do estado do voo."
+        ],
+        "en": [
+          "Fix in the flight status link."
+        ]
+      }
+    },
+    {
       "versao": "1.6.1",
       "data": "2026-11-22",
       "substitui": "1.6.0",
