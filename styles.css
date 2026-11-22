@@ -1340,3 +1340,6 @@ body.rolando #dgo-aone:not(.dgo-falando) { opacity: 0; pointer-events: none; }
 .qr-remarcado { color: var(--suave); }
 .qr-enviar { display: inline-flex; align-items: center; gap: .4rem; }
 .qr-enviar .sl-ic { width: 1.2rem; height: 1.2rem; }
+/* linha recolhida: o que não cabe desce para a linha de baixo, sem escapar do cartão */
+.res-l1 { flex-wrap: wrap; row-gap: 0; min-width: 0; }
+.res-extra { white-space: normal; min-width: 0; overflow-wrap: anywhere; }

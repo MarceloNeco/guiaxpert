@@ -2,6 +2,19 @@
   "app": "guiaxpert",
   "versoes": [
     {
+      "versao": "1.5.97",
+      "data": "2026-11-22",
+      "substitui": "1.5.96",
+      "itens": {
+        "pt": [
+          "Melhorias no horário das reservas."
+        ],
+        "en": [
+          "Improved booking hours."
+        ]
+      }
+    },
+    {
       "versao": "1.5.96",
       "data": "2026-11-21",
       "substitui": "1.5.95",
