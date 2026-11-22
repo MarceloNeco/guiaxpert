@@ -26,7 +26,7 @@
       risco: function () { return null; }, avisos: function () { return []; }, linkCompleto: function () { return 'https://www.windy.com/'; } };
   }
   var Clima = window.Clima;
-  var VERSAO_APP = '1.5.98';
+  var VERSAO_APP = '1.5.99';
 
   /* ------------------------------------------------------------------
      1. UTILIDADES
@@ -4064,7 +4064,7 @@
       h('span', { class: 'etapa-l1' }, [h('span', { class: 'chev', 'aria-hidden': 'true', texto: '›' }),
         h('b', {}, [iconeRes(ICONE_ETAPA[etapa]), T('et_' + etapa)]), h('span', { class: 'etapa-hora', texto: hora })]),
       h('span', { class: 'etapa-l2' }, [h('span', { class: 'etapa-tit', texto: c0.titulo.replace(/\s*·\s*(entrada|saída|retirada|devolução)\b.*$/i, '') }),
-        n > 1 ? h('span', { class: 'etq', texto: T('nReservas', { n: n }) }) : null])]);
+        n > 1 ? h('span', { class: 'etq', texto: c0.tipo === 'voo' ? T('nPassageiros', { n: nPassageiros([].concat.apply([], grupos)) }) : T('nReservas', { n: n }) }) : null])]);
     function encher() { if (!corpo.childNodes.length) grupos.forEach(function (g) { corpo.appendChild(cartaoDe(g)); }); }
     if (aberto) encher();
     bt.addEventListener('click', function () {
@@ -4313,7 +4313,24 @@
     return h('div', { class: 'acoes-res-cartao' }, [principal, fila]);
   }
   /* "Adulto (+13 anos), Adulto (+13 anos), Criança…" → "2 adultos · 2 crianças · 1 melhor idade"; nomes de pessoas ficam como estão */
+  /* pessoas DIFERENTES de um grupo (dono, 22/Nov/2026: "6 passagens sendo que são 5"): a reserva da família
+     ("Marcelo, Roberta, Lara e Júlia", do e-mail) e os cartões de embarque de cada um são as mesmas pessoas.
+     Compara pelo primeiro nome, sem acento; fica o nome mais completo. Categorias ("Adulto (+13)") não são pessoas. */
+  function pessoasDistintas(cs) {
+    var porNome = {}, ordem = [];
+    cs.forEach(function (c) {
+      String(c && c.pessoa || '').replace(/\s*\(.*?\)\s*/g, ' ').split(/\s*,\s*|\s+e\s+|\s*&\s*|\s*\/\s*/).forEach(function (p) {
+        p = p.trim(); if (!p) return;
+        var k = normalizar(p).split(/\s+/)[0];
+        if (!k || /^(adulto|adultos|crianca|criancas|melhor|idoso|estudante|meia|inteira|pcd|bebe)$/.test(k)) return;
+        if (!porNome[k]) { porNome[k] = p; ordem.push(k); } else if (p.length > porNome[k].length) porNome[k] = p;
+      });
+    });
+    return ordem.map(function (k) { return porNome[k]; });
+  }
+  function nPassageiros(g) { var ps = pessoasDistintas(g.map(function (x) { return x.c; })); return ps.length || g.length; }
   function resumoPessoas(g) {
+    if (g[0] && g[0].c.tipo === 'voo') { var ps = pessoasDistintas(g.map(function (x) { return x.c; })); if (ps.length) return ps.join(', '); }
     var cont = {}, ordem = [];
     g.forEach(function (x) { var p = String(x.c.pessoa || '').replace(/\s*\(.*?\)\s*/g, '').trim(); if (!p) return; if (!cont[p]) { cont[p] = 0; ordem.push(p); } cont[p]++; });
     var repete = ordem.some(function (p) { return cont[p] > 1; });
@@ -4349,7 +4366,7 @@
   function cartaoGrupo(g) {
     var c0 = g[0].c, comQR = g.filter(function (x) { return (x.c.qr || x.c.barra) && x.c.status !== 'cancelada'; }).map(function (x) { return x.c; });
     if (g.every(function (x) { return x.c.status === 'cancelada'; })) return h('div', { class: 'cartao res-cancelada' }, [
-      h('span', { class: 'pequeno' }, rotuloRes(c0.tipo, ' · ' + T(c0.tipo === 'voo' ? 'nPassageiros' : 'nIngressos', { n: g.length }))), h('b', { texto: c0.titulo }), linhaCancelada(c0),
+      h('span', { class: 'pequeno' }, rotuloRes(c0.tipo, ' · ' + T(c0.tipo === 'voo' ? 'nPassageiros' : 'nIngressos', { n: c0.tipo === 'voo' ? nPassageiros(g) : g.length }))), h('b', { texto: c0.titulo }), linhaCancelada(c0),
       h('div', { class: 'linha' }, [h('button', { class: 'bt leve', type: 'button', onclick: function () { janelaRemarcar(g); } }, '📅 ' + T('res_remarcar'))])]);
     var lista = h('div', { class: 'linha', hidden: true, style: 'flex-direction:column;align-items:stretch;gap:.4rem' });
     g.forEach(function (x) {
@@ -4359,7 +4376,7 @@
     });
     var verUm = h('button', { class: 'lk', type: 'button', texto: T('res_verUmPorUm'), 'aria-expanded': 'false', onclick: function () { lista.hidden = !lista.hidden; verUm.setAttribute('aria-expanded', lista.hidden ? 'false' : 'true'); } });
     return h('div', { class: 'cartao' }, [
-      h('span', { class: 'pequeno' }, rotuloRes(c0.tipo, ' · ' + T(c0.tipo === 'voo' ? 'nPassageiros' : 'nIngressos', { n: g.length }))),
+      h('span', { class: 'pequeno' }, rotuloRes(c0.tipo, ' · ' + T(c0.tipo === 'voo' ? 'nPassageiros' : 'nIngressos', { n: c0.tipo === 'voo' ? nPassageiros(g) : g.length }))),
       h('b', { texto: c0.titulo }),
       linhaQuando(c0) ? h('span', { texto: linhaQuando(c0) }) : null,
       c0.tipo !== 'voo' ? linhaHorario(c0) : null,

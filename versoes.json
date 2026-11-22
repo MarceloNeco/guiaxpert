@@ -2,6 +2,19 @@
   "app": "guiaxpert",
   "versoes": [
     {
+      "versao": "1.5.99",
+      "data": "2026-11-22",
+      "substitui": "1.5.98",
+      "itens": {
+        "pt": [
+          "Correção na contagem de passageiros."
+        ],
+        "en": [
+          "Fix in passenger count."
+        ]
+      }
+    },
+    {
       "versao": "1.5.98",
       "data": "2026-11-22",
       "substitui": "1.5.97",
