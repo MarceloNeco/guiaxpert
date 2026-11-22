@@ -26,7 +26,7 @@
       risco: function () { return null; }, avisos: function () { return []; }, linkCompleto: function () { return 'https://www.windy.com/'; } };
   }
   var Clima = window.Clima;
-  var VERSAO_APP = '1.6.4';
+  var VERSAO_APP = '1.6.5';
 
   /* ------------------------------------------------------------------
      1. UTILIDADES
@@ -4402,11 +4402,13 @@
   function linhaVoo(c) {
     var iata = vooIata(c), dia = String(c.quando || '').slice(0, 10);
     /* página do voo direto (FlightAware, pelo código internacional da companhia), igual no Android e no iPhone; sem código: busca */
+    /* principal: quadro do voo do Google, buscando SÓ o número ("G3 1287"; a palavra "status" puxava anúncios no iPhone);
+       reserva: a página do voo no FlightAware (pede cookies na 1ª vez) */
     var icao = iata && ICAO_CIA[iata.slice(0, 2)];
-    var href = icao ? 'https://www.flightaware.com/live/flight/' + icao + iata.slice(2) : 'https://www.google.com/search?q=' + encodeURIComponent(T('voo_buscaPrefixo') + ' ' + (iata ? iata.replace(/^([A-Z0-9]{2})/, '$1 ') : c.titulo));
-    var link = h('a', { class: 'hor-site', href: href, target: '_blank', rel: 'noopener', texto: T('voo_estado') + ' ↗' });
+    var link = h('a', { class: 'hor-site', href: 'https://www.google.com/search?q=' + encodeURIComponent(iata ? iata.replace(/^([A-Z0-9]{2})/, '$1 ') : c.titulo), target: '_blank', rel: 'noopener', texto: T('voo_estado') + ' ↗' });
+    var fa = icao ? h('a', { class: 'pequeno voo-fa', href: 'https://www.flightaware.com/live/flight/' + icao + iata.slice(2), target: '_blank', rel: 'noopener', texto: 'FlightAware' }) : null;
     var anotar = h('button', { class: 'lk pequeno voo-anotar', type: 'button', texto: '✎ ' + T('voo_anotarCurto'), onclick: function () { janelaAnotarVoo(c); } });
-    var caixa = h('div', { class: 'hor-linha voo-linha' }, [link, anotar]);
+    var caixa = h('div', { class: 'hor-linha voo-linha' }, [link, fa, anotar].filter(Boolean));
     var anot = anotadoComoEstado([c]);
     if (!iata || !dia) { if (anot) setTimeout(function () { pintar(anot); }, 0); return caixa; }
     var hj = hojeIso(), dif = (new Date(dia + 'T12:00') - new Date(hj + 'T12:00')) / 86400000;
