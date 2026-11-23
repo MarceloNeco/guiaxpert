@@ -23,6 +23,13 @@ Nada de texto longo na tela. Frases curtas, direto ao ponto, pensadas para o cel
 recolhida atrás de ▸/chevron (`<details>`), nunca ocupando a tela. Ajuda (AssistONE) responde à dúvida digitada: título,
 caminho em uma linha (ex.: "Reservas › cartão › Remarcar"), um botão que leva lá; o "como" fica em "▸ Como".
 
+## Regra permanente — o GuiaXpert é um hub, não concorrente (dono, 23/Nov/2026)
+Não concorre com Decolar, Booking, TripAdvisor e afins: usa o motor deles (API, links de parceiro/afiliado, busca
+pré-preenchida) para trazer passeios, hospedagem, voo, transporte, traslado e logística. O valor do app é **montar o
+roteiro** pelas preferências e pela criatividade da família, juntar tudo num lugar só e acompanhar a viagem. Antes de cada
+parceiro novo: regra zero (chave no Vault, custo, aprovação do parceiro, o que sai do aparelho). Sem integração, sempre
+cai num link oficial com a busca já preenchida.
+
 ## Regras permanentes do app
 - **Idioma** (diretriz geral do dono, 14/Nov/2026): textos para o usuário em PT (Brasil), EN (EUA) e ES (Espanha), tradução
   humanizada; um seletor só em todo lugar, bandeira em SVG + sigla (PT · EN · ES), componente do módulo comum, nunca emoji nem botão
