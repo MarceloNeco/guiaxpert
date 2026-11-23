@@ -2,6 +2,19 @@
   "app": "guiaxpert",
   "versoes": [
     {
+      "versao": "1.6.16",
+      "data": "2026-11-23",
+      "substitui": "1.6.15",
+      "itens": {
+        "pt": [
+          "Correção no aviso de voo atrasado."
+        ],
+        "en": [
+          "Fix in the delayed flight alert."
+        ]
+      }
+    },
+    {
       "versao": "1.6.15",
       "data": "2026-11-22",
       "substitui": "1.6.14",

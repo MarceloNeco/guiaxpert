@@ -26,7 +26,7 @@
       risco: function () { return null; }, avisos: function () { return []; }, linkCompleto: function () { return 'https://www.windy.com/'; } };
   }
   var Clima = window.Clima;
-  var VERSAO_APP = '1.6.15';
+  var VERSAO_APP = '1.6.16';
 
   /* ------------------------------------------------------------------
      1. UTILIDADES
@@ -4424,7 +4424,15 @@
     if (['voando', 'pousou', 'cancelado', 'desviado'].indexOf(st) < 0 && dia && prev) {
       var prevista = new Date(dia + 'T' + prev).getTime(), est = p.estimada ? Date.parse(String(p.estimada).length <= 16 ? String(p.estimada) : p.estimada) : NaN;
       var conta = Math.max(prevista, isNaN(est) ? 0 : est), agora = Date.now();
-      if (agora - conta >= 5 * 60000 && agora - prevista < 4 * 3600000) { tx = T('voo_naoDecolou', { m: Math.round((agora - prevista) / 60000) }); cls = 'atencao'; }
+      var chegaEm = ch.estimada || ch.prevista ? Date.parse(ch.estimada || ch.prevista) : NaN;
+      /* só na 1ª hora depois da saída (dono, 22/Nov, 22:24: "+129 min" já não fazia sentido; o voo já tinha ido):
+         depois disso o app não tem como saber, então não afirma nada; e nunca depois da chegada prevista */
+      if (agora - conta >= 5 * 60000 && agora - conta < 60 * 60000 && (isNaN(chegaEm) || agora < chegaEm)) {
+        tx = T('voo_naoDecolou', { m: Math.round((agora - prevista) / 60000) }); cls = 'atencao';
+        return { tx: tx, cls: cls, relogio: true };
+      }
+      /* mais de 1 h depois da saída e o último aviso é de ANTES de decolar ("no horário", "embarque"): já não vale, não mostra */
+      if (agora - conta >= 60 * 60000) return null;
     }
     return tx ? { tx: tx, cls: cls } : null;
   }
@@ -4455,11 +4463,16 @@
       var sv = situacaoVoo(c, x && x.status ? x : null);
       if (!sv) return;
       var p = (x && x.partida) || {}, tx = sv.tx, cls = sv.cls;
-      if (!x || !x.status) { var a0 = h('span', { class: 'hor-hoje ' + cls, texto: '✈ ' + tx }); caixa.insertBefore(a0, link); vivos.push(a0); return; }
+      if (!x || !x.status) { var a0 = h('span', { class: 'hor-hoje ' + cls, texto: '✈ ' + tx }); caixa.insertBefore(a0, link); vivos.push(a0);
+        if (sv.relogio) { var r0 = h('span', { class: 'pequeno voo-fonte', texto: T('voo_peloRelogio') }); caixa.appendChild(r0); vivos.push(r0); }
+        return; }
       var extra = [p.terminal ? T('voo_terminal', { t: p.terminal }) : null, p.portao ? T('voo_portao', { g: p.portao }) : null].filter(Boolean).join(' · ');
       var a1 = h('span', { class: 'hor-hoje ' + cls, texto: '✈ ' + tx }); caixa.insertBefore(a1, link); vivos.push(a1);
       if (extra) { var a2 = h('span', { class: 'hor-faixa', texto: extra }); caixa.insertBefore(a2, link); vivos.push(a2); }
-      var a3 = h('span', { class: 'pequeno voo-fonte', texto: T('voo_atualizado', { h: new Date(x.em).toTimeString().slice(0, 5), f: x.fonte || '' }) }); caixa.appendChild(a3); vivos.push(a3);
+      /* de onde veio e QUANDO (com o dia, se não foi hoje); se quem fala é o relógio, diz isso (não "atualizado agora") */
+      var emD = new Date(x.em), emTx = (hojeIso() === emD.getFullYear() + '-' + ('0' + (emD.getMonth() + 1)).slice(-2) + '-' + ('0' + emD.getDate()).slice(-2) ? '' : fData(emD.getFullYear() + '-' + ('0' + (emD.getMonth() + 1)).slice(-2) + '-' + ('0' + emD.getDate()).slice(-2), true) + ' ') + emD.toTimeString().slice(0, 5);
+      var fonteTx = sv.relogio ? T('voo_peloRelogio') + ' · ' + T(x.anotado ? 'voo_ultimaAnot' : 'voo_ultimaConsulta', { h: emTx }) : T('voo_atualizado', { h: emTx, f: x.fonte || '' });
+      var a3 = h('span', { class: 'pequeno voo-fonte', texto: fonteTx }); caixa.appendChild(a3); vivos.push(a3);
     }
     Promise.all([estadoVoo(iata, dia), conferirAdmin()]).then(function (r) { pintar(r[0] && r[0].semChave && anot ? anot : maisRecente(r[0] && r[0].status ? r[0] : null, anot) || r[0]); });
     var saida = Date.parse(String(c.quando).slice(0, 16));
