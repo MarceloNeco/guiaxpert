@@ -26,7 +26,7 @@
       risco: function () { return null; }, avisos: function () { return []; }, linkCompleto: function () { return 'https://www.windy.com/'; } };
   }
   var Clima = window.Clima;
-  var VERSAO_APP = '1.6.19';
+  var VERSAO_APP = '1.6.20';
 
   /* ------------------------------------------------------------------
      1. UTILIDADES
@@ -3387,6 +3387,7 @@
   var AJUDA_CURTA = {
     qr: ['Pôr QR', 'Add QR', 'Reservas › ▦ QR / cartão', 'Bookings › ▦ QR / pass'],
     enviarqr: ['Compartilhar', 'Share', 'Reservas › cartão › Compartilhar', 'Bookings › card › Share'],
+    parceiros: ['Buscar voo, hotel e passeios', 'Find flights, hotels and tours', 'Reservas › 🔎 Buscar', 'Bookings › 🔎 Find'],
     feriadao: ['Ideia para o feriadão', 'Long-weekend idea', 'Viagens › 🗓 Ideia para o feriadão', 'Trips › 🗓 Long-weekend idea'],
     grupo: ['Grupo e portão do voo', 'Flight group and gate', 'Reservas › ▦ QR › Cartão original', 'Bookings › ▦ QR › Original pass'],
     mostrar: ['Mostrar QR', 'Show QR', 'Reservas › ▦ Mostrar · − + muda o tamanho', 'Bookings › ▦ Show · − + resizes'],
@@ -3469,6 +3470,10 @@
       { id: 'enviarqr', chaves: ['compartilhar', 'mandar horario do voo', 'avisar chegada', 'quem vai buscar', 'horario de chegada', 'mandar roteiro', 'imprimir ingresso', 'backup do qr', 'enviar ingresso', 'mandar ingresso', 'compartilhar ingresso', 'passar ingresso', 'enviar qr', 'mandar qr', 'outro celular', 'celular da sogra', 'bateria acabando', 'whatsapp ingresso', 'send ticket', 'share ticket'],
         t: L('Compartilhar ingressos, voo, roteiro ou hotel', 'Share tickets, flight, plan or hotel'),
         r: L('No cartão da reserva (ou em Quem), "Compartilhar". Para quem vai junto: os QR viram imagens (quem receber entra; serve de backup e para imprimir). Para quem fica em casa: horário do voo, roteiro e hotel, sem códigos.', 'On the booking card (or in Who), "Share". For who goes with you: QR as images. For who stays home: flight times, plan and hotel, no codes.'),
+        acao: [L('Ir para Reservas', 'Go to Bookings'), irRes()] },
+      { id: 'parceiros', chaves: ['hotel', 'hospedagem', 'passagem', 'passagens', 'comprar voo', 'reservar hotel', 'booking', 'decolar', 'airbnb', 'passeio', 'ingresso', 'traslado', 'ônibus', 'onibus', 'preço', 'preco', 'buy flight', 'book hotel', 'tours'],
+        t: L('Buscar voo, hotel e passeios', 'Find flights, hotels and tours'),
+        r: L('Reservas › 🔎 Buscar: abre Booking, Decolar, Airbnb, GetYourGuide e outros já com destino, datas e pessoas. Comprou? Traga a confirmação por E-mail ou QR.', 'Bookings › 🔎 Find: opens Booking, Decolar, Airbnb, GetYourGuide and others with destination, dates and people filled in.'),
         acao: [L('Ir para Reservas', 'Go to Bookings'), irRes()] },
       { id: 'feriadao', chaves: ['feriado', 'feriadão', 'feriadao', 'emendar', 'ponte', 'onde ir', 'para onde viajar', 'sugestão de viagem', 'ideia de viagem', 'sem destino', 'próxima viagem', 'carnaval', 'long weekend', 'holiday', 'where to go'],
         t: L('Ideia para o feriadão', 'Long-weekend idea'),
@@ -4159,7 +4164,8 @@
         tela.appendChild(h('div', { class: 'acoes-res' }, [tiles([
           tile('mais', T('res_nova'), function () { janelaReserva(null); }, { principal: true, rotuloLongo: T('novaReserva') }),
           tile('qr', T('res_escanearCurto'), function () { janelaCodigos({}); }, { tom: 'hortensia', rotuloLongo: T('cod_titulo') }),
-          tile('✉', T('res_emailCurto'), function () { janelaImportar(''); }, { tom: 'nevoa', rotuloLongo: T('colarEmail') })], 3)]));
+          tile('✉', T('res_emailCurto'), function () { janelaImportar(''); }, { tom: 'nevoa', rotuloLongo: T('colarEmail') }),
+          tile('🔎', T('pc_buscar'), function () { janelaParceiros(ctxParceirosViagem(v), true); }, { rotuloLongo: T('pc_buscarLongo') })], 4)]));
         if (!itens.length) { tela.appendChild(h('p', { class: 'sub', texto: T('semReservas') })); return; }
         /* grupos: ingressos do mesmo evento (mesmo grupo, ou mesmo título e horário) viram um cartão só */
         var grupos = {}, ordem = [];
@@ -7251,6 +7257,38 @@
      Quando (feriadões do ano) → Como (o que curtem, crianças, avião ou carro, de onde sai) → Onde (sugestões
      com clima médio do mês e distância). Escolheu: segue no "Nova viagem" a partir de "Quem vai".
      ------------------------------------------------------------------ */
+  /* HUB DE PARCEIROS, camada 1 (dono, 23/Nov/2026: "não é concorrer com Decolar, Booking…; é ser um hub"): busca já
+     preenchida nos sites consolidados. Nada pessoal sai: só cidade, datas e quantas pessoas (e idades das crianças). */
+  function pessoasParaBusca(ids) {
+    var ps = estado.pessoas.filter(function (p) { return !ids || ids.indexOf(p.id) > -1; }), ad = 0, idades = [];
+    ps.forEach(function (p) { var i = p.idade === '' || p.idade == null ? null : +p.idade; if (i != null && i < 18) idades.push(i); else ad++; });
+    return { adultos: ad || 2, idades: idades };
+  }
+  function ctxParceirosViagem(v) {
+    var F = window.Feriadoes, txt = String(v.destinoTexto || v.nome || ''), m = /^(.*?),\s*([A-Z]{2})$/.exec(txt);
+    var dest = (m ? m[1] : txt).trim(), d0 = F ? F.DESTINOS.filter(function (x) { return (v.destino && x.pacote === v.destino) || normalizar(x.nome) === normalizar(dest); })[0] : null;
+    var pp = pessoasParaBusca(v.pessoas), casa = lerCalendarioCasa().casa;
+    return { destino: d0 ? d0.nome : dest, uf: m ? m[2] : d0 ? d0.uf : '', iataDestino: v.iata || (d0 && d0.iata) || null, origem: casa, inicio: v.inicio, fim: v.fim,
+      adultos: pp.adultos, idades: pp.idades, lat: v.centro && v.centro.lat, lng: v.centro && v.centro.lng };
+  }
+  function janelaParceiros(c, naViagem) {
+    if (!window.Parceiros) return;
+    var grupos = Parceiros.links(c), ICO = { voo: '✈', hotel: '🏨', passeios: '🎟', chegar: '🚗' };
+    var nc = (c.idades || []).length, quem = T(c.adultos === 1 ? 'fd_1adulto' : 'fd_nAdultos', { n: c.adultos }) + (nc ? ', ' + T(nc === 1 ? 'fd_1crianca' : 'fd_nCriancas', { n: nc }) : '');
+    var corpo = h('div', { class: 'linha', style: 'flex-direction:column;align-items:stretch;gap:.7rem' }, [
+      h('p', { class: 'sub', texto: [c.inicio ? fData(c.inicio, true) + (c.fim ? ' – ' + fData(c.fim, true) : '') : null, quem, c.origem ? T('fd_de', { c: c.origem.nome }) : null].filter(Boolean).join(' · ') })]);
+    grupos.forEach(function (g) {
+      corpo.appendChild(h('div', { class: 'pc-grupo' }, [h('b', { texto: ICO[g.id] + ' ' + T('pc_' + g.id) }), h('div', { class: 'pc-links' }, g.itens.map(function (it) {
+        return h('a', { class: 'bt leve pc-link', href: it.url, target: '_blank', rel: 'noopener', texto: it.nome + ' ↗' });
+      }))]));
+    });
+    if (naViagem) corpo.appendChild(h('div', { class: 'pc-volta' }, [h('span', { class: 'pequeno', texto: T('pc_comprou') }),
+      h('div', { class: 'linha', style: 'gap:.5rem' }, [h('button', { class: 'bt leve', type: 'button', texto: '✉ ' + T('res_emailCurto'), onclick: function () { j.fechar(function () { Nav.ir('reservas'); setTimeout(function () { janelaImportar(''); }, 250); }); } }),
+        h('button', { class: 'bt leve', type: 'button', texto: '▦ ' + T('res_escanearCurto'), onclick: function () { j.fechar(function () { Nav.ir('reservas'); setTimeout(function () { janelaCodigos({}); }, 250); }); } })])]));
+    if (!c.origem) corpo.appendChild(h('p', { class: 'pequeno', texto: T('pc_semCasa') }));
+    corpo.appendChild(h('details', { class: 'mais-opcoes' }, [h('summary', { texto: T('pc_porqueTit') }), h('p', { class: 'pequeno', texto: T('pc_porque') })]));
+    var j = janela(T('pc_titulo', { d: c.destino }), corpo);
+  }
   /* calendário de casa: { casa:{id,nome,lat,lng,uf}, extras:[{id,mmdd,pt}], desligados:[id] } (fica no aparelho) */
   function lerCalendarioCasa() { var c = null; try { c = JSON.parse(localStorage.getItem('guiaxpert.feriadao.casa') || 'null'); } catch (e) {} return c || { casa: null, extras: [], desligados: [] }; }
   function gravarCalendarioCasa(c) { try { localStorage.setItem('guiaxpert.feriadao.casa', JSON.stringify(c)); } catch (e) {} }
@@ -7385,8 +7423,9 @@
         var info = [c ? '☀ ' + c.max + '° / ' + c.min + '° ' + T('fd_em', { m: mesNome }) : null, c ? '☔ ' + T('fd_chuva', { p: c.chuva }) : null].filter(Boolean).join(' · ');
         var dist = r.transporte === 'carro' && s.estrada != null ? '🚗 ~' + s.estrada.toLocaleString('pt-BR') + ' km · ' + T('fd_horas', { n: s.horas }) : s.km != null ? '✈ ' + s.km.toLocaleString('pt-BR') + ' km' : '';
         var porque = s.porque.map(function (p) { return p === 'ai' ? T('fd_ai') : p === 'criancas' ? T('fd_criancas') : T('fd_t_' + p); }).join(' · ');
-        var voos = r.transporte === 'aviao' ? h('a', { class: 'pequeno', target: '_blank', rel: 'noopener', texto: T('fd_passagens') + ' ↗',
-          href: 'https://www.google.com/travel/flights?q=' + encodeURIComponent('voos de ' + (r.origem && r.origem.nome || '') + ' para ' + d0.iata + ' ' + esc.inicio + ' volta ' + esc.fim) }) : null;
+        var pp = pessoasParaBusca(estado.pessoas.filter(function (p) { return grupoDe(p) === 'familia'; }).map(function (p) { return p.id; }));
+        var voos = h('button', { class: 'lk pequeno', type: 'button', texto: '🔎 ' + T('pc_precos'), onclick: function () {
+          janelaParceiros({ destino: d0.nome, uf: d0.uf, iataDestino: d0.iata, origem: r.origem && r.origem.id !== 'aqui' ? r.origem : lerCalendarioCasa().casa, inicio: esc.inicio, fim: esc.fim, adultos: pp.adultos, idades: pp.idades, lat: d0.lat, lng: d0.lng }, false); } });
         return h('div', { class: 'cartao fd-destino' }, [
           h('div', { class: 'linha entre' }, [h('b', { texto: d0.nome + ' · ' + d0.uf }), d0.pacote ? h('span', { class: 'etq gratis', texto: T('fd_guiaPronto') }) : null]),
           h('span', { class: 'sub', texto: idioma() === 'en' ? d0.en : d0.pt }),
@@ -7399,7 +7438,7 @@
     }
     function escolherDestino(d0) {
       var esc = r.escolha;
-      estado.rascunho = { passo: PASSOS_VIAGEM.indexOf('quem'), tipo: 'viagem', destino: d0.pacote || null, destinoTexto: d0.nome + (d0.pacote ? '' : ', ' + d0.uf), centro: { lat: d0.lat, lng: d0.lng },
+      estado.rascunho = { passo: PASSOS_VIAGEM.indexOf('quem'), tipo: 'viagem', destino: d0.pacote || null, iata: d0.iata, destinoTexto: d0.nome + (d0.pacote ? '' : ', ' + d0.uf), centro: { lat: d0.lat, lng: d0.lng },
         inicio: esc.inicio, fim: esc.fim, nome: (esc.id === 'livre' ? '' : (idioma() === 'en' ? esc.en : esc.pt) + ' ' + esc.inicio.slice(0, 4) + ' · ') + d0.nome,
         pessoas: estado.pessoas.filter(function (p) { return grupoDe(p) === 'familia'; }).map(function (p) { return p.id; }),
         preferencias: { ritmo: 'equilibrado', orcamento: 'medio', interesses: [], transporte: r.transporte === 'carro' ? 'carro' : 'carro' }, estadias: [], usarPacote: true, ia: false };
@@ -7415,7 +7454,7 @@
       .then(function (x) { return x.ok ? x.json() : []; }).then(function (j) { return j && j[0] ? { lat: +(+j[0].lat).toFixed(4), lng: +(+j[0].lon).toFixed(4) } : null; }).catch(function () { return null; });
   }
   function criarViagem(r) {
-    var v = { nome: (r.nome || r.destinoTexto).trim(), tipo: r.tipo || 'viagem', destino: r.destino, destinoTexto: r.destinoTexto, centro: r.centro || null, inicio: r.inicio, fim: r.fim,
+    var v = { nome: (r.nome || r.destinoTexto).trim(), tipo: r.tipo || 'viagem', destino: r.destino, destinoTexto: r.destinoTexto, centro: r.centro || null, iata: r.iata || null, inicio: r.inicio, fim: r.fim,
       pessoas: r.pessoas.slice(), preferencias: r.preferencias, estadias: r.estadias.filter(function (e) { return e.nome || e.endereco; }), opcao_ativa: null };
     /* coordenadas: cidade digitada e hotel pelo endereço (1 pedido por vez, regra do OpenStreetMap) */
     var p = Promise.resolve();

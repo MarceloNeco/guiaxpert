@@ -1435,3 +1435,8 @@ button.qr-celula { border: 0; font: inherit; color: inherit; cursor: pointer; wi
 .fd-destino { gap: .3rem; }
 .fd-clima { font-weight: 700; color: var(--rodovia); }
 .fd-nivel { font-size: .75rem; font-weight: 700; color: var(--rodovia); }
+/* hub de parceiros: grupos com links que abrem a busca pronta */
+.pc-grupo { display: flex; flex-direction: column; gap: .35rem; }
+.pc-links { display: flex; flex-wrap: wrap; gap: .4rem; }
+.pc-link { text-decoration: none; min-height: 2.6rem; display: inline-flex; align-items: center; }
+.pc-volta { display: flex; flex-direction: column; gap: .35rem; padding-top: .5rem; border-top: 1px solid var(--linha); }

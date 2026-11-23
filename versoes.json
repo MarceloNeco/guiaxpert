@@ -2,6 +2,19 @@
   "app": "guiaxpert",
   "versoes": [
     {
+      "versao": "1.6.20",
+      "data": "2026-11-23",
+      "substitui": "1.6.19",
+      "itens": {
+        "pt": [
+          "Novo: buscar voo, hotel e passeios."
+        ],
+        "en": [
+          "New: find flights, hotels and tours."
+        ]
+      }
+    },
+    {
       "versao": "1.6.19",
       "data": "2026-11-23",
       "substitui": "1.6.18",
