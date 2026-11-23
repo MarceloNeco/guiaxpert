@@ -1434,3 +1434,4 @@ button.qr-celula { border: 0; font: inherit; color: inherit; cursor: pointer; wi
 .fd-feriado { text-align: left; }
 .fd-destino { gap: .3rem; }
 .fd-clima { font-weight: 700; color: var(--rodovia); }
+.fd-nivel { font-size: .75rem; font-weight: 700; color: var(--rodovia); }

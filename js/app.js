@@ -26,7 +26,7 @@
       risco: function () { return null; }, avisos: function () { return []; }, linkCompleto: function () { return 'https://www.windy.com/'; } };
   }
   var Clima = window.Clima;
-  var VERSAO_APP = '1.6.17';
+  var VERSAO_APP = '1.6.18';
 
   /* ------------------------------------------------------------------
      1. UTILIDADES
@@ -7251,13 +7251,50 @@
      Quando (feriadões do ano) → Como (o que curtem, crianças, avião ou carro, de onde sai) → Onde (sugestões
      com clima médio do mês e distância). Escolheu: segue no "Nova viagem" a partir de "Quem vai".
      ------------------------------------------------------------------ */
+  /* calendário de casa: { casa:{id,nome,lat,lng,uf}, extras:[{id,mmdd,pt}], desligados:[id] } (fica no aparelho) */
+  function lerCalendarioCasa() { var c = null; try { c = JSON.parse(localStorage.getItem('guiaxpert.feriadao.casa') || 'null'); } catch (e) {} return c || { casa: null, extras: [], desligados: [] }; }
+  function gravarCalendarioCasa(c) { try { localStorage.setItem('guiaxpert.feriadao.casa', JSON.stringify(c)); } catch (e) {} }
+  function opCalendario(c) { return { cidade: c.casa && c.casa.id, uf: c.casa && c.casa.uf, extras: c.extras || [], desligados: c.desligados || [] }; }
+  /* conferir, desligar ou acrescentar feriados (lei mudou, folga da empresa, aniversário da cidade que não está na lista) */
+  function janelaMeusFeriados(cal, depois) {
+    var F = window.Feriadoes, caixa = h('div', { class: 'linha', style: 'flex-direction:column;align-items:stretch;gap:.4rem' });
+    function desenhar() {
+      caixa.textContent = '';
+      var ls = F.locais(opCalendario(cal)).sort(function (a, b) { return a.mmdd < b.mmdd ? -1 : 1; });
+      if (!cal.casa) caixa.appendChild(h('p', { class: 'sub', texto: T('fd_moroEmDica') }));
+      if (!ls.length && cal.casa) caixa.appendChild(h('p', { class: 'sub', texto: T('fd_semLocais') }));
+      ls.forEach(function (x) {
+        var cb = h('input', { type: 'checkbox', id: 'gx-mf-' + x.id }); cb.checked = x.ligado;
+        cb.addEventListener('change', function () { cal.desligados = (cal.desligados || []).filter(function (k) { return k !== x.id; }); if (!cb.checked) cal.desligados.push(x.id); gravarCalendarioCasa(cal); });
+        var p = x.mmdd.split('-');
+        caixa.appendChild(h('div', { class: 'linha entre', style: 'flex-wrap:nowrap' }, [h('label', { for: 'gx-mf-' + x.id, style: 'display:flex;gap:.5rem;align-items:center' }, [cb,
+          h('span', {}, [h('b', { texto: p[1] + '/' + MESES[idioma()][+p[0] - 1] + ' · ' }), d.createTextNode(idioma() === 'en' ? x.en : x.pt), h('span', { class: 'pequeno', texto: ' · ' + (x.nivel === 'estadual' ? T('fd_estadual', { uf: cal.casa.uf }) : x.nivel === 'municipal' ? T('fd_municipal', { c: cal.casa.nome }) : T('fd_seu')) })])]),
+          x.nivel === 'seu' ? h('button', { class: 'lk', type: 'button', texto: T('tirar'), onclick: function () { cal.extras = cal.extras.filter(function (y) { return y.id !== x.id; }); gravarCalendarioCasa(cal); desenhar(); } }) : null]));
+      });
+    }
+    var dt = campoData('gx-mf-data', '', function () {});
+    var nome = h('input', { class: 'campo', id: 'gx-mf-nome', maxlength: '40', placeholder: T('fd_exFolga') });
+    var add = h('button', { class: 'bt sec', type: 'button', texto: '＋ ' + T('fd_addFeriado') });
+    add.addEventListener('click', function () {
+      var v = dt.valor() || '', mmdd = /^\d{4}-\d{2}-\d{2}$/.test(v) ? v.slice(5) : null;
+      if (!mmdd || !nome.value.trim()) { avisar(T('fd_faltaFeriado')); return; }
+      cal.extras = (cal.extras || []).concat([{ id: 'seu-' + Date.now(), mmdd: mmdd, pt: nome.value.trim() }]); gravarCalendarioCasa(cal);
+      nome.value = ''; dt.definir(''); desenhar();
+    });
+    desenhar();
+    janela(T('fd_meus'), h('div', { class: 'linha', style: 'flex-direction:column;align-items:stretch;gap:.6rem' }, [caixa,
+      h('fieldset', {}, [h('legend', { texto: T('fd_addFeriado') }), h('div', { class: 'dois' }, [h('div', {}, [h('label', { class: 'rot', for: 'gx-mf-data', texto: T('fd_data') }), dt]), h('div', {}, [h('label', { class: 'rot', for: 'gx-mf-nome', texto: T('nome') }), nome])]), add]),
+      h('details', { class: 'mais-opcoes' }, [h('summary', { texto: T('fd_comoContaTit') }), h('p', { class: 'pequeno', texto: T('fd_locaisDica') })])]), function () { if (depois) depois(); });
+  }
   var FD_GOSTOS = ['praia', 'serra', 'natureza', 'cidade', 'historia', 'parques', 'termas', 'vinho'];
   TELAS.feriadao = function (tela) {
     var F = window.Feriadoes, hj = hojeIso(), anoHoje = +hj.slice(0, 4);
     if (!F) { tela.appendChild(h('p', { class: 'sub', texto: T('erroTela') })); return; }
     var origemSalva = null; try { origemSalva = JSON.parse(localStorage.getItem('guiaxpert.feriadao.origem') || 'null'); } catch (e) {}
+    /* onde a pessoa MORA: o calendário de feriados é o dela (cidade + estado + nacionais + os seus) */
+    var cal = lerCalendarioCasa();
     var temCrianca = estado.pessoas.some(function (p) { return grupoDe(p) === 'familia' && p.idade !== '' && p.idade != null && +p.idade < 13; });
-    var r = estado.feriadao || (estado.feriadao = { passo: 0, ano: anoHoje, escolha: null, gostos: [], criancas: temCrianca, ai: false, transporte: 'aviao', origem: origemSalva, mostrarTodos: false });
+    var r = estado.feriadao || (estado.feriadao = { passo: 0, ano: anoHoje, escolha: null, gostos: [], criancas: temCrianca, ai: false, transporte: 'aviao', origem: origemSalva || (cal.casa ? { id: cal.casa.id, nome: cal.casa.nome, lat: cal.casa.lat, lng: cal.casa.lng } : null), mostrarTodos: false });
     var total = 3, i = r.passo;
     tela.appendChild(h('p', { class: 'passo', texto: '🗓 ' + T('fd_titulo') + ' · ' + T('passoDe', { i: i + 1, n: total }) }));
     tela.appendChild(h('div', { class: 'progresso', role: 'progressbar', 'aria-valuemin': '1', 'aria-valuemax': String(total), 'aria-valuenow': String(i + 1) }, h('i', { style: 'width:' + Math.round((i + 1) / total * 100) + '%' })));
@@ -7278,13 +7315,26 @@
       corpo.appendChild(h('div', { class: 'chips' }, [anoHoje, anoHoje + 1, anoHoje + 2].map(function (a) {
         return h('button', { class: 'chip', type: 'button', 'aria-pressed': r.ano === a ? 'true' : 'false', texto: String(a), onclick: function () { r.ano = a; mostrar('feriadao'); } });
       })));
-      var lista = F.feriadoes(r.ano).filter(function (f) { return f.fim >= hj; });
+      /* 🏠 onde mora (feriados da cidade e do estado) e ✎ meus feriados */
+      var selCasa = h('select', { class: 'campo', id: 'gx-fd-casa', 'aria-label': T('fd_moroEm') }, [h('option', { value: '' }, T('fd_escolhaCidade'))].concat(F.ORIGENS.map(function (o) {
+        return h('option', { value: o[0], selected: cal.casa && cal.casa.id === o[0] }, o[1] + ' · ' + o[4]); })));
+      selCasa.addEventListener('change', function () {
+        var o = F.ORIGENS.filter(function (x) { return x[0] === selCasa.value; })[0];
+        cal.casa = o ? { id: o[0], nome: o[1], lat: o[2], lng: o[3], uf: o[4] } : null; gravarCalendarioCasa(cal);
+        if (cal.casa && (!r.origem || r.origem.id === 'aqui' || !origemSalva)) r.origem = { id: cal.casa.id, nome: cal.casa.nome, lat: cal.casa.lat, lng: cal.casa.lng };
+        mostrar('feriadao');
+      });
+      corpo.appendChild(h('div', { class: 'fd-casa' }, [h('label', { class: 'rot', for: 'gx-fd-casa', texto: '🏠 ' + T('fd_moroEm') }),
+        h('div', { class: 'linha', style: 'flex-wrap:nowrap;gap:.5rem' }, [selCasa, h('button', { class: 'bt leve', type: 'button', texto: '✎ ' + T('fd_meus'), onclick: function () { janelaMeusFeriados(cal, function () { mostrar('feriadao'); }); } })]),
+        cal.casa ? null : h('span', { class: 'pequeno', texto: T('fd_moroEmDica') })]));
+      var lista = F.feriadoes(r.ano, opCalendario(cal)).filter(function (f) { return f.fim >= hj; });
       if (!lista.length) corpo.appendChild(h('p', { class: 'sub', texto: T('fd_semFeriadao') }));
       lista.forEach(function (f) {
         var on = r.escolha && r.escolha.id === f.id;
         corpo.appendChild(h('button', { class: 'escolha fd-feriado' + (on ? ' ativa' : ''), type: 'button', 'aria-pressed': on ? 'true' : 'false', onclick: function () { r.escolha = f; ir(1); } }, [
           h('b', { texto: (idioma() === 'en' ? f.en : f.pt) + ' · ' + T('fd_dias', { n: f.dias }) }),
-          h('span', { class: 'pequeno', texto: semana(f.inicio) + ' ' + dm(f.inicio) + ' – ' + semana(f.fim) + ' ' + dm(f.fim) + (f.pontes ? ' · ' + T(f.pontes > 1 ? 'fd_pontes' : 'fd_ponte', { n: f.pontes }) : '') })]));
+          h('span', { class: 'pequeno', texto: semana(f.inicio) + ' ' + dm(f.inicio) + ' – ' + semana(f.fim) + ' ' + dm(f.fim) + (f.pontes ? ' · ' + T(f.pontes > 1 ? 'fd_pontes' : 'fd_ponte', { n: f.pontes }) : '') }),
+          f.nivel !== 'nacional' ? h('span', { class: 'fd-nivel', texto: f.nivel === 'estadual' ? T('fd_estadual', { uf: cal.casa ? cal.casa.uf : '' }) : f.nivel === 'municipal' ? T('fd_municipal', { c: cal.casa ? cal.casa.nome : '' }) : T('fd_seu') }) : null]));
       });
       corpo.appendChild(h('button', { class: 'bt leve', type: 'button', onclick: function () {
         Seletor.abrirIdaVolta(r.escolha ? r.escolha.inicio : null, r.escolha ? r.escolha.fim : null, function (a, b) {

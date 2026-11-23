@@ -2,6 +2,21 @@
   "app": "guiaxpert",
   "versoes": [
     {
+      "versao": "1.6.18",
+      "data": "2026-11-23",
+      "substitui": "1.6.17",
+      "itens": {
+        "pt": [
+          "Novo: feriados da sua cidade e estado.",
+          "Novo: meus feriados e folgas."
+        ],
+        "en": [
+          "New: your city and state holidays.",
+          "New: my holidays and days off."
+        ]
+      }
+    },
+    {
       "versao": "1.6.17",
       "data": "2026-11-23",
       "substitui": "1.6.16",

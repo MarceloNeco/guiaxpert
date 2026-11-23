@@ -36,22 +36,41 @@
       { id: 'natal', d: dia(a, 12, 25), pt: 'Natal', en: 'Christmas' }
     ];
   }
-  /* feriadão = feriado + fim de semana; ponte = dia útil que precisa de folga para emendar */
-  function feriadoes(a) {
+  /* feriadão = feriado + fim de semana; ponte = dia útil que precisa de folga para emendar.
+     op (opcional) = calendário de quem viaja: nacionais + estaduais + municipais + os seus. Feriadões que se encostam viram um só. */
+  function feriadoes(a, op) {
+    var todos = feriados(a).map(function (f) { f.nivel = 'nacional'; return f; });
+    locais(op).filter(function (x) { return x.ligado; }).forEach(function (x) {
+      var p = x.mmdd.split('-'); todos.push({ id: x.id, d: dia(a, +p[0], +p[1]), pt: x.pt, en: x.en, nivel: x.nivel });
+    });
+    var folga = {};   /* dias que já são feriado (para não contar ponte em cima de outro feriado) */
+    todos.forEach(function (f) { folga[iso(f.d)] = 1; });
     var lista = [];
-    feriados(a).forEach(function (f) {
+    todos.forEach(function (f) {
       var dw = f.d.getDay(), ini = null, fim = null, pontes = 0;
       if (f.id === 'carnaval') { ini = soma(f.d, -3); fim = soma(f.d, 1); }          /* sábado a quarta de Cinzas */
       else if (dw === 5) { ini = f.d; fim = soma(f.d, 2); }                           /* sexta: sex–dom */
       else if (dw === 1) { ini = soma(f.d, -2); fim = f.d; }                          /* segunda: sáb–seg */
-      else if (dw === 2) { ini = soma(f.d, -3); fim = f.d; pontes = 1; }              /* terça: sáb–ter, ponte na segunda */
-      else if (dw === 4) { ini = f.d; fim = soma(f.d, 3); pontes = 1; }               /* quinta: qui–dom, ponte na sexta */
-      else if (dw === 3) { ini = f.d; fim = soma(f.d, 4); pontes = 2; }               /* quarta: só com 2 dias de folga */
+      else if (dw === 2) { ini = soma(f.d, -3); fim = f.d; pontes = folga[iso(soma(f.d, -1))] ? 0 : 1; }   /* terça: ponte na segunda */
+      else if (dw === 4) { ini = f.d; fim = soma(f.d, 3); pontes = folga[iso(soma(f.d, 1))] ? 0 : 1; }     /* quinta: ponte na sexta */
+      else if (dw === 3) { ini = f.d; fim = soma(f.d, 4); pontes = (folga[iso(soma(f.d, 1))] ? 0 : 1) + (folga[iso(soma(f.d, 2))] ? 0 : 1); }
       if (!ini) return;
-      lista.push({ id: f.id + '-' + a, feriado: f.id, pt: f.pt, en: f.en, data: iso(f.d), inicio: iso(ini), fim: iso(fim),
-        dias: Math.round((fim - ini) / 86400000) + 1, pontes: pontes, carnaval: f.id === 'carnaval' });
+      lista.push({ id: f.id + '-' + a, feriado: f.id, pt: f.pt, en: f.en, nivel: f.nivel, niveis: [f.nivel], data: iso(f.d), ini: ini, fimD: fim, pontes: pontes, carnaval: f.id === 'carnaval' });
     });
-    return lista.sort(function (x, y) { return x.inicio < y.inicio ? -1 : 1; });
+    lista.sort(function (x, y) { return x.ini - y.ini; });
+    /* junta os que se encostam (ex.: quinta 9/jul em SP + fim de semana com outro feriado) */
+    var junto = [];
+    lista.forEach(function (x) {
+      var u = junto[junto.length - 1];
+      if (u && x.ini <= soma(u.fimD, 1)) {
+        if (x.fimD > u.fimD) u.fimD = x.fimD;
+        u.pt += ' + ' + x.pt; u.en += ' + ' + x.en; u.pontes = Math.max(u.pontes, x.pontes); u.niveis.push(x.nivel); u.carnaval = u.carnaval || x.carnaval;
+      } else junto.push(x);
+    });
+    return junto.map(function (x) {
+      return { id: x.id, feriado: x.feriado, pt: x.pt, en: x.en, nivel: x.niveis.indexOf('nacional') > -1 ? 'nacional' : x.niveis[0], data: x.data,
+        inicio: iso(x.ini), fim: iso(x.fimD), dias: Math.round((x.fimD - x.ini) / 86400000) + 1, pontes: x.pontes, carnaval: x.carnaval };
+    });
   }
 
   /* ---- destinos (lista curada; coordenadas do centro; tags: praia, serra, frio, natureza, cidade, historia, parques, termas, vinho)
@@ -97,12 +116,56 @@
   ];
   /* de onde sai (capitais e cidades grandes) */
   var ORIGENS = [
-    ['sp', 'São Paulo', -23.550, -46.633], ['rio', 'Rio de Janeiro', -22.906, -43.173], ['bh', 'Belo Horizonte', -19.917, -43.934], ['bsb', 'Brasília', -15.794, -47.882],
-    ['poa', 'Porto Alegre', -30.035, -51.218], ['cwb', 'Curitiba', -25.429, -49.271], ['fln', 'Florianópolis', -27.595, -48.548], ['cps', 'Campinas', -22.906, -47.061],
-    ['ssa', 'Salvador', -12.977, -38.501], ['rec', 'Recife', -8.054, -34.881], ['for', 'Fortaleza', -3.732, -38.527], ['gyn', 'Goiânia', -16.686, -49.264],
-    ['cgr', 'Campo Grande', -20.469, -54.620], ['cgb', 'Cuiabá', -15.601, -56.097], ['vix', 'Vitória', -20.315, -40.312], ['nat', 'Natal', -5.795, -35.209],
-    ['bel', 'Belém', -1.456, -48.490], ['mao', 'Manaus', -3.119, -60.022]
+    ['sp', 'São Paulo', -23.550, -46.633, 'SP'], ['rio', 'Rio de Janeiro', -22.906, -43.173, 'RJ'], ['bh', 'Belo Horizonte', -19.917, -43.934, 'MG'], ['bsb', 'Brasília', -15.794, -47.882, 'DF'],
+    ['poa', 'Porto Alegre', -30.035, -51.218, 'RS'], ['cwb', 'Curitiba', -25.429, -49.271, 'PR'], ['fln', 'Florianópolis', -27.595, -48.548, 'SC'], ['cps', 'Campinas', -22.906, -47.061, 'SP'],
+    ['ssa', 'Salvador', -12.977, -38.501, 'BA'], ['rec', 'Recife', -8.054, -34.881, 'PE'], ['for', 'Fortaleza', -3.732, -38.527, 'CE'], ['gyn', 'Goiânia', -16.686, -49.264, 'GO'],
+    ['cgr', 'Campo Grande', -20.469, -54.620, 'MS'], ['cgb', 'Cuiabá', -15.601, -56.097, 'MT'], ['vix', 'Vitória', -20.315, -40.312, 'ES'], ['nat', 'Natal', -5.795, -35.209, 'RN'],
+    ['bel', 'Belém', -1.456, -48.490, 'PA'], ['mao', 'Manaus', -3.119, -60.022, 'AM']
   ];
+  /* FERIADOS DO LUGAR ONDE A PESSOA MORA (dono, 23/Nov/2026: "vale o calendário de onde a gente mora, onde trabalha e folga").
+     Tabela própria (não há base aberta confiável de feriados municipais): estaduais por UF e municipais das cidades da lista.
+     Só o que é feriado por lei; a pessoa confere, desliga ou acrescenta em "Meus feriados". */
+  var ESTADUAIS = {
+    SP: [['07-09', 'Revolução Constitucionalista', 'Constitutionalist Revolution']],
+    RJ: [['04-23', 'São Jorge', 'Saint George']],
+    RS: [['09-20', 'Revolução Farroupilha', 'Ragamuffin Revolution']],
+    PR: [['12-19', 'Emancipação do Paraná', 'Paraná Emancipation']],
+    BA: [['07-02', 'Independência da Bahia', 'Bahia Independence']],
+    PE: [['03-06', 'Revolução Pernambucana', 'Pernambuco Revolution']],
+    CE: [['03-19', 'São José', 'Saint Joseph'], ['03-25', 'Data Magna do Ceará', 'Ceará Day']],
+    DF: [['11-30', 'Dia do Evangélico', 'Evangelical Day']],
+    AM: [['09-05', 'Elevação do Amazonas', 'Amazonas Day']],
+    PA: [['08-15', 'Adesão do Pará', 'Pará Day']],
+    MS: [['10-11', 'Criação do Estado', 'State Day']],
+    RN: [['10-03', 'Mártires de Cunhaú e Uruaçu', 'Cunhaú and Uruaçu Martyrs']]
+  };
+  var MUNICIPAIS = {
+    sp: [['01-25', 'Aniversário de São Paulo', 'São Paulo Anniversary']],
+    rio: [['01-20', 'São Sebastião', 'Saint Sebastian']],
+    bh: [['08-15', 'Assunção de Nossa Senhora', 'Assumption'], ['12-08', 'Imaculada Conceição', 'Immaculate Conception']],
+    poa: [['02-02', 'Nossa Senhora dos Navegantes', 'Our Lady of Navigators']],
+    cwb: [['09-08', 'Nossa Senhora da Luz', 'Our Lady of Light']],
+    fln: [['03-23', 'Aniversário de Florianópolis', 'Florianópolis Anniversary']],
+    cps: [['12-08', 'Nossa Senhora da Conceição', 'Immaculate Conception']],
+    ssa: [['06-24', 'São João', 'Saint John'], ['12-08', 'Nossa Senhora da Conceição da Praia', 'Immaculate Conception']],
+    rec: [['06-24', 'São João', 'Saint John'], ['07-16', 'Nossa Senhora do Carmo', 'Our Lady of Mount Carmel'], ['12-08', 'Nossa Senhora da Conceição', 'Immaculate Conception']],
+    for: [['08-15', 'Nossa Senhora da Assunção', 'Assumption']],
+    gyn: [['10-24', 'Aniversário de Goiânia', 'Goiânia Anniversary']],
+    cgr: [['08-26', 'Aniversário de Campo Grande', 'Campo Grande Anniversary']],
+    cgb: [['04-08', 'Aniversário de Cuiabá', 'Cuiabá Anniversary']],
+    vix: [['09-08', 'Aniversário de Vitória', 'Vitória Anniversary']],
+    nat: [['01-06', 'Santos Reis', 'Epiphany'], ['11-21', 'Nossa Senhora da Apresentação', 'Our Lady of Presentation']],
+    bel: [['01-12', 'Aniversário de Belém', 'Belém Anniversary']],
+    mao: [['10-24', 'Aniversário de Manaus', 'Manaus Anniversary'], ['12-08', 'Imaculada Conceição', 'Immaculate Conception']]
+  };
+  /* feriados locais da pessoa: { cidade:'sp', uf:'SP', extras:[{id,mmdd,pt}], desligados:[id] } → [{id, mmdd, pt, en, nivel}] */
+  function locais(op) {
+    op = op || {}; var off = op.desligados || [], l = [];
+    (ESTADUAIS[op.uf] || []).forEach(function (x) { l.push({ id: 'uf-' + op.uf + '-' + x[0], mmdd: x[0], pt: x[1], en: x[2], nivel: 'estadual' }); });
+    (MUNICIPAIS[op.cidade] || []).forEach(function (x) { l.push({ id: 'cid-' + op.cidade + '-' + x[0], mmdd: x[0], pt: x[1], en: x[2], nivel: 'municipal' }); });
+    (op.extras || []).forEach(function (x) { l.push({ id: x.id, mmdd: x.mmdd, pt: x.pt, en: x.pt, nivel: 'seu' }); });
+    return l.map(function (x) { x.ligado = off.indexOf(x.id) < 0; return x; });
+  }
 
   function km(a, b) {
     var R = 6371, r = Math.PI / 180, dLa = (b.lat - a.lat) * r, dLo = (b.lng - a.lng) * r;
@@ -176,5 +239,5 @@
     }).filter(Boolean).sort(function (a, b) { return b.nota - a.nota; });
   }
 
-  window.Feriadoes = { feriadoes: feriadoes, feriados: feriados, pascoa: pascoa, DESTINOS: DESTINOS, ORIGENS: ORIGENS, clima: clima, sugerir: sugerir, km: km, iso: iso };
+  window.Feriadoes = { feriadoes: feriadoes, feriados: feriados, locais: locais, ESTADUAIS: ESTADUAIS, MUNICIPAIS: MUNICIPAIS, pascoa: pascoa, DESTINOS: DESTINOS, ORIGENS: ORIGENS, clima: clima, sugerir: sugerir, km: km, iso: iso };
 })();
