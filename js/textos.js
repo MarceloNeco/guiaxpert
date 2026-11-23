@@ -471,7 +471,7 @@ window.TEXTOS = (function () {
     fd_criancas: ['Com crianças', 'With kids'], fd_ai: ['All inclusive', 'All inclusive'], fd_comoVai: ['Como vão', 'How you travel'], fd_aviao: ['Avião', 'Plane'], fd_carro: ['Só de carro', 'Car only'],
     fd_saindoDe: ['Saindo de', 'Leaving from'], fd_escolhaCidade: ['Escolha a cidade', 'Choose the city'], fd_ondeEstou: ['Onde estou', 'Where I am'],
     fd_onde: ['Sugestões', 'Suggestions'], fd_lendoClima: ['Buscando o clima médio do mês…', 'Getting the month’s average weather…'], fd_climaFonte: ['Clima: média dos últimos 3 anos (Open-Meteo).', 'Weather: last 3 years’ average (Open-Meteo).'],
-    fd_semClima: ['Sem internet: sugestões sem o clima.', 'Offline: suggestions without weather.'], fd_nada: ['Nada com esse perfil. Tire um filtro.', 'Nothing matches. Remove a filter.'],
+    fd_semClima: ['Clima indisponível agora: sugestões sem ele.', 'Weather unavailable now: suggestions without it.'], fd_nada: ['Nada com esse perfil. Tire um filtro.', 'Nothing matches. Remove a filter.'],
     fd_verMais: ['Ver mais {n}', 'See {n} more'], fd_em: ['em {m}', 'in {m}'], fd_chuva: ['chuva forte em {p}% dos dias', 'heavy rain on {p}% of days'], fd_horas: ['~{n} h', '~{n} h'],
     fd_passagens: ['Passagens', 'Flights'], fd_guiaPronto: ['Guia pronto', 'Ready guide'], fd_escolher: ['Escolher', 'Choose'],
     tipoPasseio: ['Um passeio', 'An outing'], tipoPasseioTexto: ['Um dia só: almoço, atração, programa com visita. Hoje ou outro dia.', 'A single day: lunch, an attraction, a plan with visitors. Today or another day.'],
