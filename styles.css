@@ -1430,3 +1430,7 @@ body.rolando #dgo-aone:not(.dgo-falando) { opacity: 0; pointer-events: none; }
 /* caixas do cartão tocáveis (corrigir portão etc.) e situação do voo ao lado do QR */
 button.qr-celula { border: 0; font: inherit; color: inherit; cursor: pointer; width: 100%; }
 .qr-situacao { align-self: flex-start; font-size: .8rem; }
+/* assistente de feriadões */
+.fd-feriado { text-align: left; }
+.fd-destino { gap: .3rem; }
+.fd-clima { font-weight: 700; color: var(--rodovia); }

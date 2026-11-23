@@ -12,6 +12,7 @@
 | Leaflet 1.9.4 (mapa) | https://leafletjs.com | BSD-2-Clause | arquivo no repositório (`vendor/leaflet/`), carregado só quando o mapa abre |
 | Dados de mapa, lugares e endereços (Descobrir, mapa, coordenadas do pacote) | OpenStreetMap | ODbL 1.0 — "© OpenStreetMap contributors" | consultados na hora (Overpass, Nominatim, tiles) e coordenadas guardadas no pacote |
 | Previsão do tempo (1ª opção) | Open-Meteo (https://open-meteo.com) | CC BY 4.0 (dados), uso não comercial grátis | consultada na hora; a tela cita a fonte |
+| Clima médio do mês no Assistente de feriadões | Open-Meteo, histórico (archive-api, ERA5) | CC BY 4.0 (dados) | média dos últimos 3 anos, todos os destinos numa consulta por ano; guardada 90 dias no aparelho; a tela cita a fonte |
 | Previsão do tempo (reserva) | MET Norway (https://api.met.no) | CC BY 4.0 / NLOD | só se a 1ª falhar; a tela cita a fonte |
 | Previsão do tempo (reserva) | wttr.in (https://wttr.in), dados World Weather Online | uso livre, sem garantia | só se as duas falharem; a tela cita a fonte |
 | Pacote Gramado e Canela | pesquisa GuiaXpert (out/2026) em blogs, guias e sites oficiais | texto próprio; fontes citadas em `pacotes/gramado.json` (`fonte`) e no relatório de pesquisa | arquivo no repositório |

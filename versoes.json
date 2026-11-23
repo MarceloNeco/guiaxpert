@@ -2,6 +2,19 @@
   "app": "guiaxpert",
   "versoes": [
     {
+      "versao": "1.6.17",
+      "data": "2026-11-23",
+      "substitui": "1.6.16",
+      "itens": {
+        "pt": [
+          "Novo: ideia para o feriadão."
+        ],
+        "en": [
+          "New: long-weekend trip ideas."
+        ]
+      }
+    },
+    {
       "versao": "1.6.16",
       "data": "2026-11-23",
       "substitui": "1.6.15",

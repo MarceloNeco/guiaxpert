@@ -220,3 +220,5 @@ Wizard **sem IA** para planejar a próxima viagem a partir do calendário:
 
 Feriadões de 2027 (calculados): 1–3/jan (sex) · Carnaval 6–10/fev · Sexta Santa 26–28/mar · Corpus Christi 27–30/mai (qui + ponte) · Independência 4–7/set (ter + ponte) · Aparecida 9–12/out (ter + ponte) · Finados 30/out–2/nov (ter + ponte) · República 13–15/nov (seg). Tiradentes cai numa quarta (21/abr); Trabalho, Consciência Negra e Natal caem no sábado.
 Regra zero antes de implementar: fontes de feriados estaduais/municipais e de clima médio.
+**1ª parte feita (1.6.17, 23/Nov/2026; dono escolheu Open-Meteo para o clima):** `js/feriadoes.js` (feriadões nacionais calculados no app, 37 destinos curados com tags, clima médio do mês pelo histórico do Open-Meteo com chuva forte ≥ 5 mm, nota por perfil/crianças/all inclusive/avião ou carro/distância) e tela `feriadao` (Quando → Como → Onde) que entrega a viagem no "Nova viagem" a partir de "Quem vai". Entradas: Nova viagem (3ª opção), Minhas viagens, seletor de viagem, ajuda.
+Falta: feriados estaduais e municipais; mais destinos (e exterior); preço de passagem/hotel (só link hoje); montar roteiro dos destinos sem guia pronto.

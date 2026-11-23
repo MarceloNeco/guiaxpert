@@ -26,7 +26,7 @@
       risco: function () { return null; }, avisos: function () { return []; }, linkCompleto: function () { return 'https://www.windy.com/'; } };
   }
   var Clima = window.Clima;
-  var VERSAO_APP = '1.6.16';
+  var VERSAO_APP = '1.6.17';
 
   /* ------------------------------------------------------------------
      1. UTILIDADES
@@ -831,7 +831,7 @@
      busca e janelas são camadas: o Voltar fecha só a de cima. Na base,
      o primeiro Voltar avisa; o segundo sai do app.
      ------------------------------------------------------------------ */
-  var ROTAS = { inicio: 1, roteiro: 1, lugares: 1, mapa: 1, reservas: 1, viagens: 1, nova: 1, familia: 1, conta: 1, config: 1, entrar: 1, explorar: 1, salvos: 1, ia: 1, oquetem: 1 };
+  var ROTAS = { inicio: 1, roteiro: 1, lugares: 1, mapa: 1, reservas: 1, viagens: 1, nova: 1, feriadao: 1, familia: 1, conta: 1, config: 1, entrar: 1, explorar: 1, salvos: 1, ia: 1, oquetem: 1 };
   var Nav = {
     camadas: [], depois: [], guarda: false,
     base: function (r) { return r === 'inicio' || r === 'entrar' || r === 'explorar'; },
@@ -1391,6 +1391,7 @@
         corpo.appendChild(bt); corpo.appendChild(lista);
       }
       corpo.appendChild(h('button', { class: 'bt sec', type: 'button', texto: '＋ ' + T('novoPasseioOuViagem'), onclick: function () { estado.rascunho = null; j.fechar(function () { Nav.ir('nova'); }); } }));
+      corpo.appendChild(h('button', { class: 'bt leve', type: 'button', texto: '🗓 ' + T('fd_tipo'), onclick: function () { estado.feriadao = null; j.fechar(function () { Nav.ir('feriadao'); }); } }));
     });
   }
 
@@ -3386,6 +3387,7 @@
   var AJUDA_CURTA = {
     qr: ['Pôr QR', 'Add QR', 'Reservas › ▦ QR / cartão', 'Bookings › ▦ QR / pass'],
     enviarqr: ['Compartilhar', 'Share', 'Reservas › cartão › Compartilhar', 'Bookings › card › Share'],
+    feriadao: ['Ideia para o feriadão', 'Long-weekend idea', 'Viagens › 🗓 Ideia para o feriadão', 'Trips › 🗓 Long-weekend idea'],
     grupo: ['Grupo e portão do voo', 'Flight group and gate', 'Reservas › ▦ QR › Cartão original', 'Bookings › ▦ QR › Original pass'],
     mostrar: ['Mostrar QR', 'Show QR', 'Reservas › ▦ Mostrar · − + muda o tamanho', 'Bookings › ▦ Show · − + resizes'],
     remarcar: ['Remarcar', 'Reschedule', 'Reservas › cartão › Remarcar', 'Bookings › card › Reschedule'],
@@ -3468,6 +3470,10 @@
         t: L('Compartilhar ingressos, voo, roteiro ou hotel', 'Share tickets, flight, plan or hotel'),
         r: L('No cartão da reserva (ou em Quem), "Compartilhar". Para quem vai junto: os QR viram imagens (quem receber entra; serve de backup e para imprimir). Para quem fica em casa: horário do voo, roteiro e hotel, sem códigos.', 'On the booking card (or in Who), "Share". For who goes with you: QR as images. For who stays home: flight times, plan and hotel, no codes.'),
         acao: [L('Ir para Reservas', 'Go to Bookings'), irRes()] },
+      { id: 'feriadao', chaves: ['feriado', 'feriadão', 'feriadao', 'emendar', 'ponte', 'onde ir', 'para onde viajar', 'sugestão de viagem', 'ideia de viagem', 'sem destino', 'próxima viagem', 'carnaval', 'long weekend', 'holiday', 'where to go'],
+        t: L('Ideia para o feriadão', 'Long-weekend idea'),
+        r: L('Escolha o feriadão, o que vocês curtem e de onde saem. O app sugere destinos com o clima do mês e cria a viagem.', 'Pick the long weekend, what you like and where you leave from. The app suggests places with the month’s weather and creates the trip.'),
+        acao: [L('Abrir', 'Open'), function () { estado.feriadao = null; Nav.ir('feriadao'); }] },
       { id: 'grupo', chaves: ['grupo', 'grupo de embarque', 'zona', 'portao', 'portão', 'portao de embarque', 'hora do embarque', 'horario de embarque', 'cartao original', 'cartão de embarque', 'passagem original', 'sequencia', 'boarding group', 'gate', 'boarding pass'],
         t: L('Grupo, portão e cartão original', 'Group, gate and original pass'),
         r: L('Na tela do QR do voo: embarque, grupo, portão, terminal e assento. O app lê do print ou do PDF. "Cartão original" mostra a passagem como veio. Mudou algo (portão, embarque, saída)? Toque na caixa ou em ✎.', 'On the flight QR screen: boarding, group, gate, terminal and seat, read from the screenshot or PDF. "Original pass" shows it as it came. Missing something? Tap ✎.'),
@@ -7002,7 +7008,7 @@
   /* ---------- Viagens ---------- */
   TELAS.viagens = function (tela) {
     tela.appendChild(faixaFotos(T('rota_viagens'), null, { compacta: true }));
-    tela.appendChild(h('div', { class: 'linha entre' }, [h('span'), h('button', { class: 'bt', type: 'button', onclick: function () { estado.rascunho = null; Nav.ir('nova'); } }, '＋ ' + T('novo'))]));
+    tela.appendChild(h('div', { class: 'linha entre' }, [h('button', { class: 'bt leve', type: 'button', onclick: function () { estado.feriadao = null; Nav.ir('feriadao'); } }, '🗓 ' + T('fd_tipo')), h('button', { class: 'bt', type: 'button', onclick: function () { estado.rascunho = null; Nav.ir('nova'); } }, '＋ ' + T('novo'))]));
     tela.appendChild(h('p', { class: 'sub', texto: T('viagensTexto') }));
     Banco.listar('viagens').then(function (vs) {
       if (!vs.length) tela.appendChild(h('p', { class: 'sub', texto: T('semViagemTexto') }));
@@ -7092,6 +7098,8 @@
     };
     c.appendChild(opcao('passeio', '🚶', T('tipoPasseio'), T('tipoPasseioTexto')));
     c.appendChild(opcao('viagem', '🧳', T('tipoViagem'), T('tipoViagemTexto')));
+    /* sem destino certo: o assistente de feriadões sugere quando e onde */
+    c.appendChild(h('button', { class: 'escolha', type: 'button', onclick: function () { estado.feriadao = null; Nav.ir('feriadao'); } }, [h('b', { texto: '🗓 ' + T('fd_tipo') }), h('span', { class: 'pequeno', texto: T('fd_tipoTexto') })]));
     val(function () { return r.tipo ? true : T('escolhaTipo'); });
   };
   PASSO.destino = function (c, r, val) {
@@ -7237,6 +7245,119 @@
     };
     if (r.destino) c.appendChild(opc('gx-w-pac', 'usarPacote', T('usarRoteirosPacote'), T('usarRoteirosPacoteDica'), r.usarPacote));
     c.appendChild(opc('gx-w-ia', 'ia', '✨ ' + T('gerarIA'), T('gerarIADica'), r.ia));
+  };
+  /* ------------------------------------------------------------------
+     7b. ASSISTENTE DE FERIADÕES (dono, 22/Nov/2026; backlog #49): sem destino certo, só preferência.
+     Quando (feriadões do ano) → Como (o que curtem, crianças, avião ou carro, de onde sai) → Onde (sugestões
+     com clima médio do mês e distância). Escolheu: segue no "Nova viagem" a partir de "Quem vai".
+     ------------------------------------------------------------------ */
+  var FD_GOSTOS = ['praia', 'serra', 'natureza', 'cidade', 'historia', 'parques', 'termas', 'vinho'];
+  TELAS.feriadao = function (tela) {
+    var F = window.Feriadoes, hj = hojeIso(), anoHoje = +hj.slice(0, 4);
+    if (!F) { tela.appendChild(h('p', { class: 'sub', texto: T('erroTela') })); return; }
+    var origemSalva = null; try { origemSalva = JSON.parse(localStorage.getItem('guiaxpert.feriadao.origem') || 'null'); } catch (e) {}
+    var temCrianca = estado.pessoas.some(function (p) { return grupoDe(p) === 'familia' && p.idade !== '' && p.idade != null && +p.idade < 13; });
+    var r = estado.feriadao || (estado.feriadao = { passo: 0, ano: anoHoje, escolha: null, gostos: [], criancas: temCrianca, ai: false, transporte: 'aviao', origem: origemSalva, mostrarTodos: false });
+    var total = 3, i = r.passo;
+    tela.appendChild(h('p', { class: 'passo', texto: '🗓 ' + T('fd_titulo') + ' · ' + T('passoDe', { i: i + 1, n: total }) }));
+    tela.appendChild(h('div', { class: 'progresso', role: 'progressbar', 'aria-valuemin': '1', 'aria-valuemax': String(total), 'aria-valuenow': String(i + 1) }, h('i', { style: 'width:' + Math.round((i + 1) / total * 100) + '%' })));
+    var corpo = h('div', { class: 'linha', style: 'flex-direction:column;align-items:stretch;gap:.75rem' }); tela.appendChild(corpo);
+    var erro = h('p', { class: 'conferir', role: 'alert' });
+    function ir(p) { r.passo = p; estado.irAoTopo = true; mostrar('feriadao'); }
+    var voltar = h('button', { class: 'bt leve', type: 'button', onclick: function () { if (i === 0) { estado.feriadao = null; Nav.ir('nova'); } else ir(i - 1); } }, T('voltar'));
+    var prox = h('button', { class: 'bt', type: 'button', hidden: i === 2 }, T('proximo'));
+    prox.addEventListener('click', function () {
+      if (i === 0 && !r.escolha) { erro.textContent = T('fd_faltaQuando'); return; }
+      if (i === 1 && !r.origem) { erro.textContent = T('fd_faltaOrigem'); return; }
+      ir(i + 1);
+    });
+    var dm = function (s) { return fData(s, true); };
+    if (i === 0) {
+      /* QUANDO: feriadões do ano (os que ainda não passaram) */
+      corpo.appendChild(h('h1', { texto: T('fd_quando') }));
+      corpo.appendChild(h('div', { class: 'chips' }, [anoHoje, anoHoje + 1, anoHoje + 2].map(function (a) {
+        return h('button', { class: 'chip', type: 'button', 'aria-pressed': r.ano === a ? 'true' : 'false', texto: String(a), onclick: function () { r.ano = a; mostrar('feriadao'); } });
+      })));
+      var lista = F.feriadoes(r.ano).filter(function (f) { return f.fim >= hj; });
+      if (!lista.length) corpo.appendChild(h('p', { class: 'sub', texto: T('fd_semFeriadao') }));
+      lista.forEach(function (f) {
+        var on = r.escolha && r.escolha.id === f.id;
+        corpo.appendChild(h('button', { class: 'escolha fd-feriado' + (on ? ' ativa' : ''), type: 'button', 'aria-pressed': on ? 'true' : 'false', onclick: function () { r.escolha = f; ir(1); } }, [
+          h('b', { texto: (idioma() === 'en' ? f.en : f.pt) + ' · ' + T('fd_dias', { n: f.dias }) }),
+          h('span', { class: 'pequeno', texto: semana(f.inicio) + ' ' + dm(f.inicio) + ' – ' + semana(f.fim) + ' ' + dm(f.fim) + (f.pontes ? ' · ' + T(f.pontes > 1 ? 'fd_pontes' : 'fd_ponte', { n: f.pontes }) : '') })]));
+      });
+      corpo.appendChild(h('button', { class: 'bt leve', type: 'button', onclick: function () {
+        Seletor.abrirIdaVolta(r.escolha ? r.escolha.inicio : null, r.escolha ? r.escolha.fim : null, function (a, b) {
+          r.escolha = { id: 'livre', pt: T('fd_outrasDatas'), en: T('fd_outrasDatas'), inicio: a, fim: b, dias: Math.round((dataDe(b) - dataDe(a)) / 86400000) + 1, pontes: 0 }; ir(1);
+        });
+      } }, '📅 ' + T('fd_outrasDatas')));
+      corpo.appendChild(h('details', { class: 'mais-opcoes' }, [h('summary', { texto: T('fd_comoContaTit') }), h('p', { class: 'pequeno', texto: T('fd_comoConta') })]));
+    } else if (i === 1) {
+      /* COMO: o que curtem, crianças, all inclusive, avião ou carro, de onde sai */
+      corpo.appendChild(h('h1', { texto: T('fd_como') }));
+      corpo.appendChild(h('fieldset', {}, [h('legend', { texto: T('fd_gostam') + ' · ' + T('podeVarios') }), h('div', { class: 'chips' }, FD_GOSTOS.map(function (g) {
+        var on = r.gostos.indexOf(g) > -1;
+        return h('button', { class: 'chip', type: 'button', 'aria-pressed': on ? 'true' : 'false', texto: T('fd_t_' + g), onclick: function () { if (on) r.gostos.splice(r.gostos.indexOf(g), 1); else r.gostos.push(g); mostrar('feriadao'); } });
+      }))]));
+      corpo.appendChild(h('div', { class: 'chips' }, [
+        h('button', { class: 'chip', type: 'button', 'aria-pressed': r.criancas ? 'true' : 'false', texto: '🧒 ' + T('fd_criancas'), onclick: function () { r.criancas = !r.criancas; mostrar('feriadao'); } }),
+        h('button', { class: 'chip', type: 'button', 'aria-pressed': r.ai ? 'true' : 'false', texto: '🍹 ' + T('fd_ai'), onclick: function () { r.ai = !r.ai; mostrar('feriadao'); } })]));
+      corpo.appendChild(h('fieldset', {}, [h('legend', { texto: T('fd_comoVai') }), h('div', { class: 'chips' }, [['aviao', '✈ '], ['carro', '🚗 ']].map(function (t) {
+        return h('button', { class: 'chip', type: 'button', 'aria-pressed': r.transporte === t[0] ? 'true' : 'false', texto: t[1] + T('fd_' + t[0]), onclick: function () { r.transporte = t[0]; mostrar('feriadao'); } });
+      }))]));
+      var sel = h('select', { class: 'campo', id: 'gx-fd-origem' }, [h('option', { value: '' }, T('fd_escolhaCidade'))].concat(F.ORIGENS.map(function (o) {
+        return h('option', { value: o[0], selected: r.origem && r.origem.id === o[0] }, o[1]); })).concat(r.origem && r.origem.id === 'aqui' ? [h('option', { value: 'aqui', selected: true }, '📍 ' + T('fd_ondeEstou'))] : []));
+      sel.addEventListener('change', function () {
+        var o = F.ORIGENS.filter(function (x) { return x[0] === sel.value; })[0];
+        r.origem = o ? { id: o[0], nome: o[1], lat: o[2], lng: o[3] } : null;
+        try { localStorage.setItem('guiaxpert.feriadao.origem', JSON.stringify(r.origem)); } catch (e) {}
+      });
+      var aqui = h('button', { class: 'bt leve', type: 'button', texto: '📍 ' + T('fd_ondeEstou') });
+      aqui.addEventListener('click', function () { pegarPosicao().then(function (p) { r.origem = { id: 'aqui', nome: T('fd_ondeEstou'), lat: p.lat, lng: p.lng }; try { localStorage.setItem('guiaxpert.feriadao.origem', JSON.stringify(r.origem)); } catch (e) {} mostrar('feriadao'); }).catch(function () {}); });
+      corpo.appendChild(h('label', { class: 'rot', for: 'gx-fd-origem', texto: T('fd_saindoDe') }));
+      corpo.appendChild(h('div', { class: 'linha', style: 'flex-wrap:nowrap;gap:.5rem' }, [sel, aqui]));
+    } else {
+      /* ONDE: sugestões com o porquê, clima médio do mês e distância */
+      var esc = r.escolha, mes = +esc.inicio.slice(5, 7);
+      corpo.appendChild(h('h1', { texto: T('fd_onde') }));
+      corpo.appendChild(h('p', { class: 'sub', texto: (idioma() === 'en' ? esc.en : esc.pt) + ' · ' + dm(esc.inicio) + ' – ' + dm(esc.fim) + ' · ' + T('fd_dias', { n: esc.dias }) }));
+      var caixa = h('div', { class: 'linha', style: 'flex-direction:column;align-items:stretch;gap:.6rem' }); corpo.appendChild(caixa);
+      var nota = h('p', { class: 'pequeno', role: 'status', texto: T('fd_lendoClima') }); corpo.insertBefore(nota, caixa);
+      var desenhar = function (climas) {
+        caixa.textContent = '';
+        var sug = F.sugerir({ gostos: r.gostos, criancas: r.criancas, ai: r.ai, transporte: r.transporte, origem: r.origem, dias: esc.dias, climas: climas, mes: mes });
+        if (!sug.length) { caixa.appendChild(h('p', { class: 'sub', texto: T('fd_nada') })); caixa.appendChild(h('button', { class: 'bt leve', type: 'button', texto: T('voltar'), onclick: function () { ir(1); } })); return; }
+        (r.mostrarTodos ? sug : sug.slice(0, 8)).forEach(function (s) { caixa.appendChild(cartaoDestino(s)); });
+        if (!r.mostrarTodos && sug.length > 8) caixa.appendChild(h('button', { class: 'bt leve', type: 'button', texto: T('fd_verMais', { n: sug.length - 8 }), onclick: function () { r.mostrarTodos = true; desenhar(climas); } }));
+      };
+      var cartaoDestino = function (s) {
+        var d0 = s.d, c = s.clima, mesNome = fData(esc.inicio, true).split('/')[1];
+        var info = [c ? '☀ ' + c.max + '° / ' + c.min + '° ' + T('fd_em', { m: mesNome }) : null, c ? '☔ ' + T('fd_chuva', { p: c.chuva }) : null].filter(Boolean).join(' · ');
+        var dist = r.transporte === 'carro' && s.estrada != null ? '🚗 ~' + s.estrada.toLocaleString('pt-BR') + ' km · ' + T('fd_horas', { n: s.horas }) : s.km != null ? '✈ ' + s.km.toLocaleString('pt-BR') + ' km' : '';
+        var porque = s.porque.map(function (p) { return p === 'ai' ? T('fd_ai') : p === 'criancas' ? T('fd_criancas') : T('fd_t_' + p); }).join(' · ');
+        var voos = r.transporte === 'aviao' ? h('a', { class: 'pequeno', target: '_blank', rel: 'noopener', texto: T('fd_passagens') + ' ↗',
+          href: 'https://www.google.com/travel/flights?q=' + encodeURIComponent('voos de ' + (r.origem && r.origem.nome || '') + ' para ' + d0.iata + ' ' + esc.inicio + ' volta ' + esc.fim) }) : null;
+        return h('div', { class: 'cartao fd-destino' }, [
+          h('div', { class: 'linha entre' }, [h('b', { texto: d0.nome + ' · ' + d0.uf }), d0.pacote ? h('span', { class: 'etq gratis', texto: T('fd_guiaPronto') }) : null]),
+          h('span', { class: 'sub', texto: idioma() === 'en' ? d0.en : d0.pt }),
+          info ? h('span', { class: 'fd-clima', texto: info }) : null,
+          h('span', { class: 'pequeno', texto: [dist, porque ? '✓ ' + porque : ''].filter(Boolean).join(' · ') }),
+          h('div', { class: 'linha', style: 'gap:.6rem;align-items:center' }, [h('button', { class: 'bt', type: 'button', texto: T('fd_escolher'), onclick: function () { escolherDestino(d0); } }), voos])]);
+      };
+      desenhar(null);
+      F.clima(mes, Banco).then(function (cl) { nota.textContent = cl ? T('fd_climaFonte') : T('fd_semClima'); if (cl) desenhar(cl); }, function () { nota.textContent = T('fd_semClima'); });
+    }
+    function escolherDestino(d0) {
+      var esc = r.escolha;
+      estado.rascunho = { passo: PASSOS_VIAGEM.indexOf('quem'), tipo: 'viagem', destino: d0.pacote || null, destinoTexto: d0.nome + (d0.pacote ? '' : ', ' + d0.uf), centro: { lat: d0.lat, lng: d0.lng },
+        inicio: esc.inicio, fim: esc.fim, nome: (esc.id === 'livre' ? '' : (idioma() === 'en' ? esc.en : esc.pt) + ' ' + esc.inicio.slice(0, 4) + ' · ') + d0.nome,
+        pessoas: estado.pessoas.filter(function (p) { return grupoDe(p) === 'familia'; }).map(function (p) { return p.id; }),
+        preferencias: { ritmo: 'equilibrado', orcamento: 'medio', interesses: [], transporte: r.transporte === 'carro' ? 'carro' : 'carro' }, estadias: [], usarPacote: true, ia: false };
+      estado.feriadao = null;
+      Nav.ir('nova');
+    }
+    tela.appendChild(erro);
+    tela.appendChild(h('div', { class: 'acoes' }, [voltar, prox]));
   };
   function geocodificar(texto) {
     if (!texto || !navigator.onLine) return Promise.resolve(null);
